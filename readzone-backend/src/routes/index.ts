@@ -8,6 +8,7 @@ import readingGoalRoutes from './readingGoalRoutes';
 import searchRoutes from './searchRoutes';
 import notificationRoutes from './notificationRoutes';
 import libraryRoutes from './libraryRoutes';
+import statisticsRoutes from './statisticsRoutes';
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.use('/reading-goals', readingGoalRoutes);
 router.use('/search', searchRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/library', libraryRoutes);
+router.use('/statistics', statisticsRoutes);
 router.use('/', commentRoutes);
 
 export default router;
