@@ -9,6 +9,8 @@ import searchRoutes from './searchRoutes';
 import notificationRoutes from './notificationRoutes';
 import libraryRoutes from './libraryRoutes';
 import statisticsRoutes from './statisticsRoutes';
+import groupRoutes from './groupRoutes';
+import recommendationRoutes from './recommendationRoutes';
 
 const router = Router();
 
@@ -22,6 +24,8 @@ router.use('/search', searchRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/library', libraryRoutes);
 router.use('/statistics', statisticsRoutes);
+router.use('/groups', groupRoutes);
+router.use('/recommendations', recommendationRoutes);
 router.use('/', commentRoutes);
 
 export default router;

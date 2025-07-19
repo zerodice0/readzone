@@ -16,6 +16,7 @@ import LibraryPage from './pages/LibraryPage';
 import ReadingGoalsPage from './pages/ReadingGoalsPage';
 import SearchPage from './pages/SearchPage';
 import NotificationsPage from './pages/NotificationsPage';
+import StatisticsPage from './pages/StatisticsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Components
@@ -78,6 +79,11 @@ function App() {
           <Route path="/notifications" element={
             <ProtectedRoute>
               <NotificationsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/statistics" element={
+            <ProtectedRoute>
+              <StatisticsPage />
             </ProtectedRoute>
           } />
           

@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import Button from '../ui/Button';
 import NotificationDropdown from '../notifications/NotificationDropdown';
-import { BookOpen, User, LogOut, Search } from 'lucide-react';
+import { BookOpen, User, LogOut, Search, BarChart3 } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuthStore();
@@ -52,6 +52,13 @@ const Header: React.FC = () => {
                   className="text-gray-700 hover:text-blue-600 transition-colors"
                 >
                   독서 목표
+                </Link>
+                <Link 
+                  to="/statistics" 
+                  className="text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-1"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  <span>통계</span>
                 </Link>
                 <NotificationDropdown />
                 <Link 
