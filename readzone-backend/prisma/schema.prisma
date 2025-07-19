@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  password      String
+  displayName   String?   @map("display_name")
+  bio           String?
+  avatar        String?
+  isPublic      Boolean   @default(true) @map("is_public")
+  emailVerified Boolean   @default(false) @map("email_verified")
+  isActive      Boolean   @default(true) @map("is_active")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  posts                Post[]
+  comments             Comment[]
+  likes                Like[]
+  follows              Follow[] @relation("Follower")
+  followers            Follow[] @relation("Following")
+  libraryBooks         LibraryBook[]
+  readingGoals         ReadingGoal[]
+  notifications        Notification[] @relation("NotificationRecipient")
+  triggeredNotifications Notification[] @relation("NotificationSender")
+
+  @@map("users")
+}
+
+model Book {
+  id            String    @id @default(cuid())
+  isbn          String    @unique
+  title         String
+  authors       String[]
+  publisher     String?
+  publishedDate DateTime? @map("published_date")
+  description   String?
+  thumbnail     String?
+  categories    String[]
+  pageCount     Int?      @map("page_count")
+  price         Int?
+  salePrice     Int?      @map("sale_price")
+  url           String?
+  status        String    @default("available")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  posts         Post[]
+  libraryBooks  LibraryBook[]
+
+  @@map("books")
+}
+
+model Post {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  bookId          String    @map("book_id")
+  content         String
+  rating          Int?      @db.SmallInt
+  readingProgress Int       @default(0) @map("reading_progress") @db.SmallInt
+  tags            String[]
+  isPublic        Boolean   @default(true) @map("is_public")
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book            Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  comments        Comment[]
+  likes           Like[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String    @map("post_id")
+  userId    String    @map("user_id")
+  parentId  String?   @map("parent_id")
+  content   String
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  postId    String   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model LibraryBook {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  bookId      String    @map("book_id")
+  status      String    @default("want_to_read") // want_to_read, reading, completed
+  currentPage Int       @default(0) @map("current_page")
+  totalPages  Int?      @map("total_pages")
+  notes       String?
+  startedAt   DateTime? @map("started_at")
+  finishedAt  DateTime? @map("finished_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@map("library_books")
+}
+
+model ReadingGoal {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  year        Int
+  booksTarget Int      @default(0) @map("books_target")
+  pagesTarget Int      @default(0) @map("pages_target")
+  booksRead   Int      @default(0) @map("books_read")
+  pagesRead   Int      @default(0) @map("pages_read")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year])
+  @@map("reading_goals")
+}
+
+model Notification {
+  id            String   @id @default(cuid())
+  recipientId   String   @map("recipient_id")
+  senderId      String?  @map("sender_id")
+  type          String   // 'like', 'comment', 'follow', 'mention'
+  title         String
+  content       String
+  relatedId     String?  @map("related_id") // postId, commentId, etc.
+  isRead        Boolean  @default(false) @map("is_read")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  recipient     User     @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender        User?    @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, isRead])
+  @@index([recipientId, createdAt])
+  @@map("notifications")
+}
