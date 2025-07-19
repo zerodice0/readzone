@@ -76,21 +76,21 @@ const HomePage: React.FC = () => {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* 헤더 */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">ReadZone 피드</h1>
-            <p className="text-gray-600">커뮤니티의 최신 독서 기록들을 확인해보세요.</p>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">ReadZone 피드</h1>
+            <p className="text-gray-600 text-sm sm:text-base">커뮤니티의 최신 독서 기록들을 확인해보세요.</p>
           </div>
 
           {/* 액션 버튼 */}
-          <div className="flex gap-4 mb-8">
-            <Link to="/search">
-              <Button variant="outline">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <Link to="/search" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto justify-center">
                 <BookOpen className="w-4 h-4 mr-2" />
                 독서 기록 작성
               </Button>
             </Link>
-            <Link to="/dashboard">
-              <Button variant="outline">
+            <Link to="/dashboard" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto justify-center">
                 대시보드
               </Button>
             </Link>
@@ -155,14 +155,15 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
               독서의 새로운 경험
-              <br />
+              <br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>
               <span className="text-blue-600">ReadZone</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               책을 읽고, 기록하고, 공유하세요. 
               일상적이고 캐주얼한 독서 문화를 만들어가는 모던한 플랫폼입니다.
             </p>
@@ -193,62 +194,62 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Features Section */}
-      <div className="py-24 bg-white">
+      <div className="py-16 sm:py-20 lg:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
               왜 ReadZone을 선택해야 할까요?
             </h2>
-            <p className="text-lg text-gray-600">
+            <p className="text-base sm:text-lg text-gray-600 px-4">
               독서를 더 즐겁고 의미있게 만드는 기능들을 만나보세요.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            <div className="text-center p-4 sm:p-6">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
                 <BookOpen className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                 간편한 독서 기록
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 책을 읽으며 떠오르는 생각들을 쉽고 빠르게 기록할 수 있습니다.
               </p>
             </div>
             
-            <div className="text-center p-6">
+            <div className="text-center p-4 sm:p-6">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
                 <Users className="w-6 h-6 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                 커뮤니티 공유
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 다른 독자들과 독서 경험을 공유하고 새로운 책을 발견하세요.
               </p>
             </div>
             
-            <div className="text-center p-6">
+            <div className="text-center p-4 sm:p-6">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
                 <Star className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                 개인 서재
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 나만의 디지털 서재를 구성하고 독서 목표를 관리하세요.
               </p>
             </div>
             
-            <div className="text-center p-6">
+            <div className="text-center p-4 sm:p-6">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mb-4">
                 <TrendingUp className="w-6 h-6 text-orange-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                 독서 통계
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 내 독서 패턴을 분석하고 더 나은 독서 습관을 만들어보세요.
               </p>
             </div>
