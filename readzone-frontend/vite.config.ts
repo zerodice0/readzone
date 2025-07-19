@@ -17,15 +17,48 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
+    minify: 'terser',
+    target: 'es2020',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          state: ['zustand'],
-          ui: ['lucide-react'],
+        manualChunks: (id) => {
+          // Vendor chunk for React ecosystem
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'vendor';
+          }
+          // Router chunk
+          if (id.includes('node_modules/react-router')) {
+            return 'router';
+          }
+          // State management
+          if (id.includes('node_modules/zustand')) {
+            return 'state';
+          }
+          // UI library
+          if (id.includes('node_modules/lucide-react')) {
+            return 'ui';
+          }
+          // Pages chunks (lazy loaded)
+          if (id.includes('src/pages/Dashboard')) {
+            return 'dashboard';
+          }
+          if (id.includes('src/pages/Library')) {
+            return 'library';
+          }
+          if (id.includes('src/pages/Statistics')) {
+            return 'statistics';
+          }
+          // Other vendor libraries
+          if (id.includes('node_modules')) {
+            return 'vendor-libs';
+          }
         },
+        chunkFileNames: () => {
+          return `assets/[name]-[hash].js`;
+        },
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
   },

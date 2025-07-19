@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Share2, Star, BookOpen, Calendar, User } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import LazyImage from '../ui/LazyImage';
 
 interface PostCardProps {
   post: {
@@ -67,12 +68,13 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* 사용자 정보 */}
         <div className="flex items-center space-x-3 mb-4">
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
               {post.user.avatar ? (
-                <img
+                <LazyImage
                   src={post.user.avatar}
                   alt={post.user.username}
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
+                  placeholderClassName="bg-blue-100 flex items-center justify-center"
                 />
               ) : (
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
@@ -98,10 +100,12 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* 책 정보 */}
         <div className="flex items-center space-x-3 mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
           <div className="flex-shrink-0">
-            <img
+            <LazyImage
               src={post.book.thumbnail || '/placeholder-book.jpg'}
               alt={post.book.title}
               className="w-10 h-12 sm:w-12 sm:h-16 object-cover rounded"
+              placeholderClassName="bg-gray-200 flex items-center justify-center"
+              fallbackSrc="/placeholder-book.jpg"
             />
           </div>
           <div className="flex-1 min-w-0">

@@ -16,6 +16,7 @@ import {
 import { useLibraryStore, getStatusLabel, getStatusColor } from '../stores/libraryStore';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import LazyImage from '../components/ui/LazyImage';
 import type { LibraryStatus } from '../services/libraryService';
 
 const LibraryPage: React.FC = () => {
@@ -180,10 +181,11 @@ const LibraryPage: React.FC = () => {
                   <div className="flex space-x-3">
                     <div className="flex-shrink-0">
                       {item.book.thumbnail ? (
-                        <img
+                        <LazyImage
                           src={item.book.thumbnail}
                           alt={item.book.title}
                           className="w-10 h-12 sm:w-12 sm:h-16 object-cover rounded"
+                          placeholderClassName="bg-gray-200 flex items-center justify-center"
                         />
                       ) : (
                         <div className="w-10 h-12 sm:w-12 sm:h-16 bg-gray-200 rounded flex items-center justify-center">
@@ -288,10 +290,11 @@ const LibraryPage: React.FC = () => {
                       <div className="flex space-x-2 sm:space-x-3">
                         <div className="flex-shrink-0">
                           {libraryBook.book.thumbnail ? (
-                            <img
+                            <LazyImage
                               src={libraryBook.book.thumbnail}
                               alt={libraryBook.book.title}
                               className="w-12 h-16 sm:w-14 sm:h-18 lg:w-16 lg:h-20 object-cover rounded"
+                              placeholderClassName="bg-gray-200 flex items-center justify-center"
                             />
                           ) : (
                             <div className="w-12 h-16 sm:w-14 sm:h-18 lg:w-16 lg:h-20 bg-gray-200 rounded flex items-center justify-center">
