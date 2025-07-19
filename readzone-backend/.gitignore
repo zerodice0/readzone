@@ -64,3 +64,42 @@ jspm_packages/
 # Prisma
 prisma/migrations/*/
 !prisma/migrations/migration_lock.toml
+
+# TypeScript
+*.tsbuildinfo
+.tscache/
+
+# PM2 logs and configs
+.pm2/
+ecosystem.config.js
+
+# Upload files
+uploads/
+public/uploads/
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+
+# Backup files
+*.backup
+*.bak
+
+# Testing
+.nyc_output/
+coverage/
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor files
+*~
+
+# Runtime logs
+.pnpm-debug.log*
