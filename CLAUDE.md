@@ -32,6 +32,9 @@ readzone/
 - **데이터베이스**: PostgreSQL
 - **ORM**: Prisma
 - **인증**: JWT
+- **테스팅**: Jest + Supertest
+- **로깅**: Winston
+- **유효성 검사**: Joi
 - **환경 관리**: dotenv
 - **프로세스 관리**: PM2 (프로덕션)
 
@@ -44,6 +47,8 @@ readzone/
 - **상태 관리**: Zustand
 - **HTTP 클라이언트**: Axios
 - **폼 관리**: React Hook Form
+- **차트**: Chart.js
+- **PWA**: Service Worker, Web App Manifest
 
 ### 인프라
 - **운영체제**: Ubuntu Server
@@ -511,6 +516,176 @@ docs(readme): update installation guide
 - [ ] 성능 최적화 고려
 - [ ] 테스트 코드 작성
 - [ ] 문서 업데이트
+
+## 백엔드 테스트 가이드라인
+
+### 테스트 설정
+
+#### Jest 설정 (jest.config.js)
+```javascript
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/server.ts',
+  ],
+  testTimeout: 10000,
+};
+```
+
+#### 테스트 환경 설정 (tests/setup.ts)
+```typescript
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.TEST_DATABASE_URL || 'postgresql://test:test@localhost:5432/readzone_test',
+    },
+  },
+});
+
+// 전역 설정
+beforeAll(async () => {
+  await prisma.$connect();
+  await cleanupDatabase();
+});
+
+afterEach(async () => {
+  await cleanupDatabase();
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+```
+
+### 테스트 실행 명령어
+
+```bash
+# 모든 테스트 실행
+npm test
+
+# 테스트 커버리지 확인
+npm run test:coverage
+
+# 특정 테스트 파일 실행
+npm test -- --testPathPattern=auth.test.ts
+
+# Watch 모드로 실행
+npm run test:watch
+```
+
+### 테스트 구조
+
+#### API 엔드포인트 테스트
+```typescript
+describe('POST /api/auth/register', () => {
+  it('should register a new user successfully', async () => {
+    const userData = {
+      email: 'test@example.com',
+      username: 'testuser',
+      password: 'password123'
+    };
+
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send(userData);
+
+    expectSuccessResponse(response, 201);
+    expect(response.body.data.user.email).toBe(userData.email);
+  });
+});
+```
+
+#### 미들웨어 테스트
+```typescript
+describe('Auth Middleware', () => {
+  it('should allow access with valid token', async () => {
+    const response = await request(app)
+      .get('/test-auth')
+      .set('Authorization', `Bearer ${validToken}`);
+
+    expectSuccessResponse(response);
+  });
+});
+```
+
+### 테스트 헬퍼 함수
+
+#### 공통 헬퍼 (tests/helpers/testHelpers.ts)
+```typescript
+export async function createTestUser(userData = testUsers.user1) {
+  const hashedPassword = await bcrypt.hash(userData.password, 10);
+  
+  const user = await prisma.user.create({
+    data: {
+      email: userData.email,
+      username: userData.username,
+      password: hashedPassword,
+    }
+  });
+
+  const token = jwt.sign(
+    { userId: user.id, email: user.email },
+    process.env.JWT_SECRET!
+  );
+
+  return { user, token };
+}
+
+export function expectSuccessResponse(response: any, statusCode = 200) {
+  expect(response.status).toBe(statusCode);
+  expect(response.body).toHaveProperty('success', true);
+  expect(response.body).toHaveProperty('data');
+}
+```
+
+### 테스트 커버리지
+
+현재 구현된 테스트:
+
+#### API 엔드포인트 테스트
+- ✅ **인증 API** (auth.test.ts)
+  - 회원가입, 로그인, 토큰 검증
+  - 유효성 검사, 에러 처리
+- ✅ **게시글 API** (posts.test.ts)
+  - CRUD 작업, 권한 검사
+  - 페이지네이션, 검색
+- ✅ **도서 API** (books.test.ts)
+  - 검색, 조회, 인기 도서
+  - ISBN 유효성 검사
+- ✅ **사용자 API** (users.test.ts)
+  - 프로필 조회, 팔로우 시스템
+  - 사용자 통계
+
+#### 미들웨어 테스트
+- ✅ **인증 미들웨어** (middleware.test.ts)
+  - JWT 토큰 검증
+  - 에러 핸들링
+  - 보안 헤더
+
+#### 유틸리티 테스트
+- ✅ **페이지네이션** (utils.test.ts)
+  - 파라미터 파싱
+  - 메타데이터 생성
+- ✅ **유효성 검사** (utils.test.ts)
+  - Joi 스키마 검증
+  - 에러 메시지 처리
+
+### 테스트 베스트 프랙티스
+
+1. **테스트 격리**: 각 테스트는 독립적으로 실행되어야 함
+2. **데이터 정리**: afterEach에서 테스트 데이터 정리
+3. **Mock 활용**: 외부 API 호출 시 Mock 사용
+4. **에러 케이스**: 성공 케이스뿐만 아니라 실패 케이스도 테스트
+5. **의미있는 테스트명**: 테스트가 무엇을 검증하는지 명확히 표현
 
 ---
 

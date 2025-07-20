@@ -1,13 +1,60 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    
+    <!-- PWA 메타데이터 -->
+    <title>ReadZone - 독서 기록 플랫폼</title>
+    <meta name="description" content="책을 읽고, 기록하고, 공유하는 모던한 독서 플랫폼" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="background-color" content="#ffffff" />
+    
+    <!-- PWA 매니페스트 -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- iOS 지원 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ReadZone" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    
+    <!-- Windows 타일 -->
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    
+    <!-- 오픈 그래프 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ReadZone - 독서 기록 플랫폼" />
+    <meta property="og:description" content="책을 읽고, 기록하고, 공유하는 모던한 독서 플랫폼" />
+    <meta property="og:image" content="/icons/icon-512x512.png" />
+    <meta property="og:url" content="/" />
+    
+    <!-- Twitter 카드 -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ReadZone - 독서 기록 플랫폼" />
+    <meta name="twitter:description" content="책을 읽고, 기록하고, 공유하는 모던한 독서 플랫폼" />
+    <meta name="twitter:image" content="/icons/icon-512x512.png" />
+    
+    <!-- 추가 아이콘 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+    
+    <!-- 프리로드 최적화 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA 설치 안내 -->
+    <noscript>
+      <div style="text-align: center; padding: 2rem; background: #f3f4f6;">
+        <h1>ReadZone</h1>
+        <p>이 앱을 사용하려면 JavaScript를 활성화해주세요.</p>
+      </div>
+    </noscript>
   </body>
 </html>

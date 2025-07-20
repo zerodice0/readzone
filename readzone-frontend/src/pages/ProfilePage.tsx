@@ -1,7 +1,8 @@
 import React from 'react';
 import { useAuthStore } from '../stores/authStore';
-import { User, Calendar, BookOpen, Edit } from 'lucide-react';
+import { User, Calendar, BookOpen, Edit, Smartphone } from 'lucide-react';
 import Button from '../components/ui/Button';
+import PWAStatus from '../components/pwa/PWAStatus';
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuthStore();
@@ -100,6 +101,19 @@ const ProfilePage: React.FC = () => {
                 <p className="text-2xl font-bold text-gray-900">0명</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* PWA 상태 */}
+        <div className="bg-white shadow rounded-lg mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 flex items-center">
+              <Smartphone className="w-5 h-5 mr-2 text-blue-600" />
+              앱 설정
+            </h3>
+          </div>
+          <div className="p-6">
+            <PWAStatus />
           </div>
         </div>
 

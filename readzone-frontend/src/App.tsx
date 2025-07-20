@@ -26,6 +26,7 @@ import Layout from './components/common/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import PerformanceMonitor from './components/dev/PerformanceMonitor';
+import PWAInstallPrompt from './components/pwa/PWAInstallPrompt';
 
 function App() {
   const { isAuthenticated, token, refreshUser, isLoading } = useAuthStore();
@@ -104,6 +105,9 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
+      
+      {/* PWA Components */}
+      <PWAInstallPrompt />
       
       {/* Performance Monitor (development only) */}
       <PerformanceMonitor />
