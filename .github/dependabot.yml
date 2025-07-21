@@ -1,0 +1,87 @@
+version: 2
+updates:
+  # Backend dependencies
+  - package-ecosystem: "npm"
+    directory: "/readzone-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "02:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "readzone-team"
+    labels:
+      - "dependencies"
+      - "backend"
+    commit-message:
+      prefix: "chore(backend)"
+      include: "scope"
+    ignore:
+      # Ignore major version updates for stability
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Frontend dependencies
+  - package-ecosystem: "npm"
+    directory: "/readzone-frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday" 
+      time: "02:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "readzone-team"
+    labels:
+      - "dependencies"
+      - "frontend"
+    commit-message:
+      prefix: "chore(frontend)"
+      include: "scope"
+    ignore:
+      # Ignore major version updates for stability
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/readzone-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    reviewers:
+      - "readzone-team"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: "docker"
+    directory: "/readzone-frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    reviewers:
+      - "readzone-team"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(docker)"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    reviewers:
+      - "readzone-team"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(actions)"

@@ -25,8 +25,8 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white shadow-sm border-b w-full">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
@@ -77,7 +77,7 @@ const Header: React.FC = () => {
                   className="text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-1"
                 >
                   <User className="h-4 w-4" />
-                  <span>{user?.username}</span>
+                  <span>{user?.nickname || user?.username}</span>
                 </Link>
                 <Button
                   variant="outline"
@@ -172,7 +172,7 @@ const Header: React.FC = () => {
                     onClick={closeMobileMenu}
                   >
                     <User className="h-4 w-4" />
-                    <span>{user?.username}</span>
+                    <span>{user?.nickname || user?.username}</span>
                   </Link>
                   <button
                     onClick={handleLogout}

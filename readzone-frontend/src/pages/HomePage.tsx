@@ -74,7 +74,7 @@ const HomePage: React.FC = () => {
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* 헤더 */}
           <div className="mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">ReadZone 피드</h1>
@@ -155,7 +155,7 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
           <div className="text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
               독서의 새로운 경험
@@ -195,7 +195,7 @@ const HomePage: React.FC = () => {
 
       {/* Features Section */}
       <div className="py-16 sm:py-20 lg:py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
               왜 ReadZone을 선택해야 할까요?
@@ -259,7 +259,7 @@ const HomePage: React.FC = () => {
 
       {/* CTA Section */}
       <div className="bg-blue-600 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             오늘부터 시작해보세요
           </h2>

@@ -1,0 +1,51 @@
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Create non-root user for development
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S readzone -u 1001
+
+# Install development dependencies
+RUN apk add --no-cache \
+    git \
+    python3 \
+    make \
+    g++
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install all dependencies (including dev)
+RUN npm install
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Change ownership of app directory
+RUN chown -R readzone:nodejs /app
+
+# Switch to non-root user
+USER readzone
+
+# Copy source code (this will be overridden by volume mount)
+COPY --chown=readzone:nodejs . .
+
+# Expose ports
+EXPOSE 3001 9229
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "const http = require('http'); \
+               const options = { host: 'localhost', port: 3001, path: '/api/health', timeout: 2000 }; \
+               const request = http.request(options, (res) => { \
+                 if (res.statusCode === 200) process.exit(0); \
+                 else process.exit(1); \
+               }); \
+               request.on('error', () => process.exit(1)); \
+               request.end();"
+
+# Start development server with debugging
+CMD ["npm", "run", "dev"]

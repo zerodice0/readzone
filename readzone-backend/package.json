@@ -13,6 +13,9 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
+    "security:audit": "npm audit --audit-level moderate",
+    "security:check": "npm run security:audit && npm run security:deps",
+    "security:deps": "npx better-npm-audit audit",
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
     "db:studio": "npx prisma studio",
@@ -43,6 +46,7 @@
     "helmet": "^7.1.0",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
+    "prom-client": "^15.1.0",
     "winston": "^3.11.0"
   },
   "devDependencies": {

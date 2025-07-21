@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # Development Database
+  database:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: readzone_dev
+      POSTGRES_USER: readzone
+      POSTGRES_PASSWORD: readzone123
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - readzone-dev-network
+
+  # Development Redis
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - readzone-dev-network
+
+  # Backend Development (with hot reload)
+  backend-dev:
+    build:
+      context: ./readzone-backend
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://readzone:readzone123@database:5432/readzone_dev?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-jwt-secret-key
+      JWT_EXPIRES_IN: 7d
+      KAKAO_API_KEY: ${KAKAO_API_KEY}
+      CORS_ORIGIN: http://localhost:5173
+    volumes:
+      - ./readzone-backend:/app
+      - /app/node_modules
+      - ./readzone-backend/uploads:/app/uploads
+    ports:
+      - "3001:3001"
+      - "9229:9229" # Debug port
+    depends_on:
+      - database
+      - redis
+    networks:
+      - readzone-dev-network
+    command: npm run dev
+
+  # Frontend Development (with hot reload)
+  frontend-dev:
+    build:
+      context: ./readzone-frontend
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:3001/api
+      VITE_VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+    volumes:
+      - ./readzone-frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend-dev
+    networks:
+      - readzone-dev-network
+    command: npm run dev
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+networks:
+  readzone-dev-network:
+    driver: bridge

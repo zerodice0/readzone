@@ -1,0 +1,40 @@
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Create non-root user for development
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S readzone -u 1001
+
+# Install development dependencies
+RUN apk add --no-cache \
+    git \
+    python3 \
+    make \
+    g++
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm install
+
+# Change ownership of app directory
+RUN chown -R readzone:nodejs /app
+
+# Switch to non-root user
+USER readzone
+
+# Copy source code (this will be overridden by volume mount)
+COPY --chown=readzone:nodejs . .
+
+# Expose port for Vite dev server
+EXPOSE 5173
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:5173/ || exit 1
+
+# Start development server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

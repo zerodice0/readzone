@@ -1,0 +1,84 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert.rules"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ReadZone Backend
+  - job_name: 'readzone-backend'
+    static_configs:
+      - targets: ['backend:3001']
+    metrics_path: '/api/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Node Exporter - System metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 10s
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 10s
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 10s
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 10s
+
+  # Nginx metrics (if nginx-prometheus-exporter is used)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 10s
+
+  # Blackbox Exporter - External monitoring
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://frontend:8080/health
+        - http://backend:3001/api/health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Application-specific metrics
+  - job_name: 'readzone-business-metrics'
+    static_configs:
+      - targets: ['backend:3001']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: '(user_registrations_total|posts_created_total|books_searched_total|comments_created_total|likes_given_total|active_user_sessions|pwa_installs_total|push_notifications_sent_total)'
+        action: keep

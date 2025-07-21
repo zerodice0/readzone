@@ -13,12 +13,21 @@
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-gray-50 text-gray-900;
     margin: 0;
     padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -216,6 +225,34 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Responsive container utilities */
+  .container-responsive {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-sm {
+    @apply w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-xs {
+    @apply w-full max-w-2xl mx-auto px-4 sm:px-6;
+  }
+
+  /* Full width utilities */
+  .full-width {
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+  }
+
+  /* Safe area utilities for mobile */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .gradient-mask-b-0 {

@@ -40,7 +40,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen w-full flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -48,7 +48,7 @@ function App() {
 
   // Page loading fallback component
   const PageLoadingFallback = () => (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen w-full flex items-center justify-center">
       <LoadingSpinner size="lg" />
       <span className="ml-3 text-gray-600">페이지를 불러오는 중...</span>
     </div>
