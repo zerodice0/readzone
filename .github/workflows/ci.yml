@@ -295,7 +295,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build backend Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./readzone-backend
           file: ./readzone-backend/Dockerfile
@@ -305,7 +305,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build frontend Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./readzone-frontend
           file: ./readzone-frontend/Dockerfile
