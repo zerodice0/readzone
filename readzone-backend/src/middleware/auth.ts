@@ -28,7 +28,10 @@ export const authenticateToken = async (
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
+    console.log('Auth middleware - URL:', req.url, 'Auth header:', authHeader ? 'Present' : 'Missing');
+
     if (!token) {
+      console.log('Auth middleware - No token found');
       throw createError(401, 'AUTH_001', '인증 토큰이 필요합니다.');
     }
 

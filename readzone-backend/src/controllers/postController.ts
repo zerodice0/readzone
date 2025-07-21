@@ -49,7 +49,7 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true,
           },
         },
@@ -92,15 +92,27 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
 export const getPosts = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, skip } = parsePaginationParams(req.query);
   const { userId, bookId, tags } = req.query;
+  const currentUserId = (req as AuthenticatedRequest).user?.id;
 
   // 필터 조건 구성
   const where: any = {
-    isPublic: true,
     isDeleted: false,
   };
 
+  // userId가 지정된 경우
   if (userId) {
     where.userId = userId as string;
+    
+    // 자신의 게시글을 조회하는 경우는 비공개 게시글도 포함
+    if (currentUserId && currentUserId === userId) {
+      // 자신의 모든 게시글 (공개/비공개 모두)
+    } else {
+      // 다른 사용자의 게시글은 공개 게시글만
+      where.isPublic = true;
+    }
+  } else {
+    // 전체 게시글 조회 시에는 공개 게시글만
+    where.isPublic = true;
   }
 
   if (bookId) {
@@ -114,6 +126,9 @@ export const getPosts = asyncHandler(async (req: Request, res: Response) => {
     };
   }
 
+  console.log('PostController: getPosts - where condition:', JSON.stringify(where, null, 2));
+  console.log('PostController: getPosts - currentUserId:', currentUserId);
+
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
       where,
@@ -122,7 +137,7 @@ export const getPosts = asyncHandler(async (req: Request, res: Response) => {
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true,
           },
         },
@@ -150,6 +165,8 @@ export const getPosts = asyncHandler(async (req: Request, res: Response) => {
     }),
     prisma.post.count({ where }),
   ]);
+
+  console.log('PostController: getPosts - found posts:', posts.length, 'total:', total);
 
   return res.json({
     success: true,
@@ -193,7 +210,7 @@ export const getPostById = asyncHandler(async (req: Request, res: Response) => {
         select: {
           id: true,
           username: true,
-          displayName: true,
+          nickname: true,
           avatar: true,
         },
       },
@@ -304,7 +321,7 @@ export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true,
           },
         },

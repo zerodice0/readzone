@@ -5,8 +5,8 @@ import { authAPI } from '../services/api';
 interface User {
   id: string;
   email: string;
-  username: string;
-  displayName: string | null;
+  username: string; // 아이디
+  nickname: string; // 닉네임
   bio: string | null;
   avatar: string | null;
   isPublic: boolean;
@@ -25,8 +25,8 @@ interface AuthState {
 }
 
 interface AuthActions {
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (email: string, username: string, nickname: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   clearError: () => void;
@@ -46,12 +46,14 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
 
       // Actions
-      login: async (email: string, password: string) => {
+      login: async (username: string, password: string) => {
         try {
           set({ isLoading: true, error: null });
           
-          const response = await authAPI.login({ email, password });
+          const response = await authAPI.login({ username, password });
           const { user, token } = response.data;
+          
+          console.log('Login successful:', { user, token: token ? '***' : null });
           
           set({
             user,
@@ -60,7 +62,15 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: null,
           });
+          
+          // 토큰 저장 확인을 위한 디버그 로그
+          setTimeout(() => {
+            const storage = localStorage.getItem('auth-storage');
+            console.log('Auth storage after login:', storage ? JSON.parse(storage) : null);
+          }, 100);
+          
         } catch (error: any) {
+          console.error('Login error:', error);
           set({
             isLoading: false,
             error: error.response?.data?.error?.message || '로그인에 실패했습니다.',
@@ -69,11 +79,11 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      register: async (email: string, username: string, password: string) => {
+      register: async (email: string, username: string, nickname: string, password: string) => {
         try {
           set({ isLoading: true, error: null });
           
-          const response = await authAPI.register({ email, username, password });
+          const response = await authAPI.register({ email, username, nickname, password });
           const { user, token } = response.data;
           
           set({

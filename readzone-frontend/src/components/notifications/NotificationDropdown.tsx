@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, X, CheckCheck } from 'lucide-react';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { useAuthStore } from '../../stores/authStore';
 import Button from '../ui/Button';
 
 interface NotificationDropdownProps {
@@ -11,6 +12,7 @@ interface NotificationDropdownProps {
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated, token } = useAuthStore();
   const {
     notifications,
     unreadCount,
@@ -36,17 +38,23 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
 
   // 드롭다운 열기 시 알림 목록 로드
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && isAuthenticated && token) {
       fetchNotifications({ limit: 10 });
     }
-  }, [isOpen, fetchNotifications]);
+  }, [isOpen, isAuthenticated, token, fetchNotifications]);
 
   // 주기적으로 읽지 않은 알림 개수 업데이트
   useEffect(() => {
+    if (!isAuthenticated || !token) {
+      console.log('NotificationDropdown: Skipping fetch - not authenticated or no token');
+      return;
+    }
+
+    console.log('NotificationDropdown: Starting notification polling');
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
-  }, [fetchUnreadCount]);
+  }, [isAuthenticated, token, fetchUnreadCount]);
 
   const handleNotificationClick = async (notificationId: string, isRead: boolean) => {
     if (!isRead) {

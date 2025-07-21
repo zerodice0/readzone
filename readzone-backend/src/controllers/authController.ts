@@ -1,31 +1,37 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { prisma } from '@/config/database';
 import { logger } from '@/config/logger';
 import { createError, asyncHandler } from '@/middleware/errorHandler';
 import { validateData, registerSchema, loginSchema, updateProfileSchema } from '@/utils/validation';
 import type { AuthenticatedRequest } from '@/middleware/auth';
 
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '7d';
 
 // JWT 토큰 생성 함수
 const generateToken = (userId: string, email: string): string => {
-  if (!process.env.JWT_SECRET) {
+  const jwtSecret = process.env.JWT_SECRET;
+  
+  if (!jwtSecret) {
     throw new Error('JWT_SECRET is not defined');
   }
   
+  const options: SignOptions = {
+    expiresIn: JWT_EXPIRES_IN as any
+  };
+  
   return jwt.sign(
     { userId, email },
-    process.env.JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    jwtSecret,
+    options
   );
 };
 
 // 회원가입
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const validatedData = validateData(registerSchema, req.body);
-  const { email, username, password } = validatedData;
+  const { email, username, nickname, password } = validatedData;
 
   // 이메일 중복 체크
   const existingUserByEmail = await prisma.user.findUnique({
@@ -36,13 +42,22 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     throw createError(409, 'AUTH_004', '이미 사용 중인 이메일입니다.');
   }
 
-  // 사용자명 중복 체크
+  // 아이디 중복 체크
   const existingUserByUsername = await prisma.user.findUnique({
     where: { username },
   });
 
   if (existingUserByUsername) {
-    throw createError(409, 'AUTH_005', '이미 사용 중인 사용자명입니다.');
+    throw createError(409, 'AUTH_005', '이미 사용 중인 아이디입니다.');
+  }
+
+  // 닉네임 중복 체크
+  const existingUserByNickname = await prisma.user.findFirst({
+    where: { nickname },
+  });
+
+  if (existingUserByNickname) {
+    throw createError(409, 'AUTH_006', '이미 사용 중인 닉네임입니다.');
   }
 
   // 비밀번호 해싱
@@ -54,13 +69,14 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     data: {
       email,
       username,
+      nickname,
       password: hashedPassword,
     },
     select: {
       id: true,
       email: true,
       username: true,
-      displayName: true,
+      nickname: true,
       bio: true,
       avatar: true,
       isPublic: true,
@@ -87,28 +103,25 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 // 로그인
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const validatedData = validateData(loginSchema, req.body);
-  const { email, password } = validatedData;
+  const { username, password } = validatedData;
 
-  // 이메일 또는 사용자명으로 사용자 찾기
+  // 아이디로 사용자 찾기
   const user = await prisma.user.findFirst({
     where: {
-      OR: [
-        { email },
-        { username: email }, // email 필드에 username이 올 수도 있음
-      ],
+      username,
       isActive: true,
     },
   });
 
   if (!user) {
-    throw createError(401, 'AUTH_006', '이메일 또는 비밀번호가 올바르지 않습니다.');
+    throw createError(401, 'AUTH_007', '아이디 또는 비밀번호가 올바르지 않습니다.');
   }
 
   // 비밀번호 확인
   const isValidPassword = await bcrypt.compare(password, user.password);
 
   if (!isValidPassword) {
-    throw createError(401, 'AUTH_006', '이메일 또는 비밀번호가 올바르지 않습니다.');
+    throw createError(401, 'AUTH_007', '아이디 또는 비밀번호가 올바르지 않습니다.');
   }
 
   // 마지막 로그인 시간 업데이트
@@ -158,7 +171,7 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
       id: true,
       email: true,
       username: true,
-      displayName: true,
+      nickname: true,
       bio: true,
       avatar: true,
       isPublic: true,
@@ -190,7 +203,7 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
       id: true,
       email: true,
       username: true,
-      displayName: true,
+      nickname: true,
       bio: true,
       avatar: true,
       isPublic: true,

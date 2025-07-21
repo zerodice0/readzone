@@ -7,10 +7,15 @@ export const registerSchema = Joi.object({
     'any.required': '이메일은 필수 항목입니다.',
   }),
   username: Joi.string().alphanum().min(3).max(30).required().messages({
-    'string.alphanum': '사용자명은 영문자와 숫자만 사용할 수 있습니다.',
-    'string.min': '사용자명은 최소 3자 이상이어야 합니다.',
-    'string.max': '사용자명은 최대 30자까지 가능합니다.',
-    'any.required': '사용자명은 필수 항목입니다.',
+    'string.alphanum': '아이디는 영문자와 숫자만 사용할 수 있습니다.',
+    'string.min': '아이디는 최소 3자 이상이어야 합니다.',
+    'string.max': '아이디는 최대 30자까지 가능합니다.',
+    'any.required': '아이디는 필수 항목입니다.',
+  }),
+  nickname: Joi.string().min(2).max(20).required().messages({
+    'string.min': '닉네임은 최소 2자 이상이어야 합니다.',
+    'string.max': '닉네임은 최대 20자까지 가능합니다.',
+    'any.required': '닉네임은 필수 항목입니다.',
   }),
   password: Joi.string().min(8).required().messages({
     'string.min': '비밀번호는 최소 8자 이상이어야 합니다.',
@@ -19,8 +24,8 @@ export const registerSchema = Joi.object({
 });
 
 export const loginSchema = Joi.object({
-  email: Joi.string().required().messages({
-    'any.required': '이메일 또는 사용자명을 입력해주세요.',
+  username: Joi.string().required().messages({
+    'any.required': '아이디를 입력해주세요.',
   }),
   password: Joi.string().required().messages({
     'any.required': '비밀번호를 입력해주세요.',
@@ -29,7 +34,10 @@ export const loginSchema = Joi.object({
 
 // Profile validation schema
 export const updateProfileSchema = Joi.object({
-  displayName: Joi.string().max(100).optional(),
+  nickname: Joi.string().min(2).max(20).optional().messages({
+    'string.min': '닉네임은 최소 2자 이상이어야 합니다.',
+    'string.max': '닉네임은 최대 20자까지 가능합니다.',
+  }),
   bio: Joi.string().max(500).optional(),
   avatar: Joi.string().uri().optional(),
   isPublic: Joi.boolean().optional(),
@@ -113,9 +121,15 @@ export const paginationSchema = Joi.object({
 export const validateData = (schema: Joi.Schema, data: any) => {
   const { error, value } = schema.validate(data, { abortEarly: false });
   
-  if (error) {
-    const messages = error.details.map(detail => detail.message);
-    throw new Error(messages.join(', '));
+  if (error && error.details && error.details.length > 0) {
+    // 첫 번째 에러만 반환하여 명확한 메시지 제공
+    const firstError = error.details[0];
+    if (firstError) {
+      const validationError = new Error(firstError.message);
+      (validationError as any).field = firstError.path?.[0]; // 에러 필드 정보 추가
+      (validationError as any).type = 'VALIDATION_ERROR';
+      throw validationError;
+    }
   }
   
   return value;

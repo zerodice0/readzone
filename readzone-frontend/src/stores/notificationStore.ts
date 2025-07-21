@@ -64,10 +64,27 @@ export const useNotificationStore = create<NotificationStore>()(
 
     fetchUnreadCount: async () => {
       try {
+        // 토큰이 있는지 확인
+        const authStorage = localStorage.getItem('auth-storage');
+        if (!authStorage) {
+          console.log('NotificationStore: No auth storage found, skipping fetchUnreadCount');
+          return;
+        }
+        
+        const { state } = JSON.parse(authStorage);
+        if (!state?.token) {
+          console.log('NotificationStore: No token found, skipping fetchUnreadCount');
+          return;
+        }
+
         const count = await notificationService.getUnreadCount();
         set({ unreadCount: count });
       } catch (error: any) {
         console.error('읽지 않은 알림 개수 조회 오류:', error);
+        // 401 에러일 경우 unreadCount를 0으로 리셋
+        if (error.response?.status === 401) {
+          set({ unreadCount: 0 });
+        }
       }
     },
 

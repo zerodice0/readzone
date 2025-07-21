@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import Button from '../components/ui/Button';
@@ -7,14 +7,22 @@ import { BookOpen, Mail, Lock } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login } = useAuthStore();
+  const { login, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
+
+  // 이미 로그인된 사용자는 대시보드로 리다이렉트
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('LoginPage: User already authenticated, redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,9 +30,13 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      console.log('LoginPage: Starting login process');
+      await login(formData.username, formData.password);
+      console.log('LoginPage: Login successful, navigating to dashboard');
       navigate('/dashboard');
+      console.log('LoginPage: Navigate called');
     } catch (err: any) {
+      console.error('LoginPage: Login failed:', err);
       setError(err.message || '로그인에 실패했습니다.');
     } finally {
       setIsLoading(false);
@@ -57,22 +69,25 @@ const LoginPage: React.FC = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                이메일
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                아이디
               </label>
+              <p className="text-xs text-gray-500 mt-1">
+                회원가입 시 입력한 아이디로 로그인하세요
+              </p>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
                   required
-                  value={formData.email}
+                  value={formData.username}
                   onChange={handleChange}
-                  placeholder="이메일을 입력하세요"
+                  placeholder="아이디를 입력하세요"
                   className="pl-10"
                 />
               </div>

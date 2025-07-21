@@ -64,7 +64,7 @@ export const getNotifications = asyncHandler(async (req: AuthenticatedRequest, r
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true,
           },
         },
@@ -115,7 +115,7 @@ export const markAsRead = asyncHandler(async (req: AuthenticatedRequest, res: Re
         select: {
           id: true,
           username: true,
-          displayName: true,
+          nickname: true,
           avatar: true,
         },
       },
@@ -211,19 +211,19 @@ export const createLikeNotification = async (
 
     const liker = await prisma.user.findUnique({
       where: { id: likerId },
-      select: { username: true, displayName: true },
+      select: { username: true, nickname: true },
     });
 
     if (!liker) return null;
 
-    const displayName = liker.displayName || liker.username;
+    const nickname = liker.nickname || liker.username;
     
     return await createNotification(
       post.userId,
       likerId,
       'like',
       '게시글에 좋아요가 달렸습니다',
-      `${displayName}님이 "${post.book.title}" 독서 기록에 좋아요를 눌렀습니다.`,
+      `${nickname}님이 "${post.book.title}" 독서 기록에 좋아요를 눌렀습니다.`,
       postId
     );
   } catch (error) {
@@ -252,12 +252,12 @@ export const createCommentNotification = async (
 
     const commenter = await prisma.user.findUnique({
       where: { id: commenterId },
-      select: { username: true, displayName: true },
+      select: { username: true, nickname: true },
     });
 
     if (!commenter) return null;
 
-    const displayName = commenter.displayName || commenter.username;
+    const nickname = commenter.nickname || commenter.username;
     const shortContent = content.length > 50 ? content.substring(0, 50) + '...' : content;
 
     // 대댓글인 경우, 원댓글 작성자에게도 알림
@@ -273,7 +273,7 @@ export const createCommentNotification = async (
           commenterId,
           'comment',
           '댓글에 답글이 달렸습니다',
-          `${displayName}님이 회원님의 댓글에 답글을 달았습니다: "${shortContent}"`,
+          `${nickname}님이 회원님의 댓글에 답글을 달았습니다: "${shortContent}"`,
           postId
         );
       }
@@ -285,7 +285,7 @@ export const createCommentNotification = async (
       commenterId,
       'comment',
       '게시글에 댓글이 달렸습니다',
-      `${displayName}님이 "${post.book.title}" 독서 기록에 댓글을 달았습니다: "${shortContent}"`,
+      `${nickname}님이 "${post.book.title}" 독서 기록에 댓글을 달았습니다: "${shortContent}"`,
       postId
     );
   } catch (error) {
@@ -302,19 +302,19 @@ export const createFollowNotification = async (
   try {
     const follower = await prisma.user.findUnique({
       where: { id: followerId },
-      select: { username: true, displayName: true },
+      select: { username: true, nickname: true },
     });
 
     if (!follower) return null;
 
-    const displayName = follower.displayName || follower.username;
+    const nickname = follower.nickname || follower.username;
 
     return await createNotification(
       followingId,
       followerId,
       'follow',
       '새로운 팔로워가 생겼습니다',
-      `${displayName}님이 회원님을 팔로우하기 시작했습니다.`,
+      `${nickname}님이 회원님을 팔로우하기 시작했습니다.`,
       followerId
     );
   } catch (error) {

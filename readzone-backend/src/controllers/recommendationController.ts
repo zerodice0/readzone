@@ -74,7 +74,7 @@ export const createRecommendation = async (req: AuthenticatedRequest, res: Respo
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true
           }
         },
@@ -137,7 +137,7 @@ export const getReceivedRecommendations = async (req: AuthenticatedRequest, res:
             select: {
               id: true,
               username: true,
-              displayName: true,
+              nickname: true,
               avatar: true
             }
           },
@@ -195,7 +195,7 @@ export const getSentRecommendations = async (req: AuthenticatedRequest, res: Res
             select: {
               id: true,
               username: true,
-              displayName: true,
+              nickname: true,
               avatar: true
             }
           },
@@ -330,7 +330,7 @@ export const addRecommendationFeedback = async (req: AuthenticatedRequest, res: 
           select: {
             id: true,
             username: true,
-            displayName: true
+            nickname: true
           }
         },
         book: {

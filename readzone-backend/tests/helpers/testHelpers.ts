@@ -10,13 +10,13 @@ export const testUsers = {
     email: 'test1@example.com',
     username: 'testuser1',
     password: 'password123',
-    displayName: 'Test User 1'
+    nickname: 'Test User 1'
   },
   user2: {
     email: 'test2@example.com',
     username: 'testuser2',
     password: 'password123',
-    displayName: 'Test User 2'
+    nickname: 'Test User 2'
   }
 };
 
@@ -53,14 +53,14 @@ export async function createTestUser(userData = testUsers.user1) {
       email: userData.email,
       username: userData.username,
       password: hashedPassword,
-      displayName: userData.displayName
+      nickname: userData.nickname
     }
   });
 
   const token = jwt.sign(
     { userId: user.id, email: user.email },
     process.env.JWT_SECRET!,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+    { expiresIn: (process.env.JWT_EXPIRES_IN || '1h') as any }
   );
 
   return { user, token };
@@ -97,13 +97,13 @@ export async function createTestPost(userId: string, bookId: string, content = '
 }
 
 // Create test reading goal
-export async function createTestReadingGoal(userId: string, year = 2024, targetCount = 12) {
+export async function createTestReadingGoal(userId: string, year = 2024, booksTarget = 12) {
   return await prisma.readingGoal.create({
     data: {
       userId,
       year,
-      targetCount,
-      currentCount: 0
+      booksTarget,
+      booksRead: 0
     }
   });
 }

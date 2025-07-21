@@ -13,9 +13,9 @@ datasource db {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  username      String    @unique
+  username      String    @unique // 아이디 (영문+숫자)
   password      String
-  displayName   String?   @map("display_name")
+  nickname      String    @map("display_name") // 닉네임 (한글 포함 가능)
   bio           String?
   avatar        String?
   isPublic      Boolean   @default(true) @map("is_public")

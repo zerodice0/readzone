@@ -120,7 +120,7 @@ export const getBookById = asyncHandler(async (req: Request, res: Response) => {
             select: {
               id: true,
               username: true,
-              displayName: true,
+              nickname: true,
               avatar: true,
             },
           },
@@ -353,7 +353,7 @@ export const getBookPosts = asyncHandler(async (req: Request, res: Response) => 
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true,
           },
         },

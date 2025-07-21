@@ -49,7 +49,7 @@ export const searchAll = asyncHandler(async (req: Request, res: Response) => {
             select: {
               id: true,
               username: true,
-              displayName: true,
+              nickname: true,
               avatar: true,
             },
           },
@@ -124,7 +124,7 @@ export const searchAll = asyncHandler(async (req: Request, res: Response) => {
             {
               OR: [
                 { username: { contains: searchQuery, mode: 'insensitive' } },
-                { displayName: { contains: searchQuery, mode: 'insensitive' } },
+                { nickname: { contains: searchQuery, mode: 'insensitive' } },
                 { bio: { contains: searchQuery, mode: 'insensitive' } }
               ]
             },
@@ -134,7 +134,7 @@ export const searchAll = asyncHandler(async (req: Request, res: Response) => {
         select: {
           id: true,
           username: true,
-          displayName: true,
+          nickname: true,
           bio: true,
           avatar: true,
           isPublic: true,
@@ -171,7 +171,7 @@ export const searchAll = asyncHandler(async (req: Request, res: Response) => {
             {
               OR: [
                 { username: { contains: searchQuery, mode: 'insensitive' } },
-                { displayName: { contains: searchQuery, mode: 'insensitive' } },
+                { nickname: { contains: searchQuery, mode: 'insensitive' } },
                 { bio: { contains: searchQuery, mode: 'insensitive' } }
               ]
             },
@@ -274,7 +274,7 @@ export const getPostsByTag = asyncHandler(async (req: Request, res: Response) =>
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true,
           },
         },

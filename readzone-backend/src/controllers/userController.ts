@@ -23,7 +23,7 @@ export const getUserProfile = asyncHandler(async (req: Request, res: Response) =
     select: {
       id: true,
       username: true,
-      displayName: true,
+      nickname: true,
       bio: true,
       avatar: true,
       isPublic: true,
@@ -66,7 +66,7 @@ export const getUserProfile = asyncHandler(async (req: Request, res: Response) =
     const limitedUser = {
       id: user.id,
       username: user.username,
-      displayName: user.displayName,
+      nickname: user.nickname,
       avatar: user.avatar,
       isPublic: false,
       isFollowing
@@ -140,7 +140,7 @@ export const getUserPosts = asyncHandler(async (req: Request, res: Response) => 
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true
           }
         },
@@ -210,7 +210,7 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
     throw createError(400, 'VALIDATION_003', '검색어는 최소 2자 이상이어야 합니다.');
   }
 
-  // 사용자 검색 (username, displayName에서 검색)
+  // 사용자 검색 (username, nickname에서 검색)
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where: {
@@ -224,7 +224,7 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
                 },
               },
               {
-                displayName: {
+                nickname: {
                   contains: searchQuery,
                   mode: 'insensitive',
                 },
@@ -240,7 +240,7 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
       select: {
         id: true,
         username: true,
-        displayName: true,
+        nickname: true,
         avatar: true,
         bio: true,
         _count: {
@@ -273,7 +273,7 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
                 },
               },
               {
-                displayName: {
+                nickname: {
                   contains: searchQuery,
                   mode: 'insensitive',
                 },
@@ -453,7 +453,7 @@ export const getFollowers = asyncHandler(async (req: Request, res: Response) => 
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true,
             isPublic: true,
           },
@@ -522,7 +522,7 @@ export const getFollowing = asyncHandler(async (req: Request, res: Response) => 
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true,
             isPublic: true,
           },

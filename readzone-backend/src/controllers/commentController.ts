@@ -37,7 +37,7 @@ export const getComments = asyncHandler(async (req: Request, res: Response) => {
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true
           }
         },
@@ -50,7 +50,7 @@ export const getComments = asyncHandler(async (req: Request, res: Response) => {
               select: {
                 id: true,
                 username: true,
-                displayName: true,
+                nickname: true,
                 avatar: true
               }
             }
@@ -168,7 +168,7 @@ export const createComment = asyncHandler(async (req: AuthenticatedRequest, res:
         select: {
           id: true,
           username: true,
-          displayName: true,
+          nickname: true,
           avatar: true
         }
       },
@@ -181,7 +181,7 @@ export const createComment = asyncHandler(async (req: AuthenticatedRequest, res:
             select: {
               id: true,
               username: true,
-              displayName: true,
+              nickname: true,
               avatar: true
             }
           }
@@ -265,7 +265,7 @@ export const updateComment = asyncHandler(async (req: AuthenticatedRequest, res:
         select: {
           id: true,
           username: true,
-          displayName: true,
+          nickname: true,
           avatar: true
         }
       },
@@ -278,7 +278,7 @@ export const updateComment = asyncHandler(async (req: AuthenticatedRequest, res:
             select: {
               id: true,
               username: true,
-              displayName: true,
+              nickname: true,
               avatar: true
             }
           }

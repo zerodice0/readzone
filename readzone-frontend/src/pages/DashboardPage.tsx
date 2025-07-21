@@ -28,7 +28,11 @@ const DashboardPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('DashboardPage: Loading user posts for user:', user?.id);
+      
       const response = await postService.getPosts({ userId: user?.id, limit: 5 });
+      console.log('DashboardPage: Posts loaded successfully:', response);
+      
       setUserPosts(response.posts);
       
       // 통계 계산
@@ -39,7 +43,7 @@ const DashboardPage: React.FC = () => {
         completedBooks
       }));
     } catch (err) {
-      console.error('사용자 게시글 로드 실패:', err);
+      console.error('DashboardPage: 사용자 게시글 로드 실패:', err);
       setError('게시글을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -89,21 +93,26 @@ const DashboardPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              안녕하세요, {user?.username}님!
-            </h1>
-            <p className="mt-2 text-gray-600">
-              오늘도 새로운 책과 함께 즐거운 독서 시간을 보내세요.
-            </p>
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                안녕하세요, {user?.nickname || user?.username}님!
+              </h1>
+              <p className="mt-2 text-gray-600 text-sm sm:text-base">
+                오늘도 새로운 책과 함께 즐거운 독서 시간을 보내세요.
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <Link to="/search" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto">
+                  <Plus className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">독서 기록 작성</span>
+                  <span className="sm:hidden">기록 작성</span>
+                </Button>
+              </Link>
+            </div>
           </div>
-          <Link to="/search">
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              독서 기록 작성
-            </Button>
-          </Link>
         </div>
 
         {/* Stats Cards */}

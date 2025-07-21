@@ -41,7 +41,7 @@ export const getGroups = async (req: AuthenticatedRequest, res: Response): Promi
             select: {
               id: true,
               username: true,
-              displayName: true,
+              nickname: true,
               avatar: true
             }
           },
@@ -52,7 +52,7 @@ export const getGroups = async (req: AuthenticatedRequest, res: Response): Promi
                 select: {
                   id: true,
                   username: true,
-                  displayName: true,
+                  nickname: true,
                   avatar: true
                 }
               }
@@ -118,7 +118,7 @@ export const getGroup = async (req: AuthenticatedRequest, res: Response): Promis
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true
           }
         },
@@ -129,7 +129,7 @@ export const getGroup = async (req: AuthenticatedRequest, res: Response): Promis
               select: {
                 id: true,
                 username: true,
-                displayName: true,
+                nickname: true,
                 avatar: true
               }
             }
@@ -142,7 +142,7 @@ export const getGroup = async (req: AuthenticatedRequest, res: Response): Promis
               select: {
                 id: true,
                 username: true,
-                displayName: true,
+                nickname: true,
                 avatar: true
               }
             },
@@ -227,7 +227,7 @@ export const createGroup = async (req: AuthenticatedRequest, res: Response): Pro
           select: {
             id: true,
             username: true,
-            displayName: true,
+            nickname: true,
             avatar: true
           }
         }

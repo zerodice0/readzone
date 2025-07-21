@@ -21,10 +21,15 @@ api.interceptors.request.use(
         const { state } = JSON.parse(authStorage);
         if (state?.token) {
           config.headers.Authorization = `Bearer ${state.token}`;
+          console.log('Adding auth token to request:', config.url);
+        } else {
+          console.log('No token found in auth storage for request:', config.url);
         }
       } catch (error) {
         console.error('Error parsing auth storage:', error);
       }
+    } else {
+      console.log('No auth storage found for request:', config.url);
     }
     return config;
   },
@@ -42,9 +47,15 @@ api.interceptors.response.use(
     if (error.response) {
       // Handle 401 Unauthorized
       if (error.response.status === 401) {
+        console.log('401 Unauthorized - clearing auth and redirecting to login');
+        
         // Clear auth storage and redirect to login
         localStorage.removeItem('auth-storage');
-        window.location.href = '/login';
+        
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
       
       // Handle 429 Too Many Requests
@@ -70,10 +81,10 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  login: (data: { email: string; password: string }) =>
+  login: (data: { username: string; password: string }) =>
     api.post('/auth/login', data),
   
-  register: (data: { email: string; username: string; password: string }) =>
+  register: (data: { email: string; username: string; nickname: string; password: string }) =>
     api.post('/auth/register', data),
   
   getMe: () => api.get('/auth/me'),
