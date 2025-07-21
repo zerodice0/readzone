@@ -24,7 +24,8 @@
       "Bash(npx prisma:*)",
       "Bash(curl:*)",
       "Bash(npm start)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "mcp__sequential-thinking__sequentialthinking"
     ],
     "deny": []
   }
