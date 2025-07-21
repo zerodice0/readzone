@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: readzone_dev
-      POSTGRES_USER: readzone
-      POSTGRES_PASSWORD: readzone123
+      POSTGRES_DB: ${DATABASE_NAME:-readzone_dev}
+      POSTGRES_USER: ${DATABASE_USER:-readzone}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-readzone123}
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     ports:
@@ -37,9 +37,9 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3001
-      DATABASE_URL: postgresql://readzone:readzone123@database:5432/readzone_dev?schema=public
+      DATABASE_URL: postgresql://${DATABASE_USER:-readzone}:${DATABASE_PASSWORD:-readzone123}@database:5432/${DATABASE_NAME:-readzone_dev}?schema=public
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: dev-jwt-secret-key
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-key}
       JWT_EXPIRES_IN: 7d
       KAKAO_API_KEY: ${KAKAO_API_KEY}
       CORS_ORIGIN: http://localhost:5173

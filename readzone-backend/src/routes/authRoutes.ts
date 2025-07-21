@@ -6,6 +6,8 @@ import {
   getProfile,
   updateProfile,
   changePassword,
+  uploadAvatar,
+  deleteAvatar,
 } from '@/controllers/authController';
 import { authenticateToken } from '@/middleware/auth';
 
@@ -20,5 +22,7 @@ router.post('/logout', authenticateToken, logout);
 router.get('/me', authenticateToken, getProfile);
 router.put('/profile', authenticateToken, updateProfile);
 router.post('/change-password', authenticateToken, changePassword);
+router.post('/upload-avatar', authenticateToken, ...uploadAvatar);
+router.delete('/avatar', authenticateToken, deleteAvatar);
 
 export default router;

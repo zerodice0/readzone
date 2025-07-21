@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DATABASE_NAME:-readzone}
-      POSTGRES_USER: ${DATABASE_USER:-readzone}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-readzone123}
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./readzone-backend/prisma/migrations:/docker-entrypoint-initdb.d/migrations:ro
@@ -17,7 +17,7 @@ services:
     networks:
       - readzone-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-readzone} -d ${DATABASE_NAME:-readzone}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -27,7 +27,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     ports:
@@ -50,9 +50,9 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3001
-      DATABASE_URL: postgresql://${DATABASE_USER:-readzone}:${DATABASE_PASSWORD:-readzone123}@database:5432/${DATABASE_NAME:-readzone}?schema=public
-      REDIS_URL: redis://:${REDIS_PASSWORD:-redis123}@redis:6379
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this}
+      DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       KAKAO_API_KEY: ${KAKAO_API_KEY}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}

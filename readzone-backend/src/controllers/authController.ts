@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
+import multer from 'multer';
+import sharp from 'sharp';
+import path from 'path';
+import fs from 'fs/promises';
 import { prisma } from '@/config/database';
 import { logger } from '@/config/logger';
 import { createError, asyncHandler } from '@/middleware/errorHandler';
@@ -8,6 +12,36 @@ import { validateData, registerSchema, loginSchema, updateProfileSchema } from '
 import type { AuthenticatedRequest } from '@/middleware/auth';
 
 const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '7d';
+
+// 업로드 디렉토리 설정
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'avatars');
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+// 업로드 디렉토리 생성
+const ensureUploadDir = async () => {
+  try {
+    await fs.access(UPLOAD_DIR);
+  } catch {
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+  }
+};
+
+// Multer 설정
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+  },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('지원하지 않는 파일 형식입니다. JPEG, PNG, WebP 파일만 업로드 가능합니다.'));
+    }
+  },
+});
 
 // JWT 토큰 생성 함수
 const generateToken = (userId: string, email: string): string => {
@@ -267,5 +301,142 @@ export const changePassword = asyncHandler(async (req: AuthenticatedRequest, res
   res.json({
     success: true,
     message: '비밀번호가 변경되었습니다.',
+  });
+});/
+/ 아바타 업로드
+export const uploadAvatar = [
+  upload.single('avatar'),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user!.id;
+    const file = req.file;
+
+    if (!file) {
+      throw createError(400, 'FILE_001', '업로드할 파일을 선택해주세요.');
+    }
+
+    try {
+      // 업로드 디렉토리 확인
+      await ensureUploadDir();
+
+      // 파일명 생성 (사용자 ID + 타임스탬프)
+      const fileExtension = path.extname(file.originalname) || '.jpg';
+      const fileName = `${userId}_${Date.now()}${fileExtension}`;
+      const filePath = path.join(UPLOAD_DIR, fileName);
+
+      // 이미지 리사이징 및 최적화
+      await sharp(file.buffer)
+        .resize(200, 200, {
+          fit: 'cover',
+          position: 'center',
+        })
+        .jpeg({ quality: 85 })
+        .toFile(filePath);
+
+      // 기존 아바타 파일 삭제
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { avatar: true },
+      });
+
+      if (currentUser?.avatar) {
+        const oldFilePath = path.join(process.cwd(), currentUser.avatar);
+        try {
+          await fs.unlink(oldFilePath);
+        } catch (error) {
+          // 기존 파일 삭제 실패는 로그만 남기고 계속 진행
+          logger.warn(`기존 아바타 파일 삭제 실패: ${oldFilePath}`);
+        }
+      }
+
+      // 데이터베이스 업데이트
+      const avatarUrl = `/uploads/avatars/${fileName}`;
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { avatar: avatarUrl },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          nickname: true,
+          bio: true,
+          avatar: true,
+          isPublic: true,
+          emailVerified: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      logger.info(`아바타 업로드 완료: ${req.user?.email} - ${fileName}`);
+
+      res.json({
+        success: true,
+        data: updatedUser,
+        message: '아바타가 업로드되었습니다.',
+      });
+    } catch (error) {
+      logger.error('아바타 업로드 실패:', error);
+      
+      if (error instanceof Error) {
+        if (error.message.includes('지원하지 않는 파일 형식')) {
+          throw createError(400, 'FILE_001', error.message);
+        }
+        if (error.message.includes('File too large')) {
+          throw createError(400, 'FILE_002', '파일 크기가 너무 큽니다. 5MB 이하의 파일을 업로드해주세요.');
+        }
+      }
+      
+      throw createError(500, 'FILE_003', '아바타 업로드 중 오류가 발생했습니다.');
+    }
+  })
+];
+
+// 아바타 삭제
+export const deleteAvatar = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.id;
+
+  // 현재 사용자 정보 조회
+  const currentUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { avatar: true },
+  });
+
+  if (!currentUser?.avatar) {
+    throw createError(404, 'RESOURCE_001', '삭제할 아바타가 없습니다.');
+  }
+
+  try {
+    // 파일 삭제
+    const filePath = path.join(process.cwd(), currentUser.avatar);
+    await fs.unlink(filePath);
+  } catch (error) {
+    // 파일 삭제 실패는 로그만 남기고 계속 진행
+    logger.warn(`아바타 파일 삭제 실패: ${currentUser.avatar}`);
+  }
+
+  // 데이터베이스 업데이트
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { avatar: null },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      nickname: true,
+      bio: true,
+      avatar: true,
+      isPublic: true,
+      emailVerified: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  logger.info(`아바타 삭제 완료: ${req.user?.email}`);
+
+  res.json({
+    success: true,
+    data: updatedUser,
+    message: '아바타가 삭제되었습니다.',
   });
 });
