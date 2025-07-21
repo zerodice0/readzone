@@ -13,7 +13,7 @@ export interface Post {
   user: {
     id: string;
     username: string;
-    displayName: string | null;
+    nickname: string | null;
     avatar: string | null;
   };
   book: {

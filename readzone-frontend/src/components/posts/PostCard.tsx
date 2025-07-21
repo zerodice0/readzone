@@ -17,7 +17,7 @@ interface PostCardProps {
     user: {
       id: string;
       username: string;
-      displayName: string | null;
+      nickname: string;
       avatar: string | null;
     };
     book: {
@@ -86,7 +86,7 @@ const PostCard: React.FC<PostCardProps> = ({
               to={`/users/${post.user.id}`}
               className="font-medium text-gray-900 hover:text-blue-600 text-sm sm:text-base truncate block"
             >
-              {post.user.displayName || post.user.username}
+              {post.user.nickname}({post.user.username})
             </Link>
             <p className="text-xs sm:text-sm text-gray-500 truncate">@{post.user.username}</p>
           </div>

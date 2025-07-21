@@ -68,7 +68,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center space-x-2">
                 <span className="font-medium text-sm text-gray-900">
-                  {comment.user.displayName || comment.user.username}
+                  {comment.user.nickname}({comment.user.username})
                 </span>
                 <span className="text-xs text-gray-500">
                   {formatDate(comment.createdAt)}

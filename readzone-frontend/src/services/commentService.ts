@@ -12,7 +12,7 @@ export interface Comment {
   user: {
     id: string;
     username: string;
-    displayName: string | null;
+    nickname: string;
     avatar: string | null;
   };
   replies: Comment[];

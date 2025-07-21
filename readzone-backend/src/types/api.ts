@@ -46,7 +46,7 @@ export interface LoginData {
 }
 
 export interface UpdateProfileData {
-  displayName?: string;
+  nickname?: string;
   bio?: string;
   avatar?: string;
   isPublic?: boolean;

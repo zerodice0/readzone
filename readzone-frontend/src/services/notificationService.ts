@@ -14,7 +14,7 @@ export interface Notification {
   sender?: {
     id: string;
     username: string;
-    displayName: string | null;
+    nickname: string | null;
     avatar: string | null;
   } | null;
 }
