@@ -269,7 +269,7 @@ jobs:
 
       - name: Create security issue (if failures)
         if: needs.dependency-scan.result == 'failure' || needs.sast-scan.result == 'failure' || needs.secret-scan.result == 'failure' || needs.container-scan.result == 'failure'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const title = '🔒 Security Scan Failures Detected';
