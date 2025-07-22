@@ -6,33 +6,33 @@ ReadZone 프로젝트의 기본 인프라를 구축하고, 개발 환경을 설�
 ## 범위
 
 ### 1. 프로젝트 초기화
-- [ ] Next.js 14 프로젝트 생성 (App Router)
-- [ ] TypeScript 설정 (strict mode)
-- [ ] ESLint + Prettier 설정
-- [ ] 기본 폴더 구조 생성
+- [x] Next.js 14 프로젝트 생성 (App Router)
+- [x] TypeScript 설정 (strict mode)
+- [x] ESLint + Prettier 설정
+- [x] 기본 폴더 구조 생성
 
 ### 2. 데이터베이스 설정
-- [ ] Prisma ORM 설정
-- [ ] SQLite 데이터베이스 초기화
-- [ ] 기본 스키마 정의 (User, Book, BookReview, BookOpinion)
-- [ ] 데이터베이스 마이그레이션
+- [x] Prisma ORM 설정
+- [x] SQLite 데이터베이스 초기화
+- [x] 기본 스키마 정의 (User, Book, BookReview, BookOpinion)
+- [x] 데이터베이스 마이그레이션
 
 ### 3. 인증 시스템
-- [ ] NextAuth.js 설정
-- [ ] 이메일/비밀번호 인증 Provider
-- [ ] JWT 토큰 설정
-- [ ] 세션 관리
+- [x] NextAuth.js 설정
+- [x] 이메일/비밀번호 인증 Provider
+- [x] JWT 토큰 설정
+- [x] 세션 관리
 
 ### 4. 상태 관리
-- [ ] Zustand 스토어 설정
-- [ ] TanStack Query 설정
-- [ ] 기본 상태 타입 정의
+- [x] Zustand 스토어 설정
+- [x] TanStack Query 설정
+- [x] 기본 상태 타입 정의
 
 ### 5. UI 기초 설정
-- [ ] Tailwind CSS 설정
-- [ ] Radix UI 기본 컴포넌트 설치
-- [ ] 디자인 토큰 정의 (색상, 타이포그래피, 간격)
-- [ ] 기본 UI 컴포넌트 (Button, Input, Card 등)
+- [x] Tailwind CSS 설정
+- [x] Radix UI 기본 컴포넌트 설치
+- [x] 디자인 토큰 정의 (색상, 타이포그래피, 간격)
+- [x] 기본 UI 컴포넌트 (Button, Input, Card 등)
 
 ## 기술 요구사항
 
@@ -338,24 +338,24 @@ SMTP_PASSWORD=""
 ## 테스트 시나리오
 
 ### 1. 프로젝트 초기화 테스트
-- [ ] `npm run dev` 실행 성공
-- [ ] TypeScript 컴파일 에러 없음
-- [ ] ESLint 검사 통과
-- [ ] Prettier 포맷팅 적용
+- [x] `npm run dev` 실행 성공
+- [x] TypeScript 컴파일 에러 없음
+- [x] ESLint 검사 통과
+- [x] Prettier 포맷팅 적용
 
 ### 2. 데이터베이스 테스트
-- [ ] Prisma 마이그레이션 실행 성공
-- [ ] 데이터베이스 연결 확인
-- [ ] Prisma Studio 접근 가능
+- [x] Prisma 마이그레이션 실행 성공
+- [x] 데이터베이스 연결 확인
+- [x] Prisma Studio 접근 가능
 
 ### 3. 인증 시스템 테스트
-- [ ] NextAuth.js 설정 확인
-- [ ] 세션 상태 관리 동작
-- [ ] JWT 토큰 생성/검증
+- [x] NextAuth.js 설정 확인
+- [x] 세션 상태 관리 동작
+- [x] JWT 토큰 생성/검증
 
 ### 4. UI 컴포넌트 테스트
-- [ ] 기본 컴포넌트 렌더링
-- [ ] Tailwind CSS 스타일 적용
+- [x] 기본 컴포넌트 렌더링
+- [x] Tailwind CSS 스타일 적용
 - [ ] 반응형 디자인 동작
 
 ## 완료 기준
