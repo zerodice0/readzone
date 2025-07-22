@@ -44,18 +44,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex">
       {/* 좌측 서비스 소개 */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-red-50 to-red-100 p-12 items-center justify-center">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-900 dark:to-gray-800 p-12 items-center justify-center">
         <div className="max-w-lg">
           <div className="flex items-center gap-3 mb-8">
-            <BookOpen className="w-12 h-12 text-red-600" />
-            <h1 className="text-4xl font-bold text-gray-900">ReadZone</h1>
+            <BookOpen className="w-12 h-12 text-red-600 dark:text-red-400" />
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">ReadZone</h1>
           </div>
           
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             독서 후 생각을 나누는 공간
           </h2>
           
-          <p className="text-gray-700 mb-8">
+          <p className="text-gray-700 dark:text-gray-300 mb-8">
             ReadZone은 독서를 사랑하는 사람들이 모여 책에 대한 생각과 감상을 
             자유롭게 나누는 커뮤니티입니다. 당신의 독서 경험을 공유하고, 
             다른 독자들의 관점을 통해 새로운 시각을 발견해보세요.
@@ -63,26 +63,26 @@ export default function LoginPage() {
           
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <MessageSquare className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <MessageSquare className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-gray-800">독후감 작성</h3>
-                <p className="text-sm text-gray-600">읽은 책에 대한 생각을 자유롭게 기록하세요</p>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200">독후감 작성</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">읽은 책에 대한 생각을 자유롭게 기록하세요</p>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <Users className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <Users className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-gray-800">도서 의견 공유</h3>
-                <p className="text-sm text-gray-600">280자로 간단하게 책에 대한 의견을 나눠보세요</p>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200">도서 의견 공유</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">280자로 간단하게 책에 대한 의견을 나눠보세요</p>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <TrendingUp className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <TrendingUp className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-gray-800">독서 커뮤니티</h3>
-                <p className="text-sm text-gray-600">같은 책을 읽은 사람들과 소통하세요</p>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200">독서 커뮤니티</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">같은 책을 읽은 사람들과 소통하세요</p>
               </div>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="text-sm text-red-600 text-center">
+                <div className="text-sm text-red-600 dark:text-red-400 text-center">
                   {error}
                 </div>
               )}
@@ -146,14 +146,14 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-gray-600">아직 계정이 없으신가요? </span>
-              <Link href="/register" className="text-red-600 hover:underline">
+              <span className="text-gray-600 dark:text-gray-400">아직 계정이 없으신가요? </span>
+              <Link href="/register" className="text-red-600 dark:text-red-400 hover:underline">
                 회원가입
               </Link>
             </div>
             
             <div className="mt-2 text-center">
-              <Link href="/forgot-password" className="text-sm text-gray-600 hover:underline">
+              <Link href="/forgot-password" className="text-sm text-gray-600 dark:text-gray-400 hover:underline">
                 비밀번호를 잊으셨나요?
               </Link>
             </div>

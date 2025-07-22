@@ -79,10 +79,10 @@ export function CommentSection({ reviewId, initialComments, commentCount }: Comm
           </Button>
         </form>
       ) : (
-        <div className="p-4 bg-gray-50 rounded-lg text-center">
-          <p className="text-sm text-gray-600">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             댓글을 작성하려면{' '}
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:underline">
               로그인
             </Link>
             이 필요합니다.
@@ -104,8 +104,8 @@ export function CommentSection({ reviewId, initialComments, commentCount }: Comm
                   className="rounded-full"
                 />
               ) : (
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-medium">
+                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                     {comment.user.nickname[0].toUpperCase()}
                   </span>
                 </div>
@@ -120,11 +120,11 @@ export function CommentSection({ reviewId, initialComments, commentCount }: Comm
                 >
                   {comment.user.nickname}
                 </Link>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {formatDate(comment.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-gray-800">{comment.content}</p>
+              <p className="text-sm text-gray-800 dark:text-gray-200">{comment.content}</p>
             </div>
           </div>
         ))}

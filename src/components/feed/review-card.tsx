@@ -55,7 +55,7 @@ export function ReviewCard({ review, isPreview = false }: ReviewCardProps) {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md dark:hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
         <div className="flex gap-4">
           {/* 도서 썸네일 */}
@@ -78,7 +78,7 @@ export function ReviewCard({ review, isPreview = false }: ReviewCardProps) {
               <h3 className="font-semibold text-sm line-clamp-1">
                 {review.book.title}
               </h3>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 {review.book.authors} {review.book.genre && `· ${review.book.genre}`}
               </p>
             </div>
@@ -88,13 +88,13 @@ export function ReviewCard({ review, isPreview = false }: ReviewCardProps) {
               {review.title && (
                 <h4 className="font-medium mb-1">{review.title}</h4>
               )}
-              <p className="text-sm text-gray-800 whitespace-pre-wrap">
+              <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
                 {displayContent}
               </p>
               {isPreview && review.content.length > 200 && (
                 <Link
                   href={`/review/${review.id}`}
-                  className="text-sm text-blue-600 hover:underline inline-block mt-1"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-block mt-1"
                 >
                   더보기
                 </Link>
@@ -105,8 +105,8 @@ export function ReviewCard({ review, isPreview = false }: ReviewCardProps) {
             <div className="mb-3">
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
                 review.isRecommended
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'
+                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                  : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
               }`}>
                 {review.isRecommended ? '추천' : '비추천'}
               </span>
@@ -117,21 +117,21 @@ export function ReviewCard({ review, isPreview = false }: ReviewCardProps) {
               <div className="flex items-center gap-4">
                 <button
                   onClick={(e) => handleInteraction(e, 'like')}
-                  className="flex items-center gap-1 text-gray-600 hover:text-red-600 transition-colors"
+                  className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                 >
                   <Heart className="w-4 h-4" />
                   <span>{review._count.likes}</span>
                 </button>
                 <button
                   onClick={(e) => handleInteraction(e, 'comment')}
-                  className="flex items-center gap-1 text-gray-600 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>{review._count.comments}</span>
                 </button>
               </div>
               
-              <div className="flex items-center gap-2 text-xs text-gray-500">
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <Link
                   href={`/profile/${review.user.id}`}
                   className="hover:underline"

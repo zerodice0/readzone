@@ -23,12 +23,10 @@ export default function RootLayout({
     <html lang="ko" className={inter.variable}>
       <body className="antialiased">
         <Providers>
-          <div className="min-h-screen bg-gray-50">
-            <Header />
-            <main className="pt-16">
-              {children}
-            </main>
-          </div>
+          <Header />
+          <main className="pt-16">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

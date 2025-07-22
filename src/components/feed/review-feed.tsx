@@ -72,7 +72,7 @@ export function ReviewFeed() {
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="bg-gray-200 rounded-lg h-48"></div>
+              <div className="bg-gray-200 dark:bg-gray-800 rounded-lg h-48"></div>
             </div>
           ))}
         </div>
@@ -84,7 +84,7 @@ export function ReviewFeed() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="text-center">
-          <p className="text-gray-600">독후감을 불러오는 중 오류가 발생했습니다.</p>
+          <p className="text-gray-600 dark:text-gray-400">독후감을 불러오는 중 오류가 발생했습니다.</p>
         </div>
       </div>
     );
@@ -102,23 +102,23 @@ export function ReviewFeed() {
         {hasNextPage && (
           <div ref={ref} className="py-4 text-center">
             {isFetchingNextPage ? (
-              <span className="text-sm text-gray-500">로딩 중...</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">로딩 중...</span>
             ) : (
-              <span className="text-sm text-gray-500">더 보기</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">더 보기</span>
             )}
           </div>
         )}
         
         {!hasNextPage && reviews.length > 0 && (
           <div className="py-4 text-center">
-            <span className="text-sm text-gray-500">모든 독후감을 확인했습니다.</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">모든 독후감을 확인했습니다.</span>
           </div>
         )}
         
         {reviews.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-600">아직 작성된 독후감이 없습니다.</p>
-            {session && <p className="text-sm text-gray-500 mt-2">첫 번째 독후감을 작성해보세요!</p>}
+            <p className="text-gray-600 dark:text-gray-400">아직 작성된 독후감이 없습니다.</p>
+            {session && <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">첫 번째 독후감을 작성해보세요!</p>}
           </div>
         )}
       </div>
