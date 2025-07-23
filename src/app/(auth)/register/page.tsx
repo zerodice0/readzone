@@ -1,332 +1,116 @@
-'use client';
+import { Metadata } from 'next'
+import { RegisterForm } from '@/components/auth/register-form'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, X } from 'lucide-react';
-import { TermsModal } from '@/components/legal/terms-modal';
+export const metadata: Metadata = {
+  title: '회원가입 | ReadZone',
+  description: '독서 전용 커뮤니티 SNS ReadZone에 가입하여 독후감을 공유하세요.',
+}
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    passwordConfirm: '',
-    nickname: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
-  const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-
-  const validatePassword = (password: string) => {
-    if (password.length < 8) return '비밀번호는 8자 이상이어야 합니다';
-    if (!/[a-zA-Z]/.test(password)) return '영문자를 포함해야 합니다';
-    if (!/[0-9]/.test(password)) return '숫자를 포함해야 합니다';
-    return '';
-  };
-
-  const checkDuplicate = async (field: 'email' | 'nickname', value: string) => {
-    if (!value) return;
-    
-    try {
-      const response = await fetch('/api/auth/check-duplicate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ field, value }),
-      });
-      
-      const data = await response.json();
-      
-      if (field === 'email') {
-        setEmailAvailable(data.available);
-      } else {
-        setNicknameAvailable(data.available);
-      }
-    } catch (error) {
-      console.error('중복 확인 실패:', error);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // 유효성 검증
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.email) newErrors.email = '이메일을 입력해주세요';
-    if (!formData.password) newErrors.password = '비밀번호를 입력해주세요';
-    else {
-      const passwordError = validatePassword(formData.password);
-      if (passwordError) newErrors.password = passwordError;
-    }
-    if (formData.password !== formData.passwordConfirm) {
-      newErrors.passwordConfirm = '비밀번호가 일치하지 않습니다';
-    }
-    if (!formData.nickname) newErrors.nickname = '닉네임을 입력해주세요';
-    if (!agreedToTerms || !agreedToPrivacy) {
-      newErrors.terms = '필수 약관에 동의해주세요';
-    }
-    if (emailAvailable === false) newErrors.email = '이미 사용 중인 이메일입니다';
-    if (nicknameAvailable === false) newErrors.nickname = '이미 사용 중인 닉네임입니다';
-    
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-    
-    setIsLoading(true);
-    setErrors({});
-    
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          nickname: formData.nickname,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        router.push('/verify-email?email=' + encodeURIComponent(formData.email));
-      } else {
-        setErrors({ submit: data.message || '회원가입에 실패했습니다' });
-      }
-    } catch (error) {
-      setErrors({ submit: '회원가입 중 오류가 발생했습니다' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+export default function RegisterPage(): JSX.Element {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">회원가입</CardTitle>
-          <CardDescription>
-            ReadZone 계정을 생성하세요
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* 이메일 */}
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                이메일 *
-              </label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    setEmailAvailable(null);
-                  }}
-                  onBlur={() => checkDuplicate('email', formData.email)}
-                  required
-                  disabled={isLoading}
-                />
-                {emailAvailable !== null && (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    {emailAvailable ? (
-                      <Check className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <X className="w-5 h-5 text-red-600" />
-                    )}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
+          {/* 서비스 소개 섹션 (왼쪽) */}
+          <div className="lg:pr-8">
+            <div className="max-w-md mx-auto sm:max-w-lg lg:mx-0">
+              <div className="text-center lg:text-left">
+                <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                    ReadZone
+                  </span>
+                  에서
+                </h1>
+                <p className="mt-2 text-xl text-gray-700">
+                  독서의 감동을 함께 나누세요
+                </p>
+              </div>
+
+              <div className="mt-8 space-y-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-md bg-blue-500 text-white">
+                      📚
+                    </div>
                   </div>
-                )}
-              </div>
-              {emailAvailable === true && (
-                <p className="text-sm text-green-600">사용 가능한 이메일입니다</p>
-              )}
-              {errors.email && (
-                <p className="text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
-
-            {/* 비밀번호 */}
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                비밀번호 *
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="비밀번호를 입력하세요"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                disabled={isLoading}
-              />
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li className={formData.password.length >= 8 ? 'text-green-600' : ''}>
-                  • 8자 이상
-                </li>
-                <li className={/[a-zA-Z]/.test(formData.password) ? 'text-green-600' : ''}>
-                  • 영문 포함
-                </li>
-                <li className={/[0-9]/.test(formData.password) ? 'text-green-600' : ''}>
-                  • 숫자 포함
-                </li>
-              </ul>
-              {errors.password && (
-                <p className="text-sm text-red-600">{errors.password}</p>
-              )}
-            </div>
-
-            {/* 비밀번호 확인 */}
-            <div className="space-y-2">
-              <label htmlFor="passwordConfirm" className="text-sm font-medium">
-                비밀번호 확인 *
-              </label>
-              <Input
-                id="passwordConfirm"
-                type="password"
-                placeholder="비밀번호를 다시 입력하세요"
-                value={formData.passwordConfirm}
-                onChange={(e) => setFormData({ ...formData, passwordConfirm: e.target.value })}
-                required
-                disabled={isLoading}
-              />
-              {errors.passwordConfirm && (
-                <p className="text-sm text-red-600">{errors.passwordConfirm}</p>
-              )}
-            </div>
-
-            {/* 닉네임 */}
-            <div className="space-y-2">
-              <label htmlFor="nickname" className="text-sm font-medium">
-                닉네임 *
-              </label>
-              <div className="relative">
-                <Input
-                  id="nickname"
-                  type="text"
-                  placeholder="닉네임을 입력하세요"
-                  value={formData.nickname}
-                  onChange={(e) => {
-                    setFormData({ ...formData, nickname: e.target.value });
-                    setNicknameAvailable(null);
-                  }}
-                  onBlur={() => checkDuplicate('nickname', formData.nickname)}
-                  required
-                  disabled={isLoading}
-                />
-                {nicknameAvailable !== null && (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    {nicknameAvailable ? (
-                      <Check className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <X className="w-5 h-5 text-red-600" />
-                    )}
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">독후감 공유</h3>
+                    <p className="mt-1 text-gray-600">
+                      읽은 책에 대한 생각과 감상을 자유롭게 공유하고 다른 독자들과 소통하세요.
+                    </p>
                   </div>
-                )}
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-md bg-indigo-500 text-white">
+                      💬
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">커뮤니티 토론</h3>
+                    <p className="mt-1 text-gray-600">
+                      좋아하는 책에 대해 토론하고 새로운 책을 추천받으세요.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-md bg-purple-500 text-white">
+                      ⭐
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">도서 발견</h3>
+                    <p className="mt-1 text-gray-600">
+                      다른 독자들의 추천을 통해 새로운 책을 발견하고 읽을 목록을 늘려나가세요.
+                    </p>
+                  </div>
+                </div>
               </div>
-              {nicknameAvailable === true && (
-                <p className="text-sm text-green-600">사용 가능한 닉네임입니다</p>
-              )}
-              {errors.nickname && (
-                <p className="text-sm text-red-600">{errors.nickname}</p>
-              )}
+
+              <div className="mt-8">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <img
+                      className="h-8 w-8 rounded-full"
+                      src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                      alt=""
+                    />
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-sm font-medium text-gray-900">독서를 사랑하는 사람들의 커뮤니티</div>
+                    <div className="text-sm text-gray-600">이미 1,000명이 넘는 독자들이 함께하고 있습니다</div>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            {/* 약관 동의 */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={agreedToTerms}
-                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    disabled={isLoading}
-                    className="rounded border-gray-300"
-                  />
-                  <span className="text-sm">이용약관 동의 (필수)</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowTermsModal(true)}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  보기
-                </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={agreedToPrivacy}
-                    onChange={(e) => setAgreedToPrivacy(e.target.checked)}
-                    disabled={isLoading}
-                    className="rounded border-gray-300"
-                  />
-                  <span className="text-sm">개인정보처리방침 동의 (필수)</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPrivacyModal(true)}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  보기
-                </button>
-              </div>
-              {errors.terms && (
-                <p className="text-sm text-red-600">{errors.terms}</p>
-              )}
-            </div>
-
-            {errors.submit && (
-              <div className="text-sm text-red-600 text-center">
-                {errors.submit}
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !agreedToTerms || !agreedToPrivacy}
-            >
-              {isLoading ? '가입 중...' : '가입하기'}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">이미 계정이 있으신가요? </span>
-            <Link href="/login" className="text-red-600 hover:underline">
-              로그인
-            </Link>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* 약관 모달 */}
-      <TermsModal
-        type="terms"
-        isOpen={showTermsModal}
-        onClose={() => setShowTermsModal(false)}
-        onAgree={() => setAgreedToTerms(true)}
-      />
-      
-      <TermsModal
-        type="privacy"
-        isOpen={showPrivacyModal}
-        onClose={() => setShowPrivacyModal(false)}
-        onAgree={() => setAgreedToPrivacy(true)}
-      />
+          {/* 회원가입 폼 섹션 (오른쪽) */}
+          <div className="mt-12 lg:mt-0">
+            <div className="max-w-md mx-auto">
+              <RegisterForm />
+              
+              {/* 추가 정보 */}
+              <div className="mt-6 text-center text-sm text-gray-500">
+                <p>
+                  회원가입을 진행하시면 ReadZone의{' '}
+                  <a href="/terms" className="text-blue-600 hover:text-blue-500 underline">
+                    이용약관
+                  </a>
+                  {' '}및{' '}
+                  <a href="/privacy" className="text-blue-600 hover:text-blue-500 underline">
+                    개인정보처리방침
+                  </a>
+                  에 동의하는 것으로 간주됩니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }

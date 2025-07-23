@@ -1,64 +1,140 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
-import { useSession } from '@/hooks/use-session';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { Button, Card, CardContent } from '@/components/ui'
+import { cn } from '@/lib/utils'
 
 interface ReviewCardProps {
   review: {
-    id: string;
-    title?: string;
-    content: string;
-    isRecommended: boolean;
-    createdAt: string;
-    user: {
-      id: string;
-      nickname: string;
-      image?: string;
-    };
+    id: string
+    title: string
+    content: string
     book: {
-      id: string;
-      title: string;
-      authors: string;
-      thumbnail?: string;
-      genre?: string;
-    };
-    _count: {
-      likes: number;
-      comments: number;
-    };
-  };
-  isPreview?: boolean;
+      title: string
+      authors: string[]
+      thumbnail?: string
+    }
+    user: {
+      nickname: string
+      profileImage?: string | null
+    }
+    isRecommended: boolean
+    createdAt: Date
+    likeCount: number
+    commentCount: number
+    isLiked: boolean
+  }
+  showActions?: boolean
+  onLoginRequired?: () => void
 }
 
-export function ReviewCard({ review, isPreview = false }: ReviewCardProps) {
-  const { data: session } = useSession();
-  const router = useRouter();
-  
-  const displayContent = isPreview && review.content.length > 200
-    ? review.content.slice(0, 200) + '...'
-    : review.content;
+export function ReviewCard({ review, showActions = true, onLoginRequired }: ReviewCardProps): JSX.Element {
+  const [isLiked, setIsLiked] = useState(review.isLiked)
+  const [likeCount, setLikeCount] = useState(review.likeCount)
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  const handleInteraction = (e: React.MouseEvent, action: string) => {
-    e.preventDefault();
-    if (!session) {
-      router.push('/login');
-      return;
+  // 콘텐츠 미리보기 (200자)
+  const previewContent = review.content.length > 200 
+    ? review.content.slice(0, 200) + '...'
+    : review.content
+
+  const handleLike = (): void => {
+    if (!showActions) {
+      onLoginRequired?.()
+      return
     }
-    // TODO: 실제 상호작용 구현
-    console.log(`${action} for review ${review.id}`);
-  };
+
+    // 실제 구현에서는 API 호출
+    setIsLiked(!isLiked)
+    setLikeCount(prev => isLiked ? prev - 1 : prev + 1)
+  }
+
+  const handleComment = (): void => {
+    if (!showActions) {
+      onLoginRequired?.()
+      return
+    }
+    // 댓글 기능 (추후 구현)
+  }
+
+  const handleShare = (): void => {
+    // 공유 기능
+    if (navigator.share) {
+      navigator.share({
+        title: review.title,
+        text: `"${review.book.title}" 독후감: ${review.title}`,
+        url: window.location.origin + `/review/${review.id}`,
+      })
+    } else {
+      // 폴백: 클립보드에 복사
+      navigator.clipboard.writeText(window.location.origin + `/review/${review.id}`)
+    }
+  }
+
+  const formatDate = (date: Date): string => {
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const minutes = Math.floor(diff / (1000 * 60))
+
+    if (days > 0) return `${days}일 전`
+    if (hours > 0) return `${hours}시간 전`
+    if (minutes > 0) return `${minutes}분 전`
+    return '방금 전'
+  }
 
   return (
-    <Card className="hover:shadow-md dark:hover:shadow-lg transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          {/* 도서 썸네일 */}
+    <Card className="w-full">
+      <CardContent className="p-6">
+        {/* 사용자 정보 및 시간 */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+              {review.user.profileImage ? (
+                <Image
+                  src={review.user.profileImage}
+                  alt={review.user.nickname}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+              ) : (
+                <span className="text-sm font-medium text-gray-600">
+                  {review.user.nickname[0]}
+                </span>
+              )}
+            </div>
+            <div>
+              <div className="font-medium text-gray-900">
+                {review.user.nickname}
+              </div>
+              <div className="text-sm text-gray-500">
+                {formatDate(review.createdAt)}
+              </div>
+            </div>
+          </div>
+          
+          {/* 추천/비추천 표시 */}
+          <div className={cn(
+            'flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium',
+            review.isRecommended 
+              ? 'bg-green-100 text-green-700' 
+              : 'bg-red-100 text-red-700'
+          )}>
+            <span>
+              {review.isRecommended ? '👍' : '👎'}
+            </span>
+            <span>
+              {review.isRecommended ? '추천' : '비추천'}
+            </span>
+          </div>
+        </div>
+
+        {/* 도서 정보 */}
+        <div className="flex space-x-4 mb-4">
           {review.book.thumbnail && (
             <div className="flex-shrink-0">
               <Image
@@ -66,85 +142,101 @@ export function ReviewCard({ review, isPreview = false }: ReviewCardProps) {
                 alt={review.book.title}
                 width={60}
                 height={80}
-                className="rounded object-cover"
+                className="rounded-md shadow-sm"
               />
             </div>
           )}
-          
-          {/* 콘텐츠 */}
           <div className="flex-1 min-w-0">
-            {/* 도서 정보 */}
-            <div className="mb-2">
-              <h3 className="font-semibold text-sm line-clamp-1">
-                {review.book.title}
-              </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                {review.book.authors} {review.book.genre && `· ${review.book.genre}`}
-              </p>
-            </div>
-            
-            {/* 독후감 내용 */}
-            <div className="mb-3">
-              {review.title && (
-                <h4 className="font-medium mb-1">{review.title}</h4>
-              )}
-              <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                {displayContent}
-              </p>
-              {isPreview && review.content.length > 200 && (
-                <Link
-                  href={`/review/${review.id}`}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-block mt-1"
-                >
-                  더보기
-                </Link>
-              )}
-            </div>
-            
-            {/* 추천/비추천 표시 */}
-            <div className="mb-3">
-              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
-                review.isRecommended
-                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                  : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-              }`}>
-                {review.isRecommended ? '추천' : '비추천'}
-              </span>
-            </div>
-            
-            {/* 하단 정보 */}
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={(e) => handleInteraction(e, 'like')}
-                  className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                >
-                  <Heart className="w-4 h-4" />
-                  <span>{review._count.likes}</span>
-                </button>
-                <button
-                  onClick={(e) => handleInteraction(e, 'comment')}
-                  className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>{review._count.comments}</span>
-                </button>
-              </div>
-              
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <Link
-                  href={`/profile/${review.user.id}`}
-                  className="hover:underline"
-                >
-                  @{review.user.nickname}
-                </Link>
-                <span>·</span>
-                <span>{formatDate(review.createdAt)}</span>
-              </div>
-            </div>
+            <h3 className="font-medium text-gray-900 truncate">
+              {review.book.title}
+            </h3>
+            <p className="text-sm text-gray-500 truncate">
+              {review.book.authors.join(', ')}
+            </p>
           </div>
+        </div>
+
+        {/* 독후감 제목 */}
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          {review.title}
+        </h2>
+
+        {/* 독후감 내용 */}
+        <div className="text-gray-700 mb-4">
+          <p className="whitespace-pre-wrap">
+            {isExpanded ? review.content : previewContent}
+          </p>
+          {review.content.length > 200 && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium mt-2"
+            >
+              {isExpanded ? '접기' : '더보기'}
+            </button>
+          )}
+        </div>
+
+        {/* 액션 버튼들 */}
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div className="flex items-center space-x-6">
+            {/* 좋아요 */}
+            <button
+              onClick={handleLike}
+              className={cn(
+                'flex items-center space-x-1 text-sm transition-colors',
+                isLiked 
+                  ? 'text-red-600 hover:text-red-700' 
+                  : 'text-gray-500 hover:text-red-600'
+              )}
+            >
+              <svg 
+                className={cn('w-5 h-5', isLiked && 'fill-current')} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                />
+              </svg>
+              <span>{likeCount}</span>
+            </button>
+
+            {/* 댓글 */}
+            <button
+              onClick={handleComment}
+              className="flex items-center space-x-1 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <span>{review.commentCount}</span>
+            </button>
+
+            {/* 공유 */}
+            <button
+              onClick={handleShare}
+              className="flex items-center space-x-1 text-sm text-gray-500 hover:text-green-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+              </svg>
+              <span>공유</span>
+            </button>
+          </div>
+
+          {/* 전체 보기 링크 */}
+          <Link
+            href={`/review/${review.id}`}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            전체 보기
+          </Link>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

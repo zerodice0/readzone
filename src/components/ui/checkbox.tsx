@@ -1,0 +1,67 @@
+import * as React from 'react'
+import { cn } from '@/lib/utils'
+
+export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string
+  description?: string
+  error?: string
+}
+
+const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
+  ({ className, label, description, error, id, ...props }, ref) => {
+    const checkboxId = id || `checkbox-${React.useId()}`
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-start space-x-3">
+          <div className="flex items-center h-5">
+            <input
+              type="checkbox"
+              id={checkboxId}
+              ref={ref}
+              className={cn(
+                'h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer',
+                error && 'border-red-500',
+                className
+              )}
+              {...props}
+            />
+          </div>
+          {(label || description) && (
+            <div className="text-sm">
+              {label && (
+                <label 
+                  htmlFor={checkboxId}
+                  className={cn(
+                    'font-medium cursor-pointer',
+                    error ? 'text-red-900' : 'text-gray-900'
+                  )}
+                >
+                  {label}
+                  {props.required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+              )}
+              {description && (
+                <p className={cn(
+                  'mt-1',
+                  error ? 'text-red-600' : 'text-gray-500'
+                )}>
+                  {description}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+        {error && (
+          <p className="text-sm text-red-600">
+            {error}
+          </p>
+        )}
+      </div>
+    )
+  }
+)
+
+Checkbox.displayName = 'Checkbox'
+
+export { Checkbox }

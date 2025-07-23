@@ -1,31 +1,49 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-export const signInSchema = z.object({
-  email: z.string().email('유효한 이메일을 입력해주세요'),
-  password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
-});
-
-export const signUpSchema = z.object({
-  email: z.string().email('유효한 이메일을 입력해주세요'),
-  password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
+// 회원가입 검증 스키마
+export const registerSchema = z.object({
+  email: z
+    .string()
+    .min(1, '이메일을 입력해주세요.')
+    .email('올바른 이메일 형식이 아닙니다.'),
+  password: z
+    .string()
+    .min(8, '비밀번호는 8자 이상이어야 합니다.')
+    .regex(
+      /^(?=.*[a-zA-Z])(?=.*\d)/,
+      '비밀번호는 영문과 숫자를 포함해야 합니다.'
+    ),
   nickname: z
     .string()
-    .min(2, '닉네임은 최소 2자 이상이어야 합니다')
-    .max(20, '닉네임은 최대 20자까지 가능합니다'),
-});
+    .min(2, '닉네임은 2자 이상이어야 합니다.')
+    .max(20, '닉네임은 20자 이하여야 합니다.')
+    .regex(
+      /^[가-힣a-zA-Z0-9_-]+$/,
+      '닉네임은 한글, 영문, 숫자, _, - 만 사용 가능합니다.'
+    ),
+})
 
-export const bookReviewSchema = z.object({
-  title: z.string().optional(),
-  content: z.string().min(10, '독후감은 최소 10자 이상 작성해주세요'),
-  isRecommended: z.boolean(),
-  tags: z.string(),
-  purchaseLink: z.string().url().optional().or(z.literal('')),
-});
-
-export const bookOpinionSchema = z.object({
-  content: z
+// 로그인 검증 스키마
+export const loginSchema = z.object({
+  email: z
     .string()
-    .min(1, '의견을 입력해주세요')
-    .max(280, '의견은 280자까지 작성 가능합니다'),
-  isRecommended: z.boolean(),
-});
+    .min(1, '이메일을 입력해주세요.')
+    .email('올바른 이메일 형식이 아닙니다.'),
+  password: z.string().min(1, '비밀번호를 입력해주세요.'),
+})
+
+// 중복 확인 검증 스키마
+export const checkDuplicateSchema = z.object({
+  field: z.enum(['email', 'nickname']),
+  value: z.string().min(1, '값을 입력해주세요.'),
+})
+
+// 이메일 인증 검증 스키마
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, '인증 토큰이 필요합니다.'),
+})
+
+export type RegisterInput = z.infer<typeof registerSchema>
+export type LoginInput = z.infer<typeof loginSchema>
+export type CheckDuplicateInput = z.infer<typeof checkDuplicateSchema>
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>
