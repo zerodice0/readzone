@@ -1,19 +1,20 @@
-import { Metadata } from 'next'
+import { type Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { BookDetail } from '@/components/book/book-detail'
 import { db } from '@/lib/db'
 
 interface BookPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 // 메타데이터 생성
 export async function generateMetadata({ params }: BookPageProps): Promise<Metadata> {
   try {
+    const { id } = await params
     const book = await db.book.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         title: true,
         authors: true,
@@ -79,9 +80,11 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
 }
 
 export default async function BookPage({ params }: BookPageProps) {
+  const { id } = await params
+  
   // 도서 존재 여부 먼저 확인
   const book = await db.book.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { id: true }
   })
 
@@ -90,7 +93,7 @@ export default async function BookPage({ params }: BookPageProps) {
     notFound()
   }
 
-  return <BookDetail bookId={params.id} />
+  return <BookDetail bookId={id} />
 }
 
 // 정적 생성을 위한 params 생성 (선택사항)

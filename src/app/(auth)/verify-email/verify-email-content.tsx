@@ -39,7 +39,6 @@ function VerifyEmailInner(): JSX.Element {
   const handleVerifyEmail = async (verificationToken: string): Promise<void> => {
     try {
       await verifyEmail.mutateAsync({
-        email,
         token: verificationToken,
       })
       setIsVerified(true)

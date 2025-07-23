@@ -33,13 +33,13 @@ export function ServiceIntro({ className }: ServiceIntroProps): JSX.Element {
     <div className={cn('flex flex-col justify-center h-full', className)}>
       {/* 메인 타이틀 */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
           ReadZone
         </h1>
-        <p className="text-xl text-gray-600 mb-2">
+        <p className="text-xl text-gray-600 dark:text-gray-300 mb-2">
           독서 후 생각을 나누는 공간
         </p>
-        <p className="text-gray-500">
+        <p className="text-gray-500 dark:text-gray-400">
           책을 읽고 느낀 감정과 생각을 다른 독서가들과 함께 나눠보세요
         </p>
       </div>
@@ -52,10 +52,10 @@ export function ServiceIntro({ className }: ServiceIntroProps): JSX.Element {
               <div className="flex items-start space-x-3">
                 <div className="text-2xl">{feature.icon}</div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {feature.description}
                   </p>
                 </div>
@@ -66,14 +66,14 @@ export function ServiceIntro({ className }: ServiceIntroProps): JSX.Element {
       </div>
 
       {/* 추가 정보 */}
-      <div className="mt-8 p-4 bg-primary-50 rounded-lg">
+      <div className="mt-8 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-100 dark:border-primary-800">
         <div className="flex items-center space-x-2 mb-2">
-          <span className="text-primary-500">✨</span>
-          <span className="font-medium text-primary-700">
+          <span className="text-primary-500 dark:text-primary-400">✨</span>
+          <span className="font-medium text-primary-700 dark:text-primary-300">
             ReadZone과 함께 시작하세요
           </span>
         </div>
-        <p className="text-sm text-primary-600">
+        <p className="text-sm text-primary-600 dark:text-primary-400">
           무료로 가입하고 독서의 즐거움을 다른 사람들과 함께 나누세요. 
           새로운 책 추천도 받아볼 수 있어요!
         </p>

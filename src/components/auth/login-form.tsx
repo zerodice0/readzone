@@ -96,7 +96,7 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
               />
               <button
                 type="button"
-                className="absolute right-3 top-8 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -115,7 +115,7 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
 
           {/* 전역 에러 메시지 */}
           {errors.root && (
-            <div className="text-sm text-red-600 text-center">
+            <div className="text-sm text-red-600 dark:text-red-400 text-center">
               {errors.root.message}
             </div>
           )}
@@ -135,16 +135,16 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
             <div>
               <Link 
                 href="/forgot-password" 
-                className="text-primary-500 hover:text-primary-600 hover:underline"
+                className="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline"
               >
                 비밀번호를 잊으셨나요?
               </Link>
             </div>
             <div className="flex items-center justify-center space-x-1">
-              <span className="text-gray-500">계정이 없으신가요?</span>
+              <span className="text-gray-500 dark:text-gray-400">계정이 없으신가요?</span>
               <Link 
                 href="/register" 
-                className="text-primary-500 hover:text-primary-600 hover:underline font-medium"
+                className="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline font-medium"
               >
                 회원가입
               </Link>

@@ -9,7 +9,7 @@ import type { ManualBookInput } from '@/types/book'
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
     // 인증 확인
@@ -27,7 +27,7 @@ export async function PUT(
       )
     }
 
-    const bookId = params.id
+    const { id: bookId } = await params
 
     // 도서 존재 여부 확인
     const book = await db.book.findUnique({
@@ -185,7 +185,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
     // 인증 확인
@@ -203,7 +203,7 @@ export async function DELETE(
       )
     }
 
-    const bookId = params.id
+    const { id: bookId } = await params
 
     // 도서 존재 여부 및 관련 콘텐츠 확인
     const book = await db.book.findUnique({

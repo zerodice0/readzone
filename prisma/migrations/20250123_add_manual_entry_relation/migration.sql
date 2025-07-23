@@ -1,2 +1,0 @@
--- AlterTable
--- ManualBookEntry에 Book relation 추가 (이미 bookId 필드는 존재함)

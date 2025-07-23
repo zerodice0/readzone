@@ -20,7 +20,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               id={checkboxId}
               ref={ref}
               className={cn(
-                'h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer',
+                'h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-primary-400 dark:focus:ring-primary-400 rounded cursor-pointer',
                 error && 'border-red-500',
                 className
               )}
@@ -34,7 +34,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                   htmlFor={checkboxId}
                   className={cn(
                     'font-medium cursor-pointer',
-                    error ? 'text-red-900' : 'text-gray-900'
+                    error ? 'text-red-900 dark:text-red-100' : 'text-gray-900 dark:text-gray-100'
                   )}
                 >
                   {label}
@@ -44,7 +44,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               {description && (
                 <p className={cn(
                   'mt-1',
-                  error ? 'text-red-600' : 'text-gray-500'
+                  error ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
                 )}>
                   {description}
                 </p>
@@ -53,7 +53,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           )}
         </div>
         {error && (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-red-600 dark:text-red-400">
             {error}
           </p>
         )}

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui'
 import { useLogout } from '@/hooks/use-auth-api'
 import { useAuthStore } from '@/store/auth-store'
 import { cn } from '@/lib/utils'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export function Header(): JSX.Element {
   const { data: session, status } = useSession()
@@ -30,7 +31,7 @@ export function Header(): JSX.Element {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-white shadow-sm border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* 로고 및 브랜드 */}
@@ -39,7 +40,7 @@ export function Header(): JSX.Element {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">R</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">ReadZone</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-gray-100">ReadZone</span>
             </Link>
           </div>
 
@@ -49,20 +50,20 @@ export function Header(): JSX.Element {
             <nav className="flex items-center space-x-6">
               <Link 
                 href="/"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 px-3 py-2 text-sm font-medium transition-colors"
               >
                 홈
               </Link>
               <Link 
                 href="/search"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 px-3 py-2 text-sm font-medium transition-colors"
               >
                 도서 검색
               </Link>
               {isAuthenticated && (
                 <Link 
                   href="/write"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 px-3 py-2 text-sm font-medium transition-colors"
                 >
                   독후감 작성
                 </Link>
@@ -70,17 +71,19 @@ export function Header(): JSX.Element {
             </nav>
 
             {/* 사용자 액션 */}
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                {/* 사용자 정보 */}
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600">
+            <div className="flex items-center space-x-4">
+              <ThemeToggle />
+              {isAuthenticated ? (
+                <>
+                  {/* 사용자 정보 */}
+                  <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                       {session?.user?.name?.[0] || user?.user?.nickname?.[0] || 'U'}
                     </span>
                   </div>
                   <div className="hidden lg:block">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {session?.user?.name || user?.user?.nickname || '사용자'}
                     </p>
                   </div>
@@ -93,13 +96,13 @@ export function Header(): JSX.Element {
                     size="sm"
                     onClick={handleLogout}
                     loading={logout.isPending}
-                    className="text-gray-600 hover:text-gray-900"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
                   >
                     로그아웃
                   </Button>
                 </div>
-              </div>
-            ) : (
+                </>
+              ) : (
               <div className="flex items-center space-x-3">
                 <Link href="/login">
                   <Button variant="ghost" size="sm">
@@ -112,14 +115,15 @@ export function Header(): JSX.Element {
                   </Button>
                 </Link>
               </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* 모바일 메뉴 버튼 */}
           <div className="md:hidden">
             <button
               type="button"
-              className="text-gray-600 hover:text-gray-900 p-2"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 p-2"
               onClick={toggleMobileMenu}
               aria-label="메뉴 열기"
             >
@@ -139,18 +143,18 @@ export function Header(): JSX.Element {
         {/* 모바일 메뉴 */}
         {isMobileMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
               {/* 모바일 네비게이션 링크들 */}
               <Link
                 href="/"
-                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-md"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 홈
               </Link>
               <Link
                 href="/search"
-                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-md"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 도서 검색
@@ -158,7 +162,7 @@ export function Header(): JSX.Element {
               {isAuthenticated && (
                 <Link
                   href="/write"
-                  className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                  className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-md"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   독후감 작성
@@ -166,21 +170,21 @@ export function Header(): JSX.Element {
               )}
 
               {/* 모바일 사용자 액션 */}
-              <div className="pt-4 pb-3 border-t border-gray-200">
+              <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
                 {isAuthenticated ? (
                   <div className="space-y-1">
                     <div className="px-3 py-2">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-600">
+                        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                             {session?.user?.name?.[0] || user?.user?.nickname?.[0] || 'U'}
                           </span>
                         </div>
                         <div className="ml-3">
-                          <div className="text-base font-medium text-gray-900">
+                          <div className="text-base font-medium text-gray-900 dark:text-gray-100">
                             {session?.user?.name || user?.user?.nickname || '사용자'}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
                             {session?.user?.email || user?.user?.email}
                           </div>
                         </div>
@@ -190,7 +194,7 @@ export function Header(): JSX.Element {
                       onClick={handleLogout}
                       disabled={logout.isPending}
                       className={cn(
-                        'block w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md',
+                        'block w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-md',
                         logout.isPending && 'opacity-50 cursor-not-allowed'
                       )}
                     >
@@ -201,14 +205,14 @@ export function Header(): JSX.Element {
                   <div className="space-y-1">
                     <Link
                       href="/login"
-                      className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
+                      className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-md"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       로그인
                     </Link>
                     <Link
                       href="/register"
-                      className="block px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md"
+                      className="block px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20 rounded-md"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       회원가입

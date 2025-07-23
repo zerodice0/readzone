@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
-import { sendVerificationEmail } from '@/lib/email'
 
 const resendVerificationSchema = z.object({
   email: z.string().email('올바른 이메일 주소를 입력해주세요.'),
@@ -57,11 +56,32 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // 인증 이메일 발송 (실제 구현에서는 이메일 서비스 필요)
-    // TODO: 이메일 발송 로직 구현
-    // await sendVerificationEmail(email, token)
+    // 인증 이메일 재발송
+    try {
+      const { resendVerificationEmail } = await import('@/lib/email')
+      const emailResult = await resendVerificationEmail(email, token)
+      
+      if (!emailResult.success) {
+        console.error('인증 이메일 재발송 실패:', emailResult.error)
+        return NextResponse.json({
+          success: false,
+          message: `이메일 재발송에 실패했습니다: ${emailResult.error}`,
+        }, { status: 500 })
+      }
+      
+      console.log('✅ 인증 이메일 재발송 성공:', emailResult.messageId)
+    } catch (emailError) {
+      console.error('이메일 모듈 로드 실패:', emailError)
+      return NextResponse.json({
+        success: false,
+        message: '이메일 재발송 시스템 오류가 발생했습니다.',
+      }, { status: 500 })
+    }
     
-    console.log(`[DEBUG] 인증 이메일 재발송: ${email}, 토큰: ${token}`)
+    // 개발 환경에서는 콘솔에도 토큰 출력 (백업용)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[DEV] 인증 이메일 재발송: ${email}, 토큰: ${token}`)
+    }
 
     return NextResponse.json({
       success: true,

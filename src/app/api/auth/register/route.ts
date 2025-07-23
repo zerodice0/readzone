@@ -85,13 +85,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return newUser
     })
 
-    // TODO: 실제 환경에서는 이메일 발송 로직 추가
-    // await sendVerificationEmail(email, verificationToken)
+    // 이메일 인증 메일 발송
+    try {
+      const { sendVerificationEmail } = await import('@/lib/email')
+      const emailResult = await sendVerificationEmail(email, verificationToken)
+      
+      if (!emailResult.success) {
+        console.error('이메일 발송 실패:', emailResult.error)
+        // 이메일 발송 실패해도 회원가입은 완료 처리 (사용자가 재발송 가능)
+      } else {
+        console.log('✅ 인증 이메일 발송 성공:', emailResult.messageId)
+      }
+    } catch (emailError) {
+      console.error('이메일 모듈 로드 실패:', emailError)
+      // 이메일 발송 실패해도 회원가입은 완료 처리
+    }
     
-    // 개발 환경에서는 콘솔에 토큰 출력
+    // 개발 환경에서는 콘솔에도 토큰 출력 (백업용)
     if (process.env.NODE_ENV === 'development') {
-      console.log(`이메일 인증 토큰 (${email}): ${verificationToken}`)
-      console.log(`인증 URL: ${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`)
+      console.log(`[DEV] 이메일 인증 토큰 (${email}): ${verificationToken}`)
+      console.log(`[DEV] 인증 URL: ${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`)
     }
 
     return NextResponse.json(

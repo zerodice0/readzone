@@ -7,10 +7,10 @@ import { getBookAPI } from '@/lib/book-api'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { isbn: string } }
+  { params }: { params: Promise<{ isbn: string }> }
 ): Promise<NextResponse> {
   try {
-    const { isbn } = params
+    const { isbn } = await params
 
     // ISBN 파라미터 검증
     if (!isbn) {

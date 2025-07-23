@@ -43,6 +43,9 @@ model User {
   bio           String?
   image         String?
   password      String
+  // 비밀번호 재설정 관련 필드
+  resetToken        String?
+  resetTokenExpiry  DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -52,6 +55,7 @@ model User {
   opinions BookOpinion[]
   likes    ReviewLike[]
   comments Comment[]
+  drafts   ReviewDraft[]
 }
 
 model VerificationToken {
@@ -93,6 +97,7 @@ model Book {
   opinions BookOpinion[]
   apiCache BookApiCache[]
   manualEntries ManualBookEntry[]
+  drafts   ReviewDraft[]
 
   @@index([title])
   @@index([isbn])
@@ -205,4 +210,23 @@ model ManualBookEntry {
 
   @@index([status])
   @@index([submittedBy])
+}
+
+// 독후감 임시저장
+model ReviewDraft {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String?
+  title     String?
+  content   String
+  metadata  String   @default("{}") // JSON 메타데이터 (태그, 설정 등)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book? @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([bookId])
+  @@index([updatedAt])
 }
