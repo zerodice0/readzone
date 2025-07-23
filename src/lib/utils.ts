@@ -58,3 +58,9 @@ export function getErrorMessage(error: unknown): string {
   }
   return '알 수 없는 오류가 발생했습니다.'
 }
+
+// 텍스트 자르기
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength) + '...'
+}
