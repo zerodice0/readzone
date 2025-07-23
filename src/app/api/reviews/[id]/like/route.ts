@@ -67,42 +67,51 @@ export async function POST(
       )
     }
 
-    // 기존 좋아요 확인
-    const existingLike = await prisma.reviewLike.findUnique({
-      where: {
-        userId_reviewId: {
-          userId,
-          reviewId
-        }
-      }
-    })
-
-    let isLiked: boolean
-    let likeCount: number
-
-    if (existingLike) {
-      // 좋아요 취소
-      await prisma.reviewLike.delete({
+    // 트랜잭션으로 좋아요 토글 및 카운트 조회를 원자적으로 처리
+    const result = await prisma.$transaction(async (tx) => {
+      // 기존 좋아요 확인
+      const existingLike = await tx.reviewLike.findUnique({
         where: {
-          id: existingLike.id
+          userId_reviewId: {
+            userId,
+            reviewId
+          }
         }
       })
-      isLiked = false
-    } else {
-      // 좋아요 추가
-      await prisma.reviewLike.create({
-        data: {
-          userId,
-          reviewId
-        }
-      })
-      isLiked = true
-    }
 
-    // 전체 좋아요 수 조회
-    likeCount = await prisma.reviewLike.count({
-      where: { reviewId }
+      let isLiked: boolean
+
+      if (existingLike) {
+        // 좋아요 취소
+        await tx.reviewLike.delete({
+          where: {
+            userId_reviewId: {
+              userId,
+              reviewId
+            }
+          }
+        })
+        isLiked = false
+      } else {
+        // 좋아요 추가
+        await tx.reviewLike.create({
+          data: {
+            userId,
+            reviewId
+          }
+        })
+        isLiked = true
+      }
+
+      // 전체 좋아요 수 조회 (트랜잭션 내에서)
+      const likeCount = await tx.reviewLike.count({
+        where: { reviewId }
+      })
+
+      return { isLiked, likeCount }
     })
+
+    const { isLiked, likeCount } = result
 
     return NextResponse.json({
       success: true,

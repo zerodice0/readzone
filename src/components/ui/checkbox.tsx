@@ -1,15 +1,15 @@
-import * as React from 'react'
+import { forwardRef, useId, type InputHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
-export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   description?: string
   error?: string
 }
 
-const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
+const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, label, description, error, id, ...props }, ref) => {
-    const checkboxId = id || `checkbox-${React.useId()}`
+    const checkboxId = id || `checkbox-${useId()}`
 
     return (
       <div className="space-y-2">
