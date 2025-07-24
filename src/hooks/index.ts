@@ -22,3 +22,5 @@ export type {
   UseAutosaveOptions,
   UseAutosaveReturn
 } from './use-autosave'
+
+export { useComments, useComment } from './use-comments'

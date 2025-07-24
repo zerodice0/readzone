@@ -30,7 +30,7 @@ export function validateEmailConfig(): { isValid: boolean; error?: string } {
  * 이메일 인증 템플릿 HTML
  */
 function getVerificationEmailTemplate(email: string, token: string): string {
-  const verificationUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}`
+  const verificationUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}&email=${encodeURIComponent(email)}`
   
   return `
     <!DOCTYPE html>
@@ -172,7 +172,7 @@ ReadZone 이메일 인증
 안녕하세요! ReadZone에 가입해주셔서 감사합니다.
 
 아래 링크를 클릭하여 이메일 인증을 완료해주세요:
-${process.env.NEXTAUTH_URL}/verify-email?token=${token}
+${process.env.NEXTAUTH_URL}/verify-email?token=${token}&email=${encodeURIComponent(email)}
 
 이 인증 링크는 24시간 후 만료됩니다.
 본인이 요청하지 않은 이메일이라면 무시하셔도 됩니다.

@@ -118,8 +118,54 @@ export type LoginInput = z.infer<typeof loginSchema>
 export type CheckDuplicateInput = z.infer<typeof checkDuplicateSchema>
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
+// 댓글 생성 검증 스키마
+export const createCommentSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(2, '댓글은 2자 이상 입력해주세요.')
+    .max(1000, '댓글은 1000자 이하로 입력해주세요.')
+    .refine(
+      (content) => content.replace(/\s/g, '').length >= 2,
+      { message: '의미 있는 댓글을 입력해주세요.' }
+    ),
+  parentId: z.string().optional(), // 대댓글인 경우
+})
+
+// 댓글 수정 검증 스키마
+export const updateCommentSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(2, '댓글은 2자 이상 입력해주세요.')
+    .max(1000, '댓글은 1000자 이하로 입력해주세요.')
+    .refine(
+      (content) => content.replace(/\s/g, '').length >= 2,
+      { message: '의미 있는 댓글을 입력해주세요.' }
+    ),
+})
+
+// 댓글 목록 조회 검증 스키마
+export const listCommentsSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  sort: z.enum(['latest', 'oldest', 'most_liked']).default('latest'),
+  parentId: z.string().nullish(), // null이면 최상위 댓글만
+})
+
+// 댓글 좋아요 응답 스키마
+export const commentLikeResponseSchema = z.object({
+  success: z.boolean(),
+  isLiked: z.boolean(),
+  likesCount: z.number(),
+})
+
 export type CreateReviewInput = z.infer<typeof createReviewSchema>
 export type UpdateReviewInput = z.infer<typeof updateReviewSchema>
 export type ListReviewsQuery = z.infer<typeof listReviewsSchema>
 export type ReviewDraftInput = z.infer<typeof reviewDraftSchema>
 export type ImageUploadInput = z.infer<typeof imageUploadSchema>
+export type CreateCommentInput = z.infer<typeof createCommentSchema>
+export type UpdateCommentInput = z.infer<typeof updateCommentSchema>
+export type ListCommentsQuery = z.infer<typeof listCommentsSchema>
+export type CommentLikeResponse = z.infer<typeof commentLikeResponseSchema>

@@ -55,6 +55,7 @@ model User {
   opinions BookOpinion[]
   likes    ReviewLike[]
   comments Comment[]
+  commentLikes CommentLike[]
   drafts   ReviewDraft[]
 }
 
@@ -154,11 +155,45 @@ model Comment {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // 대댓글 지원을 위한 계층 구조
+  parentId  String?  // 부모 댓글 ID (null이면 최상위 댓글)
+  depth     Int      @default(0) // 댓글 깊이 (0: 최상위, 1: 대댓글)
+  
+  // 소프트 삭제 지원
+  isDeleted Boolean  @default(false)
+  deletedAt DateTime?
 
   userId   String
   reviewId String
   user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   review   BookReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  parent   Comment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  
+  // 관계 정의
+  replies  Comment[]  @relation("CommentReplies")
+  likes    CommentLike[]
+
+  // 성능 최적화를 위한 인덱스
+  @@index([reviewId, createdAt])
+  @@index([userId])
+  @@index([parentId])
+  @@index([isDeleted])
+}
+
+// 댓글 좋아요 시스템
+model CommentLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  commentId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  // 사용자당 댓글별 1개 좋아요 제한
+  @@unique([userId, commentId])
+  @@index([commentId])
 }
 
 // API 캐싱 테이블

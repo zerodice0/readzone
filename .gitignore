@@ -42,3 +42,20 @@ next-env.d.ts
 
 # uploads
 /public/uploads/
+
+# database files
+*.db
+*.db-journal
+*.db-wal
+
+# development/test files
+test-*.js
+test-*.ts
+/src/app/test-*/
+
+# Claude settings (contains local configurations)
+.claude/settings.local.json
+
+# temporary scripts for testing
+scripts/test-*.ts
+scripts/test-*.js

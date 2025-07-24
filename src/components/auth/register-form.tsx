@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -57,6 +57,25 @@ export function RegisterForm({ className, onSuccess }: RegisterFormProps): JSX.E
 
   const watchedPassword = watch('password')
   const watchedPasswordConfirm = watch('passwordConfirm')
+
+  // Memoize validation callbacks to prevent infinite loops
+  const handleEmailValidationChange = useCallback((isValid: boolean, message?: string) => {
+    setEmailValid(isValid)
+    if (!isValid && message) {
+      setError('email', { message })
+    } else {
+      clearErrors('email')
+    }
+  }, [setError, clearErrors])
+
+  const handleNicknameValidationChange = useCallback((isValid: boolean, message?: string) => {
+    setNicknameValid(isValid)
+    if (!isValid && message) {
+      setError('nickname', { message })
+    } else {
+      clearErrors('nickname')
+    }
+  }, [setError, clearErrors])
 
   const onSubmit = async (data: RegisterInput & { passwordConfirm: string; agreeTerms: boolean; agreePrivacy: boolean }): Promise<void> => {
     // 비밀번호 확인 검증
@@ -200,14 +219,7 @@ export function RegisterForm({ className, onSuccess }: RegisterFormProps): JSX.E
             type="email"
             placeholder="이메일을 입력하세요"
             validationType="email"
-            onValidationChange={(isValid, message) => {
-              setEmailValid(isValid)
-              if (!isValid && message) {
-                setError('email', { message })
-              } else {
-                clearErrors('email')
-              }
-            }}
+            onValidationChange={handleEmailValidationChange}
             {...registerField('email')}
             required
           />
@@ -300,14 +312,7 @@ export function RegisterForm({ className, onSuccess }: RegisterFormProps): JSX.E
             type="text"
             placeholder="닉네임을 입력하세요"
             validationType="nickname"
-            onValidationChange={(isValid, message) => {
-              setNicknameValid(isValid)
-              if (!isValid && message) {
-                setError('nickname', { message })
-              } else {
-                clearErrors('nickname')
-              }
-            }}
+            onValidationChange={handleNicknameValidationChange}
             {...registerField('nickname')}
             required
           />

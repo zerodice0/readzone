@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button, Card, CardContent } from '@/components/ui'
+import { LikeButton } from '@/components/review/like-button'
 import { cn } from '@/lib/utils'
 
 interface ReviewCardProps {
@@ -31,8 +32,6 @@ interface ReviewCardProps {
 }
 
 export function ReviewCard({ review, showActions = true, onLoginRequired }: ReviewCardProps): JSX.Element {
-  const [isLiked, setIsLiked] = useState(review.isLiked)
-  const [likeCount, setLikeCount] = useState(review.likeCount)
   const [isExpanded, setIsExpanded] = useState(false)
 
   // 콘텐츠 미리보기 (200자)
@@ -40,15 +39,13 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
     ? review.content.slice(0, 200) + '...'
     : review.content
 
-  const handleLike = (): void => {
-    if (!showActions) {
-      onLoginRequired?.()
-      return
-    }
+  const handleLikeToggle = (newIsLiked: boolean, newLikeCount: number): void => {
+    // 상위 컴포넌트에서 상태 동기화가 필요한 경우 여기서 처리
+    console.log('Like toggled:', { newIsLiked, newLikeCount })
+  }
 
-    // 실제 구현에서는 API 호출
-    setIsLiked(!isLiked)
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1)
+  const handleLoginRequired = (): void => {
+    onLoginRequired?.()
   }
 
   const handleComment = (): void => {
@@ -179,31 +176,39 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
         {/* 액션 버튼들 */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
           <div className="flex items-center space-x-6">
-            {/* 좋아요 */}
-            <button
-              onClick={handleLike}
-              className={cn(
-                'flex items-center space-x-1 text-sm transition-colors',
-                isLiked 
-                  ? 'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300' 
-                  : 'text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400'
-              )}
-            >
-              <svg 
-                className={cn('w-5 h-5', isLiked && 'fill-current')} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+            {/* 좋아요 - 향상된 애니메이션 버튼 */}
+            {showActions ? (
+              <LikeButton
+                reviewId={review.id}
+                isLiked={review.isLiked}
+                likeCount={review.likeCount}
+                size="md"
+                variant="minimal"
+                showExplosion={true}
+                onToggle={handleLikeToggle}
+                className="hover:scale-105 transition-transform"
+              />
+            ) : (
+              <button
+                onClick={handleLoginRequired}
+                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-                />
-              </svg>
-              <span>{likeCount}</span>
-            </button>
+                <svg 
+                  className="w-5 h-5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                  />
+                </svg>
+                <span>{review.likeCount}</span>
+              </button>
+            )}
 
             {/* 댓글 */}
             <button
