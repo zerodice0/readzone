@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+import { logger } from '@/lib/logger'
 
 // 사용자 타입 정의
 export interface User {
@@ -86,7 +87,7 @@ export const useAuthStore = create<AuthState>()(
               state.isLoading = false
             })
           } catch (error) {
-            console.error('로그아웃 중 오류 발생:', error)
+            logger.error('로그아웃 중 오류 발생', { error })
             // 에러가 발생해도 클라이언트 상태는 초기화
             set((state) => {
               state.user = null

@@ -193,7 +193,7 @@ export class UsageLogger {
         totalRequests: log.searchCount + log.errorCount,
         successCount: log.searchCount,
         errorCount: log.errorCount,
-        averageResponseTime: 0, // TODO: 응답 시간 추적 구현
+        averageResponseTime: 0, // Response time tracking to be implemented in Phase 6
         errorRate: log.searchCount + log.errorCount > 0 
           ? (log.errorCount / (log.searchCount + log.errorCount)) * 100 
           : 0

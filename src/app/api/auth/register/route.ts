@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { hashPassword, generateEmailVerificationToken } from '@/lib/utils'
 import { registerSchema } from '@/lib/validations'
 import { RegisterResponse } from '@/types/auth'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -91,20 +92,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const emailResult = await sendVerificationEmail(email, verificationToken)
       
       if (!emailResult.success) {
-        console.error('이메일 발송 실패:', emailResult.error)
+        logger.email('이메일 발송 실패', { email, error: emailResult.error })
         // 이메일 발송 실패해도 회원가입은 완료 처리 (사용자가 재발송 가능)
       } else {
-        console.log('✅ 인증 이메일 발송 성공:', emailResult.messageId)
+        logger.email('인증 이메일 발송 성공', { email, messageId: emailResult.messageId })
       }
     } catch (emailError) {
-      console.error('이메일 모듈 로드 실패:', emailError)
+      logger.error('이메일 모듈 로드 실패', { email, error: emailError instanceof Error ? emailError.message : String(emailError) }, emailError instanceof Error ? emailError : undefined)
       // 이메일 발송 실패해도 회원가입은 완료 처리
     }
     
     // 개발 환경에서는 콘솔에도 토큰 출력 (백업용)
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] 이메일 인증 토큰 (${email}): ${verificationToken}`)
-      console.log(`[DEV] 인증 URL: ${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}`)
+      logger.debug('개발환경 이메일 인증 토큰', { email, verificationUrl: `${process.env.NEXTAUTH_URL}/verify-email?token=${verificationToken}` })
     }
 
     return NextResponse.json(
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     )
 
   } catch (error) {
-    console.error('회원가입 에러:', error)
+    logger.error('회원가입 에러', { error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
 
     // Prisma 중복 제약 조건 에러 처리
     if (error && typeof error === 'object' && 'code' in error) {

@@ -1,4 +1,12 @@
 import { Resend } from 'resend'
+import { logger } from '@/lib/logger'
+
+// Email result type
+interface EmailResult {
+  success: boolean
+  messageId?: string
+  error?: string
+}
 
 // Resend 클라이언트 초기화
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -138,17 +146,17 @@ export async function sendVerificationEmail(email: string, token: string): Promi
     // 설정 검증
     const config = validateEmailConfig()
     if (!config.isValid) {
-      console.error('이메일 설정 오류:', config.error)
+      logger.error('이메일 설정 오류', { error: config.error })
       return { success: false, error: config.error }
     }
 
     const htmlContent = getVerificationEmailTemplate(email, token)
     
     // 이메일 전송 전 상세 로깅
-    console.log('🔍 [DEBUG] 이메일 전송 시도:', {
+    logger.debug('이메일 전송 시도', {
       from: process.env.RESEND_FROM_EMAIL,
       to: email,
-      apiKey: process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 10)}...` : 'MISSING',
+      apiKeyPresent: !!process.env.RESEND_API_KEY,
       environment: process.env.NODE_ENV
     })
     
@@ -179,14 +187,13 @@ ReadZone - 독서 전용 커뮤니티 SNS
     })
 
     // Resend API 응답 전체 로깅
-    console.log('📧 [DEBUG] Resend API 전체 응답:', {
+    logger.debug('Resend API 응답', {
       success: !!result.data,
-      data: result.data,
-      error: result.error,
-      fullResponse: result
+      messageId: result.data?.id,
+      hasError: !!result.error
     })
 
-    console.log('✅ 인증 이메일 발송 성공:', { 
+    logger.email('인증 이메일 발송 성공', { 
       email, 
       messageId: result.data?.id,
       environment: process.env.NODE_ENV 
@@ -198,7 +205,7 @@ ReadZone - 독서 전용 커뮤니티 SNS
     }
 
   } catch (error) {
-    console.error('❌ 인증 이메일 발송 실패:', error)
+    logger.error('인증 이메일 발송 실패', { email, error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
     
     // Resend API 에러 처리
     if (error instanceof Error) {
@@ -227,7 +234,7 @@ export async function resendVerificationEmail(email: string, token: string): Pro
     const result = await sendVerificationEmail(email, token)
     
     if (result.success) {
-      console.log('✅ 인증 이메일 재발송 성공:', { 
+      logger.email('인증 이메일 재발송 성공', { 
         email, 
         messageId: result.messageId 
       })
@@ -235,7 +242,7 @@ export async function resendVerificationEmail(email: string, token: string): Pro
     
     return result
   } catch (error) {
-    console.error('❌ 인증 이메일 재발송 실패:', error)
+    logger.error('인증 이메일 재발송 실패', { email, error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
     return { 
       success: false, 
       error: '이메일 재발송에 실패했습니다.' 
@@ -363,14 +370,14 @@ ReadZone - 독서 전용 커뮤니티 SNS
     })
 
     if (result.error) {
-      console.error('❌ [PASSWORD RESET EMAIL] Resend API 오류:', result.error)
+      logger.error('Resend API 오류', { error: result.error.message || 'Resend API 오류' })
       return {
         success: false,
         error: result.error.message || 'Resend API 오류'
       }
     }
 
-    console.log('✅ [PASSWORD RESET EMAIL] 발송 성공:', {
+    logger.email('비밀번호 재설정 이메일 발송 성공', {
       messageId: result.data?.id,
       to: email
     })
@@ -381,7 +388,7 @@ ReadZone - 독서 전용 커뮤니티 SNS
     }
 
   } catch (error) {
-    console.error('❌ [PASSWORD RESET EMAIL] 발송 실패:', error)
+    logger.error('비밀번호 재설정 이메일 발송 실패', { email, error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
     return {
       success: false,
       error: error instanceof Error ? error.message : '알 수 없는 오류 발생'
@@ -400,15 +407,15 @@ export async function sendTestEmail(to: string): Promise<{
   try {
     const config = validateEmailConfig()
     if (!config.isValid) {
-      console.error('❌ 이메일 설정 검증 실패:', config.error)
+      logger.error('이메일 설정 검증 실패', { error: config.error })
       return { success: false, error: config.error }
     }
 
     // 테스트 이메일 전송 전 상세 로깅
-    console.log('🔍 [TEST] 테스트 이메일 전송 시도:', {
+    logger.debug('테스트 이메일 전송 시도', {
       from: process.env.RESEND_FROM_EMAIL,
       to: to,
-      apiKey: process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 10)}...` : 'MISSING',
+      apiKeyPresent: !!process.env.RESEND_API_KEY,
       environment: process.env.NODE_ENV
     })
 
@@ -430,11 +437,10 @@ export async function sendTestEmail(to: string): Promise<{
     })
 
     // 테스트 이메일 Resend API 응답 전체 로깅
-    console.log('📧 [TEST] Resend API 전체 응답:', {
+    logger.debug('테스트 이메일 Resend API 응답', {
       success: !!result.data,
-      data: result.data,
-      error: result.error,
-      fullResponse: JSON.stringify(result, null, 2)
+      messageId: result.data?.id,
+      hasError: !!result.error
     })
 
     return { 
@@ -442,7 +448,7 @@ export async function sendTestEmail(to: string): Promise<{
       messageId: result.data?.id 
     }
   } catch (error) {
-    console.error('테스트 이메일 발송 실패:', error)
+    logger.error('테스트 이메일 발송 실패', { to, error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
     return { 
       success: false, 
       error: error instanceof Error ? error.message : '알 수 없는 오류' 

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { z } from 'zod'
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { cn } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 // 비밀번호 재설정 검증 스키마 (토큰 제외 - 이미 URL에서 추출됨)
 const resetPasswordFormSchema = z.object({
@@ -68,7 +69,7 @@ export function ResetPasswordForm({ className, token, onSuccess }: ResetPassword
         throw new Error(result.message || '비밀번호 재설정에 실패했습니다.')
       }
 
-      console.log('✅ [RESET PASSWORD FORM] 비밀번호 재설정 성공:', result)
+      logger.auth('비밀번호 재설정 성공', { userId: result.userId })
       
       setIsCompleted(true)
       
@@ -76,7 +77,7 @@ export function ResetPasswordForm({ className, token, onSuccess }: ResetPassword
         onSuccess()
       }
     } catch (error) {
-      console.error('❌ [RESET PASSWORD FORM] 비밀번호 재설정 실패:', error)
+      logger.error('비밀번호 재설정 실패', { error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
       setError('root', {
         message: error instanceof Error ? error.message : '비밀번호 재설정 중 오류가 발생했습니다. 다시 시도해주세요.',
       })

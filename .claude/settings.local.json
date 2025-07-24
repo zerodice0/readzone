@@ -27,7 +27,8 @@
       "Bash(npm run:*)",
       "mcp__sequential-thinking__sequentialthinking",
       "Bash(npx tsc:*)",
-      "Bash(npx tailwindcss:*)"
+      "Bash(npx tailwindcss:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

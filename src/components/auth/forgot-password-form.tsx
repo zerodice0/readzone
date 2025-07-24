@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { z } from 'zod'
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { cn } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 // 비밀번호 찾기 검증 스키마
 const forgotPasswordSchema = z.object({
@@ -50,7 +51,7 @@ export function ForgotPasswordForm({ className, onSuccess }: ForgotPasswordFormP
         throw new Error(result.message || '비밀번호 재설정 요청에 실패했습니다.')
       }
 
-      console.log('✅ [FORGOT PASSWORD FORM] API 요청 성공:', result)
+      logger.auth('비밀번호 재설정 요청 성공', { email: data.email })
       
       setSubmittedEmail(data.email)
       setIsSubmitted(true)
@@ -59,7 +60,7 @@ export function ForgotPasswordForm({ className, onSuccess }: ForgotPasswordFormP
         onSuccess()
       }
     } catch (error) {
-      console.error('❌ [FORGOT PASSWORD FORM] API 요청 실패:', error)
+      logger.error('비밀번호 재설정 요청 실패', { email: data.email, error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
       setError('root', {
         message: error instanceof Error ? error.message : '비밀번호 재설정 요청 중 오류가 발생했습니다. 다시 시도해주세요.',
       })
