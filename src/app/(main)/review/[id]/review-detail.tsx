@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MarkdownRenderer } from '@/components/markdown/markdown-renderer'
+import { SafeHtmlRenderer } from '@/components/review/safe-html-renderer'
 import { ShareMenu } from '@/components/share/share-menu'
 import { LikeButton } from '@/components/review/like-button'
 import { 
@@ -370,9 +370,20 @@ export default function ReviewDetail({
 
         {/* 독후감 내용 */}
         <Card className="p-6">
-          <MarkdownRenderer 
+          <SafeHtmlRenderer 
             content={review.content}
             className="prose prose-gray dark:prose-invert max-w-none"
+            showCopyButton={true}
+            strictMode={true}
+            showSecurityInfo={false}
+            allowImages={true}
+            allowLinks={true}
+            allowStyles={false}
+            lazyRender={false}
+            fallbackContent="독후감 내용을 안전하게 표시할 수 없습니다."
+            onSecurityWarning={(warnings) => {
+              console.warn('독후감 보안 경고:', warnings)
+            }}
           />
         </Card>
 

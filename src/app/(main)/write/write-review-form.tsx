@@ -10,10 +10,9 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { BookSelector } from '@/components/book/book-selector'
-import MarkdownEditorWrapper from '@/components/editor/markdown-editor-wrapper'
+import { RichTextEditor } from '@/components/editor/rich-text-editor'
 import { TagInput } from '@/components/ui/tag-input'
-import { useAutosave, formatAutosaveStatus } from '@/hooks/use-autosave'
-import { uploadImage } from '@/lib/image-upload'
+import { useHtmlAutosave } from '@/hooks/use-html-autosave'
 import { 
   Save, 
   Eye, 
@@ -73,16 +72,18 @@ export default function WriteReviewForm() {
   const [showBookSelector, setShowBookSelector] = useState(true)
   const [tagSuggestions, setTagSuggestions] = useState<string[]>(POPULAR_TAGS)
 
-  // 자동저장 설정
-  const autosave = useAutosave({
+  // HTML 콘텐츠 특화 자동저장 설정
+  const autosave = useHtmlAutosave({
     key: `review-draft-${session?.user?.id || 'anonymous'}`,
     data: {
       selectedBook,
       formData
     },
     storage: 'both',
+    compareTextOnly: false,  // HTML 구조 변경도 감지
+    minTextLength: 10,       // 실제 텍스트 10자 이상일 때만 저장
     onSave: async (data) => {
-      if (data.selectedBook && data.formData.content.length > 10) {
+      if (data.selectedBook && data.formData.content) {
         await fetch('/api/reviews/draft', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -102,6 +103,7 @@ export default function WriteReviewForm() {
     },
     onError: (error) => {
       console.error('자동저장 실패:', error)
+      toast.error('자동저장에 실패했습니다.')
     },
     onSuccess: () => {
       console.log('자동저장 완료')
@@ -147,21 +149,6 @@ export default function WriteReviewForm() {
     setFormData(prev => ({ ...prev, ...updates }))
   }
 
-  // 이미지 업로드 처리
-  const handleImageUpload = async (file: File): Promise<string> => {
-    try {
-      const result = await uploadImage(file, {
-        onProgress: (progress) => {
-          console.log(`이미지 업로드 진행률: ${progress}%`)
-        }
-      })
-      toast.success('이미지가 업로드되었습니다.')
-      return result.url
-    } catch (error) {
-      console.error('이미지 업로드 실패:', error)
-      throw error
-    }
-  }
 
   // 독후감 제출
   const handleSubmit = async () => {
@@ -170,7 +157,9 @@ export default function WriteReviewForm() {
       return
     }
 
-    if (formData.content.length < 10) {
+    // HTML 태그를 제거한 실제 텍스트 길이 체크
+    const textLength = formData.content.replace(/<[^>]*>/g, '').trim().length
+    if (textLength < 10) {
       toast.error('독후감 내용을 10자 이상 작성해주세요.')
       return
     }
@@ -227,13 +216,13 @@ export default function WriteReviewForm() {
 
   return (
     <div className="space-y-6">
-      {/* 자동저장 상태 표시 */}
+      {/* 자동저장 제어 */}
       <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-blue-600" />
             <span className="text-sm text-blue-700 dark:text-blue-300">
-              {formatAutosaveStatus(autosave.status, autosave.lastSaved)}
+              자동저장 활성화됨 (5분 간격)
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -354,21 +343,22 @@ export default function WriteReviewForm() {
           <div>
             <Label className="text-base font-medium">독후감 내용</Label>
             <div className="mt-3">
-              <MarkdownEditorWrapper
+              <RichTextEditor
                 value={formData.content}
-                onChange={(value) => updateFormData({ content: value })}
-                placeholder="독후감을 작성해보세요..."
+                onChange={(content) => updateFormData({ content })}
+                placeholder="독후감 내용을 작성해주세요..."
                 height="500px"
-                previewStyle="vertical"
-                enableImages={true}
-                enableTables={true}
-                onImageUpload={handleImageUpload}
                 onSave={handleSave}
-                className="min-h-[500px]"
+                isLoading={autosave.isSaving}
+                autofocus={true}
+                // 자동저장 상태 통합
+                autosaveStatus={autosave.status}
+                lastSaved={autosave.lastSaved}
+                showAutosaveStatus={true}
               />
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              {formData.content.length}/50,000자 | 마크다운 문법을 사용할 수 있습니다.
+              {formData.content.replace(/<[^>]*>/g, '').length}/50,000자 | 서식 도구를 사용해 내용을 꾸밀 수 있습니다.
             </p>
           </div>
 
@@ -456,7 +446,7 @@ export default function WriteReviewForm() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !formData.content || formData.content.length < 10}
+                disabled={isSubmitting || !formData.content || formData.content.replace(/<[^>]*>/g, '').trim().length < 10}
               >
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

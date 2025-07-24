@@ -1,0 +1,16 @@
+{
+  "tables": {
+    "User": 3,
+    "Book": 0,
+    "Comment": 0,
+    "Account": 0,
+    "Session": 0
+  },
+  "totalRecords": 3,
+  "databaseSize": 335872,
+  "timestamp": "2025-07-24T15:26:28.536Z",
+  "backupPath": "/Users/zerodice0/workspace/zerodice0/development/readzone/backups/readzone-backup-2025-07-24T15-26-28.db",
+  "backupSize": 335872,
+  "createdAt": "2025-07-24T15:26:28.556Z",
+  "version": "0.1.0"
+}

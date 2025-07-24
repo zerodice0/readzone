@@ -17,7 +17,7 @@ export default function PreviewPage() {
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
         <p className="text-blue-700 dark:text-blue-300">
-          이 기능은 곧 구현될 예정입니다. 현재는 작성 페이지에서 마크다운 에디터의 미리보기 기능을 사용하실 수 있습니다.
+          이 기능은 곧 구현될 예정입니다. 현재는 작성 페이지에서 React Quill 에디터의 실시간 미리보기 기능을 사용하실 수 있습니다.
         </p>
       </div>
     </div>

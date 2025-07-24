@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button, Card, CardContent } from '@/components/ui'
 import { LikeButton } from '@/components/review/like-button'
+import { SafeHtmlRenderer } from '@/components/review/safe-html-renderer'
 import { cn } from '@/lib/utils'
 
 interface ReviewCardProps {
@@ -34,10 +35,15 @@ interface ReviewCardProps {
 export function ReviewCard({ review, showActions = true, onLoginRequired }: ReviewCardProps): JSX.Element {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  // 콘텐츠 미리보기 (200자)
-  const previewContent = review.content.length > 200 
-    ? review.content.slice(0, 200) + '...'
-    : review.content
+  // HTML 콘텐츠 미리보기 (200자) - HTML 태그 제거
+  const getTextContent = (html: string) => {
+    return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+  }
+  
+  const textContent = getTextContent(review.content)
+  const previewContent = textContent.length > 200 
+    ? textContent.slice(0, 200) + '...'
+    : textContent
 
   const handleLikeToggle = (newIsLiked: boolean, newLikeCount: number): void => {
     // 상위 컴포넌트에서 상태 동기화가 필요한 경우 여기서 처리
@@ -160,10 +166,25 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
 
         {/* 독후감 내용 */}
         <div className="text-gray-700 dark:text-gray-300 mb-4">
-          <p className="whitespace-pre-wrap">
-            {isExpanded ? review.content : previewContent}
-          </p>
-          {review.content.length > 200 && (
+          <div className="prose prose-sm max-w-none">
+            {isExpanded ? (
+              <SafeHtmlRenderer 
+                content={review.content}
+                className="prose prose-sm max-w-none"
+                strictMode={true}
+                showCopyButton={false}
+                showSecurityInfo={false}
+                allowImages={true}
+                allowLinks={true}
+                allowStyles={false}
+                lazyRender={false}
+                fallbackContent="콘텐츠를 안전하게 표시할 수 없습니다."
+              />
+            ) : (
+              <p className="whitespace-pre-wrap">{previewContent}</p>
+            )}
+          </div>
+          {textContent.length > 200 && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium mt-2"
