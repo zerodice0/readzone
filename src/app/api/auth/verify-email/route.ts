@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyEmailSchema } from '@/lib/validations'
 import { VerifyEmailResponse } from '@/types/auth'
+import { AuthErrorCode, createAuthError } from '@/types/error'
+import { handleAuthError, createErrorContext, createErrorResponse } from '@/lib/error-handler'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -10,11 +12,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 입력 데이터 검증
     const validationResult = verifyEmailSchema.safeParse(body)
     if (!validationResult.success) {
+      const error = createAuthError(AuthErrorCode.INVALID_TOKEN)
+      const context = createErrorContext('verify-email')
+      handleAuthError(error, context)
+      
       return NextResponse.json(
-        {
-          success: false,
-          message: '잘못된 인증 토큰입니다.',
-        } as VerifyEmailResponse,
+        createErrorResponse(error),
         { status: 400 }
       )
     }
@@ -27,14 +30,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
     if (!verificationToken) {
+      const error = createAuthError(AuthErrorCode.TOKEN_NOT_FOUND)
+      const context = createErrorContext('verify-email')
+      handleAuthError(error, context)
+      
       return NextResponse.json(
-        {
-          success: false,
-          message: '유효하지 않은 인증 토큰입니다.',
-        } as VerifyEmailResponse,
-        { status: 400 }
+        createErrorResponse(error),
+        { status: 404 }
       )
     }
+
+    const context = createErrorContext('verify-email', undefined, verificationToken.identifier)
 
     // 토큰 만료 확인
     if (verificationToken.expires < new Date()) {
@@ -43,11 +49,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         where: { token },
       })
 
+      const error = createAuthError(AuthErrorCode.EXPIRED_TOKEN)
+      handleAuthError(error, context)
+      
       return NextResponse.json(
-        {
-          success: false,
-          message: '인증 토큰이 만료되었습니다. 다시 회원가입을 진행해주세요.',
-        } as VerifyEmailResponse,
+        createErrorResponse(error),
         { status: 400 }
       )
     }
@@ -58,11 +64,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
     if (!user) {
+      const error = createAuthError(AuthErrorCode.USER_NOT_FOUND)
+      handleAuthError(error, context)
+      
       return NextResponse.json(
-        {
-          success: false,
-          message: '사용자를 찾을 수 없습니다.',
-        } as VerifyEmailResponse,
+        createErrorResponse(error),
         { status: 404 }
       )
     }
@@ -74,10 +80,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         where: { token },
       })
 
+      const error = createAuthError(AuthErrorCode.ALREADY_VERIFIED)
+      // This is not actually an error, just informational
       return NextResponse.json(
         {
           success: true,
-          message: '이미 인증이 완료된 계정입니다.',
+          message: error.userMessage,
         } as VerifyEmailResponse,
         { status: 200 }
       )
@@ -108,13 +116,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     )
 
   } catch (error) {
-    console.error('이메일 인증 에러:', error)
-
+    const context = createErrorContext('verify-email')
+    const authError = handleAuthError(error, context)
+    
     return NextResponse.json(
-      {
-        success: false,
-        message: '이메일 인증 중 오류가 발생했습니다.',
-      } as VerifyEmailResponse,
+      createErrorResponse(authError),
       { status: 500 }
     )
   }

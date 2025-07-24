@@ -4,6 +4,8 @@ import { type JWT } from 'next-auth/jwt'
 import { prisma } from './db'
 import { verifyPassword } from './utils'
 import { logger } from './logger'
+import { AuthErrorCode, createAuthError } from '@/types/error'
+import { handleAuthError, createErrorContext } from './error-handler'
 
 // Extend NextAuth types for custom properties
 declare module 'next-auth' {
@@ -34,39 +36,64 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('이메일과 비밀번호를 입력해주세요.')
-        }
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            const error = createAuthError(AuthErrorCode.MISSING_REQUIRED_FIELD)
+            throw new Error(error.userMessage)
+          }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email as string,
-          },
-        })
+          const email = credentials.email as string
+          const password = credentials.password as string
 
-        if (!user) {
-          throw new Error('등록되지 않은 이메일입니다.')
-        }
+          // Create error context for logging
+          const context = createErrorContext('login', undefined, email)
 
-        if (!user.emailVerified) {
-          throw new Error('이메일 인증이 완료되지 않았습니다.')
-        }
+          const user = await prisma.user.findUnique({
+            where: { email },
+          })
 
-        const isPasswordValid = await verifyPassword(
-          credentials.password as string,
-          user.password
-        )
+          if (!user) {
+            const error = createAuthError(AuthErrorCode.USER_NOT_FOUND)
+            handleAuthError(error, context)
+            throw new Error(error.userMessage)
+          }
 
-        if (!isPasswordValid) {
-          throw new Error('비밀번호가 올바르지 않습니다.')
-        }
+          if (!user.emailVerified) {
+            const error = createAuthError(AuthErrorCode.EMAIL_NOT_VERIFIED)
+            handleAuthError(error, { ...context, userId: user.id })
+            throw new Error(error.userMessage)
+          }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.nickname,
-          nickname: user.nickname,
-          image: user.image,
+          const isPasswordValid = await verifyPassword(password, user.password)
+
+          if (!isPasswordValid) {
+            const error = createAuthError(AuthErrorCode.INVALID_CREDENTIALS)
+            handleAuthError(error, { ...context, userId: user.id })
+            throw new Error(error.userMessage)
+          }
+
+          // Log successful login
+          logger.auth('Successful login', {
+            userId: user.id,
+            email: user.email,
+            timestamp: new Date().toISOString()
+          })
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.nickname,
+            nickname: user.nickname,
+            image: user.image,
+          }
+        } catch (error) {
+          // Re-throw with the structured error message
+          if (error instanceof Error) {
+            throw error
+          }
+          
+          const authError = createAuthError(AuthErrorCode.INTERNAL_ERROR)
+          throw new Error(authError.userMessage)
         }
       },
     }),

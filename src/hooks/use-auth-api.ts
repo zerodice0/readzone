@@ -5,6 +5,7 @@ import { signIn, signOut } from 'next-auth/react'
 import { toast } from 'sonner'
 import { queryKeys, handleQueryError } from '@/lib/query-client'
 import { useAuthStore } from '@/store/auth-store'
+import { AuthErrorCode } from '@/types/error'
 import type { 
   RegisterRequest, 
   RegisterResponse, 
@@ -161,7 +162,38 @@ export function useLogin() {
       })
 
       if (result?.error) {
-        throw new Error('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.')
+        // Enhanced error handling with specific error codes and messages
+        const errorMessage = result.error
+        
+        // Map NextAuth errors to structured error types
+        if (errorMessage.includes('이메일 인증이 완료되지 않았습니다')) {
+          const error = new Error('이메일 인증이 완료되지 않았습니다. 이메일을 확인하고 인증을 완료해주세요.')
+          ;(error as any).code = AuthErrorCode.EMAIL_NOT_VERIFIED
+          throw error
+        }
+        
+        if (errorMessage.includes('등록되지 않은 이메일입니다')) {
+          const error = new Error('등록되지 않은 이메일입니다. 회원가입을 먼저 진행해주세요.')
+          ;(error as any).code = AuthErrorCode.USER_NOT_FOUND
+          throw error
+        }
+        
+        if (errorMessage.includes('비밀번호가 올바르지 않습니다')) {
+          const error = new Error('비밀번호가 올바르지 않습니다. 다시 확인해주세요.')
+          ;(error as any).code = AuthErrorCode.INVALID_CREDENTIALS
+          throw error
+        }
+        
+        if (errorMessage.includes('이메일과 비밀번호를 입력해주세요')) {
+          const error = new Error('이메일과 비밀번호를 입력해주세요.')
+          ;(error as any).code = AuthErrorCode.MISSING_REQUIRED_FIELD
+          throw error
+        }
+        
+        // Default error for unknown cases
+        const error = new Error('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.')
+        ;(error as any).code = AuthErrorCode.INTERNAL_ERROR
+        throw error
       }
 
       return result

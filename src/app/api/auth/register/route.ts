@@ -4,6 +4,8 @@ import { hashPassword, generateEmailVerificationToken } from '@/lib/utils'
 import { registerSchema } from '@/lib/validations'
 import { RegisterResponse } from '@/types/auth'
 import { logger } from '@/lib/logger'
+import { AuthErrorCode, createAuthError } from '@/types/error'
+import { handleAuthError, createErrorContext, createErrorResponse } from '@/lib/error-handler'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -12,17 +14,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 입력 데이터 검증
     const validationResult = registerSchema.safeParse(body)
     if (!validationResult.success) {
-      const errorMessage = validationResult.error.errors[0]?.message || '입력 데이터가 올바르지 않습니다.'
+      const error = createAuthError(AuthErrorCode.INVALID_INPUT, {
+        validationErrors: validationResult.error.errors
+      })
+      const context = createErrorContext('register')
+      handleAuthError(error, context)
+      
       return NextResponse.json(
-        {
-          success: false,
-          message: errorMessage,
-        } as RegisterResponse,
+        createErrorResponse(error),
         { status: 400 }
       )
     }
 
     const { email, password, nickname } = validationResult.data
+
+    const context = createErrorContext('register', undefined, email)
 
     // 이메일 중복 확인
     const existingEmailUser = await prisma.user.findUnique({
@@ -30,11 +36,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
     if (existingEmailUser) {
+      const error = createAuthError(AuthErrorCode.EMAIL_ALREADY_EXISTS)
+      handleAuthError(error, context)
       return NextResponse.json(
-        {
-          success: false,
-          message: '이미 사용 중인 이메일입니다.',
-        } as RegisterResponse,
+        createErrorResponse(error),
         { status: 400 }
       )
     }
@@ -45,11 +50,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
     if (existingNicknameUser) {
+      const error = createAuthError(AuthErrorCode.NICKNAME_ALREADY_EXISTS)
+      handleAuthError(error, context)
       return NextResponse.json(
-        {
-          success: false,
-          message: '이미 사용 중인 닉네임입니다.',
-        } as RegisterResponse,
+        createErrorResponse(error),
         { status: 400 }
       )
     }
@@ -117,39 +121,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     )
 
   } catch (error) {
-    logger.error('회원가입 에러', { error: error instanceof Error ? error.message : String(error) }, error instanceof Error ? error : undefined)
-
-    // Prisma 중복 제약 조건 에러 처리
-    if (error && typeof error === 'object' && 'code' in error) {
-      if (error.code === 'P2002') {
-        const target = (error as any).meta?.target
-        if (target?.includes('email')) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: '이미 사용 중인 이메일입니다.',
-            } as RegisterResponse,
-            { status: 400 }
-          )
-        }
-        if (target?.includes('nickname')) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: '이미 사용 중인 닉네임입니다.',
-            } as RegisterResponse,
-            { status: 400 }
-          )
-        }
-      }
+    const context = createErrorContext('register', undefined, body?.email)
+    const authError = handleAuthError(error, context)
+    
+    // Determine appropriate status code
+    let statusCode = 500
+    if (authError.code === AuthErrorCode.EMAIL_ALREADY_EXISTS || 
+        authError.code === AuthErrorCode.NICKNAME_ALREADY_EXISTS) {
+      statusCode = 400
     }
 
     return NextResponse.json(
-      {
-        success: false,
-        message: '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-      } as RegisterResponse,
-      { status: 500 }
+      createErrorResponse(authError),
+      { status: statusCode }
     )
   }
 }

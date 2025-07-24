@@ -6,9 +6,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
-import { useLogin } from '@/hooks/use-auth-api'
+import { useLogin, useResendVerification } from '@/hooks/use-auth-api'
 import { loginSchema, type LoginInput } from '@/lib/validations'
 import { cn } from '@/lib/utils'
+import { AuthErrorCode } from '@/types/error'
 
 interface LoginFormProps {
   className?: string
@@ -18,7 +19,10 @@ interface LoginFormProps {
 export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element {
   const router = useRouter()
   const login = useLogin()
+  const resendVerification = useResendVerification()
   const [showPassword, setShowPassword] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
 
   const {
     register,
@@ -45,21 +49,50 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
         router.push('/')
       }
     } catch (error) {
-      // 에러는 login hook에서 toast로 이미 처리됨
+      // Enhanced error handling with error codes
+      const errorMessage = error instanceof Error ? error.message : '로그인에 실패했습니다.'
+      const errorCode = (error as any)?.code
+      
+      // Handle specific error types with appropriate UI
+      if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED || 
+          errorMessage.includes('이메일 인증이 완료되지 않았습니다')) {
+        setNeedsVerification(true)
+        setUserEmail(data.email)
+        setError('root', {
+          message: '이메일 인증이 필요합니다. 가입 시 받은 인증 메일을 확인해주세요.',
+        })
+      } else {
+        setNeedsVerification(false)
+        setError('root', {
+          message: errorMessage,
+        })
+      }
+    }
+  }
+
+  const handleResendVerification = async (): Promise<void> => {
+    if (!userEmail) return
+    
+    try {
+      await resendVerification.mutateAsync({ email: userEmail })
       setError('root', {
-        message: '로그인에 실패했습니다. 입력 정보를 확인해주세요.',
+        message: '인증 메일이 재발송되었습니다. 이메일을 확인해주세요.',
       })
+    } catch (error) {
+      // 에러는 resendVerification hook에서 toast로 이미 처리됨
     }
   }
 
   const handleEmailChange = (): void => {
     clearErrors('email')
     clearErrors('root')
+    setNeedsVerification(false)
   }
 
   const handlePasswordChange = (): void => {
     clearErrors('password')
     clearErrors('root')
+    setNeedsVerification(false)
   }
 
   return (
@@ -117,6 +150,20 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
           {errors.root && (
             <div className="text-sm text-red-600 dark:text-red-400 text-center">
               {errors.root.message}
+              
+              {/* 이메일 인증 필요 시 재발송 버튼 표시 */}
+              {needsVerification && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendVerification.isPending}
+                    className="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline text-sm disabled:opacity-50"
+                  >
+                    {resendVerification.isPending ? '발송 중...' : '인증 메일 재발송'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
