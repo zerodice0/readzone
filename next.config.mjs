@@ -15,6 +15,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 't1.daumcdn.net',
       },
+      {
+        protocol: 'https',
+        hostname: 'image.yes24.com',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
   },

@@ -7,12 +7,14 @@ type Theme = 'light' | 'dark'
 interface ThemeContextType {
   theme: Theme
   toggleTheme: () => void
+  isLoaded: boolean
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
+  const [isLoaded, setIsLoaded] = useState(false)
 
   // 초기 테마 설정 (로컬스토리지 + 시스템 설정)
   useEffect(() => {
@@ -22,6 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setTheme('dark')
     }
+    setIsLoaded(true)
   }, [])
 
   // 테마 변경 시 HTML 클래스와 로컬스토리지 업데이트
@@ -40,7 +43,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, isLoaded }}>
       {children}
     </ThemeContext.Provider>
   )

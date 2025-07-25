@@ -173,13 +173,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     
     // 쿼리 파라미터 파싱 및 검증
     const queryData = {
-      page: searchParams.get('page'),
-      limit: searchParams.get('limit'),
-      userId: searchParams.get('userId'),
-      bookId: searchParams.get('bookId'),
-      tags: searchParams.get('tags'),
-      sort: searchParams.get('sort'),
-      search: searchParams.get('search'),
+      page: searchParams.get('page') || undefined,
+      limit: searchParams.get('limit') || undefined,
+      userId: searchParams.get('userId') || undefined,
+      bookId: searchParams.get('bookId') || undefined,
+      tags: searchParams.get('tags') || undefined,
+      sort: searchParams.get('sort') || undefined,
+      search: searchParams.get('search') || undefined,
     }
 
     const validationResult = listReviewsSchema.safeParse(queryData)

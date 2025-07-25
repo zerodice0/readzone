@@ -208,3 +208,23 @@ export interface ErrorMetrics {
   count: number
   context: ErrorContext
 }
+
+/**
+ * Creates a structured auth error with consistent messaging
+ */
+export function createAuthError(
+  code: AuthErrorCode, 
+  details?: Record<string, any>,
+  requestId?: string
+): AuthError {
+  const messages = AUTH_ERROR_MESSAGES[code]
+  
+  return {
+    code,
+    message: messages.system,
+    userMessage: messages.user,
+    details,
+    timestamp: new Date(),
+    requestId,
+  }
+}

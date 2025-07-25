@@ -97,12 +97,6 @@
   /sc:implement "review-feed.tsx의 MOCK_REVIEWS 제거하고 실제 API 연동. TanStack
    Query의 useInfiniteQuery 사용하여 무한 스크롤 구현"
 
-  2. 데이터베이스 정리
-
-  # 테스트 데이터 확인 및 삭제
-  /sc:task "데이터베이스에서 테스트 데이터 확인 후 삭제. 특히 '독서왕김씨',
-  '문학소녀', '사색하는개발자' 같은 테스트 사용자 데이터 제거"
-
   3. API 사용량 추적 구현
 
   # Kakao API 사용량 추적 시스템 구현

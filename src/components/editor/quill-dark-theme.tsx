@@ -8,9 +8,9 @@ import { useTheme } from '@/contexts/theme-context'
  * ReadZone 디자인 시스템과 완벽하게 일치하는 Tailwind CSS 기반 스타일
  */
 export const QuillDarkTheme: React.FC = () => {
-  const { theme } = useTheme()
+  const { theme, isLoaded } = useTheme()
 
-  if (theme !== 'dark') return null
+  if (!isLoaded || theme !== 'dark') return null
 
   return (
     <style jsx global>{`

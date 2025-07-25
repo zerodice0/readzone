@@ -22,6 +22,7 @@ interface AuthState {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
+  isHydrated: boolean
   
   // 액션
   setUser: (user: User | null) => void
@@ -44,6 +45,7 @@ export const useAuthStore = create<AuthState>()(
         user: null,
         isLoading: false,
         isAuthenticated: false,
+        isHydrated: false,
 
         // 사용자 설정
         setUser: (user) => {
@@ -137,6 +139,7 @@ export const useAuthStore = create<AuthState>()(
         onRehydrateStorage: () => (state) => {
           if (state) {
             state.isLoading = false
+            state.isHydrated = true
           }
         },
       }

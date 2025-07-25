@@ -85,11 +85,11 @@ export const updateReviewSchema = createReviewSchema.partial().omit({ bookId: tr
 export const listReviewsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
-  userId: z.string().optional(),
-  bookId: z.string().optional(),
-  tags: z.string().optional(), // 쉼표로 구분된 태그 문자열
-  sort: z.enum(['latest', 'popular', 'recommended']).default('latest'),
-  search: z.string().max(100).optional(), // 제목 또는 내용 검색
+  userId: z.string().nullish(),
+  bookId: z.string().nullish(),
+  tags: z.string().nullish(), // 쉼표로 구분된 태그 문자열
+  sort: z.enum(['latest', 'popular', 'recommended']).nullish().default('latest'),
+  search: z.string().max(100).nullish(), // 제목 또는 내용 검색
 })
 
 // 독후감 임시저장 검증 스키마

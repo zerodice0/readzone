@@ -18,10 +18,7 @@ const ReactQuill = dynamic(() => import('react-quill'), {
   )
 })
 
-// Quill CSS 동적 임포트
-const QuillCSS = dynamic(() => import('react-quill/dist/quill.snow.css'), {
-  ssr: false
-})
+// Quill CSS는 globals.css에서 임포트
 
 export interface RichTextEditorProps {
   value: string
@@ -54,7 +51,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   lastSaved = null,
   showAutosaveStatus = true
 }) => {
-  const { theme } = useTheme()
+  const { theme, isLoaded } = useTheme()
   const quillRef = useRef<any>(null)
 
   // Quill 에디터 설정 (독후감 작성에 최적화)
@@ -129,9 +126,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   return (
     <>
-      {/* Quill CSS 로드 */}
-      <QuillCSS />
-      
       {/* ReadZone 다크테마 CSS */}
       <QuillDarkTheme />
       
@@ -139,7 +133,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <div 
           className={cn(
             "quill-wrapper",
-            theme === 'dark' && 'dark-theme',
+            isLoaded && theme === 'dark' && 'dark-theme',
             isLoading && 'opacity-50 pointer-events-none'
           )}
           style={editorStyle}

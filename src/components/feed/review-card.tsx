@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button, Card, CardContent } from '@/components/ui'
@@ -11,22 +11,23 @@ import { cn } from '@/lib/utils'
 interface ReviewCardProps {
   review: {
     id: string
-    title: string
+    title: string | null
     content: string
     book: {
       title: string
       authors: string[]
-      thumbnail?: string
+      thumbnail?: string | null
     }
     user: {
       nickname: string
       profileImage?: string | null
+      image?: string | null
     }
     isRecommended: boolean
     createdAt: Date
     likeCount: number
     commentCount: number
-    isLiked: boolean
+    isLiked?: boolean
   }
   showActions?: boolean
   onLoginRequired?: () => void
@@ -34,6 +35,8 @@ interface ReviewCardProps {
 
 export function ReviewCard({ review, showActions = true, onLoginRequired }: ReviewCardProps): JSX.Element {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [formattedDate, setFormattedDate] = useState<string>('')
+  const [isClientMounted, setIsClientMounted] = useState(false)
 
   // HTML 콘텐츠 미리보기 (200자) - HTML 태그 제거
   const getTextContent = (html: string) => {
@@ -63,31 +66,56 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
   }
 
   const handleShare = (): void => {
-    // 공유 기능
-    if (navigator.share) {
+    // 공유 기능 - 클라이언트 전용
+    if (typeof window === 'undefined') return
+    
+    if (navigator?.share) {
       navigator.share({
-        title: review.title,
-        text: `"${review.book.title}" 독후감: ${review.title}`,
+        title: review.title || '제목 없음',
+        text: `"${review.book.title}" 독후감: ${review.title || '제목 없음'}`,
         url: window.location.origin + `/review/${review.id}`,
       })
     } else {
       // 폴백: 클립보드에 복사
-      navigator.clipboard.writeText(window.location.origin + `/review/${review.id}`)
+      navigator?.clipboard?.writeText(window.location.origin + `/review/${review.id}`)
     }
   }
 
-  const formatDate = (date: Date): string => {
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const minutes = Math.floor(diff / (1000 * 60))
+  // 클라이언트 마운트 후 날짜 포맷팅
+  useEffect(() => {
+    setIsClientMounted(true)
+    
+    // 개발 환경에서 DOM 변경 모니터링 (선택사항)
+    if (process.env.NODE_ENV === 'development') {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            const element = mutation.target as Element
+            if (element.className.includes('tc-')) {
+              console.warn('외부 확장 프로그램이 DOM을 수정했습니다:', element.className)
+            }
+          }
+        })
+      })
+      observer.observe(document.body, { attributes: true, subtree: true })
+      return () => observer.disconnect()
+    }
+    
+    const formatDate = (date: Date): string => {
+      const now = new Date()
+      const diff = now.getTime() - date.getTime()
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor(diff / (1000 * 60 * 60))
+      const minutes = Math.floor(diff / (1000 * 60))
 
-    if (days > 0) return `${days}일 전`
-    if (hours > 0) return `${hours}시간 전`
-    if (minutes > 0) return `${minutes}분 전`
-    return '방금 전'
-  }
+      if (days > 0) return `${days}일 전`
+      if (hours > 0) return `${hours}시간 전`
+      if (minutes > 0) return `${minutes}분 전`
+      return '방금 전'
+    }
+    
+    setFormattedDate(formatDate(review.createdAt))
+  }, [review.createdAt])
 
   return (
     <Card className="w-full">
@@ -96,9 +124,9 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-              {review.user.profileImage ? (
+              {(review.user.image || review.user.profileImage) ? (
                 <Image
-                  src={review.user.profileImage}
+                  src={review.user.image || review.user.profileImage || ''}
                   alt={review.user.nickname}
                   width={40}
                   height={40}
@@ -114,8 +142,8 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
               <div className="font-medium text-gray-900 dark:text-gray-100">
                 {review.user.nickname}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {formatDate(review.createdAt)}
+              <div className="text-sm text-gray-500 dark:text-gray-400" suppressHydrationWarning>
+                {isClientMounted ? formattedDate : review.createdAt.toLocaleDateString('ko-KR')}
               </div>
             </div>
           </div>
@@ -161,7 +189,7 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
 
         {/* 독후감 제목 */}
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-          {review.title}
+          {review.title || '제목 없음'}
         </h2>
 
         {/* 독후감 내용 */}

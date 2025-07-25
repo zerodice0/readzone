@@ -1,0 +1,885 @@
+
+> readzone@0.1.0 dev
+> next dev
+
+ ⚠ Warning: Found multiple lockfiles. Selecting /Users/zerodice0/workspace/package-lock.json.
+   Consider removing the lockfiles at:
+   * /Users/zerodice0/workspace/zerodice0/development/readzone/package-lock.json
+
+   ▲ Next.js 15.4.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.77.199:3000
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · serverActions
+     · optimizePackageImports
+
+ ✓ Starting...
+ ✓ Ready in 1875ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1998ms (876 modules)
+ HEAD / 200 in 2593ms
+ ✓ Compiled in 663ms (380 modules)
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ○ Compiling /api/reviews ...
+ GET /api/reviews 200 in 517ms
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ✓ Compiled / in 141ms (496 modules)
+ GET / 200 in 381ms
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ GET /api/reviews?page=1&limit=10&sort=latest 200 in 517ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ○ Compiling /api/auth/[...nextauth] ...
+ GET /api/auth/session 200 in 719ms
+ GET / 200 in 161ms
+ GET /api/reviews?page=1&limit=10&sort=latest 200 in 19ms
+ GET /api/auth/session 200 in 34ms
+ ⚠ Found a change in next.config.mjs. Restarting the server to apply the changes...
+   ▲ Next.js 15.4.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.77.199:3000
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     · serverActions
+     · optimizePackageImports
+
+ ✓ Starting...
+ ✓ Ready in 1334ms
+ ○ Compiling /api/reviews ...
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ GET /api/reviews 200 in 738ms
+ GET /api/reviews 200 in 11ms
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ✓ Compiled / in 2.8s (877 modules)
+ GET / 200 in 3882ms
+ ✓ Compiled in 1101ms (381 modules)
+ ○ Compiling /api/auth/[...nextauth] ...
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+ GET /api/auth/session 200 in 1415ms
+ GET /api/auth/session 200 in 15ms
+ GET /api/auth/session 200 in 13ms
+ GET /api/auth/session 200 in 9ms
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+ GET /sw.js 404 in 391ms
+ GET / 200 in 93ms
+ GET /api/auth/session 200 in 49ms
+ GET /api/auth/session 200 in 8ms
+ GET /api/auth/session 200 in 8ms
+ GET /api/auth/session 200 in 6ms
+ GET /sw.js 404 in 30ms
+ GET / 200 in 64ms
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+ GET /api/auth/session 200 in 347ms
+ GET /api/reviews?page=1&limit=10&sort=latest 200 in 353ms
+ GET /api/auth/session 200 in 6ms
+ GET / 200 in 182ms
+ GET /api/reviews?page=1&limit=10&sort=latest 200 in 43ms
+ GET /api/auth/session 200 in 32ms
+ GET /api/auth/session 200 in 13ms
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/auth/[...nextauth]/route.ts
+ ✓ Compiled /_not-found in 226ms (867 modules)
+ GET /sw.js 404 in 413ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 588ms (1194 modules)
+ GET / 200 in 457ms
+ GET / 200 in 458ms
+ GET / 200 in 21ms
+ GET / 200 in 16ms
+ GET /_next/static/css/app/layout.css?v=1753405086382 404 in 32ms
+ GET /_next/static/css/app/layout.css?v=1753405086376 404 in 147ms
+ GET /sw.js 404 in 1066ms
+ ✓ Compiled in 389ms (1209 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 99ms
+ GET / 200 in 214ms
+ GET /_next/static/css/app/layout.css?v=1753405089439 404 in 132ms
+ GET / 200 in 329ms
+ GET /_next/static/css/app/layout.css?v=1753405089458 404 in 165ms
+ GET /_next/static/chunks/main-app.js?v=1753405089458 404 in 164ms
+ GET /sw.js 404 in 50ms
+ ✓ Compiled in 235ms (1209 modules)
+ GET / 200 in 38ms
+ GET /_next/static/css/app/layout.css?v=1753405097682 404 in 66ms
+ ✓ Compiled in 215ms (1209 modules)
+ GET / 200 in 56ms
+ GET /_next/static/css/app/layout.css?v=1753405108861 404 in 67ms
+ ✓ Compiled in 160ms (1107 modules)
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ GET /api/reviews?page=1&limit=10&sort=latest 200 in 457ms
+ ○ Compiling /api/reviews ...
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ GET / 200 in 66ms
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ GET /_next/static/css/app/layout.css?v=1753405178870 404 in 303ms
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ⚠ ./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+
+./src/lib/auth.ts
+Attempted import error: 'createAuthError' is not exported from '@/types/error' (imported as 'createAuthError').
+
+Import trace for requested module:
+./src/lib/auth.ts
+./src/app/api/reviews/route.ts
+ ✓ Compiled /_not-found in 239ms (1102 modules)
+ ✓ Compiled /api/reviews in 77ms (764 modules)
+ GET /api/reviews?page=1 200 in 196ms
+ GET / 200 in 196ms
+ ✓ Compiled /_not-found in 206ms (1107 modules)
+ GET /_next/static/css/app/layout.css?v=1753405411367 404 in 402ms
+ GET /_next/static/chunks/main-app.js?v=1753405411367 404 in 21ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 20ms
+ GET / 200 in 84ms
+ GET /_next/static/css/app/layout.css?v=1753405413968 404 in 22ms
+ GET /_next/static/chunks/main-app.js?v=1753405413968 404 in 43ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 43ms
+ GET / 200 in 52ms
+ GET /_next/static/css/app/layout.css?v=1753405415389 404 in 18ms
+ GET /_next/static/chunks/main-app.js?v=1753405415389 404 in 59ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 59ms
+ GET /sw.js 404 in 23ms
+ GET /demo 404 in 33ms
+ GET /_next/static/css/app/layout.css?v=1753405416392 404 in 20ms
+ GET /_next/static/chunks/main-app.js?v=1753405416392 404 in 35ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 33ms
+ GET / 200 in 54ms
+ GET /_next/static/css/app/layout.css?v=1753405419571 404 in 16ms
+ GET /_next/static/chunks/main-app.js?v=1753405419571 404 in 33ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 33ms
+ GET / 200 in 42ms
+ GET /_next/static/css/app/layout.css?v=1753405422808 404 in 62ms
+ GET /_next/static/media/e4af272ccee01ff0-s.p.woff2 404 in 66ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 31ms
+ GET /_next/static/chunks/main-app.js?v=1753405422808 404 in 32ms
+ GET /_next/static/css/app/layout.css?v=1753405422808 404 in 38ms
+ GET / 200 in 57ms
+ GET /_next/static/css/app/layout.css?v=1753405431556 404 in 50ms
+ GET /_next/static/media/e4af272ccee01ff0-s.p.woff2 404 in 71ms
+ GET /_next/static/chunks/main-app.js?v=1753405431556 404 in 70ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 71ms
