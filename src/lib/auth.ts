@@ -6,6 +6,7 @@ import { verifyPassword } from './utils'
 import { logger } from './logger'
 import { AuthErrorCode, createAuthError } from '@/types/error'
 import { handleAuthError, createErrorContext } from './error-handler'
+import { storeAuthError } from '@/app/api/auth/last-error/route'
 
 // Extend NextAuth types for custom properties
 declare module 'next-auth' {
@@ -39,7 +40,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           if (!credentials?.email || !credentials?.password) {
             const error = createAuthError(AuthErrorCode.MISSING_REQUIRED_FIELD)
-            throw new Error(error.userMessage)
+            const email = credentials?.email as string || 'unknown'
+            // Store error for client-side retrieval
+            storeAuthError(email, error)
+            return null
           }
 
           const email = credentials.email as string
@@ -55,13 +59,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (!user) {
             const error = createAuthError(AuthErrorCode.USER_NOT_FOUND)
             handleAuthError(error, context)
-            throw new Error(error.userMessage)
+            // Store error for client-side retrieval
+            storeAuthError(email, error)
+            return null
           }
 
           if (!user.emailVerified) {
             const error = createAuthError(AuthErrorCode.EMAIL_NOT_VERIFIED)
             handleAuthError(error, { ...context, userId: user.id })
-            throw new Error(error.userMessage)
+            // Store error for client-side retrieval
+            storeAuthError(email, error)
+            return null
           }
 
           const isPasswordValid = await verifyPassword(password, user.password)
@@ -69,7 +77,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (!isPasswordValid) {
             const error = createAuthError(AuthErrorCode.INVALID_CREDENTIALS)
             handleAuthError(error, { ...context, userId: user.id })
-            throw new Error(error.userMessage)
+            // Store error for client-side retrieval
+            storeAuthError(email, error)
+            return null
           }
 
           // Log successful login
@@ -87,13 +97,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             image: user.image,
           }
         } catch (error) {
-          // Re-throw with the structured error message
-          if (error instanceof Error) {
-            throw error
-          }
-          
-          const authError = createAuthError(AuthErrorCode.INTERNAL_ERROR)
-          throw new Error(authError.userMessage)
+          // Log unexpected errors and return null
+          logger.error('Unexpected auth error:', error)
+          return null
         }
       },
     }),

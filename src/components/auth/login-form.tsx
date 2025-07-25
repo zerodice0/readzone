@@ -6,10 +6,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
-import { useLogin, useResendVerification } from '@/hooks/use-auth-api'
+import { useLogin, useResendVerificationBasic } from '@/hooks/use-auth-api'
 import { loginSchema, type LoginInput } from '@/lib/validations'
 import { cn } from '@/lib/utils'
-import { AuthErrorCode } from '@/types/error'
+import { AuthErrorCode, type AuthError } from '@/types/error'
+import { Eye, EyeOff } from 'lucide-react'
 import { EmailVerificationPrompt } from './email-verification-prompt'
 import { EmailGuideModal } from './email-guide-modal'
 
@@ -21,11 +22,14 @@ interface LoginFormProps {
 export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element {
   const router = useRouter()
   const login = useLogin()
-  const resendVerification = useResendVerification()
+  const resendVerification = useResendVerificationBasic()
+  
+  // UI 상태 관리
   const [showPassword, setShowPassword] = useState(false)
   const [needsVerification, setNeedsVerification] = useState(false)
   const [userEmail, setUserEmail] = useState('')
   const [showEmailGuide, setShowEmailGuide] = useState(false)
+  const [availableActions, setAvailableActions] = useState<string[]>([])
 
   const {
     register,
@@ -52,22 +56,20 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
         router.push('/')
       }
     } catch (error) {
-      // Enhanced error handling with error codes
-      const errorMessage = error instanceof Error ? error.message : '로그인에 실패했습니다.'
-      const errorCode = (error as any)?.code
-      const isActionable = (error as any)?.actionable
+      // 개선된 구조화된 에러 처리
+      const authError = error as AuthError & Error
+      const errorMessage = authError.message || '로그인에 실패했습니다.'
       
-      // Handle specific error types with appropriate UI
-      if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED || 
-          errorMessage.includes('이메일 인증이 필요합니다') ||
-          errorMessage.includes('이메일 인증이 완료되지 않았습니다') ||
-          isActionable) {
+      // 이메일 인증이 필요한 경우
+      if (authError.code === AuthErrorCode.EMAIL_NOT_VERIFIED) {
         setNeedsVerification(true)
         setUserEmail(data.email)
-        // Clear any existing form errors since we'll show the verification prompt
+        setAvailableActions(authError.details?.actions || ['resend_email', 'show_guide'])
         clearErrors('root')
       } else {
+        // 다른 에러 타입들 처리
         setNeedsVerification(false)
+        setAvailableActions([])
         setError('root', {
           message: errorMessage,
         })
@@ -83,16 +85,14 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
     setShowEmailGuide(false)
   }
 
-  const handleEmailChange = (): void => {
-    clearErrors('email')
+  // 폼 필드 변경 시 상태 초기화
+  const handleFieldChange = (field: 'email' | 'password'): void => {
+    clearErrors(field)
     clearErrors('root')
-    setNeedsVerification(false)
-  }
-
-  const handlePasswordChange = (): void => {
-    clearErrors('password')
-    clearErrors('root')
-    setNeedsVerification(false)
+    if (needsVerification) {
+      setNeedsVerification(false)
+      setAvailableActions([])
+    }
   }
 
   return (
@@ -109,7 +109,7 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
             placeholder="이메일을 입력하세요"
             error={errors.email?.message}
             {...register('email', {
-              onChange: handleEmailChange,
+              onChange: () => handleFieldChange('email'),
             })}
             required
           />
@@ -123,24 +123,20 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
                 placeholder="비밀번호를 입력하세요"
                 error={errors.password?.message}
                 {...register('password', {
-                  onChange: handlePasswordChange,
+                  onChange: () => handleFieldChange('password'),
                 })}
                 required
               />
               <button
                 type="button"
-                className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
               >
                 {showPassword ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                  </svg>
+                  <EyeOff className="w-5 h-5" />
                 ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
+                  <Eye className="w-5 h-5" />
                 )}
               </button>
             </div>
@@ -151,6 +147,7 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
             <EmailVerificationPrompt
               email={userEmail}
               onShowGuide={handleShowEmailGuide}
+              availableActions={availableActions}
               className="mb-4"
             />
           )}

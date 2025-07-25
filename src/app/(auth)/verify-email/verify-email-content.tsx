@@ -4,7 +4,8 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
-import { useVerifyEmail, useResendVerification } from '@/hooks/use-auth-api'
+import { useVerifyEmail } from '@/hooks/use-auth-api'
+import { useResendVerification } from '@/hooks/use-resend-verification'
 
 function VerifyEmailInner(): JSX.Element {
   const router = useRouter()
@@ -14,7 +15,7 @@ function VerifyEmailInner(): JSX.Element {
   const [isVerified, setIsVerified] = useState(false)
   
   const verifyEmail = useVerifyEmail()
-  const resendVerification = useResendVerification()
+  const resendVerification = useResendVerification(email)
 
   useEffect(() => {
     const emailParam = searchParams.get('email')

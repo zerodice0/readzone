@@ -28,7 +28,7 @@ const nextConfig = {
   eslint: {
     dirs: ['src'],
   },
-  // TypeScript configuration
+  // TypeScript configuration - strict type checking enabled
   typescript: {
     ignoreBuildErrors: false,
   },
