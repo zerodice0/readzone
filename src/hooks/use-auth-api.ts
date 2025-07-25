@@ -165,26 +165,35 @@ export function useLogin() {
         // Enhanced error handling with specific error codes and messages
         const errorMessage = result.error
         
-        // Map NextAuth errors to structured error types
-        if (errorMessage.includes('이메일 인증이 완료되지 않았습니다')) {
-          const error = new Error('이메일 인증이 완료되지 않았습니다. 이메일을 확인하고 인증을 완료해주세요.')
+        // Map NextAuth errors to structured error types with more flexible matching
+        if (errorMessage.includes('이메일 인증이 필요합니다') || 
+            errorMessage.includes('이메일 인증이 완료되지 않았습니다') ||
+            errorMessage.includes('Email verification required')) {
+          const error = new Error('이메일 인증이 필요합니다. 가입 시 받은 인증 메일을 확인해주세요.')
           ;(error as any).code = AuthErrorCode.EMAIL_NOT_VERIFIED
+          ;(error as any).actionable = true
+          ;(error as any).actions = ['resend_email', 'show_guide']
           throw error
         }
         
-        if (errorMessage.includes('등록되지 않은 이메일입니다')) {
+        if (errorMessage.includes('등록되지 않은 이메일입니다') ||
+            errorMessage.includes('User not found')) {
           const error = new Error('등록되지 않은 이메일입니다. 회원가입을 먼저 진행해주세요.')
           ;(error as any).code = AuthErrorCode.USER_NOT_FOUND
           throw error
         }
         
-        if (errorMessage.includes('비밀번호가 올바르지 않습니다')) {
-          const error = new Error('비밀번호가 올바르지 않습니다. 다시 확인해주세요.')
+        if (errorMessage.includes('비밀번호가 올바르지 않습니다') ||
+            errorMessage.includes('이메일 또는 비밀번호가 올바르지 않습니다') ||
+            errorMessage.includes('Invalid credentials')) {
+          const error = new Error('이메일 또는 비밀번호가 올바르지 않습니다.')
           ;(error as any).code = AuthErrorCode.INVALID_CREDENTIALS
           throw error
         }
         
-        if (errorMessage.includes('이메일과 비밀번호를 입력해주세요')) {
+        if (errorMessage.includes('필수 입력 정보가 누락되었습니다') ||
+            errorMessage.includes('이메일과 비밀번호를 입력해주세요') ||
+            errorMessage.includes('Missing required field')) {
           const error = new Error('이메일과 비밀번호를 입력해주세요.')
           ;(error as any).code = AuthErrorCode.MISSING_REQUIRED_FIELD
           throw error

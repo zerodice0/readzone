@@ -10,6 +10,8 @@ import { useLogin, useResendVerification } from '@/hooks/use-auth-api'
 import { loginSchema, type LoginInput } from '@/lib/validations'
 import { cn } from '@/lib/utils'
 import { AuthErrorCode } from '@/types/error'
+import { EmailVerificationPrompt } from './email-verification-prompt'
+import { EmailGuideModal } from './email-guide-modal'
 
 interface LoginFormProps {
   className?: string
@@ -23,6 +25,7 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
   const [showPassword, setShowPassword] = useState(false)
   const [needsVerification, setNeedsVerification] = useState(false)
   const [userEmail, setUserEmail] = useState('')
+  const [showEmailGuide, setShowEmailGuide] = useState(false)
 
   const {
     register,
@@ -52,15 +55,17 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
       // Enhanced error handling with error codes
       const errorMessage = error instanceof Error ? error.message : '로그인에 실패했습니다.'
       const errorCode = (error as any)?.code
+      const isActionable = (error as any)?.actionable
       
       // Handle specific error types with appropriate UI
       if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED || 
-          errorMessage.includes('이메일 인증이 완료되지 않았습니다')) {
+          errorMessage.includes('이메일 인증이 필요합니다') ||
+          errorMessage.includes('이메일 인증이 완료되지 않았습니다') ||
+          isActionable) {
         setNeedsVerification(true)
         setUserEmail(data.email)
-        setError('root', {
-          message: '이메일 인증이 필요합니다. 가입 시 받은 인증 메일을 확인해주세요.',
-        })
+        // Clear any existing form errors since we'll show the verification prompt
+        clearErrors('root')
       } else {
         setNeedsVerification(false)
         setError('root', {
@@ -70,17 +75,12 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
     }
   }
 
-  const handleResendVerification = async (): Promise<void> => {
-    if (!userEmail) return
-    
-    try {
-      await resendVerification.mutateAsync({ email: userEmail })
-      setError('root', {
-        message: '인증 메일이 재발송되었습니다. 이메일을 확인해주세요.',
-      })
-    } catch (error) {
-      // 에러는 resendVerification hook에서 toast로 이미 처리됨
-    }
+  const handleShowEmailGuide = (): void => {
+    setShowEmailGuide(true)
+  }
+
+  const handleCloseEmailGuide = (): void => {
+    setShowEmailGuide(false)
   }
 
   const handleEmailChange = (): void => {
@@ -146,24 +146,19 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
             </div>
           </div>
 
-          {/* 전역 에러 메시지 */}
-          {errors.root && (
+          {/* 이메일 인증 필요 시 EmailVerificationPrompt 표시 */}
+          {needsVerification && userEmail && (
+            <EmailVerificationPrompt
+              email={userEmail}
+              onShowGuide={handleShowEmailGuide}
+              className="mb-4"
+            />
+          )}
+
+          {/* 일반 에러 메시지 (이메일 인증 에러가 아닌 경우만) */}
+          {errors.root && !needsVerification && (
             <div className="text-sm text-red-600 dark:text-red-400 text-center">
               {errors.root.message}
-              
-              {/* 이메일 인증 필요 시 재발송 버튼 표시 */}
-              {needsVerification && (
-                <div className="mt-2">
-                  <button
-                    type="button"
-                    onClick={handleResendVerification}
-                    disabled={resendVerification.isPending}
-                    className="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 hover:underline text-sm disabled:opacity-50"
-                  >
-                    {resendVerification.isPending ? '발송 중...' : '인증 메일 재발송'}
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -199,6 +194,13 @@ export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element
           </div>
         </form>
       </CardContent>
+      
+      {/* 이메일 확인 가이드 모달 */}
+      <EmailGuideModal
+        isOpen={showEmailGuide}
+        onClose={handleCloseEmailGuide}
+        userEmail={userEmail}
+      />
     </Card>
   )
 }
