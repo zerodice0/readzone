@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, X, Book, Clock, TrendingUp } from 'lucide-react'
+import { Search, X, Book } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -67,17 +67,26 @@ export function BookSearch({
     setSearchState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
+      console.log('🔵 Calling searchBooks with:', { query: query.trim(), page, maxResults })
       const response = await searchBooks(query.trim(), page, maxResults)
+      console.log('🔵 searchBooks response:', response)
+      console.log('🔵 response.success:', response.success)
+      console.log('🔵 response.data:', response.data)
 
       if (response.success && response.data) {
-        const newResults = response.data.data.documents
+        console.log('🟡 Parsing response data...')
+        console.log('🟡 response.data structure:', Object.keys(response.data))
+        console.log('🟡 response.data.data:', response.data.data)
+        console.log('🟡 response.data.data?.documents:', response.data.data?.documents)
+        
+        const newResults = response.data?.data?.documents || []
         
         setSearchState(prev => ({
           ...prev,
           results: append ? [...prev.results, ...newResults] : newResults,
           isLoading: false,
-          hasMore: !response.data.pagination.isEnd,
-          totalCount: response.data.pagination.totalCount,
+          hasMore: !response.data?.pagination?.isEnd,
+          totalCount: response.data?.pagination?.totalCount || 0,
           page
         }))
 
@@ -94,6 +103,11 @@ export function BookSearch({
         }))
       }
     } catch (error) {
+      console.error('🔴 BookSearch Error:', error)
+      console.error('🔴 Error Type:', error?.constructor?.name)
+      console.error('🔴 Error Message:', error instanceof Error ? error.message : 'Unknown error')
+      console.error('🔴 Error Stack:', error instanceof Error ? error.stack : 'No stack trace')
+      
       setSearchState(prev => ({
         ...prev,
         isLoading: false,

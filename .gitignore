@@ -59,3 +59,28 @@ test-*.ts
 # temporary scripts for testing
 scripts/test-*.ts
 scripts/test-*.js
+
+# Playwright testing files
+/playwright-report/
+/test-results/
+/e2e/
+playwright.config.ts
+
+# Performance testing scripts
+/scripts/performance-tests/
+
+# Test files and directories
+**/__tests__/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+
+# Development logs
+dev.log
+
+# Local environment files
+.env.local
+.env.development
+.env.test
+.env.production

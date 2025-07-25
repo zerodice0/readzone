@@ -61,9 +61,13 @@ class ApiClient {
       }
 
       const data = await response.json()
+      console.log('🟢 API Client - Response JSON:', data)
       return data
 
     } catch (error: any) {
+      console.error('🔴 API Client Error:', error)
+      console.error('🔴 API Client Error Name:', error.name)
+      console.error('🔴 API Client Error Message:', error.message)
       clearTimeout(timeoutId)
       
       if (error.name === 'AbortError') {

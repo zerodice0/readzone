@@ -24,6 +24,7 @@ import {
 
 interface UserProfilePageProps {
   userId: string
+  currentUserId?: string
   className?: string
 }
 

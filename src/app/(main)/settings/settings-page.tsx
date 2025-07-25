@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+// import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
@@ -14,24 +14,14 @@ import {
   Bell,
   Shield,
   Palette,
-  Globe,
   Trash2,
   LogOut,
   Save,
   RefreshCw,
   ArrowLeft,
   AlertCircle,
-  CheckCircle,
-  Moon,
-  Sun,
-  Monitor,
   Lock,
-  Mail,
-  Eye,
-  EyeOff,
-  Smartphone,
-  Download,
-  Upload
+  Download
 } from 'lucide-react'
 import Link from 'next/link'
 import { ProfileEditSection } from '@/components/settings/profile-edit-section'
@@ -69,7 +59,6 @@ interface SettingSectionConfig {
 }
 
 export function SettingsPage({ userId, className }: SettingsPageProps) {
-  const { data: session } = useSession()
   const [activeSection, setActiveSection] = useState<SettingSection>('profile')
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -179,7 +168,6 @@ export function SettingsPage({ userId, className }: SettingsPageProps) {
       if (hasUnsavedChanges) {
         event.preventDefault()
         event.returnValue = '저장하지 않은 변경사항이 있습니다.'
-        return '저장하지 않은 변경사항이 있습니다.'
       }
     }
 

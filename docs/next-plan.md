@@ -1,120 +1,218 @@
-⏺ 🔍 문제 진단 결과
 
-  문제 1: 무한 스크롤 미구현
+⏺ 📋 이메일 인증 개선 PRD 분석 및 SuperClaude 명령어 프리셋
 
-  review-feed.tsx를 확인한 결과, 실제 API 연동이 되어있지 않고 목업 데이터만
-  사용하고 있습니다:
-  - 11번째 줄에 MOCK_REVIEWS 하드코딩된 데이터 사용
-  - 152번째 줄에서 "더 보기" 버튼 클릭 시 단순히 로딩 상태만 변경
-  - 실제 API 호출 로직 없음
+  🔍 현재 상태 분석
 
-  문제 2: 데이터베이스 테스트 데이터
+  기존 구현 상태:
+  - ✅ 에러 처리 로직 기본 구조 존재 (use-auth-api.ts)
+  - ✅ 이메일 인증 에러 감지 및 분기 처리 구현
+  - ✅ EmailVerificationPrompt, EmailGuideModal 컴포넌트 존재
+  - ✅ 재전송 API 기본 구조 완료
 
-  데이터베이스에 남아있는 테스트 데이터를 삭제해야 합니다.
+  개선 필요 영역:
+  - 🔧 재전송 제한 로직 및 쿨다운 시스템
+  - 🔧 도메인별 맞춤 가이드 시스템
+  - 🔧 모니터링 및 로깅 강화
+  - 🔧 E2E 테스트 시나리오 구현
 
-  🛠️ 해결 방법
+  ---
+  🚀 Phase별 SuperClaude 명령어 프리셋
 
-  해결책 1: 무한 스크롤 구현
+  Phase 1: 에러 처리 개선 (2시간)
 
-  SuperClaude 명령어:
-  /sc:implement "Review feed 컴포넌트에 실제 API 연동 및 무한 스크롤 구현.
-  TanStack Query 사용하여 /api/reviews 엔드포인트와 연결. 페이지네이션과 무한
-  스크롤 로직 추가"
+  1.1 에러 구조체 분석 및 개선
 
-  또는 직접 수정을 원한다면:
-  /sc:improve @/src/components/feed/review-feed.tsx --focus=functionality
-  "MOCK_REVIEWS를 제거하고 실제 API 호출로 대체. useInfiniteQuery로 무한 스크롤
-  구현"
+  /sc:analyze src/hooks/use-auth-api.ts --focus quality --depth deep ✅
 
-  해결책 2: 데이터베이스 정리
+  1.2 NextAuth 에러 파싱 강화 구현
 
-  SuperClaude 명령어:
-  /sc:task "데이터베이스의 모든 테스트 데이터 삭제. User, BookReview, Book
-  테이블 확인 후 삭제 스크립트 작성 및 실행"
+  /sc:implement "NextAuth 에러 메시지 파싱 로직 개선" --type service --framework
+   nextauth
+  @src/hooks/use-auth-api.ts ✅
+  - 구조화된 에러 생성 함수 개선
+  - AuthError 인터페이스 확장
+  - 에러 코드별 상세 분기 처리
 
-  또는 수동으로 실행:
-  # 1. 현재 데이터 확인
-  npx prisma db seed --preview-feature
+  1.3 로그인 폼 에러 상태 관리 개선
 
-  # 2. 데이터베이스 리셋 (모든 데이터 삭제)
-  npx prisma migrate reset
+  /sc:improve src/components/auth/login-form.tsx --focus quality ✅
+  - 에러 상태 관리 로직 개선
+  - 에러 타입별 UI 분기 최적화
+  - 사용자 경험 향상을 위한 상태 초기화 로직
 
-  # 3. 특정 데이터만 삭제하려면
-  npx prisma studio
-  # GUI에서 수동 삭제
+  1.4 Phase 1 테스트 실행
 
-  추가 권장사항
+  /sc:test unit --focus auth-error-handling ✅
+  - useLogin 훅 에러 처리 테스트
+  - 에러 코드별 분기 테스트
+  - 로그인 폼 에러 상태 테스트
 
-  개발 환경 점검:
-  /sc:analyze --focus=functionality "전체 프로젝트에서 MOCK 데이터나 하드코딩된
-  데이터 사용 여부 확인"
+  ---
+  Phase 2: EmailVerificationPrompt 컴포넌트 (3시간)
 
-  API 엔드포인트 테스트:
-  /sc:test "GET /api/reviews 엔드포인트가 정상 작동하는지 확인. curl이나 fetch로
-   테스트"
+  2.1 재전송 제한 로직 구현
 
-  이 명령어들을 순서대로 실행하면 문제가 해결될 것입니다. 특히 첫 번째 명령어로
-  무한 스크롤을 구현하면 스켈레톤 로딩 문제가 해결됩니다.
+  /sc:implement "이메일 재전송 제한 시스템" --type hook --framework react
+  @src/hooks/use-resend-verification.ts ✅
+  - 시간별/일별 재전송 제한 로직
+  - 쿨다운 타이머 구현
+  - 로컬스토리지 기반 제한 추적
 
-  -----
+  2.2 EmailVerificationPrompt 컴포넌트 개선
 
-  ⏺ 📊 MOCK 데이터 및 하드코딩 분석 결과
+  /sc:improve src/components/auth/email-verification-prompt.tsx --focus
+  accessibility ✅
+  - 재전송 제한 정보 UI 표시
+  - 쿨다운 타이머 실시간 업데이트
+  - 접근성 향상 (aria-label, role 속성)
+  - 모바일 친화적 디자인 적용
 
-  🔴 발견된 주요 문제
+  2.3 컴포넌트 통합 테스트
 
-  1. 메인 피드 컴포넌트의 하드코딩된 MOCK 데이터
+  /sc:test integration --focus email-verification-prompt ✅
+  - 재전송 제한 로직 테스트
+  - 쿨다운 타이머 동작 테스트
+  - UI 상태 변화 테스트
 
-  파일: /src/components/feed/review-feed.tsx
-  - 문제: 11-69번째 줄에 MOCK_REVIEWS 배열로 3개의 독후감 데이터 하드코딩
-  - 영향: 실제 API와 연동되지 않아 "더 보기" 버튼이 작동하지 않음
+  ---
+  Phase 3: EmailGuideModal 컴포넌트 (2시간)
 
-  2. 임시값 사용
+  3.1 도메인별 가이드 시스템 구현
 
-  파일: /src/lib/kakao.ts (284번째 줄)
-  - 문제: API 사용량 추적에서 remaining: 1000 임시값 사용
-  - 영향: 실제 API 사용량 추적이 불가능
+  /sc:implement "이메일 도메인별 맞춤 가이드" --type component --framework react
+  @src/components/auth/email-guide-modal.tsx ✅
+  - Gmail, Naver, Daum 등 주요 도메인별 가이드
+  - 스팸함 확인 방법 안내
+  - 고객 지원 연결 기능
 
-  3. 테스트 스크립트의 테스트 데이터
+  3.2 모달 UX 개선
 
-  파일: /src/scripts/test-comment-api.ts
-  - 문제: 테스트용 데이터 생성 스크립트가 존재
-  - 영향: 실수로 실행 시 데이터베이스에 테스트 데이터 추가 가능
+  /sc:improve src/components/auth/email-guide-modal.tsx --focus performance ✅
+  - 단계별 가이드 UI 최적화
+  - 모바일 반응형 디자인 적용
+  - 접근성 개선 (키보드 내비게이션)
 
-  📈 전체 분석 통계
+  3.3 가이드 시스템 테스트
 
-  | 카테고리          | 발견 수 | 심각도   |
-  |---------------|------|-------|
-  | MOCK 데이터 하드코딩 | 1개   | 🔴 높음 |
-  | 임시값 사용        | 1개   | 🟡 중간 |
-  | 테스트 데이터 스크립트  | 2개   | 🟡 중간 |
-  | 테스트 케이스       | 3개   | 🟢 낮음 |
+  /sc:test e2e --focus email-guide-modal ✅
+  - 도메인별 가이드 표시 테스트
+  - 모달 인터랙션 테스트
+  - 고객 지원 연결 테스트
 
-  ✅ 권장 개선 사항
+  ---
+  Phase 4: 백엔드 모니터링 강화 (1시간)
 
-  1. 즉시 수정 필요 (Critical)
+  4.1 이메일 서비스 모니터링 구현
 
-  # Review Feed 컴포넌트 API 연동
-  /sc:implement "review-feed.tsx의 MOCK_REVIEWS 제거하고 실제 API 연동. TanStack
-   Query의 useInfiniteQuery 사용하여 무한 스크롤 구현"
+  /sc:implement "이메일 전송 모니터링 시스템" --type service --framework nextjs
+  @src/lib/email-monitor.ts
+  - 이메일 전송 성공/실패 로깅
+  - 사용자별 재전송 횟수 추적
+  - 비정상적 패턴 감지 로직
 
-  3. API 사용량 추적 구현
+  4.2 API 엔드포인트 개선
 
-  # Kakao API 사용량 추적 시스템 구현
-  /sc:implement "kakao.ts의 getApiUsage 메서드에서 임시값 대신 실제 API 사용량
-  추적 구현. Redis나 DB를 사용한 카운터 시스템"
+  /sc:improve src/app/api/auth/resend-verification/route.ts --focus security ✅
+  - 재전송 제한 검증 로직 추가
+  - 모니터링 이벤트 로깅
+  - 어뷰징 방지 기능 강화
 
-  4. 전체 프로젝트 점검
+  4.3 모니터링 시스템 테스트
 
-  # 추가 MOCK 데이터 검색 및 제거
-  /sc:analyze --depth=deep "프로젝트 전체에서 TODO, FIXME, HACK 주석과 함께
-  남아있는 임시 코드 검색"
+  /sc:test unit --focus email-monitoring
+  - 재전송 제한 추적 테스트
+  - 로깅 이벤트 생성 테스트
+  - 어뷰징 패턴 감지 테스트
 
-  🎯 우선순위 액션 플랜
+  ---
+  통합 테스트 및 QA (2시간)
 
-  1. 최우선: review-feed.tsx의 MOCK_REVIEWS 제거 및 API 연동
-  2. 높음: 데이터베이스의 테스트 데이터 삭제
-  3. 중간: Kakao API 사용량 추적 시스템 구현
-  4. 낮음: 테스트 스크립트 정리 및 문서화
+  5.1 E2E 테스트 시나리오 구현
 
-  이러한 개선사항을 적용하면 프로덕션 환경에서 실제 데이터로 정상 작동하는
-  시스템을 구축할 수 있습니다.
+  /sc:implement "이메일 인증 E2E 테스트 시나리오" --type test --framework
+  playwright
+  @tests/e2e/email-verification.spec.ts
+  - 기본 플로우: 미인증 → 안내 → 재전송 → 성공
+  - 제한 시나리오: 재전송 제한 → 쿨다운 → 재시도
+  - 가이드 시나리오: 도움말 → 모달 → 도메인별 가이드
+
+  5.2 성능 및 접근성 테스트
+
+  /sc:test performance --focus email-verification-flow ✅
+  - 로딩 시간 측정
+  - 메모리 사용량 분석
+  - 접근성 점수 확인
+
+  5.3 최종 품질 검증
+
+  /sc:analyze . --focus quality --scope project ✅
+  - 코드 품질 메트릭 검증
+  - TypeScript 타입 안정성 확인
+  - ESLint 규칙 준수 확인
+
+  ---
+  배포 준비 및 모니터링 (1시간)
+
+  6.1 배포 전 체크리스트 실행
+
+  /sc:build --validate --safe-mode
+  - 프로덕션 빌드 검증
+  - 환경별 설정 확인
+  - 성능 메트릭 기준치 확인
+
+  6.2 모니터링 대시보드 설정
+
+  /sc:implement "이메일 인증 메트릭 대시보드" --type monitoring
+  - 인증 완료율 추적
+  - 재전송 사용률 모니터링
+  - 사용자 이탈률 분석
+
+  ---
+  🎯 실행 순서 요약
+
+  즉시 실행 가능한 명령어 시퀀스:
+
+  # Phase 1: 에러 처리 개선
+  /sc:analyze src/hooks/use-auth-api.ts --focus quality --depth deep
+  /sc:improve src/hooks/use-auth-api.ts --focus error-handling
+  /sc:improve src/components/auth/login-form.tsx --focus quality
+
+  # Phase 2: 재전송 시스템 구현
+  /sc:implement "이메일 재전송 제한 시스템" --type hook
+  /sc:improve src/components/auth/email-verification-prompt.tsx --focus
+  accessibility
+
+  # Phase 3: 가이드 시스템 완성
+  /sc:implement "이메일 도메인별 맞춤 가이드" --type component
+  /sc:improve src/components/auth/email-guide-modal.tsx --focus performance
+
+  # Phase 4: 모니터링 구현
+  /sc:implement "이메일 전송 모니터링 시스템" --type service
+  /sc:improve src/app/api/auth/resend-verification/route.ts --focus security
+
+  # 통합 테스트 실행
+  /sc:test e2e --focus email-verification-flow
+  /sc:build --validate --safe-mode
+
+⏺ Update Todos
+  ⎿  ☒ Analyze PRD phases and create SuperClaude command presets
+     ☒ Map detailed implementation requirements per phase
+     ☒ Generate executable SuperClaude command sequences
+
+⏺ 📊 예상 성과
+
+  정량적 개선:
+  - 이메일 인증 완료율: 80% → 95% (+15%)
+  - 로그인 성공률: 75% → 90% (+15%)
+  - 고객 지원 문의: 60% 감소
+  - 사용자 온보딩 시간: 10분 → 5분 (50% 단축)
+
+  구현 완료 후 실행할 검증 명령어:
+  # 최종 품질 검증
+  /sc:analyze . --focus security --scope project
+  /sc:test --comprehensive --coverage 90%
+  /sc:build --production --optimize
+
+  PRD 기반으로 체계적인 SuperClaude 명령어 프리셋을 생성했습니다. 각 Phase별로
+  세부 구현과 테스트가 포함된 실행 가능한 명령어들을 제공하여 효율적인 개발
+  진행을 지원합니다.

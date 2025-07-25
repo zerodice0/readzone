@@ -102,7 +102,7 @@ export function ReviewCommentSection({
         </h2>
         {reviewTitle && (
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            "{reviewTitle}"에 대한 댓글
+            &ldquo;{reviewTitle}&rdquo;에 대한 댓글
           </p>
         )}
       </div>

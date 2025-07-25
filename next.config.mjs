@@ -28,10 +28,6 @@ const nextConfig = {
   eslint: {
     dirs: ['src'],
   },
-  // TypeScript configuration - strict type checking enabled
-  typescript: {
-    ignoreBuildErrors: false,
-  },
   // Performance optimizations for Next.js 15
   experimental: {
     // Enable advanced bundling optimizations

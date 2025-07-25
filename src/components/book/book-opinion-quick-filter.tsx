@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -111,7 +111,7 @@ export function BookOpinionQuickFilter({
   const visibleFilters = showAllFilters ? quickFilters : quickFilters.slice(0, 3)
 
   // 키보드 단축키 핸들러
-  const handleKeyPress = (event: KeyboardEvent) => {
+  const handleKeyPress = useCallback((event: KeyboardEvent) => {
     const num = parseInt(event.key)
     if (num >= 1 && num <= quickFilters.length) {
       const filter = quickFilters[num - 1]
@@ -119,7 +119,7 @@ export function BookOpinionQuickFilter({
         onFilterChange(filter.id)
       }
     }
-  }
+  }, [onFilterChange])
 
   // 키보드 이벤트 리스너 등록
   useEffect(() => {
@@ -133,7 +133,7 @@ export function BookOpinionQuickFilter({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onFilterChange])
+  }, [handleKeyPress])
 
   const clearFilter = () => {
     onFilterChange('all')

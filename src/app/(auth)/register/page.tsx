@@ -1,5 +1,6 @@
 import { type Metadata } from 'next'
 import { RegisterForm } from '@/components/auth/register-form'
+import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: '회원가입 | ReadZone',
@@ -73,7 +74,7 @@ export default function RegisterPage(): JSX.Element {
               <div className="mt-8">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <img
+                    <Image
                       className="h-8 w-8 rounded-full"
                       src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                       alt=""

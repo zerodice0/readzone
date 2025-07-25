@@ -71,6 +71,193 @@ function addToTotal(price: number): void {
 }
 ```
 
+## ESLint 규칙 준수 (필수)
+
+### 🚨 React Hooks 규칙 (react-hooks/exhaustive-deps, react-hooks/rules-of-hooks)
+
+**1. 조건부 Hook 사용 금지**
+```typescript
+// ❌ 잘못된 예 - 조건부 Hook 호출
+const MyComponent = ({ id }: { id?: string }) => {
+  const generatedId = id ? null : useId() // 위반!
+  return <div id={id || generatedId} />
+}
+
+// ✅ 올바른 예 - Hook을 항상 호출
+const MyComponent = ({ id }: { id?: string }) => {
+  const generatedId = useId()
+  return <div id={id || `generated-${generatedId}`} />
+}
+```
+
+**2. useEffect 의존성 배열 완성**
+```typescript
+// ❌ 잘못된 예 - 의존성 누락
+useEffect(() => {
+  if (enabled && lastData && !isEqual(currentData, lastData)) {
+    saveToStorage(currentData)
+  }
+}, []) // enabled, lastData, isEqual, currentData, saveToStorage 누락!
+
+// ✅ 올바른 예 - 모든 의존성 포함
+useEffect(() => {
+  if (enabled && lastData && !isEqual(currentData, lastData)) {
+    saveToStorage(currentData)
+  }
+}, [enabled, lastData, isEqual, currentData, saveToStorage])
+```
+
+**3. 복잡한 cleanup 함수 패턴**
+```typescript
+// ❌ 잘못된 예 - cleanup에서 외부 변수 직접 사용
+useEffect(() => {
+  return () => {
+    cancel() // 클로저로 인한 stale reference 위험
+    if (enabled && hasChanges) {
+      saveData(data) // 의존성 누락으로 인한 문제
+    }
+  }
+}, []) // 빈 의존성 배열이지만 외부 변수 사용
+
+// ✅ 올바른 예 - ref 패턴으로 최신 값 접근
+const latestValuesRef = useRef({ enabled, data, hasChanges, saveData, cancel })
+useEffect(() => {
+  latestValuesRef.current = { enabled, data, hasChanges, saveData, cancel }
+}, [enabled, data, hasChanges, saveData, cancel])
+
+useEffect(() => {
+  return () => {
+    const { cancel, enabled, hasChanges, saveData, data } = latestValuesRef.current
+    cancel()
+    if (enabled && hasChanges) {
+      saveData(data)
+    }
+  }
+}, [])
+```
+
+**4. 메모이제이션 의존성 관리**
+```typescript
+// ❌ 잘못된 예 - 매번 새로운 객체 생성
+const config = { ...DEFAULT_CONFIG, ...userConfig }
+const result = useMemo(() => processData(config), [config]) // config가 매번 변경됨
+
+// ✅ 올바른 예 - 객체를 메모이제이션
+const config = useMemo(() => ({ ...DEFAULT_CONFIG, ...userConfig }), [userConfig])
+const result = useMemo(() => processData(config), [config])
+```
+
+**5. 디바운스/Throttle 함수 의존성**
+```typescript
+// ❌ 잘못된 예 - 외부 라이브러리 함수는 의존성으로 인식되지 않음
+const debouncedFn = useCallback(
+  debounce(async () => { await onAction() }, 300),
+  [onAction] // debounce는 의존성으로 인식되지 않아 문제 발생
+)
+
+// ✅ 올바른 예 - 인라인 구현으로 해결
+const timeoutRef = useRef<NodeJS.Timeout>()
+const debouncedFn = useCallback(async () => {
+  if (timeoutRef.current) clearTimeout(timeoutRef.current)
+  timeoutRef.current = setTimeout(async () => {
+    await onAction()
+  }, 300)
+}, [onAction])
+```
+
+### 🖼️ Next.js 이미지 최적화 (next/next/no-img-element)
+
+**모든 이미지는 Next.js Image 컴포넌트 사용 필수**
+```typescript
+// ❌ 금지 - 일반 img 태그
+<img src={book.thumbnail} alt={book.title} className="w-20 h-28" />
+
+// ✅ 필수 - Next.js Image 컴포넌트
+import Image from 'next/image'
+<Image 
+  src={book.thumbnail} 
+  alt={book.title}
+  width={80}
+  height={112}
+  className="w-20 h-28 object-cover"
+/>
+```
+
+**Image 컴포넌트 필수 속성**:
+- `width`, `height`: 명시적 크기 지정 (성능 최적화)
+- `alt`: 접근성을 위한 대체 텍스트
+- 적절한 `className`으로 스타일링
+
+### 🔤 JSX 문자 이스케이프 (react/no-unescaped-entities)
+
+```typescript
+// ❌ 금지 - 특수문자 직접 사용
+<p>Don't use quotes like this & that</p>
+
+// ✅ 필수 - HTML 엔티티 또는 문자열 사용
+<p>Don&apos;t use quotes like this &amp; that</p>
+// 또는
+<p>{"Don't use quotes like this & that"}</p>
+```
+
+### ♿ 접근성 규칙 (jsx-a11y/alt-text)
+
+```typescript
+// ❌ 금지 - alt 속성 누락
+<Image src={image} width={100} height={100} />
+
+// ✅ 필수 - 의미있는 alt 텍스트
+<Image 
+  src={userImage} 
+  alt={`${user.nickname}의 프로필 사진`}
+  width={100} 
+  height={100} 
+/>
+
+// 장식용 이미지인 경우
+<Image 
+  src={decorativeImage} 
+  alt=""
+  width={100} 
+  height={100} 
+/>
+```
+
+### 📝 개발 워크플로우
+
+**1. 코드 작성 전 체크리스트**
+- [ ] Hook을 조건문 내에서 호출하지 않았는가?
+- [ ] useEffect의 모든 의존성을 포함했는가?
+- [ ] 이미지는 Next.js Image 컴포넌트를 사용했는가?
+- [ ] JSX 내 특수문자를 적절히 이스케이프했는가?
+- [ ] 모든 이미지에 alt 속성을 추가했는가?
+
+**2. 코드 작성 후 필수 검증**
+```bash
+# 린트 에러 확인 (0개여야 함)
+npm run lint
+
+# 타입 체크
+npm run type-check
+```
+
+**3. 자주 발생하는 실수 패턴**
+- IntersectionObserver cleanup에서 stale reference 사용
+- 객체 스프레드 연산자로 인한 불필요한 재렌더링
+- 외부 라이브러리 함수의 의존성 누락
+- 조건부 Hook 호출
+- img 태그 대신 Image 컴포넌트 미사용
+
+**4. 문제 발생 시 해결 순서**
+1. 에러 메시지를 정확히 읽고 어떤 규칙을 위반했는지 파악
+2. 위 가이드에서 해당 패턴 확인
+3. 올바른 패턴으로 수정
+4. `npm run lint`로 검증
+5. 기능이 정상 동작하는지 확인
+
+### 🎯 목표: 완벽한 린트 준수
+**모든 코드는 린트 에러 0개, 경고 0개를 유지해야 합니다.**
+
 ## 페이지 구성 (11개)
 
 ### 1. 독후감 피드 (`/`) - 메인 페이지

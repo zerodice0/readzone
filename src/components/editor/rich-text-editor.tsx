@@ -87,7 +87,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       default:
         return lastSaved ? `마지막 저장: ${formatTime(lastSaved)}` : null
     }
-  }, [autosaveStatus, lastSaved, showAutosaveStatus])
+  }, [autosaveStatus, lastSaved, showAutosaveStatus, formatTime])
 
   // 시간 포맷팅 함수
   const formatTime = useCallback((date: Date) => {

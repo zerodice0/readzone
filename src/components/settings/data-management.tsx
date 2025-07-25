@@ -449,7 +449,7 @@ export function DataManagement({ userId, className }: DataManagementProps) {
             </div>
             
             <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Image className="w-6 h-6 text-green-600 mx-auto mb-2" />
+              <Image className="w-6 h-6 text-green-600 mx-auto mb-2" aria-label="이미지 데이터" />
               <div className="text-sm font-medium">이미지</div>
               <div className="text-lg font-bold text-green-600">1.8MB</div>
               <div className="text-xs text-gray-600 dark:text-gray-400">프로필 이미지 등</div>

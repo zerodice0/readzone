@@ -119,13 +119,13 @@ export default async function ReviewDetailPage({ params }: PageProps) {
         },
         _count: {
           select: {
-            reviewLikes: true,
+            likes: true,
             comments: true
           }
         },
         // 현재 사용자의 좋아요 여부 확인
         ...(session?.user?.id ? {
-          reviewLikes: {
+          likes: {
             where: {
               userId: session.user.id
             },
@@ -150,11 +150,9 @@ export default async function ReviewDetailPage({ params }: PageProps) {
         ...review.book,
         authors: JSON.parse(review.book.authors || '[]')
       },
-      isLiked: session?.user?.id ? (review.reviewLikes && review.reviewLikes.length > 0) : false,
+      isLiked: session?.user?.id ? (review.likes && review.likes.length > 0) : false,
       canEdit: session?.user?.id === review.userId,
-      likeCount: review._count.reviewLikes,
-      commentCount: review._count.comments,
-      reviewLikes: undefined // reviewLikes 배열 제거 (isLiked로 대체)
+      likes: undefined // likes 배열 제거 (isLiked로 대체)
     }
 
   } catch (error) {

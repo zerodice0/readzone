@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
@@ -35,9 +35,9 @@ function VerifyEmailInner(): JSX.Element {
     if (token && email) {
       handleVerifyEmail(token)
     }
-  }, [token, email])
+  }, [token, email, handleVerifyEmail])
 
-  const handleVerifyEmail = async (verificationToken: string): Promise<void> => {
+  const handleVerifyEmail = useCallback(async (verificationToken: string): Promise<void> => {
     try {
       await verifyEmail.mutateAsync({
         token: verificationToken,
@@ -51,13 +51,13 @@ function VerifyEmailInner(): JSX.Element {
     } catch (error) {
       // 에러는 hook에서 toast로 처리됨
     }
-  }
+  }, [verifyEmail, router])
 
   const handleResendEmail = async (): Promise<void> => {
     if (!email) return
     
     try {
-      await resendVerification.mutateAsync({ email })
+      await resendVerification.resend()
     } catch (error) {
       // 에러는 hook에서 toast로 처리됨
     }
@@ -161,10 +161,10 @@ function VerifyEmailInner(): JSX.Element {
                 variant="outline"
                 className="w-full"
                 onClick={handleResendEmail}
-                loading={resendVerification.isPending}
-                disabled={!email || resendVerification.isPending}
+                loading={resendVerification.isLoading}
+                disabled={!email || resendVerification.isLoading}
               >
-                {resendVerification.isPending ? '발송 중...' : '인증 이메일 재발송'}
+                {resendVerification.isLoading ? '발송 중...' : '인증 이메일 재발송'}
               </Button>
 
               {/* 이메일 확인 안내 */}
