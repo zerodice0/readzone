@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import Image from 'next/image'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { Card, CardContent } from '@/components/ui/card'
@@ -161,9 +162,11 @@ export function UserContentTabs({
                 {/* 도서 이미지 */}
                 <div className="flex-shrink-0">
                   {review.book.thumbnail ? (
-                    <img
+                    <Image
                       src={review.book.thumbnail}
                       alt={review.book.title}
+                      width={64}
+                      height={80}
                       className="w-16 h-20 object-cover rounded-md border"
                     />
                   ) : (
@@ -281,9 +284,11 @@ export function UserContentTabs({
                 {/* 도서 이미지 */}
                 <div className="flex-shrink-0">
                   {opinion.book.thumbnail ? (
-                    <img
+                    <Image
                       src={opinion.book.thumbnail}
                       alt={opinion.book.title}
+                      width={48}
+                      height={60}
                       className="w-12 h-15 object-cover rounded border"
                     />
                   ) : (

@@ -65,10 +65,17 @@ export function AnimatedLikeButton({
   const particleCanvasRef = useRef<HTMLDivElement>(null)
   const lastAnimationTime = useRef<number>(0)
   const touchStartTime = useRef<number>(0)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>()
 
   // Debounced toggle to prevent spam clicks
-  const debouncedToggle = useCallback(
-    debounce(async () => {
+  const debouncedToggle = useCallback(async () => {
+    // Clear previous timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+
+    // Set new timeout
+    debounceTimeoutRef.current = setTimeout(async () => {
       if (disabled || isLoading) return
 
       try {
@@ -79,9 +86,17 @@ export function AnimatedLikeButton({
       } finally {
         setIsLoading(false)
       }
-    }, 300),
-    [onToggle, disabled, isLoading]
-  )
+    }, 300)
+  }, [onToggle, disabled, isLoading])
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Generate heart explosion particles
   const generateParticles = useCallback((centerX: number, centerY: number) => {
@@ -357,19 +372,6 @@ export function AnimatedLikeButton({
       )}
     </div>
   )
-}
-
-// Debounce utility function
-function debounce<T extends (...args: any[]) => any>(
-  func: T, 
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout
-  
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }
 }
 
 // Hook for managing like state with optimistic updates and offline support

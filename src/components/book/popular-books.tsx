@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { TrendingUp, Book, Loader2 } from 'lucide-react'
 import { getPopularBooks } from '@/lib/api-client'
 import type { KakaoBook } from '@/types/kakao'
@@ -131,9 +132,11 @@ export function PopularBooks({ onSelect }: PopularBooksProps) {
               {/* 도서 썸네일 */}
               <div className="flex-shrink-0">
                 {book.thumbnail ? (
-                  <img
+                  <Image
                     src={book.thumbnail}
                     alt={book.title}
+                    width={32}
+                    height={40}
                     className="w-8 h-10 object-cover rounded"
                   />
                 ) : (

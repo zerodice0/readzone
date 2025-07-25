@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, ReactNode } from 'react'
+import { useEffect, useRef, useCallback, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 interface FocusTrapProps {
@@ -91,17 +91,17 @@ export function FocusTrap({
   }
 
   // 첫 번째와 마지막 포커스 가능한 요소 찾기
-  const getFirstAndLastFocusableElements = (container: HTMLElement) => {
+  const getFirstAndLastFocusableElements = useCallback((container: HTMLElement) => {
     const focusableElements = getFocusableElements(container)
     return {
       firstElement: focusableElements[0] || null,
       lastElement: focusableElements[focusableElements.length - 1] || null,
       allElements: focusableElements
     }
-  }
+  }, [])
 
   // 초기 포커스 설정
-  const setInitialFocus = () => {
+  const setInitialFocus = useCallback(() => {
     if (!containerRef.current) return
 
     let targetElement: HTMLElement | null = null
@@ -123,10 +123,10 @@ export function FocusTrap({
         targetElement?.focus()
       }, 0)
     }
-  }
+  }, [initialFocus, getFirstAndLastFocusableElements])
 
   // 키보드 이벤트 핸들러
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!enabled || !containerRef.current) return
 
     // ESC 키 처리
@@ -157,7 +157,7 @@ export function FocusTrap({
         }
       }
     }
-  }
+  }, [enabled, allowEscapeKey, onEscape, getFirstAndLastFocusableElements])
 
   // 포커스 트랩 활성화/비활성화
   useEffect(() => {
@@ -184,7 +184,7 @@ export function FocusTrap({
         }, 0)
       }
     }
-  }, [enabled, initialFocus, restoreFocus, allowEscapeKey, onEscape])
+  }, [enabled, setInitialFocus, handleKeyDown, restoreFocus])
 
   // 컨테이너 외부 클릭 방지 (선택사항)
   const handleMouseDown = (event: React.MouseEvent) => {

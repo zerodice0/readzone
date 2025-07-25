@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -204,9 +205,11 @@ export default function ReviewDetail({
         <Card className="p-6">
           <div className="flex items-start gap-4">
             {review.book.thumbnail ? (
-              <img 
+              <Image 
                 src={review.book.thumbnail} 
                 alt={review.book.title}
+                width={80}
+                height={112}
                 className="w-20 h-28 object-cover rounded-md shadow-sm flex-shrink-0"
               />
             ) : (
@@ -282,9 +285,11 @@ export default function ReviewDetail({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {review.user.image ? (
-                  <img 
+                  <Image 
                     src={review.user.image} 
                     alt={review.user.nickname}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (

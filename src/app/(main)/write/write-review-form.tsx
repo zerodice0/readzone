@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -126,7 +127,7 @@ export default function WriteReviewForm() {
       setShowBookSelector(false)
       toast.success('이전에 작성하던 내용을 복원했습니다.')
     }
-  }, [])
+  }, [autosave])
 
   // 도서 선택 처리
   const handleBookSelect = (book: SelectedBook) => {
@@ -262,9 +263,11 @@ export default function WriteReviewForm() {
         <Card className="p-6">
           <div className="flex items-start gap-4">
             {selectedBook.thumbnail && (
-              <img 
+              <Image 
                 src={selectedBook.thumbnail} 
                 alt={selectedBook.title}
+                width={64}
+                height={80}
                 className="w-16 h-20 object-cover rounded"
               />
             )}

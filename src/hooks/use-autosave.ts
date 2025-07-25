@@ -42,7 +42,7 @@ export interface UseAutosaveOptions<T> {
 /**
  * 자동저장 반환값
  */
-export interface UseAutosaveReturn {
+export interface UseAutosaveReturn<T> {
   /** 수동 저장 트리거 */
   save: () => Promise<void>
   /** 자동저장 취소 */
@@ -91,7 +91,7 @@ export function useAutosave<T>({
   enabled = true,
   isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b),
   maxRetries = 3
-}: UseAutosaveOptions<T>): UseAutosaveReturn {
+}: UseAutosaveOptions<T>): UseAutosaveReturn<T> {
   const [status, setStatus] = useState<AutosaveStatus>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [error, setError] = useState<Error | null>(null)
@@ -262,6 +262,26 @@ export function useAutosave<T>({
     }
   }, [])
 
+  // Refs for cleanup access to latest values
+  const latestValuesRef = useRef({
+    enabled,
+    data,
+    isEqual,
+    saveToLocalStorage,
+    cancel
+  })
+  
+  // Update latest values ref for cleanup access
+  useEffect(() => {
+    latestValuesRef.current = {
+      enabled,
+      data,
+      isEqual,
+      saveToLocalStorage,
+      cancel
+    }
+  }, [enabled, data, isEqual, saveToLocalStorage, cancel])
+
   /**
    * 자동저장 설정
    */
@@ -333,12 +353,13 @@ export function useAutosave<T>({
 
     return () => {
       isMountedRef.current = false
-      cancel()
+      latestValuesRef.current.cancel()
       
       // 언마운트 시 마지막 저장 시도
-      if (enabled && lastSavedDataRef.current && !isEqual(data, lastSavedDataRef.current)) {
+      const { enabled: latestEnabled, data: latestData, isEqual: latestIsEqual, saveToLocalStorage: latestSaveToLocalStorage } = latestValuesRef.current
+      if (latestEnabled && lastSavedDataRef.current && !latestIsEqual(latestData, lastSavedDataRef.current)) {
         try {
-          saveToLocalStorage(data)
+          latestSaveToLocalStorage(latestData)
         } catch (err) {
           console.error('Cleanup save failed:', err)
         }
@@ -347,7 +368,7 @@ export function useAutosave<T>({
   }, [])
 
   // 반환값 메모이제이션
-  const returnValue = useMemo<UseAutosaveReturn>(() => ({
+  const returnValue = useMemo<UseAutosaveReturn<T>>(() => ({
     save,
     cancel,
     status,

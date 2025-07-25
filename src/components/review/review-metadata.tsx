@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { 
   Calendar, 
@@ -93,9 +94,11 @@ export function ReviewMetadata({
       {/* 작성자 정보 */}
       <div className="flex items-center gap-3">
         {author.image ? (
-          <img 
+          <Image 
             src={author.image} 
             alt={author.nickname}
+            width={40}
+            height={40}
             className="w-10 h-10 rounded-full object-cover"
           />
         ) : (
@@ -128,7 +131,7 @@ export function ReviewMetadata({
       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
         <BookOpen className="h-4 w-4" />
         <span>
-          "{book.title}" by {book.authors.join(', ')}
+          &ldquo;{book.title}&rdquo; by {book.authors.join(', ')}
         </span>
       </div>
 

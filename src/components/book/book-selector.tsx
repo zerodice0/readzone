@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -333,7 +334,7 @@ export function BookSelector({ onSelect, className = '' }: BookSelectorProps) {
           <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-3" />
           <h3 className="font-medium mb-2">검색 결과가 없습니다</h3>
           <p className="text-sm text-gray-500 mb-4">
-            "{query}"에 대한 검색 결과를 찾을 수 없습니다.
+            &ldquo;{query}&rdquo;에 대한 검색 결과를 찾을 수 없습니다.
           </p>
           <Button
             variant="outline"
@@ -407,9 +408,11 @@ function BookItem({ book, onSelect, isRecent = false }: BookItemProps) {
     >
       <div className="flex items-start gap-3">
         {book.thumbnail ? (
-          <img 
+          <Image 
             src={book.thumbnail} 
             alt={book.title}
+            width={48}
+            height={64}
             className="w-12 h-16 object-cover rounded flex-shrink-0"
           />
         ) : (

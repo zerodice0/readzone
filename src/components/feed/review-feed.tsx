@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+// import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ReviewCard } from './review-card'
 import { FeedLoading } from './feed-loading'
@@ -11,7 +11,7 @@ import { useReviews } from '@/hooks/use-reviews'
 import { AlertCircle } from 'lucide-react'
 
 export function ReviewFeed(): JSX.Element {
-  const { data: session } = useSession()
+  // const { data: session } = useSession()
   const { isAuthenticated, isHydrated } = useAuthStore()
   const router = useRouter()
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -29,7 +29,8 @@ export function ReviewFeed(): JSX.Element {
 
   // 무한 스크롤을 위한 Intersection Observer
   useEffect(() => {
-    if (!loadMoreRef.current) return
+    const currentElement = loadMoreRef.current
+    if (!currentElement) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -40,12 +41,10 @@ export function ReviewFeed(): JSX.Element {
       { threshold: 0.5 }
     )
 
-    observer.observe(loadMoreRef.current)
+    observer.observe(currentElement)
 
     return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current)
-      }
+      observer.unobserve(currentElement)
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
@@ -53,13 +52,13 @@ export function ReviewFeed(): JSX.Element {
     router.push('/login')
   }, [router])
 
-  const handleLikeToggle = useCallback((reviewId: string) => {
-    if (!isAuthenticated) {
-      handleLoginPrompt()
-      return
-    }
-    // 좋아요 토글 로직은 ReviewCard 내부에서 처리
-  }, [isAuthenticated, handleLoginPrompt])
+  // const handleLikeToggle = useCallback((reviewId: string) => {
+  //   if (!isAuthenticated) {
+  //     handleLoginPrompt()
+  //     return
+  //   }
+  //   // 좋아요 토글 로직은 ReviewCard 내부에서 처리
+  // }, [isAuthenticated, handleLoginPrompt])
 
   // 초기 로딩
   if (isLoading) {

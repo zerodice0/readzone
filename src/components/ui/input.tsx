@@ -10,7 +10,8 @@ export interface InputProps
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, error, label, helperText, id, ...props }, ref) => {
-    const inputId = id || `input-${useId()}`
+    const generatedId = useId()
+    const inputId = id || `input-${generatedId}`
 
     return (
       <div className="space-y-2">

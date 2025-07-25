@@ -9,7 +9,8 @@ export interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, label, description, error, id, ...props }, ref) => {
-    const checkboxId = id || `checkbox-${useId()}`
+    const generatedId = useId()
+    const checkboxId = id || `checkbox-${generatedId}`
 
     return (
       <div className="space-y-2">
