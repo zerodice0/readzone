@@ -396,23 +396,28 @@ export function useLikeState(initialLiked: boolean, initialCount: number) {
     }
   }, [])
 
-  // // Service Worker 메시지 리스너
-  // useEffect(() => {
-    // const handleServiceWorkerMessage = (event: MessageEvent) => {
-    //   if (event.data.type === 'LIKES_SYNCED') {
-    //     // 오프라인 좋아요가 동기화되었을 때 상태 업데이트
-    //     console.log('Likes synced from service worker')
-    //     setIsOptimistic(false)
-    //   }
-    // }
+  // Service Worker 메시지 리스너
+  useEffect(() => {
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data.type === 'LIKES_SYNCED') {
+        // 오프라인 좋아요가 동기화되었을 때 상태 업데이트
+        console.log('Likes synced from service worker')
+        setIsOptimistic(false)
+      }
+    }
 
-    // if ('serviceWorker' in navigator) {
-    //   navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage)
-    //   return () => {
-    //     navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
-    //   }
-    // }
-  // }, [])
+    // Service Worker 지원 확인 후 이벤트 리스너 등록
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage)
+    }
+
+    // 항상 cleanup 함수 반환 (Service Worker 지원 여부와 관계없이)
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
+      }
+    }
+  }, [])
 
   const toggleLike = useCallback(async (apiCall: () => Promise<{ isLiked: boolean; likeCount: number }>) => {
     // Optimistic update
