@@ -6,12 +6,14 @@ import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui'
 import { useLogout } from '@/hooks/use-auth-api'
 import { useAuthStore } from '@/store/auth-store'
+import { useThemeState } from '@/hooks/use-theme'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export function Header(): JSX.Element {
   const { data: session, status } = useSession()
   const { user } = useAuthStore()
+  const { isLoaded, isDark } = useThemeState()
   const logout = useLogout()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -31,16 +33,30 @@ export function Header(): JSX.Element {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+    <header 
+      className={cn(
+        "bg-white shadow-sm border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 transition-colors duration-200",
+        !isLoaded && "opacity-95" // 하이드레이션 로딩 중 약간의 투명도
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* 로고 및 브랜드 */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+            <Link href="/" className="flex items-center space-x-2 group">
+              <div 
+                className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-gradient-to-r from-red-500 to-pink-500" 
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600"
+                )}
+              >
                 <span className="text-white font-bold text-lg">R</span>
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-gray-100">ReadZone</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-gray-100 transition-colors">
+                ReadZone
+              </span>
             </Link>
           </div>
 
@@ -72,13 +88,27 @@ export function Header(): JSX.Element {
 
             {/* 사용자 액션 */}
             <div className="flex items-center space-x-4">
-              <ThemeToggle />
+              {/* 테마 토글 - 구분선과 함께 배치 */}
+              <div className="flex items-center space-x-4">
+                <ThemeToggle />
+                {isAuthenticated && (
+                  <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
+                )}
+              </div>
+              
               {isAuthenticated ? (
                 <>
                   {/* 사용자 정보 */}
                   <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <div 
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-200",
+                      isDark
+                        ? "bg-gradient-to-r from-red-500 to-pink-500"
+                        : "bg-gradient-to-r from-blue-500 to-indigo-500"
+                    )}
+                  >
+                    <span className="text-sm font-medium text-white">
                       {session?.user?.name?.[0] || user?.user?.nickname?.[0] || 'U'}
                     </span>
                   </div>
@@ -143,7 +173,10 @@ export function Header(): JSX.Element {
         {/* 모바일 메뉴 */}
         {isMobileMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+            <div className={cn(
+              "px-2 pt-2 pb-3 space-y-1 border-t transition-colors duration-200",
+              "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+            )}>
               {/* 모바일 네비게이션 링크들 */}
               <Link
                 href="/"
@@ -169,14 +202,33 @@ export function Header(): JSX.Element {
                 </Link>
               )}
 
+              {/* 모바일 테마 설정 */}
+              <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="px-3 py-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      테마 설정
+                    </span>
+                    <ThemeToggle />
+                  </div>
+                </div>
+              </div>
+
               {/* 모바일 사용자 액션 */}
               <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
                 {isAuthenticated ? (
                   <div className="space-y-1">
                     <div className="px-3 py-2">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                        <div 
+                          className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200",
+                            isDark
+                              ? "bg-gradient-to-r from-red-500 to-pink-500"
+                              : "bg-gradient-to-r from-blue-500 to-indigo-500"
+                          )}
+                        >
+                          <span className="text-sm font-medium text-white">
                             {session?.user?.name?.[0] || user?.user?.nickname?.[0] || 'U'}
                           </span>
                         </div>

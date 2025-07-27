@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { useTheme } from '@/contexts/theme-context'
+import { useThemeState } from '@/hooks/use-theme'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { CustomToolbar } from './custom-toolbar'
@@ -51,7 +51,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   lastSaved = null,
   showAutosaveStatus = true
 }) => {
-  const { theme, isLoaded } = useTheme()
+  const { isLoaded, isDark } = useThemeState()
   const quillRef = useRef<any>(null)
 
   // Quill 에디터 설정 (독후감 작성에 최적화)
@@ -133,7 +133,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <div 
           className={cn(
             "quill-wrapper",
-            isLoaded && theme === 'dark' && 'dark-theme',
+            isLoaded && isDark && 'dark-theme',
             isLoading && 'opacity-50 pointer-events-none'
           )}
           style={editorStyle}

@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }): JSX.Element {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

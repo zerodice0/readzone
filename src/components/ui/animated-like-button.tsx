@@ -396,23 +396,23 @@ export function useLikeState(initialLiked: boolean, initialCount: number) {
     }
   }, [])
 
-  // Service Worker 메시지 리스너
-  useEffect(() => {
-    const handleServiceWorkerMessage = (event: MessageEvent) => {
-      if (event.data.type === 'LIKES_SYNCED') {
-        // 오프라인 좋아요가 동기화되었을 때 상태 업데이트
-        console.log('Likes synced from service worker')
-        setIsOptimistic(false)
-      }
-    }
+  // // Service Worker 메시지 리스너
+  // useEffect(() => {
+    // const handleServiceWorkerMessage = (event: MessageEvent) => {
+    //   if (event.data.type === 'LIKES_SYNCED') {
+    //     // 오프라인 좋아요가 동기화되었을 때 상태 업데이트
+    //     console.log('Likes synced from service worker')
+    //     setIsOptimistic(false)
+    //   }
+    // }
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage)
-      return () => {
-        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
-      }
-    }
-  }, [])
+    // if ('serviceWorker' in navigator) {
+    //   navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage)
+    //   return () => {
+    //     navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage)
+    //   }
+    // }
+  // }, [])
 
   const toggleLike = useCallback(async (apiCall: () => Promise<{ isLiked: boolean; likeCount: number }>) => {
     // Optimistic update

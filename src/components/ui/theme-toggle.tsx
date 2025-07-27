@@ -1,10 +1,25 @@
 'use client'
 
-import { useTheme } from '@/contexts/theme-context'
+import { useTheme } from '@/hooks/use-theme'
 import { Button } from './button'
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme()
+  const { currentTheme, toggleTheme, isLoaded } = useTheme()
+
+  // 하이드레이션 완료 전까지는 로딩 표시
+  if (!isLoaded) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="w-9 h-9"
+        disabled
+        aria-label="테마 설정 로딩 중"
+      >
+        <div className="h-5 w-5 animate-pulse bg-gray-400 rounded" />
+      </Button>
+    )
+  }
 
   return (
     <Button
@@ -12,9 +27,9 @@ export function ThemeToggle() {
       size="icon"
       onClick={toggleTheme}
       className="w-9 h-9"
-      aria-label={theme === 'light' ? '다크모드로 전환' : '라이트모드로 전환'}
+      aria-label={currentTheme === 'light' ? '다크모드로 전환' : '라이트모드로 전환'}
     >
-      {theme === 'light' ? (
+      {currentTheme === 'light' ? (
         // 달 아이콘 (다크모드로 전환)
         <svg
           className="h-5 w-5 text-gray-700 dark:text-gray-300"

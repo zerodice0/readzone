@@ -1,16 +1,16 @@
 'use client'
 
 import React from 'react'
-import { useTheme } from '@/contexts/theme-context'
+import { useThemeState } from '@/hooks/use-theme'
 
 /**
  * React Quill 에디터용 다크테마 CSS 컴포넌트
  * ReadZone 디자인 시스템과 완벽하게 일치하는 Tailwind CSS 기반 스타일
  */
 export const QuillDarkTheme: React.FC = () => {
-  const { theme, isLoaded } = useTheme()
+  const { isLoaded, isDark } = useThemeState()
 
-  if (!isLoaded || theme !== 'dark') return null
+  if (!isLoaded || !isDark) return null
 
   return (
     <style jsx global>{`
