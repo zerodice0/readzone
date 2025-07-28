@@ -1,218 +1,128 @@
+📋 관련 파일 분석
 
-⏺ 📋 이메일 인증 개선 PRD 분석 및 SuperClaude 명령어 프리셋
+  1. 직접적 관련 파일
 
-  🔍 현재 상태 분석
+  - rich-text-editor.tsx: 메인 에디터 컴포넌트
+  - custom-toolbar.tsx: 커스텀 툴바 (ref와 무관)
+  - quill-dark-theme.tsx: 다크 테마 CSS (ref와 무관)
 
-  기존 구현 상태:
-  - ✅ 에러 처리 로직 기본 구조 존재 (use-auth-api.ts)
-  - ✅ 이메일 인증 에러 감지 및 분기 처리 구현
-  - ✅ EmailVerificationPrompt, EmailGuideModal 컴포넌트 존재
-  - ✅ 재전송 API 기본 구조 완료
+  2. 사용하는 파일들
 
-  개선 필요 영역:
-  - 🔧 재전송 제한 로직 및 쿨다운 시스템
-  - 🔧 도메인별 맞춤 가이드 시스템
-  - 🔧 모니터링 및 로깅 강화
-  - 🔧 E2E 테스트 시나리오 구현
+  - write-review-form.tsx: RichTextEditor를 import하여 사용
+  - 기타 댓글 폼들에서도 사용
 
-  ---
-  🚀 Phase별 SuperClaude 명령어 프리셋
+  3. ref 사용 목적 분석
 
-  Phase 1: 에러 처리 개선 (2시간)
+  현재 quillRef는 선언되었지만 실제로 사용되지 않음:
+  - 54번 라인에서 선언
+  - 145번 라인에서 전달
+  - 그 외 어디서도 참조되지 않음
 
-  1.1 에러 구조체 분석 및 개선
+  ⚡ 최적 해결 방안
 
-  /sc:analyze src/hooks/use-auth-api.ts --focus quality --depth deep ✅
+  방법 1: ref 완전 제거 (가장 권장)
 
-  1.2 NextAuth 에러 파싱 강화 구현
+  // quillRef 관련 코드 모두 제거
+  // const quillRef = useRef<any>(null)  // 삭제
 
-  /sc:implement "NextAuth 에러 메시지 파싱 로직 개선" --type service --framework
-   nextauth
-  @src/hooks/use-auth-api.ts ✅
-  - 구조화된 에러 생성 함수 개선
-  - AuthError 인터페이스 확장
-  - 에러 코드별 상세 분기 처리
+  <ReactQuill
+    // ref={quillRef as any}  // 삭제
+    theme="snow"
+    value={value}
+    onChange={handleChange}
+    // ...
+  />
 
-  1.3 로그인 폼 에러 상태 관리 개선
+  장점:
+  - 타입 에러 완전 해결
+  - 불필요한 코드 제거
+  - 성능상 이점 (불필요한 ref 생성 방지)
 
-  /sc:improve src/components/auth/login-form.tsx --focus quality ✅
-  - 에러 상태 관리 로직 개선
-  - 에러 타입별 UI 분기 최적화
-  - 사용자 경험 향상을 위한 상태 초기화 로직
+  방법 2: 올바른 ref 타입 정의
 
-  1.4 Phase 1 테스트 실행
+  import { ReactQuill as ReactQuillType } from 'react-quill'
 
-  /sc:test unit --focus auth-error-handling ✅
-  - useLogin 훅 에러 처리 테스트
-  - 에러 코드별 분기 테스트
-  - 로그인 폼 에러 상태 테스트
+  const quillRef = useRef<ReactQuillType>(null)
 
-  ---
-  Phase 2: EmailVerificationPrompt 컴포넌트 (3시간)
+  <ReactQuill
+    ref={quillRef}
+    // ...
+  />
 
-  2.1 재전송 제한 로직 구현
+  방법 3: 콜백 ref 사용
 
-  /sc:implement "이메일 재전송 제한 시스템" --type hook --framework react
-  @src/hooks/use-resend-verification.ts ✅
-  - 시간별/일별 재전송 제한 로직
-  - 쿨다운 타이머 구현
-  - 로컬스토리지 기반 제한 추적
+  const [quillInstance, setQuillInstance] = useState<any>(null)
 
-  2.2 EmailVerificationPrompt 컴포넌트 개선
+  const handleQuillRef = useCallback((reactQuillComponent: any) => {
+    if (reactQuillComponent) {
+      setQuillInstance(reactQuillComponent.getEditor())
+    }
+  }, [])
 
-  /sc:improve src/components/auth/email-verification-prompt.tsx --focus
-  accessibility ✅
-  - 재전송 제한 정보 UI 표시
-  - 쿨다운 타이머 실시간 업데이트
-  - 접근성 향상 (aria-label, role 속성)
-  - 모바일 친화적 디자인 적용
+  <ReactQuill
+    ref={handleQuillRef}
+    // ...
+  />
 
-  2.3 컴포넌트 통합 테스트
+  🎯 SuperClaude 명령어 가이드
 
-  /sc:test integration --focus email-verification-prompt ✅
-  - 재전송 제한 로직 테스트
-  - 쿨다운 타이머 동작 테스트
-  - UI 상태 변화 테스트
+  즉시 실행 가능한 명령어
 
-  ---
-  Phase 3: EmailGuideModal 컴포넌트 (2시간)
+  /improve @src/components/editor/rich-text-editor.tsx --focus quality
+  목적: ref 제거 및 코드 정리
 
-  3.1 도메인별 가이드 시스템 구현
+  /cleanup @src/components/editor/rich-text-editor.tsx
+  목적: 불필요한 코드 제거 및 최적화
 
-  /sc:implement "이메일 도메인별 맞춤 가이드" --type component --framework react
-  @src/components/auth/email-guide-modal.tsx ✅
-  - Gmail, Naver, Daum 등 주요 도메인별 가이드
-  - 스팸함 확인 방법 안내
-  - 고객 지원 연결 기능
+  /refactor @src/components/editor/rich-text-editor.tsx --type remove-unused
+  목적: 사용되지 않는 ref 코드 리팩토링
 
-  3.2 모달 UX 개선
+  심화 분석용 명령어
 
-  /sc:improve src/components/auth/email-guide-modal.tsx --focus performance ✅
-  - 단계별 가이드 UI 최적화
-  - 모바일 반응형 디자인 적용
-  - 접근성 개선 (키보드 내비게이션)
+  /analyze @src/components/editor/ --focus architecture --depth deep
+  목적: 에디터 전체 구조 분석
 
-  3.3 가이드 시스템 테스트
+  /troubleshoot "react-quill ref type error" @src/components/editor/
+  목적: React Quill ref 관련 이슈 종합 분석
 
-  /sc:test e2e --focus email-guide-modal ✅
-  - 도메인별 가이드 표시 테스트
-  - 모달 인터랙션 테스트
-  - 고객 지원 연결 테스트
+  🏆 최종 권장사항
 
-  ---
-  Phase 4: 백엔드 모니터링 강화 (1시간)
+  1순위: ref 완전 제거
 
-  4.1 이메일 서비스 모니터링 구현
+  /cleanup @src/components/editor/rich-text-editor.tsx --remove-unused-refs
 
-  /sc:implement "이메일 전송 모니터링 시스템" --type service --framework nextjs
-  @src/lib/email-monitor.ts
-  - 이메일 전송 성공/실패 로깅
-  - 사용자별 재전송 횟수 추적
-  - 비정상적 패턴 감지 로직
+  이유:
+  - 현재 quillRef가 실제로 사용되지 않음
+  - 타입 에러 완전 해결
+  - 코드 간소화
 
-  4.2 API 엔드포인트 개선
+  2순위: 향후 확장성 고려
 
-  /sc:improve src/app/api/auth/resend-verification/route.ts --focus security ✅
-  - 재전송 제한 검증 로직 추가
-  - 모니터링 이벤트 로깅
-  - 어뷰징 방지 기능 강화
+  만약 미래에 Quill 인스턴스 접근이 필요하다면:
 
-  4.3 모니터링 시스템 테스트
+  /implement "quill instance access pattern"
+  @src/components/editor/rich-text-editor.tsx
 
-  /sc:test unit --focus email-monitoring
-  - 재전송 제한 추적 테스트
-  - 로깅 이벤트 생성 테스트
-  - 어뷰징 패턴 감지 테스트
+  📋 구체적 수정 계획
 
-  ---
-  통합 테스트 및 QA (2시간)
+  Phase 1: 즉시 수정
 
-  5.1 E2E 테스트 시나리오 구현
+  1. quillRef 관련 코드 제거
+  2. 타입 에러 완전 해결
+  3. 기능 테스트
 
-  /sc:implement "이메일 인증 E2E 테스트 시나리오" --type test --framework
-  playwright
-  @tests/e2e/email-verification.spec.ts
-  - 기본 플로우: 미인증 → 안내 → 재전송 → 성공
-  - 제한 시나리오: 재전송 제한 → 쿨다운 → 재시도
-  - 가이드 시나리오: 도움말 → 모달 → 도메인별 가이드
+  Phase 2: 최적화
 
-  5.2 성능 및 접근성 테스트
+  1. 에디터 성능 개선
+  2. 타입 안전성 강화
+  3. 코드 리팩토링
 
-  /sc:test performance --focus email-verification-flow ✅
-  - 로딩 시간 측정
-  - 메모리 사용량 분석
-  - 접근성 점수 확인
+  Phase 3: 확장성
 
-  5.3 최종 품질 검증
+  1. 필요시 올바른 ref 패턴 구현
+  2. 에디터 인스턴스 접근 API 추가
 
-  /sc:analyze . --focus quality --scope project ✅
-  - 코드 품질 메트릭 검증
-  - TypeScript 타입 안정성 확인
-  - ESLint 규칙 준수 확인
+  🚀 즉시 실행 명령어
 
-  ---
-  배포 준비 및 모니터링 (1시간)
-
-  6.1 배포 전 체크리스트 실행
-
-  /sc:build --validate --safe-mode
-  - 프로덕션 빌드 검증
-  - 환경별 설정 확인
-  - 성능 메트릭 기준치 확인
-
-  6.2 모니터링 대시보드 설정
-
-  /sc:implement "이메일 인증 메트릭 대시보드" --type monitoring
-  - 인증 완료율 추적
-  - 재전송 사용률 모니터링
-  - 사용자 이탈률 분석
-
-  ---
-  🎯 실행 순서 요약
-
-  즉시 실행 가능한 명령어 시퀀스:
-
-  # Phase 1: 에러 처리 개선
-  /sc:analyze src/hooks/use-auth-api.ts --focus quality --depth deep
-  /sc:improve src/hooks/use-auth-api.ts --focus error-handling
-  /sc:improve src/components/auth/login-form.tsx --focus quality
-
-  # Phase 2: 재전송 시스템 구현
-  /sc:implement "이메일 재전송 제한 시스템" --type hook
-  /sc:improve src/components/auth/email-verification-prompt.tsx --focus
-  accessibility
-
-  # Phase 3: 가이드 시스템 완성
-  /sc:implement "이메일 도메인별 맞춤 가이드" --type component
-  /sc:improve src/components/auth/email-guide-modal.tsx --focus performance
-
-  # Phase 4: 모니터링 구현
-  /sc:implement "이메일 전송 모니터링 시스템" --type service
-  /sc:improve src/app/api/auth/resend-verification/route.ts --focus security
-
-  # 통합 테스트 실행
-  /sc:test e2e --focus email-verification-flow
-  /sc:build --validate --safe-mode
-
-⏺ Update Todos
-  ⎿  ☒ Analyze PRD phases and create SuperClaude command presets
-     ☒ Map detailed implementation requirements per phase
-     ☒ Generate executable SuperClaude command sequences
-
-⏺ 📊 예상 성과
-
-  정량적 개선:
-  - 이메일 인증 완료율: 80% → 95% (+15%)
-  - 로그인 성공률: 75% → 90% (+15%)
-  - 고객 지원 문의: 60% 감소
-  - 사용자 온보딩 시간: 10분 → 5분 (50% 단축)
-
-  구현 완료 후 실행할 검증 명령어:
-  # 최종 품질 검증
-  /sc:analyze . --focus security --scope project
-  /sc:test --comprehensive --coverage 90%
-  /sc:build --production --optimize
-
-  PRD 기반으로 체계적인 SuperClaude 명령어 프리셋을 생성했습니다. 각 Phase별로
-  세부 구현과 테스트가 포함된 실행 가능한 명령어들을 제공하여 효율적인 개발
-  진행을 지원합니다.
+  /improve @src/components/editor/rich-text-editor.tsx --remove-unused
+  --fix-**types**
