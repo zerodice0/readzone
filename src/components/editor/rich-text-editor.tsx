@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useCallback, useMemo } from 'react'
+import React, { useEffect, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useThemeState } from '@/hooks/use-theme'
 import { Card } from '@/components/ui/card'
@@ -44,7 +44,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   className = '',
   onSave,
   isLoading = false,
-  autofocus = false,
   readOnly = false,
   // 자동저장 관련 props
   autosaveStatus = 'idle',
@@ -52,7 +51,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   showAutosaveStatus = true
 }) => {
   const { isLoaded, isDark } = useThemeState()
-  const quillRef = useRef<any>(null)
+  // const quillRef = useRef<any>(null)
 
   // Quill 에디터 설정 (독후감 작성에 최적화)
   const modules = useMemo(() => ({
@@ -72,6 +71,22 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onChange(content)
   }, [onChange])
 
+  // 시간 포맷팅 함수
+  const formatTime = useCallback((date: Date) => {
+    const now = new Date()
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
+    
+    if (diff < 60) return '방금 전'
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`
+    return date.toLocaleDateString('ko-KR', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }, [])
+
   // 자동저장 상태 포맷팅
   const formatAutosaveStatus = useCallback(() => {
     if (!showAutosaveStatus) return null
@@ -88,22 +103,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         return lastSaved ? `마지막 저장: ${formatTime(lastSaved)}` : null
     }
   }, [autosaveStatus, lastSaved, showAutosaveStatus, formatTime])
-
-  // 시간 포맷팅 함수
-  const formatTime = useCallback((date: Date) => {
-    const now = new Date()
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
-    
-    if (diff < 60) return '방금 전'
-    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`
-    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`
-    return date.toLocaleDateString('ko-KR', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }, [])
 
   // 키보드 단축키 설정
   useEffect(() => {
@@ -142,7 +141,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <CustomToolbar />
           
           <ReactQuill
-            ref={quillRef}
+            // ref={quillRef as any}
             theme="snow"
             value={value}
             onChange={handleChange}

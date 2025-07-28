@@ -12,7 +12,6 @@ import {
   Quote,
   Link,
   RotateCcw,
-  Separator
 } from 'lucide-react'
 
 interface CustomToolbarProps {

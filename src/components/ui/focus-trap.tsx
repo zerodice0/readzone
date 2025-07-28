@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback, ReactNode } from 'react'
+import { useEffect, useRef, useCallback, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 interface FocusTrapProps {

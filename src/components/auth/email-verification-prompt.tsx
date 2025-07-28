@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useId, useRef } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 import { Button } from '@/components/ui'
 import { useResendVerification } from '@/hooks/use-resend-verification'
 import { Mail, Clock, HelpCircle, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react'
@@ -16,7 +16,6 @@ interface EmailVerificationPromptProps {
 export function EmailVerificationPrompt({ 
   email, 
   onShowGuide, 
-  availableActions = [],
   className 
 }: EmailVerificationPromptProps): JSX.Element {
   // 새로운 재전송 제한 훅 사용

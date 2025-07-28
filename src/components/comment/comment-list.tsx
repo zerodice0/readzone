@@ -9,7 +9,6 @@ import { CommentSortSelector } from './comment-sort-selector'
 import { useComments } from '@/hooks/use-comments'
 import { cn } from '@/lib/utils'
 import { MessageCircle, Plus, RefreshCw } from 'lucide-react'
-import type { CommentTree } from '@/types/comment'
 
 interface CommentListProps {
   reviewId: string
@@ -29,7 +28,6 @@ export function CommentList({
   const {
     comments,
     pagination,
-    meta,
     isLoading,
     isError,
     error,

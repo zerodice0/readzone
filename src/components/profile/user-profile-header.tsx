@@ -16,7 +16,6 @@ import {
   Mail,
   CheckCircle,
   Crown,
-  TrendingUp,
   Heart,
   MessageCircle,
   BookOpen,
@@ -117,7 +116,7 @@ export function UserProfileHeader({
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center space-x-2">
                     <span>{profile.nickname}</span>
                     {profile.emailVerified && (
-                      <CheckCircle className="w-5 h-5 text-blue-500" title="인증된 사용자" />
+                      <CheckCircle className="w-5 h-5 text-blue-500" />
                     )}
                   </h1>
                   

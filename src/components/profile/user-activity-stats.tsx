@@ -9,7 +9,6 @@ import {
   Heart,
   TrendingUp,
   Crown,
-  Calendar,
   Target,
   Award,
   BarChart3

@@ -90,7 +90,7 @@ function getEmailDomainGuide(email: string): EmailDomainGuide {
           '구글 스마트 필터에 의한 자동 분류'
         ]
       }
-    
+      break;
     case 'naver.com':
       guide = {
         name: 'Naver 메일',
@@ -119,7 +119,7 @@ function getEmailDomainGuide(email: string): EmailDomainGuide {
           '외부 메일 차단 설정'
         ]
       }
-    
+      break;
     case 'daum.net':
     case 'hanmail.net':
       guide = {
@@ -149,6 +149,7 @@ function getEmailDomainGuide(email: string): EmailDomainGuide {
           '외부 도메인 차단'
         ]
       }
+      break;
     
     case 'outlook.com':
     case 'hotmail.com':
@@ -179,6 +180,7 @@ function getEmailDomainGuide(email: string): EmailDomainGuide {
           'Clutter 기능에 의한 자동 이동'
         ]
       }
+      break
     
     case 'icloud.com':
     case 'me.com':
@@ -209,7 +211,7 @@ function getEmailDomainGuide(email: string): EmailDomainGuide {
           '자동 정크 메일 분류'
         ]
       }
-    
+      break;
     case 'yahoo.com':
     case 'yahoo.co.kr':
       guide = {
@@ -238,6 +240,7 @@ function getEmailDomainGuide(email: string): EmailDomainGuide {
           '자동 삭제 정책'
         ]
       }
+      break;
     
     case 'qq.com':
     case '163.com':
@@ -269,6 +272,7 @@ function getEmailDomainGuide(email: string): EmailDomainGuide {
           '네트워크 지연'
         ]
       }
+      break;
     
     default:
       guide = {
@@ -298,7 +302,7 @@ function getEmailDomainGuide(email: string): EmailDomainGuide {
           '보안 설정'
         ]
       }
-      break
+      break;
   }
   
   // Cache the result
@@ -558,8 +562,8 @@ export const EmailGuideModal = memo(function EmailGuideModal({ isOpen, onClose, 
                   )}
                   
                   {/* 특별 안내사항 섹션 - 성능 최적화된 조건부 렌더링 */}
-                  {emailGuide.specialInstructions?.length > 0 && (
-                    <SpecialInstructionsSection items={emailGuide.specialInstructions} />
+                  {(emailGuide.specialInstructions?.length ?? 0) > 0 && (
+                    <SpecialInstructionsSection items={emailGuide.specialInstructions ?? []} />
                   )}
                 </div>
               </GuideStep>
@@ -587,16 +591,16 @@ export const EmailGuideModal = memo(function EmailGuideModal({ isOpen, onClose, 
                   </ul>
                   
                   {/* 문제 해결 팁 섹션 - 성능 최적화된 조건부 렌더링 */}
-                  {emailGuide.troubleshooting?.length > 0 && (
-                    <TroubleshootingSection items={emailGuide.troubleshooting} />
+                  {(emailGuide.troubleshooting?.length ?? 0) > 0 && (
+                    <TroubleshootingSection items={emailGuide.troubleshooting ?? []} />
                   )}
                 </div>
               </GuideStep>
               
               {/* 자주 발생하는 문제 섹션 - 성능 최적화된 조건부 렌더링 */}
-              {emailGuide.commonIssues?.length > 0 && (
+              {(emailGuide.commonIssues?.length ?? 0) > 0 && (
                 <div className="mt-6">
-                  <CommonIssuesSection items={emailGuide.commonIssues} />
+                  <CommonIssuesSection items={emailGuide.commonIssues ?? []} />
                 </div>
               )}
             </div>

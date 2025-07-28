@@ -2,13 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui'
 import { useAuthStore } from '@/store/auth-store'
 import { cn } from '@/lib/utils'
 
 export function FloatingWriteButton(): JSX.Element {
-  const { data: session } = useSession()
   const { isAuthenticated } = useAuthStore()
   const [showTooltip, setShowTooltip] = useState(false)
 

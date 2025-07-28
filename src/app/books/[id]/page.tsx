@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
       },
       keywords: [
         book.title,
-        ...book.authors,
+        ...Array.from(book.authors),
         '독후감',
         '도서 리뷰',
         '책 추천',

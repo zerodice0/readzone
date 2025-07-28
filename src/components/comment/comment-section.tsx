@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { CommentList } from './comment-list'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -25,8 +24,7 @@ export function CommentSection({
   className
 }: CommentSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-  const { data: session } = useSession()
-
+  
   const handleToggle = () => {
     setIsExpanded(!isExpanded)
   }

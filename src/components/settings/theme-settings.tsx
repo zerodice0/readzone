@@ -100,7 +100,7 @@ const fontSizeOptions = [
 ]
 
 export function ThemeSettings({ userId, className }: ThemeSettingsProps) {
-  const { theme, setTheme, systemTheme, resolvedTheme } = useTheme()
+  const { theme, setTheme, systemTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [additionalSettings, setAdditionalSettings] = useState<AdditionalSettings>(defaultAdditionalSettings)
   const [isLoading, setIsLoading] = useState(true)

@@ -145,14 +145,28 @@ export default async function ReviewDetailPage({ params }: PageProps) {
     // 데이터 포맷팅
     initialReview = {
       ...review,
+      title: review.title || undefined,
       tags: JSON.parse(review.tags || '[]'),
+      createdAt: review.createdAt.toISOString(),
+      updatedAt: review.updatedAt.toISOString(),
+      user: {
+        ...review.user,
+        image: review.user.image || undefined,
+        bio: review.user.bio || undefined
+      },
       book: {
         ...review.book,
-        authors: JSON.parse(review.book.authors || '[]')
+        authors: JSON.parse(review.book.authors || '[]'),
+        title: review.book.title || '제목 없음',
+        publisher: review.book.publisher || undefined,
+        genre: review.book.genre || undefined,
+        thumbnail: review.book.thumbnail || undefined,
+        isbn: review.book.isbn || undefined,
+        pageCount: review.book.pageCount || undefined
       },
       isLiked: session?.user?.id ? (review.likes && review.likes.length > 0) : false,
       canEdit: session?.user?.id === review.userId,
-      likes: undefined // likes 배열 제거 (isLiked로 대체)
+      purchaseLink: review.purchaseLink || undefined,
     }
 
   } catch (error) {

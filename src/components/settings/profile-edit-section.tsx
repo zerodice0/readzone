@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
@@ -19,16 +18,12 @@ import {
   Camera,
   Upload,
   X,
-  Save,
   RefreshCw,
   AlertCircle,
   CheckCircle,
   Mail,
   Calendar,
   Loader2,
-  Eye,
-  EyeOff,
-  Globe
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -101,7 +96,7 @@ export function ProfileEditSection({ userId, className }: ProfileEditSectionProp
   const watchedBio = watch('bio')
 
   // 프로필 데이터가 로드되면 폼 리셋
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       reset({
         nickname: profile.nickname,
@@ -175,7 +170,7 @@ export function ProfileEditSection({ userId, className }: ProfileEditSectionProp
   }, [profile])
 
   // 디바운싱된 닉네임 확인
-  useState(() => {
+  useEffect(() => {
     const debounceTimer = setTimeout(() => {
       if (watchedNickname && watchedNickname.length >= 2) {
         checkNickname(watchedNickname)
@@ -186,7 +181,7 @@ export function ProfileEditSection({ userId, className }: ProfileEditSectionProp
   }, [watchedNickname, checkNickname])
 
   // 이미지 URL 변경 감지
-  useState(() => {
+  useEffect(() => {
     if (watchedImage && watchedImage !== imagePreview) {
       setImagePreview(watchedImage)
     }

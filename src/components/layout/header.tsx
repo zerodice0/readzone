@@ -17,7 +17,7 @@ export function Header(): JSX.Element {
   const logout = useLogout()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const isAuthenticated = status === 'authenticated' || user?.isAuthenticated
+  const isAuthenticated = status === 'authenticated'
 
   const handleLogout = async (): Promise<void> => {
     try {
@@ -109,12 +109,12 @@ export function Header(): JSX.Element {
                     )}
                   >
                     <span className="text-sm font-medium text-white">
-                      {session?.user?.name?.[0] || user?.user?.nickname?.[0] || 'U'}
+                      {session?.user?.name?.[0] || user?.nickname?.[0] || 'U'}
                     </span>
                   </div>
                   <div className="hidden lg:block">
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {session?.user?.name || user?.user?.nickname || '사용자'}
+                      {session?.user?.name || user?.nickname || '사용자'}
                     </p>
                   </div>
                 </div>
@@ -229,15 +229,15 @@ export function Header(): JSX.Element {
                           )}
                         >
                           <span className="text-sm font-medium text-white">
-                            {session?.user?.name?.[0] || user?.user?.nickname?.[0] || 'U'}
+                            {session?.user?.name?.[0] || user?.nickname?.[0] || 'U'}
                           </span>
                         </div>
                         <div className="ml-3">
                           <div className="text-base font-medium text-gray-900 dark:text-gray-100">
-                            {session?.user?.name || user?.user?.nickname || '사용자'}
+                            {session?.user?.name || user?.nickname || '사용자'}
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {session?.user?.email || user?.user?.email}
+                            {session?.user?.email || user?.email}
                           </div>
                         </div>
                       </div>

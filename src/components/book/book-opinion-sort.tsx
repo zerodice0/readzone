@@ -10,11 +10,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Shuffle,
-  TrendingUp,
   Filter,
   X,
   Check,
-  Star
 } from 'lucide-react'
 
 export type SortOption = 

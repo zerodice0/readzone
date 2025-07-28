@@ -74,9 +74,14 @@ export default function WriteReviewForm() {
   const [tagSuggestions, setTagSuggestions] = useState<string[]>(POPULAR_TAGS)
 
   // HTML 콘텐츠 특화 자동저장 설정
-  const autosave = useHtmlAutosave({
+  const autosave = useHtmlAutosave<{
+    content?: string;
+    selectedBook?: typeof selectedBook;
+    formData?: typeof formData;
+  }>({
     key: `review-draft-${session?.user?.id || 'anonymous'}`,
     data: {
+      content: formData.content,
       selectedBook,
       formData
     },
@@ -84,19 +89,19 @@ export default function WriteReviewForm() {
     compareTextOnly: false,  // HTML 구조 변경도 감지
     minTextLength: 10,       // 실제 텍스트 10자 이상일 때만 저장
     onSave: async (data) => {
-      if (data.selectedBook && data.formData.content) {
+      if (data.selectedBook && data.formData?.content) {
         await fetch('/api/reviews/draft', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            content: data.formData.content,
+            content: data.formData?.content,
             bookId: data.selectedBook.id,
-            title: data.formData.title,
+            title: data.formData?.title,
             metadata: {
               book: data.selectedBook,
-              isRecommended: data.formData.isRecommended,
-              tags: data.formData.tags,
-              purchaseLink: data.formData.purchaseLink
+              isRecommended: data.formData?.isRecommended,
+              tags: data.formData?.tags,
+              purchaseLink: data.formData?.purchaseLink
             }
           })
         })

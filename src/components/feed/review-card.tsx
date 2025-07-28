@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Button, Card, CardContent } from '@/components/ui'
+import { Card, CardContent } from '@/components/ui'
 import { LikeButton } from '@/components/review/like-button'
 import { SafeHtmlRenderer } from '@/components/review/safe-html-renderer'
 import { cn } from '@/lib/utils'
@@ -115,6 +115,8 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
     }
     
     setFormattedDate(formatDate(review.createdAt))
+
+    return;
   }, [review.createdAt])
 
   return (
@@ -229,7 +231,7 @@ export function ReviewCard({ review, showActions = true, onLoginRequired }: Revi
             {showActions ? (
               <LikeButton
                 reviewId={review.id}
-                isLiked={review.isLiked}
+                isLiked={review.isLiked ?? false}
                 likeCount={review.likeCount}
                 size="md"
                 variant="minimal"

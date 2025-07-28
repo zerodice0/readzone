@@ -11,16 +11,10 @@ import { cn } from '@/lib/utils'
 import {
   Bell,
   Mail,
-  MessageCircle,
-  Heart,
-  BookOpen,
-  Users,
-  Settings,
   Smartphone,
   Clock,
   Volume2,
   VolumeX,
-  Save,
   RefreshCw,
   CheckCircle,
   AlertCircle

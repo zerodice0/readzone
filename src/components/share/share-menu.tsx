@@ -7,7 +7,6 @@ import {
   Share2, 
   Copy, 
   MessageCircle, 
-  Send,
   Facebook,
   Twitter,
   Check,
@@ -137,7 +136,7 @@ export function ShareMenu({
         size="sm"
         onClick={() => {
           // 모바일에서는 네이티브 공유 API 우선 사용
-          if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
             shareNative()
           } else {
             setIsOpen(!isOpen)
@@ -245,7 +244,7 @@ export function SimpleShareButton({
         isCopied && 'text-green-600',
         className
       )}
-      title={navigator.share ? '공유하기' : '링크 복사'}
+      title={'공유하기'}
     >
       {isCopied ? (
         <Check className="h-4 w-4" />

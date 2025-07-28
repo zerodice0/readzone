@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useMemo } from 'react'
-import { AnimatedLikeButton, AnimatedLikeButtonProps } from '@/components/ui/animated-like-button'
+import { AnimatedLikeButton, type AnimatedLikeButtonProps } from '@/components/ui/animated-like-button'
 import { useLazyLoad } from '@/hooks/use-intersection-observer'
 import { cn } from '@/lib/utils'
 
@@ -141,31 +141,8 @@ interface LikeBatchContainerProps {
 
 export const LikeBatchContainer = memo<LikeBatchContainerProps>(function LikeBatchContainer({
   children,
-  maxActiveAnimations = 10,
-  enablePerformanceMonitoring = false,
   className
 }) {
-  // 성능 모니터링 (개발 환경에서만)
-  const performanceObserver = useMemo(() => {
-    if (typeof window === 'undefined' || !enablePerformanceMonitoring || process.env.NODE_ENV !== 'development') {
-      return null
-    }
-
-    try {
-      return new PerformanceObserver((list) => {
-        const entries = list.getEntries()
-        entries.forEach((entry) => {
-          if (entry.entryType === 'measure' && entry.name.includes('like-animation')) {
-            console.debug(`Like animation performance: ${entry.duration.toFixed(2)}ms`)
-          }
-        })
-      })
-    } catch (error) {
-      console.warn('PerformanceObserver not supported:', error)
-      return null
-    }
-  }, [enablePerformanceMonitoring])
-
   return (
     <div 
       className={cn(

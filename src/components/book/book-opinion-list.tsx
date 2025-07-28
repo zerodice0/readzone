@@ -10,7 +10,6 @@ import {
   User,
   MessageSquare,
   Clock,
-  Star,
   TrendingUp
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -24,7 +23,7 @@ import { BookOpinionSort, type SortOption, type FilterOption } from './book-opin
 import { usePaginatedList } from '@/hooks/use-paginated-list'
 import { UI_LABELS, ARIA_LABELS, EMPTY_STATE_MESSAGES } from '@/lib/constants/book'
 import { cn } from '@/lib/utils'
-import type { BookOpinion } from '@/types/book'
+import type { BookOpinion } from '@prisma/client'
 
 interface BookOpinionListProps {
   bookId: string
@@ -40,26 +39,9 @@ interface OpinionWithUser extends BookOpinion {
   }
 }
 
-interface OpinionListData {
-  items: OpinionWithUser[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
-  stats: {
-    total: number
-    recommendCount: number
-    notRecommendCount: number
-    recommendationRate: number
-  }
-}
-
 export function BookOpinionList({ 
   bookId, 
   limit = 20, 
-  onOpinionSubmit 
 }: BookOpinionListProps) {
   const [sortOption, setSortOption] = useState<SortOption>('newest')
   const [filterOption, setFilterOption] = useState<FilterOption>('all')
@@ -167,9 +149,9 @@ export function BookOpinionList({
         <BookOpinionSort
           currentSort={sortOption}
           currentFilter={filterOption}
-          totalCount={data.stats.total}
-          recommendCount={data.stats.recommendCount}
-          notRecommendCount={data.stats.notRecommendCount}
+          totalCount={data.stats?.total || 0}
+          recommendCount={data.stats?.recommendCount || 0}
+          notRecommendCount={data.stats?.notRecommendCount || 0}
           onSortChange={setSortOption}
           onFilterChange={setFilterOption}
         />
@@ -198,10 +180,10 @@ export function BookOpinionList({
     <div className="space-y-6">
       {/* 통계 요약 */}
       <StatsSummary
-        total={data.stats.total}
-        recommendCount={data.stats.recommendCount}
-        notRecommendCount={data.stats.notRecommendCount}
-        recommendationRate={data.stats.recommendationRate}
+        total={data.stats?.total || 0}
+        recommendCount={data.stats?.recommendCount || 0}
+        notRecommendCount={data.stats?.notRecommendCount || 0}
+        recommendationRate={data.stats?.recommendationRate || 0}
         totalLabel={UI_LABELS.TOTAL_OPINIONS}
         recommendLabel={UI_LABELS.RECOMMEND}
         notRecommendLabel={UI_LABELS.NOT_RECOMMEND}
@@ -211,9 +193,9 @@ export function BookOpinionList({
       <BookOpinionSort
         currentSort={sortOption}
         currentFilter={filterOption}
-        totalCount={data.stats.total}
-        recommendCount={data.stats.recommendCount}
-        notRecommendCount={data.stats.notRecommendCount}
+        totalCount={data.stats?.total || 0}
+        recommendCount={data.stats?.recommendCount || 0}
+        notRecommendCount={data.stats?.notRecommendCount || 0}
         onSortChange={setSortOption}
         onFilterChange={setFilterOption}
       />
@@ -286,7 +268,7 @@ export function BookOpinionList({
                     
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <Clock className="h-3 w-3" aria-hidden="true" />
-                      <time dateTime={opinion.createdAt}>
+                      <time dateTime={opinion.createdAt.toISOString()}>
                         {formatDistanceToNow(new Date(opinion.createdAt), { 
                           addSuffix: true,
                           locale: ko

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
-import { useLogin, useResendVerificationBasic } from '@/hooks/use-auth-api'
+import { useLogin } from '@/hooks/use-auth-api'
 import { loginSchema, type LoginInput } from '@/lib/validations'
 import { cn } from '@/lib/utils'
 import { AuthErrorCode, type AuthError } from '@/types/error'
@@ -22,7 +22,7 @@ interface LoginFormProps {
 export function LoginForm({ className, onSuccess }: LoginFormProps): JSX.Element {
   const router = useRouter()
   const login = useLogin()
-  const resendVerification = useResendVerificationBasic()
+  // const resendVerification = useResendVerificationBasic()
   
   // UI 상태 관리
   const [showPassword, setShowPassword] = useState(false)

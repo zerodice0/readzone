@@ -3,8 +3,6 @@
  * 실제 테스트 러너 없이 수동으로 실행할 수 있는 테스트 케이스들
  */
 
-import { SafeHtmlRenderer } from './safe-html-renderer'
-
 // XSS 공격 시나리오 테스트 케이스
 export const XSS_TEST_CASES = [
   {

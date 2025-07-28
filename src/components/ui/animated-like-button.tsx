@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Heart, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface AnimatedLikeButtonProps {
+export interface AnimatedLikeButtonProps {
   isLiked: boolean
   likeCount: number
   onToggle: () => Promise<void> | void

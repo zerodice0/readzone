@@ -137,7 +137,7 @@ export function CommentItem({
     }
   }
 
-  const canReply = level < maxLevel && comment.canReply && currentUserId
+  const canReply = level < maxLevel && currentUserId
   const canEdit = comment.canEdit && currentUserId === comment.userId
   const canDelete = comment.canDelete && (currentUserId === comment.userId || currentUserId)
   const canReport = currentUserId && currentUserId !== comment.userId

@@ -14,9 +14,6 @@ export {
 export type {
   CommentDetail,
   CommentTree,
-  CreateCommentInput,
-  UpdateCommentInput,
-  ListCommentsQuery
 } from '@/types/comment'
 
 // Hooks

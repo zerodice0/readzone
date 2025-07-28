@@ -94,7 +94,7 @@ export function UserStatsCharts({ stats, className }: UserStatsChartsProps) {
   const monthlyData = useMemo(() => {
     // 실제 구현에서는 API에서 월별 데이터를 가져와야 합니다
     const months = ['1월', '2월', '3월', '4월', '5월', '6월']
-    return months.map((month, index) => ({
+    return months.map((month) => ({
       name: month,
       reviews: Math.floor(Math.random() * 10),
       opinions: Math.floor(Math.random() * 15),
@@ -202,7 +202,7 @@ export function UserStatsCharts({ stats, className }: UserStatsChartsProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 장르 목록 */}
               <div className="space-y-3">
-                {genreData.map((genre, index) => (
+                {genreData.map((genre) => (
                   <div key={genre.name} className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div

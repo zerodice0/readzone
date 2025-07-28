@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
   Trash2,
@@ -76,7 +75,7 @@ export function AccountDeletion({ userId, className }: AccountDeletionProps) {
     resolver: zodResolver(accountDeletionSchema),
     mode: 'onChange',
     defaultValues: {
-      confirmationText: '',
+      confirmationText: 'DELETE',
       password: '',
       reason: '',
       agreedToTerms: false,
@@ -383,7 +382,7 @@ export function AccountDeletion({ userId, className }: AccountDeletionProps) {
                   <Checkbox
                     id="terms"
                     checked={agreedToTerms}
-                    onCheckedChange={(checked) => setValue('agreedToTerms', checked as boolean)}
+                    onChange={(e) => setValue('agreedToTerms', e.target.checked)}
                     className="mt-1"
                   />
                   <Label htmlFor="terms" className="text-sm cursor-pointer">
@@ -401,7 +400,7 @@ export function AccountDeletion({ userId, className }: AccountDeletionProps) {
                   <Checkbox
                     id="data-loss"
                     checked={agreedToDataLoss}
-                    onCheckedChange={(checked) => setValue('agreedToDataLoss', checked as boolean)}
+                    onChange={(e) => setValue('agreedToDataLoss', e.target.checked)}
                     className="mt-1"
                   />
                   <Label htmlFor="data-loss" className="text-sm cursor-pointer">

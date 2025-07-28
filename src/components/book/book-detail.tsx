@@ -7,7 +7,6 @@ import {
   Calendar, 
   Users, 
   ThumbsUp, 
-  ThumbsDown, 
   MessageSquare, 
   ExternalLink,
   Tag
@@ -23,7 +22,6 @@ import { ErrorDisplay } from './shared/error-display'
 import { useBookData } from '@/hooks/use-book-data'
 import { formatAuthors, formatPrice, formatBookDate } from '@/lib/book-utils'
 import { UI_LABELS, ARIA_LABELS } from '@/lib/constants/book'
-import type { BookDetail as BookDetailType } from '@/types/book'
 
 interface BookDetailProps {
   bookId: string
@@ -217,7 +215,7 @@ export function BookDetail({ bookId }: BookDetailProps) {
               {book.url && (
                 <Button
                   variant="outline"
-                  onClick={() => window.open(book.url, '_blank', 'noopener,noreferrer')}
+                  onClick={book.url ? () => window.open(book.url!, '_blank', 'noopener,noreferrer') : undefined}
                   className="flex items-center gap-2"
                   aria-label="카카오북스에서 이 도서 보기 (새 창)"
                 >

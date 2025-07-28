@@ -29,14 +29,7 @@ function VerifyEmailInner(): JSX.Element {
       setToken(tokenParam)
     }
   }, [searchParams])
-
-  useEffect(() => {
-    // 토큰이 있으면 자동으로 인증 시도
-    if (token && email) {
-      handleVerifyEmail(token)
-    }
-  }, [token, email, handleVerifyEmail])
-
+  
   const handleVerifyEmail = useCallback(async (verificationToken: string): Promise<void> => {
     try {
       await verifyEmail.mutateAsync({
@@ -52,6 +45,14 @@ function VerifyEmailInner(): JSX.Element {
       // 에러는 hook에서 toast로 처리됨
     }
   }, [verifyEmail, router])
+
+  useEffect(() => {
+    // 토큰이 있으면 자동으로 인증 시도
+    if (token && email) {
+      handleVerifyEmail(token)
+    }
+  }, [token, email, handleVerifyEmail])
+
 
   const handleResendEmail = async (): Promise<void> => {
     if (!email) return

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Book, Calendar, Star, Users, ExternalLink } from 'lucide-react'
+import { Book, Calendar, ExternalLink } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatAuthors, formatPrice, formatBookDate } from '@/lib/book-utils'

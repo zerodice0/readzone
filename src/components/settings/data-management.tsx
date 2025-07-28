@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
@@ -13,13 +12,10 @@ import {
   FileText,
   Image,
   HardDrive,
-  Cloud,
   RefreshCw,
-  CheckCircle,
   AlertCircle,
   Info,
   Archive,
-  Trash2,
   Calendar
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -90,7 +86,7 @@ const exportOptions: DataExportOption[] = [
 export function DataManagement({ userId, className }: DataManagementProps) {
   const [selectedExports, setSelectedExports] = useState<string[]>([])
   const [isExporting, setIsExporting] = useState(false)
-  const [exportHistory, setExportHistory] = useState([
+  const [exportHistory, _] = useState([
     {
       id: '1',
       type: '전체 데이터',

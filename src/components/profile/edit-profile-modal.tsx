@@ -22,10 +22,8 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
   User,
-  Upload,
   X,
   Eye,
-  EyeOff,
   AlertCircle,
   CheckCircle,
   Camera,
@@ -84,7 +82,6 @@ export function EditProfileModal({
     formState: { errors, isDirty, isValid },
     watch,
     setValue,
-    reset
   } = useForm<EditProfileFormData>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
@@ -191,11 +188,11 @@ export function EditProfileModal({
     }
     
     if (data.bio !== (profile.bio || '')) {
-      changes.bio = data.bio || null
+      changes.bio = data.bio || undefined
     }
     
     if (data.image !== (profile.image || '')) {
-      changes.image = data.image || null
+      changes.image = data.image || undefined
     }
 
     onSave(changes)

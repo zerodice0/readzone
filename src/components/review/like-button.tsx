@@ -116,6 +116,8 @@ export function LikeButton({
       
       return () => clearInterval(interval)
     }
+
+    return;
   }, [getQueueStatus])
 
   // 배치 API 호출 함수

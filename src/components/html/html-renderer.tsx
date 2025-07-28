@@ -32,17 +32,17 @@ const ALLOWED_TAGS = [
   'hr', 'div', 'span'
 ]
 
-const ALLOWED_ATTRIBUTES = {
-  'a': ['href', 'title', 'target', 'rel'],
-  'img': ['src', 'alt', 'title', 'width', 'height', 'style'],
-  'blockquote': ['cite'],
-  'p': ['style'],
-  'div': ['style'],
-  'span': ['style'],
-  'h1': ['style'], 'h2': ['style'], 'h3': ['style'], 
-  'h4': ['style'], 'h5': ['style'], 'h6': ['style'],
-  'strong': ['style'], 'em': ['style'], 'u': ['style']
-}
+// const ALLOWED_ATTRIBUTES = {
+//   'a': ['href', 'title', 'target', 'rel'],
+//   'img': ['src', 'alt', 'title', 'width', 'height', 'style'],
+//   'blockquote': ['cite'],
+//   'p': ['style'],
+//   'div': ['style'],
+//   'span': ['style'],
+//   'h1': ['style'], 'h2': ['style'], 'h3': ['style'], 
+//   'h4': ['style'], 'h5': ['style'], 'h6': ['style'],
+//   'strong': ['style'], 'em': ['style'], 'u': ['style']
+// }
 
 export function HtmlRenderer({
   content,
@@ -75,6 +75,8 @@ export function HtmlRenderer({
       observer.observe(node)
       return () => observer.disconnect()
     }
+
+    return;
   }, [lazyRender, isVisible])
 
   // Copy content to clipboard (텍스트만 복사)
@@ -124,7 +126,6 @@ export function HtmlRenderer({
       // DOMPurify 설정으로 XSS 공격 방지
       const purifyConfig = {
         ALLOWED_TAGS,
-        ALLOWED_ATTR: ALLOWED_ATTRIBUTES,
         ALLOW_DATA_ATTR: false,
         FORBID_SCRIPTS: true,
         FORBID_TAGS: ['script', 'object', 'embed', 'base', 'link', 'meta', 'style'],

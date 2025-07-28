@@ -24,7 +24,7 @@ import { PaginationControls } from './shared/pagination-controls'
 import { usePaginatedList } from '@/hooks/use-paginated-list'
 import { truncateText } from '@/lib/utils'
 import { UI_LABELS, ARIA_LABELS, EMPTY_STATE_MESSAGES } from '@/lib/constants/book'
-import type { BookReview } from '@/types/book'
+import type { BookReview } from '@prisma/client'
 
 interface BookReviewListProps {
   bookId: string
@@ -43,7 +43,7 @@ interface ReviewWithUser extends BookReview {
   }
 }
 
-interface ReviewListData {
+export interface ReviewListData {
   items: ReviewWithUser[]
   pagination: {
     page: number
@@ -115,10 +115,10 @@ export function BookReviewList({ bookId, limit = 10 }: BookReviewListProps) {
     <div className="space-y-6">
       {/* 통계 요약 */}
       <StatsSummary
-        total={data.stats.total}
-        recommendCount={data.stats.recommendCount}
-        notRecommendCount={data.stats.notRecommendCount}
-        recommendationRate={data.stats.recommendationRate}
+        total={data.stats?.total || 0}
+        recommendCount={data.stats?.recommendCount || 0}
+        notRecommendCount={data.stats?.notRecommendCount || 0}
+        recommendationRate={data.stats?.recommendationRate || 0}
         totalLabel={UI_LABELS.TOTAL_REVIEWS}
         recommendLabel={UI_LABELS.RECOMMEND}
         notRecommendLabel={UI_LABELS.NOT_RECOMMEND}
@@ -126,7 +126,7 @@ export function BookReviewList({ bookId, limit = 10 }: BookReviewListProps) {
 
       {/* 독후감 목록 */}
       <div className="space-y-6">
-        {data.items.map((review) => {
+        {data.items.map((review: ReviewWithUser) => {
           const tags = parseTags(review.tags)
           
           return (
@@ -177,7 +177,7 @@ export function BookReviewList({ bookId, limit = 10 }: BookReviewListProps) {
                       
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Calendar className="h-3 w-3" aria-hidden="true" />
-                        <time dateTime={review.createdAt}>
+                        <time dateTime={review.createdAt.toISOString()}>
                           {formatDistanceToNow(new Date(review.createdAt), { 
                             addSuffix: true,
                             locale: ko

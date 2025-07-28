@@ -36,6 +36,7 @@ interface LikePerformanceMonitorProps {
     animation: number  // 애니메이션 임계값 (ms)
     api: number        // API 응답 임계값 (ms)
     batch: number      // 배치 처리 임계값 (ms)
+    total: number      // 전체 임계값 (ms)
   }
   className?: string
 }
@@ -58,7 +59,8 @@ export function LikePerformanceMonitor({
   thresholds = {
     animation: 16, // 60fps
     api: 500,      // 0.5초
-    batch: 200     // 0.2초
+    batch: 200,    // 0.2초
+    total: 1000    // 1초
   },
   className
 }: LikePerformanceMonitorProps) {
@@ -332,7 +334,7 @@ export function LikePerformanceMonitor({
  * 성능 모니터링을 위한 유틸리티 훅
  */
 export function useLikePerformanceMonitoring() {
-  const recordMetric = useCallback((type: string, duration: number, success = true, error?: string) => {
+  const recordMetric = useCallback((type: string, _: number, __ = true, ___?: string) => {
     if (typeof window === 'undefined' || process.env.NODE_ENV !== 'development') return
 
     const metricName = `like-${type}-${Date.now()}`

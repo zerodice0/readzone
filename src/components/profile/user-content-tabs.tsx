@@ -14,12 +14,9 @@ import {
   BookOpen,
   MessageCircle,
   Heart,
-  Eye,
   ExternalLink,
   MoreHorizontal,
   Calendar,
-  Star,
-  Bookmark,
   ThumbsUp,
   ThumbsDown
 } from 'lucide-react'
@@ -104,7 +101,6 @@ interface UserContentResponse {
 export function UserContentTabs({
   userId,
   activeTab,
-  onTabChange,
   className
 }: UserContentTabsProps) {
   const [page, setPage] = useState(1)
