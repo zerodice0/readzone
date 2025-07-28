@@ -3,12 +3,14 @@
  * Provides consistent error processing, logging, and user messaging
  */
 
-import { 
+import type { 
   AuthError, 
-  AuthErrorCode, 
-  ErrorContext, 
+  ErrorContext,
+} from '@/types/error'
+import { 
   ErrorSeverity,
   AUTH_ERROR_MESSAGES,
+  AuthErrorCode,
   ERROR_SEVERITY_MAP,
   ACTIONABLE_ERRORS,
   RETRIABLE_ERRORS,
@@ -94,7 +96,7 @@ export class AuthErrorHandler {
   /**
    * Map Prisma and other errors to auth error codes
    */
-  private mapGenericError(error: Error, context: ErrorContext): AuthError {
+  private mapGenericError(error: Error, _: ErrorContext): AuthError {
     const message = error.message.toLowerCase()
 
     // Prisma unique constraint violations
@@ -291,6 +293,7 @@ export function createErrorResponse(error: AuthError, statusCode?: number) {
   const defaultStatusCode = getDefaultStatusCode(error.code)
   
   return {
+    status: statusCode || defaultStatusCode,
     success: false,
     message: error.userMessage,
     error: {

@@ -387,6 +387,17 @@ export function validateEmailSecurity(email: string): {
   }
 }
 
+interface SecureErrorResponse {
+  success: false
+  message: string
+  error: {
+    code: string
+    statusCode: number
+    timestamp: string
+    retryAfter?: number
+  }
+}
+
 /**
  * Generate standardized error response that doesn't leak information
  */
@@ -395,20 +406,13 @@ export function createSecureErrorResponse(
   publicMessage: string,
   statusCode: number,
   retryAfter?: number
-): {
-  success: false
-  message: string
-  error: {
-    code: string
-    timestamp: string
-    retryAfter?: number
-  }
-} {
+): SecureErrorResponse {
   return {
     success: false,
     message: publicMessage,
     error: {
       code,
+      statusCode,
       timestamp: new Date().toISOString(),
       ...(retryAfter && { retryAfter })
     }
@@ -423,14 +427,14 @@ export function cleanupRateLimitEntries(): void {
   const oneDay = 24 * 60 * 60 * 1000
   
   // Clean IP rate limits
-  for (const [ip, entry] of ipRateLimit.entries()) {
+  for (const [ip, entry] of Array.from(ipRateLimit.entries())) {
     if (now - entry.lastRequest > oneDay) {
       ipRateLimit.delete(ip)
     }
   }
   
   // Clean email rate limits
-  for (const [email, entry] of emailRateLimit.entries()) {
+  for (const [email, entry] of Array.from(emailRateLimit.entries())) {
     if (now - entry.lastRequest > oneDay) {
       emailRateLimit.delete(email)
     }

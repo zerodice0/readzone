@@ -343,10 +343,10 @@ export function createResendAuthError(
       authErrorCode = AuthErrorCode.EMAIL_SEND_LIMIT
       break
     case ResendErrorType.VALIDATION_ERROR:
-      authErrorCode = AuthErrorCode.INVALID_EMAIL
+      authErrorCode = AuthErrorCode.INVALID_INPUT
       break
     case ResendErrorType.NETWORK_ERROR:
-      authErrorCode = AuthErrorCode.NETWORK_ERROR
+      authErrorCode = AuthErrorCode.INTERNAL_ERROR
       break
     default:
       authErrorCode = AuthErrorCode.INTERNAL_ERROR

@@ -3,7 +3,8 @@
  * Tracks auth events, errors, and security metrics
  */
 
-import { AuthError, AuthErrorCode, ErrorSeverity, ErrorMetrics, ERROR_SEVERITY_MAP } from '@/types/error'
+import type { AuthError, ErrorMetrics } from '@/types/error'
+import { ErrorSeverity, ERROR_SEVERITY_MAP } from '@/types/error'
 import { logger } from './logger'
 
 export interface AuthEvent {
@@ -37,7 +38,6 @@ export class AuthMonitor {
   // Thresholds for security alerts
   private readonly FAILED_LOGIN_THRESHOLD = 5 // per 15 minutes
   private readonly REGISTRATION_THRESHOLD = 10 // per hour
-  private readonly TOKEN_ABUSE_THRESHOLD = 20 // per hour
   
   public static getInstance(): AuthMonitor {
     if (!AuthMonitor.instance) {
@@ -170,16 +170,6 @@ export class AuthMonitor {
   private createSecurityAlert(alert: SecurityAlert): void {
     this.securityAlerts.push(alert)
     
-    // Log security alert
-    logger.security('Security alert generated', {
-      type: alert.type,
-      severity: alert.severity,
-      email: alert.email,
-      ip: alert.ip,
-      count: alert.count,
-      timeWindow: alert.timeWindow
-    })
-    
     // In production, send to monitoring service
     if (process.env.NODE_ENV === 'production') {
       this.sendToMonitoringService(alert)
@@ -240,7 +230,7 @@ export class AuthMonitor {
     }
     
     // Count errors by code
-    this.errorMetrics.forEach((metric, key) => {
+    this.errorMetrics.forEach((metric) => {
       stats.errorsByCode[metric.errorCode] = metric.count
     })
     

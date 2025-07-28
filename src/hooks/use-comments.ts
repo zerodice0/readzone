@@ -4,7 +4,8 @@ import { useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { CommentDetail, CommentTree, CreateCommentInput, UpdateCommentInput } from '@/types/comment'
+import type { CommentDetail, CommentTree } from '@/types/comment'
+import type { CreateCommentInput, UpdateCommentInput } from '@/lib/validations'
 
 interface UseCommentsOptions {
   reviewId: string
@@ -241,7 +242,7 @@ export function useComments({ reviewId, sort = 'latest', limit = 20 }: UseCommen
   }, [commentsData?.data.pagination.hasMore])
 
   // 정렬 변경
-  const changeSort = useCallback((newSort: 'latest' | 'oldest' | 'most_liked') => {
+  const changeSort = useCallback((_: 'latest' | 'oldest' | 'most_liked') => {
     setPage(1)
     queryClient.invalidateQueries({ queryKey: ['comments', reviewId] })
   }, [queryClient, reviewId])
@@ -276,8 +277,6 @@ export function useComments({ reviewId, sort = 'latest', limit = 20 }: UseCommen
 
 // 개별 댓글 상세 정보 조회 훅
 export function useComment(commentId: string) {
-  const { data: session } = useSession()
-
   return useQuery({
     queryKey: ['comment', commentId],
     queryFn: async (): Promise<{ success: boolean; data: { comment: CommentDetail } }> => {

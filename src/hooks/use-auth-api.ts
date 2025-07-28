@@ -6,13 +6,14 @@ import { toast } from 'sonner'
 import { queryKeys, handleQueryError } from '@/lib/query-client'
 import { useAuthStore } from '@/store/auth-store'
 import { AuthErrorCode, createAuthError, type AuthError } from '@/types/error'
+
 import type { 
   RegisterRequest, 
   RegisterResponse, 
   CheckDuplicateRequest, 
   CheckDuplicateResponse,
   VerifyEmailRequest,
-  VerifyEmailResponse 
+  VerifyEmailResponse,
 } from '@/types/auth'
 
 // API 호출 함수들
@@ -163,8 +164,7 @@ function parseNextAuthError(errorMessage: string, email?: string): AuthError {
         '이메일 인증이 필요합니다',
         '이메일 인증이 완료되지 않았습니다', 
         'Email verification required',
-        'EMAIL_NOT_VERIFIED',
-        'CredentialsSignin'  // NextAuth v5 기본 에러
+        'EMAIL_NOT_VERIFIED'
       ],
       code: AuthErrorCode.EMAIL_NOT_VERIFIED,
       details: {
@@ -280,11 +280,27 @@ export function useLogin() {
             throw error
           }
         } catch (apiError) {
-          // API 호출 실패 시 기본 에러 파싱으로 fallback
+          // API 호출이 성공적으로 에러를 반환한 경우 재throw
+          if (apiError instanceof Error && 'code' in apiError) {
+            throw apiError
+          }
+          // 그 외의 경우는 아래 fallback으로 진행
         }
         
-        // 구체적인 에러 정보를 가져올 수 없는 경우 기존 방식 사용
-        const authError = parseNextAuthError(result.error, email)
+        // 구체적인 에러 정보를 가져올 수 없는 경우
+        // CredentialsSignin은 일반적으로 잘못된 인증 정보를 의미
+        let authError
+        if (result.error === 'CredentialsSignin') {
+          // 기본적으로 잘못된 인증 정보로 처리
+          authError = createAuthError(AuthErrorCode.INVALID_CREDENTIALS, {
+            email,
+            operation: 'login'
+          })
+        } else {
+          // 그 외의 경우 패턴 매칭 시도
+          authError = parseNextAuthError(result.error, email)
+        }
+        
         const error = new Error(authError.userMessage)
         Object.assign(error, {
           code: authError.code,

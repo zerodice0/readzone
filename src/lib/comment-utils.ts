@@ -134,5 +134,5 @@ export function parseMentions(content: string): string[] {
     mentions.push(match[1])
   }
   
-  return [...new Set(mentions)] // 중복 제거
+  return Array.from(new Set(mentions)) // 중복 제거
 }

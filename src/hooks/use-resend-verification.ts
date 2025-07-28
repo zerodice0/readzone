@@ -13,8 +13,6 @@ import { AuthErrorCode, createAuthError } from '@/types/error'
 import { 
   showResendErrorToast, 
   logResendError, 
-  canRetryResend,
-  ResendErrorType 
 } from '@/lib/resend-error-handler'
 
 // 재전송 제한 인터페이스
@@ -197,7 +195,7 @@ export function useResendVerification(
   
   // 상태 관리
   const [record, setRecord] = useState<ResendRecord>(() => loadResendRecord(email))
-  const [cooldownRemaining, setCooldownRemaining] = useState(0)
+  // const [cooldownRemaining, setCooldownRemaining] = useState(0)
   
   // API 뮤테이션
   const mutation = useMutation({
@@ -217,13 +215,6 @@ export function useResendVerification(
       toast.success(data.message)
     },
     onError: (error) => {
-      // 포괄적인 에러 처리 및 로깅
-      const errorDetails = showResendErrorToast(error, {
-        email,
-        attemptCount: record.dailyCount,
-        lastAttemptTime: record.lastSentAt ? new Date(record.lastSentAt) : undefined
-      })
-      
       // 에러 로깅
       logResendError(error, {
         email,
@@ -239,7 +230,7 @@ export function useResendVerification(
     
     const interval = setInterval(() => {
       const { remaining } = calculateCooldown(record.lastSentAt, finalLimits.cooldownMinutes)
-      setCooldownRemaining(remaining)
+      // setCooldownRemaining(remaining)
       
       if (remaining === 0) {
         clearInterval(interval)
@@ -324,7 +315,7 @@ export function useResendVerification(
     const emptyRecord = createEmptyRecord(email)
     setRecord(emptyRecord)
     saveResendRecord(email, emptyRecord)
-    setCooldownRemaining(0)
+    // setCooldownRemaining(0)
   }, [email])
   
   // 상태 메시지 생성

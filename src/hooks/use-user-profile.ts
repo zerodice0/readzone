@@ -163,7 +163,7 @@ export function useUserProfile({ userId, includeRanking = false }: UseUserProfil
 
       return result
     },
-    onSuccess: (data) => {
+    onSuccess: (_) => {
       // 통계 캐시 업데이트
       queryClient.invalidateQueries({ queryKey: ['userStats', userId] })
       toast.success('통계가 새로고침되었습니다.')

@@ -7,7 +7,6 @@
  */
 
 import { db } from '@/lib/db'
-import type { KakaoBookResponse, ApiResponse } from '@/types/kakao'
 import type { CacheConfig } from '@/types/book'
 
 // 메모리 캐시 엔트리
@@ -195,7 +194,7 @@ export class BookCacheManager {
     let deletedCount = 0
 
     // 메모리 캐시에서 패턴 매칭 삭제
-    for (const [key] of this.memoryCache) {
+    for (const [key] of Array.from(this.memoryCache)) {
       if (pattern.test(key)) {
         this.memoryCache.delete(key)
         deletedCount++
@@ -250,7 +249,7 @@ export class BookCacheManager {
     let deletedCount = 0
 
     // 메모리 캐시 정리
-    for (const [key, entry] of this.memoryCache) {
+    for (const [key, entry] of Array.from(this.memoryCache)) {
       if (entry.expiresAt <= now) {
         this.memoryCache.delete(key)
         deletedCount++
@@ -331,7 +330,7 @@ export class BookCacheManager {
       let leastUsedKey = null
       let minHits = Infinity
 
-      for (const [key, entry] of this.memoryCache) {
+      for (const [key, entry] of Array.from(this.memoryCache)) {
         if (entry.hits < minHits) {
           minHits = entry.hits
           leastUsedKey = key

@@ -60,13 +60,12 @@ function compareHtmlContent(a: string, b: string): boolean {
 export function useHtmlAutosave<T extends { content?: string }>({
   compareTextOnly = false,
   minTextLength = 10,
-  isEqual: customIsEqual,
   onSave: originalOnSave,
   ...options
-}: UseHtmlAutosaveOptions<T>): UseAutosaveReturn {
+}: UseHtmlAutosaveOptions<T>): UseAutosaveReturn<T> {
   
   // HTML 콘텐츠 비교 로직
-  const isEqual = customIsEqual || ((a: T, b: T) => {
+  const isEqual = ((a: T, b: T) => {
     if (compareTextOnly && a.content && b.content) {
       // 실제 텍스트만 비교
       const textA = htmlToText(a.content)

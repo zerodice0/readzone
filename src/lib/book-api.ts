@@ -42,7 +42,6 @@ export class BookAPI {
         return {
           success: true,
           data: cachedResult,
-          cached: true
         }
       }
 
@@ -134,8 +133,7 @@ export class BookAPI {
 
         return {
           success: true,
-          data: cachedResult,
-          cached: true
+          data: cachedResult
         }
       }
 

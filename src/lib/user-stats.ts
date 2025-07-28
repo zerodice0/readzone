@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/db'
-import type { User } from '@prisma/client'
 
 // 사용자 활동 통계 타입 정의
 export interface UserActivityStats {

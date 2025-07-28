@@ -140,14 +140,7 @@ export class UsageLogger {
     
     const successCount = requests.filter(r => r.success).length
     const errorCount = requests.length - successCount
-    const responseTimes = requests
-      .filter(r => r.responseTime !== undefined)
-      .map(r => r.responseTime!)
-
-    const averageResponseTime = responseTimes.length > 0
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
-      : 0
-
+    
     try {
       await db.apiUsageLog.upsert({
         where: {

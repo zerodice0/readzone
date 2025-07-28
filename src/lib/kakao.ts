@@ -3,7 +3,7 @@ import type {
   KakaoBookResponse, 
   KakaoBook, 
   ApiResponse,
-  KakaoApiError
+  // KakaoApiError
 } from '@/types/kakao'
 
 /**
@@ -71,7 +71,7 @@ export class KakaoBookAPI {
     const response = await this.search({ query: isbn, size: 1 })
     
     if (!response.success || !response.data) {
-      return response as ApiResponse<KakaoBook | null>
+      return response as unknown as ApiResponse<KakaoBook | null>
     }
 
     const book = response.data.documents.find(book => 
@@ -277,7 +277,7 @@ export class KakaoBookAPI {
   /**
    * API 사용량 정보 추출
    */
-  private extractUsageInfo(response: Response) {
+  private extractUsageInfo(_: Response) {
     // 카카오 API는 응답 헤더에 사용량 정보를 포함하지 않음
     // 필요시 별도의 사용량 추적 시스템에서 관리
     return {

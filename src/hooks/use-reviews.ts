@@ -85,7 +85,7 @@ export function useToggleReviewLike() {
       
       return response.json()
     },
-    onSuccess: (data, reviewId) => {
+    onSuccess: (_, reviewId) => {
       // 관련된 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: ['reviews'] })
       queryClient.invalidateQueries({ queryKey: ['review', reviewId] })

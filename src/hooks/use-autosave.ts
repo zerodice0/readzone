@@ -337,6 +337,8 @@ export function useAutosave<T>({
         e.returnValue = message
         return message
       }
+
+      return;
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)

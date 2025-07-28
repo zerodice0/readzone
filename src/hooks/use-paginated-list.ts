@@ -18,6 +18,7 @@ export interface UsePaginatedListOptions {
   initialPage?: number
   initialLimit?: number
   autoFetch?: boolean
+  additionalParams?: Record<string, any>
 }
 
 export interface UsePaginatedListReturn<T> {
@@ -45,7 +46,8 @@ export function usePaginatedList<T>(
   const {
     initialPage = 1,
     initialLimit = 20,
-    autoFetch = true
+    autoFetch = true,
+    additionalParams = {}
   } = options
 
   const [currentPage, setCurrentPage] = useState(initialPage)
@@ -54,9 +56,16 @@ export function usePaginatedList<T>(
   const { data, isLoading, error, call, reset: resetApi } = useApiCall<PaginatedResponse<T>>()
 
   const fetchData = useCallback(() => {
-    const url = `${baseUrl}?page=${currentPage}&limit=${limit}`
+    const params = new URLSearchParams({
+      page: currentPage.toString(),
+      limit: limit.toString(),
+      ...Object.fromEntries(
+        Object.entries(additionalParams).map(([key, value]) => [key, String(value)])
+      )
+    })
+    const url = `${baseUrl}?${params.toString()}`
     call(url)
-  }, [baseUrl, currentPage, limit, call])
+  }, [baseUrl, currentPage, limit, additionalParams, call])
 
   useEffect(() => {
     if (autoFetch) {

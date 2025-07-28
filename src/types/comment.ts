@@ -1,5 +1,3 @@
-import type { User, Comment, CommentLike, BookReview } from '@prisma/client'
-
 // 기본 댓글 타입
 export interface BaseComment {
   id: string

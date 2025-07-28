@@ -4,12 +4,11 @@
  */
 
 export enum AuthErrorCode {
-  // Authentication errors
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED',
   USER_NOT_FOUND = 'USER_NOT_FOUND',
-  ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
-  
+  ACCOUNT_LOCKED = 'ACCOUNT_LOCKED', 
+
   // Registration errors
   EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS',
   NICKNAME_ALREADY_EXISTS = 'NICKNAME_ALREADY_EXISTS',
@@ -35,7 +34,6 @@ export enum AuthErrorCode {
   INVALID_INPUT = 'INVALID_INPUT',
   MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
 }
-
 export interface AuthError {
   code: AuthErrorCode
   message: string

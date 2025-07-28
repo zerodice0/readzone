@@ -6,7 +6,7 @@ import { verifyPassword } from './utils'
 import { logger } from './logger'
 import { AuthErrorCode, createAuthError } from '@/types/error'
 import { handleAuthError, createErrorContext } from './error-handler'
-import { storeAuthError } from '@/app/api/auth/last-error/route'
+import { storeAuthError } from './auth-error-store'
 
 // Extend NextAuth types for custom properties
 declare module 'next-auth' {
@@ -98,7 +98,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         } catch (error) {
           // Log unexpected errors and return null
-          logger.error('Unexpected auth error:', error)
+          logger.error('Unexpected auth error:', { error })
           return null
         }
       },

@@ -14,7 +14,7 @@ export class ApiUsageTracker {
   /**
    * API 호출 추적
    */
-  async track(apiKey: string = 'default'): Promise<void> {
+  async track(_: string = 'default'): Promise<void> {
     const today = this.getTodayKey()
     const currentUsage = this.usage.get(today) || this.createDefaultUsage(today)
 
@@ -38,7 +38,7 @@ export class ApiUsageTracker {
   /**
    * 요청 가능 여부 확인
    */
-  async canMakeRequest(apiKey: string = 'default'): Promise<boolean> {
+  async canMakeRequest(_: string = 'default'): Promise<boolean> {
     const today = this.getTodayKey()
     const currentUsage = this.usage.get(today) || this.createDefaultUsage(today)
 
@@ -48,7 +48,7 @@ export class ApiUsageTracker {
   /**
    * 남은 할당량 조회
    */
-  async getRemainingQuota(apiKey: string = 'default'): Promise<number> {
+  async getRemainingQuota(_: string = 'default'): Promise<number> {
     const today = this.getTodayKey()
     const currentUsage = this.usage.get(today) || this.createDefaultUsage(today)
 
@@ -58,7 +58,7 @@ export class ApiUsageTracker {
   /**
    * 오늘의 사용량 조회
    */
-  async getTodayUsage(apiKey: string = 'default'): Promise<ApiUsage> {
+  async getTodayUsage(_: string = 'default'): Promise<ApiUsage> {
     const today = this.getTodayKey()
     return this.usage.get(today) || this.createDefaultUsage(today)
   }
@@ -66,7 +66,7 @@ export class ApiUsageTracker {
   /**
    * 사용량 통계 조회
    */
-  async getUsageStats(apiKey: string = 'default'): Promise<{
+  async getUsageStats(_: string = 'default'): Promise<{
     today: ApiUsage
     usagePercentage: number
     isNearLimit: boolean
@@ -127,7 +127,7 @@ export class ApiUsageTracker {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - 7) // 7일 이전 데이터 삭제
 
-    for (const [dateKey] of this.usage) {
+    for (const [dateKey] of Array.from(this.usage.entries())) {
       const date = new Date(dateKey)
       if (date < cutoffDate) {
         this.usage.delete(dateKey)

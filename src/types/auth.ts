@@ -1,4 +1,3 @@
-import { type DefaultSession } from 'next-auth'
 
 export interface ApiResponse<T = any> {
   success: boolean
