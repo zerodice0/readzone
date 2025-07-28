@@ -8,8 +8,7 @@ import {
   logCommentAction 
 } from '@/lib/comment-security'
 import { 
-  updateCommentSchema,
-  type UpdateCommentInput 
+  updateCommentSchema
 } from '@/lib/validations'
 import { commentInclude } from '@/types/comment'
 import { logger } from '@/lib/logger'
@@ -24,7 +23,7 @@ interface RouteParams {
  * GET /api/comments/[id] - 댓글 상세 조회
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {
@@ -32,7 +31,7 @@ export async function GET(
 
     // 현재 사용자 확인 (선택적)
     const authResult = await validateAuthSession()
-    const currentUserId = authResult.success ? authResult.user.id : undefined
+    const currentUserId = authResult.success && authResult.user ? authResult.user.id : undefined
 
     // 댓글 존재 여부 및 권한 확인
     const commentValidation = await validateCommentAccess(commentId, currentUserId)
@@ -42,11 +41,11 @@ export async function GET(
           success: false,
           error: commentValidation.error,
         },
-        { status: commentValidation.error.statusCode }
+        { status: commentValidation.error?.statusCode || 400 }
       )
     }
 
-    const { comment, permissions } = commentValidation
+    // comment validation passed, continue with detailed query
 
     // 상세 댓글 정보 조회
     const detailedComment = await prisma.comment.findUnique({
@@ -88,13 +87,14 @@ export async function GET(
       user: detailedComment.user,
       replies: detailedComment.replies?.map(reply => ({
         ...reply,
-        isLiked: currentUserId ? reply.likes?.length > 0 : false,
+        isLiked: false, // replies에는 likes 정보가 포함되지 않음
         canEdit: currentUserId === reply.userId,
         canDelete: currentUserId === reply.userId,
       })) || [],
       _count: detailedComment._count,
       isLiked: currentUserId ? detailedComment.likes?.length > 0 : false,
-      ...permissions,
+      canEdit: currentUserId === detailedComment.userId,
+      canDelete: currentUserId === detailedComment.userId,
     }
 
     return NextResponse.json({
@@ -141,7 +141,7 @@ export async function PUT(
           success: false,
           error: authResult.error,
         },
-        { status: authResult.error.statusCode }
+        { status: authResult.error?.statusCode || 401 }
       )
     }
 
@@ -168,21 +168,21 @@ export async function PUT(
     const { content } = validation.data
 
     // 댓글 존재 여부 및 권한 확인
-    const commentValidation = await validateCommentAccess(commentId, user.id)
+    const commentValidation = await validateCommentAccess(commentId, user?.id)
     if (!commentValidation.success) {
       return NextResponse.json(
         {
           success: false,
           error: commentValidation.error,
         },
-        { status: commentValidation.error.statusCode }
+        { status: commentValidation.error?.statusCode || 400 }
       )
     }
 
     const { comment, permissions } = commentValidation
 
     // 편집 권한 확인
-    if (!permissions.canEdit) {
+    if (!permissions?.canEdit) {
       return NextResponse.json(
         {
           success: false,
@@ -196,7 +196,7 @@ export async function PUT(
     }
 
     // 편집 시간 제한 확인 (24시간)
-    if (!validateEditTimeLimit(comment.createdAt)) {
+    if (!comment || !validateEditTimeLimit(comment.createdAt)) {
       return NextResponse.json(
         {
           success: false,
@@ -240,20 +240,22 @@ export async function PUT(
       },
       include: {
         ...commentInclude,
-        likes: {
+        likes: user?.id ? {
           where: { userId: user.id },
           select: { id: true },
-        },
+        } : false,
       },
     })
 
     // 작업 로깅
-    logCommentAction('update', {
-      userId: user.id,
-      commentId,
-      reviewId: updatedComment.reviewId,
-      ipAddress,
-    })
+    if (user?.id) {
+      logCommentAction('update', {
+        userId: user.id,
+        commentId,
+        reviewId: updatedComment.reviewId,
+        ipAddress,
+      })
+    }
 
     // 응답 데이터 가공
     const responseComment = {
@@ -272,7 +274,7 @@ export async function PUT(
       _count: updatedComment._count,
       isLiked: updatedComment.likes?.length > 0,
       canEdit: true,
-      canDelete: permissions.canDelete,
+      canDelete: permissions?.canDelete || false,
       canReply: updatedComment.depth === 0,
     }
 
@@ -321,28 +323,28 @@ export async function DELETE(
           success: false,
           error: authResult.error,
         },
-        { status: authResult.error.statusCode }
+        { status: authResult.error?.statusCode || 401 }
       )
     }
 
     const { user } = authResult
 
     // 댓글 존재 여부 및 권한 확인
-    const commentValidation = await validateCommentAccess(commentId, user.id)
+    const commentValidation = await validateCommentAccess(commentId, user?.id)
     if (!commentValidation.success) {
       return NextResponse.json(
         {
           success: false,
           error: commentValidation.error,
         },
-        { status: commentValidation.error.statusCode }
+        { status: commentValidation.error?.statusCode || 400 }
       )
     }
 
     const { comment, permissions } = commentValidation
 
     // 삭제 권한 확인
-    if (!permissions.canDelete) {
+    if (!permissions?.canDelete) {
       return NextResponse.json(
         {
           success: false,
@@ -377,7 +379,7 @@ export async function DELETE(
           isDeleted: true,
           deletedAt: new Date(),
           // 답글이 있는 경우 내용을 "삭제된 댓글입니다"로 변경
-          content: replyCount > 0 ? "삭제된 댓글입니다." : comment.content,
+          content: replyCount > 0 ? "삭제된 댓글입니다." : (comment?.content || ""),
         },
       })
 
@@ -390,12 +392,14 @@ export async function DELETE(
     })
 
     // 작업 로깅
-    logCommentAction('delete', {
-      userId: user.id,
-      commentId,
-      reviewId: comment.review.id,
-      ipAddress,
-    })
+    if (user?.id && comment?.review?.id) {
+      logCommentAction('delete', {
+        userId: user.id,
+        commentId,
+        reviewId: comment.review.id,
+        ipAddress,
+      })
+    }
 
     return NextResponse.json({
       success: true,

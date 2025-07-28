@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { getUserProfile } from '@/lib/user-stats'
 import { prisma } from '@/lib/db'
 import { logger } from '@/lib/logger'
@@ -15,12 +14,12 @@ interface RouteParams {
  * GET /api/users/[id]/profile - 사용자 프로필 및 활동 통계 조회
  */
 export async function GET(
-  request: NextRequest,
+  __request: NextRequest,
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {
     const { id: userId } = await params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     // 사용자 존재 여부 확인
     const targetUser = await prisma.user.findUnique({
@@ -117,12 +116,12 @@ export async function GET(
  * PUT /api/users/[id]/profile - 사용자 프로필 정보 수정
  */
 export async function PUT(
-  request: NextRequest,
+  __request: NextRequest,
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {
     const { id: userId } = await params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     // 인증 확인
     if (!session?.user?.id) {
@@ -153,7 +152,7 @@ export async function PUT(
     }
 
     // 요청 본문 파싱
-    const body = await request.json()
+    const body = await __request.json()
     const { nickname, bio, image } = body
 
     // 입력 검증

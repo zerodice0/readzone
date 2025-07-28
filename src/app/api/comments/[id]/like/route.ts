@@ -25,13 +25,13 @@ export async function POST(
 
     // 인증 확인
     const authResult = await validateAuthSession()
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
         {
           success: false,
-          error: authResult.error,
+          error: authResult.error || { message: 'Authentication failed', statusCode: 401 },
         },
-        { status: authResult.error.statusCode }
+        { status: authResult.error?.statusCode || 401 }
       )
     }
 
@@ -39,13 +39,13 @@ export async function POST(
 
     // 댓글 존재 여부 및 권한 확인
     const commentValidation = await validateCommentAccess(commentId, user.id)
-    if (!commentValidation.success) {
+    if (!commentValidation.success || !commentValidation.comment) {
       return NextResponse.json(
         {
           success: false,
-          error: commentValidation.error,
+          error: commentValidation.error || { message: 'Comment not found', statusCode: 404 },
         },
-        { status: commentValidation.error.statusCode }
+        { status: commentValidation.error?.statusCode || 404 }
       )
     }
 
@@ -167,13 +167,13 @@ export async function DELETE(
 
     // 인증 확인
     const authResult = await validateAuthSession()
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json(
         {
           success: false,
-          error: authResult.error,
+          error: authResult.error || { message: 'Authentication failed', statusCode: 401 },
         },
-        { status: authResult.error.statusCode }
+        { status: authResult.error?.statusCode || 401 }
       )
     }
 
@@ -181,13 +181,13 @@ export async function DELETE(
 
     // 댓글 존재 여부 및 권한 확인
     const commentValidation = await validateCommentAccess(commentId, user.id)
-    if (!commentValidation.success) {
+    if (!commentValidation.success || !commentValidation.comment) {
       return NextResponse.json(
         {
           success: false,
-          error: commentValidation.error,
+          error: commentValidation.error || { message: 'Comment not found', statusCode: 404 },
         },
-        { status: commentValidation.error.statusCode }
+        { status: commentValidation.error?.statusCode || 404 }
       )
     }
 

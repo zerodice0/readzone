@@ -6,14 +6,11 @@ import {
   validateReplyDepth,
   validateCommentRateLimit,
   sanitizeCommentContent,
-  logCommentAction,
-  COMMENT_LIMITS 
+  logCommentAction
 } from '@/lib/comment-security'
 import { 
   createCommentSchema, 
-  listCommentsSchema,
-  type CreateCommentInput,
-  type ListCommentsQuery 
+  listCommentsSchema
 } from '@/lib/validations'
 import { commentInclude } from '@/types/comment'
 import { buildCommentTree, sortComments } from '@/lib/comment-utils'
@@ -68,13 +65,13 @@ export async function GET(
           success: false,
           error: reviewValidation.error,
         },
-        { status: reviewValidation.error.statusCode }
+        { status: reviewValidation.error?.statusCode || 400 }
       )
     }
 
     // 현재 사용자 확인 (선택적)
     const authResult = await validateAuthSession()
-    const currentUserId = authResult.success ? authResult.user.id : undefined
+    const currentUserId = authResult.success && authResult.user ? authResult.user.id : undefined
 
     // 댓글 조회 조건 설정
     const whereCondition: any = {
@@ -131,14 +128,14 @@ export async function GET(
       user: comment.user,
       replies: comment.replies?.map(reply => ({
         ...reply,
-        isLiked: currentUserId ? reply.likes?.length > 0 : false,
+        isLiked: false, // replies에는 likes 정보가 포함되지 않음
         canEdit: currentUserId === reply.userId,
-        canDelete: currentUserId === reply.userId || currentUserId === reviewValidation.review.userId,
+        canDelete: currentUserId === reply.userId || currentUserId === reviewValidation.review?.userId,
       })) || [],
       _count: comment._count,
       isLiked: currentUserId ? comment.likes?.length > 0 : false,
       canEdit: currentUserId === comment.userId,
-      canDelete: currentUserId === comment.userId || currentUserId === reviewValidation.review.userId,
+      canDelete: currentUserId === comment.userId || currentUserId === reviewValidation.review?.userId,
       canReply: comment.depth === 0,
     }))
 
@@ -210,7 +207,7 @@ export async function POST(
           success: false,
           error: authResult.error,
         },
-        { status: authResult.error.statusCode }
+        { status: authResult.error?.statusCode || 401 }
       )
     }
 
@@ -244,7 +241,7 @@ export async function POST(
           success: false,
           error: reviewValidation.error,
         },
-        { status: reviewValidation.error.statusCode }
+        { status: reviewValidation.error?.statusCode || 400 }
       )
     }
 
@@ -266,6 +263,13 @@ export async function POST(
     const sanitizedContent = contentSanitization.content!
 
     // 스팸 방지 - 댓글 작성 제한 확인
+    if (!user?.id) {
+      return NextResponse.json({
+        success: false,
+        error: { errorType: 'UNAUTHORIZED', message: '인증 정보가 없습니다.' }
+      }, { status: 401 })
+    }
+
     const rateLimitResult = await validateCommentRateLimit(user.id)
     if (!rateLimitResult.success) {
       return NextResponse.json(
@@ -273,7 +277,7 @@ export async function POST(
           success: false,
           error: rateLimitResult.error,
         },
-        { status: rateLimitResult.error.statusCode }
+        { status: rateLimitResult.error?.statusCode || 429 }
       )
     }
 
@@ -287,10 +291,10 @@ export async function POST(
             success: false,
             error: replyValidation.error,
           },
-          { status: replyValidation.error.statusCode }
+          { status: replyValidation.error?.statusCode || 400 }
         )
       }
-      depth = replyValidation.newDepth
+      depth = replyValidation.newDepth || 0
     }
 
     // 클라이언트 IP 주소 추출 (로깅용)

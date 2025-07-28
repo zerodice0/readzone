@@ -12,7 +12,7 @@ interface RouteParams {
  * POST /api/reviews/[id]/like - 좋아요 토글
  */
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {

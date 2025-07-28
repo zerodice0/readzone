@@ -5,7 +5,7 @@ import { getBookAPI } from '@/lib/book-api'
  * API 사용량 조회 엔드포인트
  * GET /api/books/usage
  */
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
     const bookAPI = getBookAPI()
     

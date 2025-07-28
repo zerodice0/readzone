@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { checkDuplicateSchema } from '@/lib/validations'
-import { CheckDuplicateResponse } from '@/types/auth'
+import type { CheckDuplicateResponse } from '@/types/auth'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {

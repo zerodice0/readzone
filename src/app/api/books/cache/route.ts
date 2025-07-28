@@ -11,7 +11,7 @@ import { getCacheManager } from '@/lib/cache-manager'
 /**
  * 캐시 통계 조회
  */
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
     const cacheManager = getCacheManager()
     const stats = await cacheManager.getStats()

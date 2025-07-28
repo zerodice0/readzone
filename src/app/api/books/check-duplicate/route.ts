@@ -72,12 +72,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const exactMatches = await db.book.findMany({
       where: {
         title: {
-          equals: title.trim(),
-          mode: 'insensitive'
+          equals: title.trim()
         },
         authors: {
-          contains: firstAuthor,
-          mode: 'insensitive'
+          contains: firstAuthor
         }
       },
       select: {
@@ -103,14 +101,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         OR: [
           {
             title: {
-              contains: normalizedTitle.split(' ')[0], // 첫 단어로 검색
-              mode: 'insensitive'
+              contains: normalizedTitle.split(' ')[0] // 첫 단어로 검색
             }
           },
           {
             authors: {
-              contains: firstAuthor,
-              mode: 'insensitive'
+              contains: firstAuthor
             }
           }
         ]

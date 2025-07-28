@@ -5,7 +5,7 @@ import { getBookAPI } from '@/lib/book-api'
  * 인기 도서 조회 API 엔드포인트
  * GET /api/books/popular
  */
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
     // 인기 도서 검색 실행
     const bookAPI = getBookAPI()

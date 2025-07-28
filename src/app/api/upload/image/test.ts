@@ -12,10 +12,27 @@ export interface ImageUploadTestResult {
   errors?: string[]
 }
 
+// Test configuration types
+interface SuccessTestConfig {
+  description: string
+  expectedStatus: 200
+  expectedResponseKeys: string[]
+  requirements: string[]
+}
+
+interface ErrorTestConfig {
+  description: string
+  expectedStatus: number
+  expectedError: string
+  requirements: string[]
+}
+
+type TestConfig = SuccessTestConfig | ErrorTestConfig
+
 /**
  * 이미지 업로드 API 테스트 시나리오
  */
-export const imageUploadTests = {
+export const imageUploadTests: Record<string, TestConfig> = {
   // 1. 정상적인 JPEG 이미지 업로드
   validJpegUpload: {
     description: '유효한 JPEG 이미지 업로드',
@@ -84,6 +101,13 @@ export const imageUploadTests = {
       '에러 메시지 확인'
     ]
   }
+}
+
+/**
+ * Type guard functions
+ */
+function isErrorTestConfig(config: TestConfig): config is ErrorTestConfig {
+  return 'expectedError' in config
 }
 
 /**
@@ -209,7 +233,7 @@ export async function runImageUploadTests(): Promise<{ [key: string]: ImageUploa
           results[testName] = await testHelpers.validateResponse(
             response, 
             testConfig.expectedStatus, 
-            testConfig.expectedError
+            isErrorTestConfig(testConfig) ? testConfig.expectedError : undefined
           )
           continue
         default:
@@ -223,7 +247,7 @@ export async function runImageUploadTests(): Promise<{ [key: string]: ImageUploa
       results[testName] = await testHelpers.validateResponse(
         response,
         testConfig.expectedStatus,
-        testConfig.expectedError
+        isErrorTestConfig(testConfig) ? testConfig.expectedError : undefined
       )
       
     } catch (error) {

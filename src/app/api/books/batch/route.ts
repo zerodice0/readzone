@@ -14,7 +14,7 @@ import { getBookAPI } from '@/lib/book-api'
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json()
-    const { queries, maxResults = 5 } = body
+    const { queries, maxResults: _maxResults = 5 } = body
 
     // 입력 데이터 검증
     if (!Array.isArray(queries)) {

@@ -37,8 +37,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const existingBook = await prisma.book.findFirst({
       where: {
         title: {
-          equals: validatedData.title,
-          mode: 'insensitive'
+          equals: validatedData.title
         },
         authors: {
           contains: validatedData.authors[0]

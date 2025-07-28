@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { hashPassword, generateEmailVerificationToken } from '@/lib/utils'
 import { registerSchema } from '@/lib/validations'
-import { RegisterResponse } from '@/types/auth'
+import type { RegisterResponse } from '@/types/auth'
 import { logger } from '@/lib/logger'
 import { AuthErrorCode, createAuthError } from '@/types/error'
 import { handleAuthError, createErrorContext, createErrorResponse } from '@/lib/error-handler'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  let body: any = null
   try {
-    const body = await request.json()
+    body = await request.json()
 
     // 입력 데이터 검증
     const validationResult = registerSchema.safeParse(body)

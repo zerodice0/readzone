@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { calculateUserStats, getUserRanking } from '@/lib/user-stats'
 import { prisma } from '@/lib/db'
 import { logger } from '@/lib/logger'
@@ -15,14 +14,14 @@ interface RouteParams {
  * GET /api/users/[id]/stats - 사용자 활동 통계 조회
  */
 export async function GET(
-  request: NextRequest,
+  __request: NextRequest,
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {
     const { id: userId } = await params
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(__request.url)
     const includeRanking = searchParams.get('includeRanking') === 'true'
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     // 사용자 존재 여부 확인
     const targetUser = await prisma.user.findUnique({
@@ -107,12 +106,12 @@ export async function GET(
  * 향후 통계 캐싱 구현 시 사용할 엔드포인트
  */
 export async function POST(
-  request: NextRequest,
+  __request: NextRequest,
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {
     const { id: userId } = await params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     // 인증 확인
     if (!session?.user?.id) {
@@ -167,7 +166,7 @@ export async function POST(
     // 새로고침 로깅
     logger.info('User stats refreshed', {
       userId,
-      requestedBy: session.user.id,
+      _requestedBy: session.user.id,
       timestamp: new Date().toISOString()
     })
 

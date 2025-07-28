@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
 interface RouteParams {
@@ -15,7 +14,7 @@ export async function GET(
 ) {
   try {
     const { id: userId } = await params
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const { searchParams } = new URL(request.url)
     
     const type = searchParams.get('type') as 'reviews' | 'opinions' | 'comments' | null

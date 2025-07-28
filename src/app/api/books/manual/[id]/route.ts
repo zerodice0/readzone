@@ -78,7 +78,7 @@ export async function PUT(
     })
 
     // 작성자가 아니면 수정 불가
-    if (!manualEntry && session.user.role !== 'admin') {
+    if (!manualEntry) {
       return NextResponse.json(
         {
           success: false,
@@ -184,7 +184,7 @@ export async function PUT(
  * DELETE /api/books/manual/[id]
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
@@ -271,8 +271,8 @@ export async function DELETE(
       }
     })
 
-    // 작성자가 아니면 삭제 불가 (관리자 제외)
-    if (!manualEntry && session.user.role !== 'admin') {
+    // 작성자가 아니면 삭제 불가
+    if (!manualEntry) {
       return NextResponse.json(
         {
           success: false,

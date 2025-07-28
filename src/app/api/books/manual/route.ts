@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { validateManualBookInput, kakaoBookToDbModel } from '@/lib/book-utils'
+import { validateManualBookInput } from '@/lib/book-utils'
 import type { ManualBookInput } from '@/types/book'
 import type { Book } from '@prisma/client'
 
@@ -73,12 +73,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const similarBooks = await db.book.findMany({
       where: {
         title: {
-          contains: input.title.trim(),
-          mode: 'insensitive'
+          contains: input.title.trim()
         },
         authors: {
-          contains: input.authors[0], // 첫 번째 저자로 검색
-          mode: 'insensitive'
+          contains: input.authors[0] // 첫 번째 저자로 검색
         }
       },
       take: 5

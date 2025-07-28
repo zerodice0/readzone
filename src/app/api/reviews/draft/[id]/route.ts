@@ -18,7 +18,7 @@ interface RouteParams {
  * GET /api/reviews/draft/[id] - 특정 임시저장 조회
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {
@@ -131,7 +131,7 @@ export async function GET(
  * DELETE /api/reviews/draft/[id] - 임시저장 삭제
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {

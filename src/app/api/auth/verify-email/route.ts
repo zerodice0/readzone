@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyEmailSchema } from '@/lib/validations'
-import { VerifyEmailResponse } from '@/types/auth'
+import type { VerifyEmailResponse } from '@/types/auth'
 import { AuthErrorCode, createAuthError } from '@/types/error'
 import { handleAuthError, createErrorContext, createErrorResponse } from '@/lib/error-handler'
 

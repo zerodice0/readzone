@@ -6,7 +6,7 @@ import { getBookAPI } from '@/lib/book-api'
  * GET /api/books/isbn/[isbn]
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ isbn: string }> }
 ): Promise<NextResponse> {
   try {
