@@ -10,11 +10,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url)
     
-    // 검색 파라미터 추출
-    const query = searchParams.get('query')
+    // 검색 파라미터 추출 (q 또는 query 파라미터 지원)
+    const query = searchParams.get('query') || searchParams.get('q')
     const page = parseInt(searchParams.get('page') || '1')
-    const size = parseInt(searchParams.get('size') || '10')
+    const size = parseInt(searchParams.get('size') || searchParams.get('limit') || '10')
     const sort = searchParams.get('sort') as 'accuracy' | 'latest' || 'accuracy'
+    const source = searchParams.get('source') // kakao 소스 지원
 
     // 필수 파라미터 검증
     if (!query) {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           success: false,
           error: {
             errorType: 'INVALID_PARAMS',
-            message: '검색어가 필요합니다.'
+            message: '검색어가 필요합니다. (q 또는 query 파라미터 사용)'
           }
         },
         { status: 400 }
@@ -57,16 +58,75 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // 검색 실행
-    const bookAPI = getBookAPI()
-    const bookSearchParams: KakaoBookSearchParams = {
-      query: query.trim(),
-      page,
-      size,
-      sort
-    }
+    // 검색 실행 (소스에 따른 분기)
+    let result: { success: boolean; data?: any; error?: any; usage?: any }
 
-    const result = await bookAPI.searchBooks(bookSearchParams)
+    if (source === 'kakao') {
+      // 카카오 API 검색
+      const bookAPI = getBookAPI()
+      const bookSearchParams: KakaoBookSearchParams = {
+        query: query.trim(),
+        page,
+        size,
+        sort
+      }
+      result = await bookAPI.searchBooks(bookSearchParams)
+    } else {
+      // DB 검색 (기본값)
+      try {
+        const { prisma } = await import('@/lib/db')
+        
+        const books = await prisma.book.findMany({
+          where: {
+            OR: [
+              {
+                title: {
+                  contains: query.trim()
+                }
+              },
+              {
+                authors: {
+                  contains: query.trim()
+                }
+              }
+            ]
+          },
+          take: size,
+          skip: (page - 1) * size,
+          orderBy: {
+            createdAt: 'desc'
+          }
+        })
+
+        const formattedBooks = books.map(book => ({
+          id: book.id,
+          title: book.title,
+          authors: JSON.parse(book.authors),
+          publisher: book.publisher,
+          genre: book.genre,
+          thumbnail: book.thumbnail,
+          isbn: book.isbn,
+          isManualEntry: book.isManualEntry
+        }))
+
+        result = {
+          success: true,
+          data: formattedBooks
+        }
+      } catch (error) {
+        console.error('DB search error:', error)
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              errorType: 'DB_ERROR',
+              message: 'DB 검색 중 오류가 발생했습니다.'
+            }
+          },
+          { status: 500 }
+        )
+      }
+    }
 
     // API 응답 처리
     if (!result.success) {
@@ -81,18 +141,33 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // 성공 응답
-    return NextResponse.json({
-      success: true,
-      data: result.data,
-      usage: result.usage,
-      pagination: {
-        currentPage: page,
-        pageSize: size,
-        totalCount: result.data?.meta.total_count || 0,
-        isEnd: result.data?.meta.is_end || true
-      }
-    })
+    // 성공 응답 (정규화된 구조)
+    if (source === 'kakao') {
+      const books = result.data?.documents || []
+      return NextResponse.json({
+        success: true,
+        data: books, // documents 배열을 직접 반환
+        usage: result.usage,
+        pagination: {
+          currentPage: page,
+          pageSize: size,
+          totalCount: result.data?.meta.total_count || 0,
+          isEnd: result.data?.meta.is_end || true
+        }
+      })
+    } else {
+      // DB 검색 응답
+      return NextResponse.json({
+        success: true,
+        data: result.data,
+        pagination: {
+          currentPage: page,
+          pageSize: size,
+          totalCount: result.data.length,
+          isEnd: result.data.length < size
+        }
+      })
+    }
 
   } catch (error) {
     console.error('Book search API error:', error)

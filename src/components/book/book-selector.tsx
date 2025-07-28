@@ -89,8 +89,12 @@ export function BookSelector({ onSelect, className = '' }: BookSelectorProps) {
       
       let allBooks: Book[] = []
       
-      if (dbResult.success && dbResult.data.length > 0) {
-        allBooks = dbResult.data
+      if (dbResult.success && dbResult.data) {
+        // 데이터 구조에 상관없이 배열로 정규화
+        const books = Array.isArray(dbResult.data) ? dbResult.data : dbResult.data.documents || []
+        if (books.length > 0) {
+          allBooks = books
+        }
       }
 
       // 2. 카카오 API 검색 (DB에서 충분한 결과가 없는 경우)
@@ -99,19 +103,28 @@ export function BookSelector({ onSelect, className = '' }: BookSelectorProps) {
           const kakaoResponse = await fetch(`/api/books/search?q=${encodeURIComponent(searchQuery)}&source=kakao&limit=10`)
           const kakaoResult = await kakaoResponse.json()
           
-          if (kakaoResult.success && kakaoResult.data.length > 0) {
-            // 중복 제거 (제목 + 첫 번째 저자 기준)
-            const existingKeys = new Set(allBooks.map(book => `${book.title}-${book.authors[0]}`))
-            const newBooks = kakaoResult.data.filter((book: Book) => 
-              !existingKeys.has(`${book.title}-${book.authors[0]}`)
-            )
-            allBooks = [...allBooks, ...newBooks]
+          if (kakaoResult.success && kakaoResult.data) {
+            // 데이터 구조에 상관없이 배열로 정규화
+            const books = Array.isArray(kakaoResult.data) ? kakaoResult.data : kakaoResult.data.documents || []
+            if (books.length > 0) {
+              // 중복 제거 (제목 + 첫 번째 저자 기준)
+              const existingKeys = new Set(allBooks.map(book => `${book.title}-${book.authors[0]}`))
+              const newBooks = books.filter((book: Book) => 
+                !existingKeys.has(`${book.title}-${book.authors[0]}`)
+              )
+              allBooks = [...allBooks, ...newBooks]
+            }
           }
         } catch (error) {
           console.error('카카오 API 검색 실패:', error)
         }
       }
 
+      console.log('🔍 검색 완료:', { 
+        query: searchQuery, 
+        dbBooks: dbResult.success ? (Array.isArray(dbResult.data) ? dbResult.data.length : (dbResult.data?.documents?.length || 0)) : 0,
+        totalBooks: allBooks.length 
+      })
       setBooks(allBooks)
     } catch (error) {
       console.error('도서 검색 실패:', error)
