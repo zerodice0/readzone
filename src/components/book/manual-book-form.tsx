@@ -1,24 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, type FieldArrayPath } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, X, AlertCircle, CheckCircle2, Book, Search } from 'lucide-react'
+import { Plus, X, AlertCircle, Book, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { validateManualBookInput } from '@/lib/book-utils'
-import { getBookApiClient } from '@/lib/api-client'
 import type { ManualBookInput } from '@/types/book'
-import type { KakaoBook } from '@/types/kakao'
 
 // 폼 검증 스키마
 const manualBookSchema = z.object({
   title: z.string().min(1, '제목은 필수입니다').max(500, '제목은 500자 이내여야 합니다'),
   authors: z.array(z.string().min(1, '저자명을 입력해주세요')).min(1, '최소 1명의 저자가 필요합니다'),
   publisher: z.string().optional(),
-  translators: z.array(z.string()).optional(),
+  translators: z.array(z.string()).default([]), // default([])로 항상 배열이 되도록 보장
   genre: z.string().optional(),
   pageCount: z.number().min(1, '페이지 수는 1 이상이어야 합니다').max(10000, '페이지 수는 10000 이하여야 합니다').optional(),
   thumbnail: z.string().url('유효한 URL을 입력해주세요').optional().or(z.literal('')),
@@ -30,6 +28,7 @@ const manualBookSchema = z.object({
   salePrice: z.number().min(0, '판매가는 0 이상이어야 합니다').optional()
 })
 
+// Zod에서 자동으로 타입 추론
 type FormData = z.infer<typeof manualBookSchema>
 
 interface ManualBookFormProps {
@@ -89,12 +88,12 @@ export function ManualBookForm({
 
   const { fields: authorFields, append: appendAuthor, remove: removeAuthor } = useFieldArray({
     control,
-    name: 'authors'
+    name: 'authors' as FieldArrayPath<FormData>
   })
 
   const { fields: translatorFields, append: appendTranslator, remove: removeTranslator } = useFieldArray({
     control,
-    name: 'translators'
+    name: 'translators' as FieldArrayPath<FormData>
   })
 
   const watchedTitle = watch('title')
@@ -113,7 +112,6 @@ export function ManualBookForm({
       setCheckingDuplicates(true)
       
       try {
-        const apiClient = getBookApiClient()
         const response = await fetch('/api/books/check-duplicate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

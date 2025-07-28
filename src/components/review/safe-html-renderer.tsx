@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useCallback, useState, useEffect } from 'react'
-import DOMPurify from 'isomorphic-dompurify'
+import { useMemo, useCallback, useState } from 'react'
+import DOMPurify, { type Config } from 'isomorphic-dompurify'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, Copy, Check, Shield, Eye, EyeOff } from 'lucide-react'
+import { AlertTriangle, Copy, Check, Shield, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export interface SafeHtmlRendererProps {
@@ -45,17 +45,16 @@ const SAFE_TAGS = [
 ]
 
 // 안전한 속성 화이트리스트 (보안 강화)
-const SAFE_ATTRIBUTES = {
-  'a': ['href', 'title', 'rel'],
-  'img': ['src', 'alt', 'title', 'width', 'height'],
-  'blockquote': ['cite'],
-  // 스타일 속성은 strictMode가 false일 때만 허용
-  'p': [],
-  'div': [],
-  'span': [],
-  'h1': [], 'h2': [], 'h3': [], 'h4': [], 'h5': [], 'h6': [],
-  'strong': [], 'em': [], 'u': [], 'b': [], 'i': []
-}
+const SAFE_ATTRIBUTES: string[] = [
+  'a',
+  'img',
+  'blockquote',
+  'p',
+  'div',
+  'span',
+  'h1',
+  'strong',
+];
 
 // XSS 공격 패턴 감지 정규식
 const XSS_PATTERNS = [
@@ -120,6 +119,8 @@ export function SafeHtmlRenderer({
       observer.observe(node)
       return () => observer.disconnect()
     }
+
+    return;
   }, [lazyRender, isVisible])
 
   // 보안 검사 및 경고 생성
@@ -190,29 +191,17 @@ export function SafeHtmlRenderer({
         allowedTags = allowedTags.filter(tag => tag !== 'a')
       }
       
-      // 허용된 속성 구성
-      const allowedAttributes = { ...SAFE_ATTRIBUTES }
-      if (allowStyles && !strictMode) {
-        // 스타일 속성 추가 (non-strict mode에서만)
-        Object.keys(allowedAttributes).forEach(tag => {
-          if (['p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'u'].includes(tag)) {
-            allowedAttributes[tag].push('style')
-          }
-        })
-      }
-      
       // DOMPurify 설정
-      const purifyConfig = {
+      const purifyConfig: Config = {
         ALLOWED_TAGS: allowedTags,
-        ALLOWED_ATTR: allowedAttributes,
+        ALLOWED_ATTR: SAFE_ATTRIBUTES,
         ALLOW_DATA_ATTR: false,
-        FORBID_SCRIPTS: true,
-        FORBID_TAGS: ['script', 'object', 'embed', 'base', 'link', 'meta', 'style', 'form', 'input', 'textarea', 'button'],
+        FORBID_TAGS: ['script', 'object', 'embed', 'base', 'link', 'meta', 'style', 'form', 'input', 'textarea', 'button'] as string[],
         FORBID_ATTR: [
           'onload', 'onerror', 'onclick', 'onmouseover', 'onmouseout', 
           'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset',
           'style' // strictMode에서는 style 속성도 차단
-        ],
+        ] as string[],
         // URL 검증 강화
         ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
         // HTML5 파싱 사용
@@ -228,7 +217,7 @@ export function SafeHtmlRenderer({
       
       // strict mode에서 추가 제한
       if (strictMode) {
-        purifyConfig.FORBID_ATTR.push('style', 'class', 'id')
+        purifyConfig.FORBID_ATTR?.push('style', 'class', 'id')
         // 외부 리소스 차단
         purifyConfig.ALLOWED_URI_REGEXP = /^(?:https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&=]*))?$/
       }
@@ -252,7 +241,7 @@ export function SafeHtmlRenderer({
     }
   }, [
     content, isVisible, maxLength, performSecurityCheck, onSecurityWarning, 
-    strictMode, allowImages, allowLinks, allowStyles, fallbackContent, onError
+    strictMode, allowImages, allowLinks, fallbackContent, onError
   ])
 
   // 콘텐츠 복사 (텍스트만)
