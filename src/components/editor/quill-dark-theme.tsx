@@ -21,15 +21,15 @@ export const QuillDarkTheme: React.FC = () => {
 
       /* 에디터 컨테이너 */
       .quill-wrapper.dark-theme .ql-container {
-        background-color: rgb(31 41 55); /* bg-gray-800 */
+        background-color: rgb(17 24 39); /* bg-gray-900 */
         border-color: rgb(55 65 81);     /* border-gray-700 */
-        color: rgb(243 244 246);         /* text-gray-100 */
+        color: rgb(249 250 251);         /* text-gray-50 */
       }
       
       /* 에디터 내용 영역 */
       .quill-wrapper.dark-theme .ql-editor {
-        background-color: rgb(31 41 55); /* bg-gray-800 */
-        color: rgb(243 244 246);         /* text-gray-100 */
+        background-color: rgb(17 24 39); /* bg-gray-900 */
+        color: rgb(249 250 251);         /* text-gray-50 */
         caret-color: rgb(239 68 68);     /* caret-primary-500 */
       }
       
@@ -73,12 +73,12 @@ export const QuillDarkTheme: React.FC = () => {
       
       /* 인용구 */
       .quill-wrapper.dark-theme .ql-editor blockquote {
-        background-color: rgb(17 24 39); /* bg-gray-900 */
+        background-color: rgb(55 65 81);   /* bg-gray-700 */
         border-left: 4px solid rgb(239 68 68); /* border-l-primary-500 */
         border-radius: 0 0.375rem 0.375rem 0; /* rounded-r-md */
         padding: 1rem;
         margin: 1rem 0;
-        color: rgb(156 163 175);         /* text-gray-400 */
+        color: rgb(209 213 219);         /* text-gray-300 */
         font-style: italic;
         position: relative;
       }

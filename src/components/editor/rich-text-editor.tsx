@@ -154,13 +154,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         </div>
         
         {/* 하단 정보 */}
-        <div className="flex justify-between items-center px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-t">
+        <div className="flex justify-between items-center px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <span>
               {value ? `${value.replace(/<[^>]*>/g, '').length}자` : '0자'}
             </span>
             {onSave && (
-              <span className="text-gray-400">| Ctrl+S로 저장</span>
+              <span className="text-gray-400 dark:text-gray-500">| Ctrl+S로 저장</span>
             )}
           </div>
           

@@ -214,8 +214,8 @@ export default function WriteReviewForm() {
   if (!session) {
     return (
       <Card className="p-8 text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-        <p>로그인 페이지로 이동 중...</p>
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-600 dark:text-gray-400" />
+        <p className="text-gray-700 dark:text-gray-300">로그인 페이지로 이동 중...</p>
       </Card>
     )
   }
@@ -226,7 +226,7 @@ export default function WriteReviewForm() {
       <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-blue-600" />
+            <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span className="text-sm text-blue-700 dark:text-blue-300">
               자동저장 활성화됨 (5분 간격)
             </span>
@@ -259,8 +259,8 @@ export default function WriteReviewForm() {
       {showBookSelector ? (
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">도서 선택</h2>
+            <BookOpen className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">도서 선택</h2>
           </div>
           <BookSelector onSelect={handleBookSelect} />
         </Card>
@@ -277,7 +277,7 @@ export default function WriteReviewForm() {
               />
             )}
             <div className="flex-1">
-              <h3 className="font-semibold text-lg">{selectedBook.title}</h3>
+              <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{selectedBook.title}</h3>
               <p className="text-gray-600 dark:text-gray-400">
                 {selectedBook.authors.join(', ')}
                 {selectedBook.publisher && ` | ${selectedBook.publisher}`}
@@ -304,8 +304,8 @@ export default function WriteReviewForm() {
         <Card className="p-6 space-y-6">
           {/* 제목 입력 */}
           <div>
-            <Label htmlFor="title" className="text-base font-medium">
-              독후감 제목 <span className="text-gray-500">(선택사항)</span>
+            <Label htmlFor="title" className="text-base font-medium text-gray-900 dark:text-gray-100">
+              독후감 제목 <span className="text-gray-500 dark:text-gray-400">(선택사항)</span>
             </Label>
             <Input
               id="title"
@@ -315,7 +315,7 @@ export default function WriteReviewForm() {
               maxLength={200}
               className="mt-2"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {formData.title.length}/200자
             </p>
           </div>
@@ -324,7 +324,7 @@ export default function WriteReviewForm() {
 
           {/* 추천/비추천 선택 */}
           <div>
-            <Label className="text-base font-medium">이 책을 추천하시나요?</Label>
+            <Label className="text-base font-medium text-gray-900 dark:text-gray-100">이 책을 추천하시나요?</Label>
             <div className="flex items-center gap-4 mt-3">
               <Button
                 variant={formData.isRecommended ? "default" : "outline"}
@@ -349,7 +349,7 @@ export default function WriteReviewForm() {
 
           {/* 내용 작성 */}
           <div>
-            <Label className="text-base font-medium">독후감 내용</Label>
+            <Label className="text-base font-medium text-gray-900 dark:text-gray-100">독후감 내용</Label>
             <div className="mt-3">
               <RichTextEditor
                 value={formData.content}
@@ -365,7 +365,7 @@ export default function WriteReviewForm() {
                 showAutosaveStatus={true}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               {formData.content.replace(/<[^>]*>/g, '').length}/50,000자 | 서식 도구를 사용해 내용을 꾸밀 수 있습니다.
             </p>
           </div>
@@ -374,7 +374,7 @@ export default function WriteReviewForm() {
 
           {/* 해시태그 입력 */}
           <div>
-            <Label className="text-base font-medium">해시태그</Label>
+            <Label className="text-base font-medium text-gray-900 dark:text-gray-100">해시태그</Label>
             <TagInput
               value={formData.tags}
               onChange={(tags) => updateFormData({ tags })}
@@ -383,7 +383,7 @@ export default function WriteReviewForm() {
               maxTags={10}
               className="mt-3"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               최대 10개까지 추가할 수 있습니다.
             </p>
           </div>
@@ -392,11 +392,11 @@ export default function WriteReviewForm() {
 
           {/* 구매 링크 입력 */}
           <div>
-            <Label htmlFor="purchaseLink" className="text-base font-medium">
-              구매 링크 <span className="text-gray-500">(선택사항)</span>
+            <Label htmlFor="purchaseLink" className="text-base font-medium text-gray-900 dark:text-gray-100">
+              구매 링크 <span className="text-gray-500 dark:text-gray-400">(선택사항)</span>
             </Label>
             <div className="flex items-center gap-2 mt-2">
-              <Link className="h-4 w-4 text-gray-500" />
+              <Link className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               <Input
                 id="purchaseLink"
                 type="url"
@@ -405,7 +405,7 @@ export default function WriteReviewForm() {
                 onChange={(e) => updateFormData({ purchaseLink: e.target.value })}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               독자들이 이 책을 구매할 수 있는 링크를 추가하세요.
             </p>
           </div>
