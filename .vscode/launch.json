@@ -7,8 +7,22 @@
 		{
 			"type": "chrome",
 			"request": "launch",
-			"name": "localhost에 대해 Chrome 시작",
+			"name": "chrome:3000",
 			"url": "http://localhost:3000",
+			"webRoot": "${workspaceFolder}"
+		},
+		{
+			"type": "chrome",
+			"request": "launch",
+			"name": "chrome:3001",
+			"url": "http://localhost:3001",
+			"webRoot": "${workspaceFolder}"
+		},
+		{
+			"type": "chrome",
+			"request": "launch",
+			"name": "chrome:3002",
+			"url": "http://localhost:3002",
 			"webRoot": "${workspaceFolder}"
 		}
 	]

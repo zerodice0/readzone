@@ -59,7 +59,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     // 검색 실행 (소스에 따른 분기)
-    let result: { success: boolean; data?: any; error?: any; usage?: any }
+    let result: { success: boolean; data?: any; error?: any; usage?: any; meta?: { totalCount: number; isEnd: boolean } }
 
     if (source === 'kakao') {
       // 카카오 API 검색
@@ -76,21 +76,30 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       try {
         const { prisma } = await import('@/lib/db')
         
-        const books = await prisma.book.findMany({
-          where: {
-            OR: [
-              {
-                title: {
-                  contains: query.trim()
-                }
-              },
-              {
-                authors: {
-                  contains: query.trim()
-                }
+        // 검색 조건 설정
+        const whereCondition = {
+          OR: [
+            {
+              title: {
+                contains: query.trim()
               }
-            ]
-          },
+            },
+            {
+              authors: {
+                contains: query.trim()
+              }
+            }
+          ]
+        }
+        
+        // 전체 개수 조회 (페이지네이션을 위해)
+        const totalCount = await prisma.book.count({
+          where: whereCondition
+        })
+        
+        // 도서 조회
+        const books = await prisma.book.findMany({
+          where: whereCondition,
           take: size,
           skip: (page - 1) * size,
           orderBy: {
@@ -111,7 +120,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
         result = {
           success: true,
-          data: formattedBooks
+          data: formattedBooks,
+          meta: {
+            totalCount,
+            isEnd: books.length < size || (page * size) >= totalCount
+          }
         }
       } catch (error) {
         console.error('DB search error:', error)
@@ -163,8 +176,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         pagination: {
           currentPage: page,
           pageSize: size,
-          totalCount: result.data.length,
-          isEnd: result.data.length < size
+          totalCount: result.meta?.totalCount || result.data.length,
+          isEnd: result.meta?.isEnd || result.data.length < size
         }
       })
     }

@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { validateManualBookInput } from '@/lib/book-utils'
-import type { ManualBookInput } from '@/types/book'
-import type { Book } from '@prisma/client'
+import { prisma } from '@/lib/db'
 
 /**
- * 수동 도서 입력 API
+ * 직접 입력 도서 저장 API 엔드포인트
  * POST /api/books/manual
  * 
- * 인증 필요: 로그인한 사용자만 도서 추가 가능
+ * 검색되지 않는 도서를 사용자가 직접 입력하여 등록합니다.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // 인증 확인
+    // 사용자 인증 확인
     const session = await auth()
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json(
         {
           success: false,
@@ -28,117 +25,119 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // 요청 본문 파싱
     const body = await request.json()
-    const input: ManualBookInput = body
+    const { title, authors, publisher, genre } = body
 
-    // 입력 데이터 검증
-    const validation = validateManualBookInput(input)
-    if (!validation.isValid) {
+    // 필수 필드 검증
+    if (!title || !authors || !Array.isArray(authors) || authors.length === 0) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            errorType: 'VALIDATION_ERROR',
-            message: '입력 데이터가 유효하지 않습니다.',
-            details: validation.errors
+            errorType: 'INVALID_PARAMS',
+            message: '도서 제목과 저자 정보가 필요합니다.'
           }
         },
         { status: 400 }
       )
     }
 
-    // ISBN 중복 확인 (있는 경우)
-    if (input.isbn) {
-      const existingBook = await db.book.findUnique({
-        where: { isbn: input.isbn }
-      })
-
-      if (existingBook) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              errorType: 'DUPLICATE_ISBN',
-              message: '이미 등록된 ISBN입니다.',
-              bookId: existingBook.id
-            }
-          },
-          { status: 409 }
-        )
-      }
-    }
-
-    // 제목과 저자로 중복 확인 (유사 도서 방지)
-    const similarBooks = await db.book.findMany({
-      where: {
-        title: {
-          contains: input.title.trim()
+    // 제목 길이 검증
+    if (title.trim().length < 1 || title.trim().length > 200) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            errorType: 'INVALID_PARAMS',
+            message: '도서 제목은 1-200자 사이여야 합니다.'
+          }
         },
-        authors: {
-          contains: input.authors[0] // 첫 번째 저자로 검색
-        }
-      },
-      take: 5
-    })
-
-    // 도서 데이터 생성
-    const bookData: Omit<Book, 'id' | 'createdAt' | 'updatedAt'> = {
-      isbn: input.isbn || null,
-      isbn13: input.isbn13 || null,
-      title: input.title.trim(),
-      authors: JSON.stringify(input.authors.map(a => a.trim())),
-      publisher: input.publisher?.trim() || null,
-      translators: input.translators && input.translators.length > 0 
-        ? JSON.stringify(input.translators.map(t => t.trim())) 
-        : null,
-      genre: input.genre?.trim() || null,
-      pageCount: input.pageCount || null,
-      thumbnail: input.thumbnail?.trim() || null,
-      description: input.description?.trim() || null,
-      contents: null,
-      url: null,
-      datetime: input.datetime || null,
-      price: input.price || null,
-      salePrice: input.salePrice || null,
-      status: 'manual',
-      isManualEntry: true,
-      kakaoId: null,
-      lastSyncedAt: null
+        { status: 400 }
+      )
     }
 
-    // 트랜잭션으로 도서 생성 및 수동 입력 로그 기록
-    const result = await db.$transaction(async (tx) => {
-      // 도서 생성
-      const newBook = await tx.book.create({
-        data: bookData
-      })
+    // 저자 정보 검증
+    const filteredAuthors = authors.filter((author: string) => author.trim().length > 0)
+    if (filteredAuthors.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            errorType: 'INVALID_PARAMS',
+            message: '최소 한 명의 저자 정보가 필요합니다.'
+          }
+        },
+        { status: 400 }
+      )
+    }
 
-      // 수동 입력 로그 생성
-      await tx.manualBookEntry.create({
-        data: {
-          bookId: newBook.id,
-          submittedBy: session.user.id,
-          status: 'pending',
-          originalData: JSON.stringify(input)
+    // 중복 도서 확인 (제목 + 첫 번째 저자 조합)
+    const existingBook = await prisma.book.findFirst({
+      where: {
+        title: title.trim(),
+        authors: {
+          contains: filteredAuthors[0].trim()
         }
-      })
-
-      return newBook
+      }
     })
 
-    // 성공 응답
+    if (existingBook) {
+      // 이미 존재하는 도서인 경우 기존 도서 정보 반환
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: existingBook.id,
+          title: existingBook.title,
+          authors: JSON.parse(existingBook.authors),
+          publisher: existingBook.publisher,
+          genre: existingBook.genre,
+          isManualEntry: existingBook.isManualEntry,
+          createdAt: existingBook.createdAt.toISOString(),
+          alreadyExists: true
+        }
+      })
+    }
+
+    // 새 도서 저장
+    const newBook = await prisma.book.create({
+      data: {
+        title: title.trim(),
+        authors: JSON.stringify(filteredAuthors.map((author: string) => author.trim())),
+        publisher: publisher?.trim() || null,
+        genre: genre?.trim() || null,
+        isManualEntry: true // 직접 입력 도서
+      }
+    })
+
     return NextResponse.json({
       success: true,
       data: {
-        book: result,
-        similarBooks: similarBooks.length > 0 ? similarBooks : undefined,
-        message: '도서가 성공적으로 등록되었습니다. 관리자 검토 후 최종 승인됩니다.'
+        id: newBook.id,
+        title: newBook.title,
+        authors: JSON.parse(newBook.authors),
+        publisher: newBook.publisher,
+        genre: newBook.genre,
+        isManualEntry: newBook.isManualEntry,
+        createdAt: newBook.createdAt.toISOString()
       }
-    }, { status: 201 })
+    })
 
   } catch (error) {
     console.error('Manual book creation error:', error)
+    
+    // Prisma 중복 키 오류 처리
+    if (error instanceof Error && error.message.includes('Unique constraint')) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            errorType: 'DUPLICATE_BOOK',
+            message: '이미 등록된 도서입니다.'
+          }
+        },
+        { status: 409 }
+      )
+    }
     
     return NextResponse.json(
       {
@@ -178,7 +177,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // 수동 입력 도서 조회
     const [entries, total] = await Promise.all([
-      db.manualBookEntry.findMany({
+      prisma.manualBookEntry.findMany({
         where,
         include: {
           book: true
@@ -189,11 +188,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         skip: (page - 1) * limit,
         take: limit
       }),
-      db.manualBookEntry.count({ where })
+      prisma.manualBookEntry.count({ where })
     ])
 
     // 도서 데이터 파싱
-    const parsedEntries = entries.map(entry => ({
+    const parsedEntries = entries.map((entry: any) => ({
       ...entry,
       book: {
         ...entry.book,
