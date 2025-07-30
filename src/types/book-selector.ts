@@ -20,6 +20,7 @@ export interface KakaoBook extends BaseBook {
   id?: string
   newBook?: boolean
   kakaoBook?: boolean
+  url?: string
 }
 
 export interface ManualBook extends BaseBook {

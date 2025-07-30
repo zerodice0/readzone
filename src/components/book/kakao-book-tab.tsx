@@ -54,7 +54,7 @@ export const KakaoBookTab = memo(function KakaoBookTab({
         setBooks(prev => [...prev, ...newBooks])
         
         setTotalCount(result.totalCount || 0)
-        setHasMore(!result.isEnd && newBooks.length === limit)
+        setHasMore(!result.isEnd && newBooks.length === limit && page < 50)
         setCurrentPage(page)
       } else {
         // API 한도 초과 등의 특별한 오류 처리
@@ -94,7 +94,7 @@ export const KakaoBookTab = memo(function KakaoBookTab({
 
   // 더 많은 결과 로드
   const loadMoreBooks = useCallback(() => {
-    if (!isLoadingMore && hasMore && query.length >= 2) {
+    if (!isLoadingMore && hasMore && query.length >= 2 && currentPage < 50) {
       searchKakaoBooks(query, currentPage + 1, true)
     }
   }, [isLoadingMore, hasMore, query, currentPage, searchKakaoBooks])
@@ -258,7 +258,7 @@ export const KakaoBookTab = memo(function KakaoBookTab({
                 const isLast = index === books.length - 1
                 return (
                   <div
-                    key={book.isbn || `kakao-${index}`}
+                    key={book.url}
                     ref={isLast ? lastBookElementRef : null}
                   >
                     <BookItem 
@@ -279,14 +279,20 @@ export const KakaoBookTab = memo(function KakaoBookTab({
               )}
               
               {/* 모든 결과 로드 완료 */}
-              {!hasMore && books.length > 10 && (
+              {!hasMore && books.length > 10 && currentPage < 50 && (
                 <div className="p-4 text-center">
                   <p className="text-xs text-gray-500">모든 검색 결과를 불러왔습니다.</p>
                 </div>
               )}
+
+              {!hasMore && currentPage >= 50 && (
+                <div className="p-4 text-center">
+                  <p className="text-xs text-gray-500">카카오 API 제한으로 50페이지까지만 검색할 수 있습니다.</p>
+                </div>
+              )}
               
               {/* 수동으로 더보기 버튼 (fallback) */}
-              {hasMore && !isLoadingMore && books.length >= 10 && (
+              {hasMore && !isLoadingMore && books.length >= 10 && currentPage < 50 && (
                 <div className="p-3 text-center">
                   <Button
                     variant="outline"
