@@ -1,15 +1,17 @@
 'use client'
 
 import React, { useEffect, useCallback, useMemo } from 'react'
-import dynamic from 'next/dynamic'
 import { useThemeState } from '@/hooks/use-theme'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { CustomToolbar } from './custom-toolbar'
 import { QuillDarkTheme } from './quill-dark-theme'
 
-// React Quill을 동적 임포트로 SSR 문제 해결
-const ReactQuill = dynamic(() => import('react-quill'), { 
+// react-quill-new 3.0.0을 동적 임포트로 SSR 문제 해결
+// forwardRef 래핑 없이 직접 사용
+import dynamic from 'next/dynamic'
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { 
   ssr: false,
   loading: () => (
     <div className="min-h-[400px] w-full border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 animate-pulse flex items-center justify-center">
@@ -51,7 +53,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   showAutosaveStatus = true
 }) => {
   const { isLoaded, isDark } = useThemeState()
-  // const quillRef = useRef<any>(null)
+  // ref는 직접 사용하지 않고 필요시 getEditor() 메서드로 접근
 
   // Quill 에디터 설정 (독후감 작성에 최적화)
   const modules = useMemo(() => ({
@@ -61,9 +63,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }), [])
 
   // Quill 포맷 설정 (독후감에 필요한 기본 포맷만)
+  // Quill 2.0+에서 'bullet'은 'list' 포맷의 값이므로 별도 등록 불필요
   const formats = useMemo(() => [
     'header', 'bold', 'italic', 
-    'list', 'bullet', 'blockquote', 'link'
+    'list', 'blockquote', 'link'
   ], [])
 
   // 내용 변경 핸들러
@@ -141,7 +144,6 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <CustomToolbar />
           
           <ReactQuill
-            // ref={quillRef as any}
             theme="snow"
             value={value}
             onChange={handleChange}

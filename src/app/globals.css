@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* React Quill CSS */
-@import 'react-quill/dist/quill.snow.css';
+@import 'quill/dist/quill.snow.css';
 
 :root {
   --foreground-rgb: 0, 0, 0;
