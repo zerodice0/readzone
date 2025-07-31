@@ -38,16 +38,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         try {
-          if (!credentials?.email || !credentials?.password) {
+          if (!credentials?.email || !credentials?.password || typeof credentials.email !== 'string' || typeof credentials.password !== 'string') {
             const error = createAuthError(AuthErrorCode.MISSING_REQUIRED_FIELD)
-            const email = credentials?.email as string || 'unknown'
+            const email = typeof credentials?.email === 'string' ? credentials.email : 'unknown'
             // Store error for client-side retrieval
             storeAuthError(email, error)
             return null
           }
 
-          const email = credentials.email as string
-          const password = credentials.password as string
+          const { email, password } = credentials
 
           // Create error context for logging
           const context = createErrorContext('login', undefined, email)
@@ -125,7 +124,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }: { session: any; token: JWT }) {
       if (token) {
         session.user.id = token.sub!
-        session.user.nickname = token.nickname as string
+        if (typeof token.nickname === 'string') {
+          session.user.nickname = token.nickname
+        }
       }
       return session
     },

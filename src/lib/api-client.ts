@@ -1,261 +1,215 @@
 /**
- * 클라이언트 사이드 API 호출 유틸리티
- * - 도서 검색 API 클라이언트
- * - 에러 처리 및 타입 안전성
- * - React Query와 함께 사용
+ * 타입 안전한 API 클라이언트
+ * 
+ * - TypeScript 타입 추론 지원
+ * - Zod를 통한 런타임 검증
+ * - 에러 처리 표준화
+ * - 재시도 로직 포함
  */
 
-import type { 
-  KakaoBookResponse, 
-  KakaoBook, 
-  ApiResponse 
-} from '@/types/kakao'
+import { z } from 'zod';
+import type { ApiResponse } from '@/types/api-responses';
 
-// API 기본 설정
-const API_BASE_URL = '/api/books'
-const DEFAULT_TIMEOUT = 10000
+// API 클라이언트 옵션
+interface ApiClientOptions extends RequestInit {
+  // 재시도 횟수 (기본값: 0)
+  retry?: number;
+  // 재시도 간격 (ms, 기본값: 1000)
+  retryDelay?: number;
+  // 타임아웃 (ms, 기본값: 30000)
+  timeout?: number;
+}
+
+// API 에러 클래스
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status?: number,
+    public errorType?: string,
+    public details?: unknown
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 /**
- * API 클라이언트 기본 클래스
+ * 기본 fetch 래퍼 (타입 추론만 지원)
  */
-class ApiClient {
-  private baseURL: string
-  private timeout: number
+export async function apiRequest<T>(
+  url: string,
+  options?: ApiClientOptions
+): Promise<ApiResponse<T>> {
+  const {
+    retry = 0,
+    retryDelay = 1000,
+    timeout = 30000,
+    ...fetchOptions
+  } = options || {};
 
-  constructor(baseURL: string = API_BASE_URL, timeout: number = DEFAULT_TIMEOUT) {
-    this.baseURL = baseURL
-    this.timeout = timeout
-  }
+  let lastError: Error | null = null;
 
-  /**
-   * HTTP 요청 실행
-   */
-  private async request<T>(
-    endpoint: string, 
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
-
+  for (let attempt = 0; attempt <= retry; attempt++) {
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
-        ...options,
+      // 타임아웃 설정
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      const response = await fetch(url, {
+        ...fetchOptions,
         signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-      })
+      });
 
-      clearTimeout(timeoutId)
+      clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        return {
-          success: false,
-          error: errorData.error || {
-            errorType: 'HTTP_ERROR',
-            message: `HTTP ${response.status}: ${response.statusText}`
-          }
-        }
+      const result = await response.json();
+
+      // API 응답이 아닌 경우 (예: Next.js 에러 페이지)
+      if (!('success' in result)) {
+        throw new ApiError(
+          'Invalid API response format',
+          response.status,
+          'INVALID_RESPONSE'
+        );
       }
 
-      const data = await response.json()
-      console.log('🟢 API Client - Response JSON:', data)
-      return data
+      // 에러 응답 처리
+      if (!response.ok || !result.success) {
+        throw new ApiError(
+          result.error?.message || `HTTP ${response.status}`,
+          response.status,
+          result.error?.errorType,
+          result.error?.details
+        );
+      }
 
-    } catch (error: any) {
-      console.error('🔴 API Client Error:', error)
-      console.error('🔴 API Client Error Name:', error.name)
-      console.error('🔴 API Client Error Message:', error.message)
-      clearTimeout(timeoutId)
+      // API 응답 검증
+      if (typeof result === 'object' && result !== null && 'success' in result) {
+        return result;
+      }
       
-      if (error.name === 'AbortError') {
-        return {
-          success: false,
-          error: {
-            errorType: 'TIMEOUT',
-            message: '요청 시간이 초과되었습니다.'
-          }
-        }
+      throw new ApiError(
+        'Invalid API response format',
+        response.status,
+        'INVALID_RESPONSE'
+      );
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // 재시도할 수 없는 에러는 즉시 throw
+      if (
+        error instanceof ApiError ||
+        (error instanceof Error && error.name === 'AbortError') ||
+        attempt === retry
+      ) {
+        throw error;
       }
 
-      return {
-        success: false,
-        error: {
-          errorType: 'NETWORK_ERROR',
-          message: '네트워크 오류가 발생했습니다.'
-        }
-      }
+      // 재시도 전 대기
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
     }
   }
 
-  /**
-   * GET 요청
-   */
-  async get<T>(endpoint: string, params?: Record<string, string>): Promise<ApiResponse<T>> {
-    const url = params ? `${endpoint}?${new URLSearchParams(params)}` : endpoint
-    return this.request<T>(url, { method: 'GET' })
-  }
-
-  /**
-   * POST 요청
-   */
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
+  throw lastError || new Error('Unknown error');
 }
 
 /**
- * 도서 API 클라이언트
+ * Zod 스키마를 사용한 안전한 API 요청
  */
-export class BookApiClient extends ApiClient {
-  /**
-   * 도서 검색
-   */
-  async searchBooks(params: {
-    query: string
-    page?: number
-    size?: number
-    sort?: 'accuracy' | 'latest'
-  }): Promise<ApiResponse<{
-    data: KakaoBookResponse
-    pagination: {
-      currentPage: number
-      pageSize: number
-      totalCount: number
-      isEnd: boolean
-    }
-  }>> {
-    const searchParams = {
-      query: params.query,
-      page: (params.page || 1).toString(),
-      size: (params.size || 10).toString(),
-      sort: params.sort || 'accuracy'
-    }
+export async function safeApiRequest<T>(
+  url: string,
+  schema: z.ZodSchema<ApiResponse<T>>,
+  options?: ApiClientOptions
+): Promise<ApiResponse<T>> {
+  const response = await apiRequest<T>(url, options);
 
-    return this.get('/search', searchParams)
+  // 런타임 검증
+  const validation = schema.safeParse(response);
+
+  if (!validation.success) {
+    console.error('API response validation failed:', {
+      url,
+      errors: validation.error.errors,
+      response,
+    });
+
+    throw new ApiError(
+      'API response validation failed',
+      undefined,
+      'VALIDATION_ERROR',
+      validation.error.errors
+    );
   }
 
-  /**
-   * ISBN으로 도서 검색
-   */
-  async getBookByISBN(isbn: string): Promise<ApiResponse<{
-    data: KakaoBook | null
-    found: boolean
-  }>> {
-    return this.get(`/isbn/${encodeURIComponent(isbn)}`)
+  return validation.data;
+}
+
+/**
+ * JSON 데이터를 POST하는 헬퍼 함수
+ */
+export async function postJson<T>(
+  url: string,
+  data: unknown,
+  options?: ApiClientOptions
+): Promise<ApiResponse<T>> {
+  return apiRequest<T>(url, {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Zod 스키마와 함께 JSON 데이터를 POST하는 헬퍼 함수
+ */
+export async function safePostJson<T>(
+  url: string,
+  data: unknown,
+  schema: z.ZodSchema<ApiResponse<T>>,
+  options?: ApiClientOptions
+): Promise<ApiResponse<T>> {
+  return safeApiRequest(url, schema, {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * 성공적인 응답에서 데이터 추출
+ */
+export function extractData<T>(response: ApiResponse<T>): T {
+  if (!response.success || !response.data) {
+    throw new ApiError(
+      response.error?.message || 'No data in response',
+      undefined,
+      response.error?.errorType,
+      response.error?.details
+    );
   }
 
-  /**
-   * 인기 도서 조회
-   */
-  async getPopularBooks(): Promise<ApiResponse<{
-    data: {
-      fiction: KakaoBook[]
-      nonFiction: KakaoBook[]
-      recent: KakaoBook[]
-    }
-    categories: {
-      fiction: number
-      nonFiction: number
-      recent: number
-    }
-  }>> {
-    return this.get('/popular')
-  }
-
-  /**
-   * API 사용량 조회
-   */
-  async getUsageStatus(): Promise<ApiResponse<{
-    status: {
-      today: {
-        searchCount: number
-        remaining: number
-        resetTime: string
-      }
-      usagePercentage: number
-      isNearLimit: boolean
-      isLimitExceeded: boolean
-      timeUntilReset: number
-    }
-    remainingQuota: number
-    history: Array<{
-      date: string
-      searchCount: number
-      remaining: number
-    }>
-    limits: {
-      dailyLimit: number
-      warningThreshold: number
-      resetTime: string
-    }
-  }>> {
-    return this.get('/usage')
-  }
-
-  /**
-   * 다중 도서 검색 (배치)
-   */
-  async searchMultipleBooks(queries: string[], maxResults: number = 5): Promise<ApiResponse<{
-    results: Array<{
-      query: string
-      response: ApiResponse<KakaoBookResponse>
-    }>
-    summary: {
-      total: number
-      successful: number
-      failed: number
-      quotaExceeded: boolean
-    }
-    processedQueries: number
-    skippedQueries: number
-  }>> {
-    return this.post('/batch', { queries, maxResults })
-  }
+  return response.data;
 }
 
-// 싱글톤 인스턴스
-let bookApiClient: BookApiClient | null = null
-
-export function getBookApiClient(): BookApiClient {
-  if (!bookApiClient) {
-    bookApiClient = new BookApiClient()
-  }
-  return bookApiClient
-}
-
-// 편의 함수들
-export async function searchBooks(
-  query: string, 
-  page = 1, 
-  size = 10, 
-  sort: 'accuracy' | 'latest' = 'accuracy'
-) {
-  const client = getBookApiClient()
-  return client.searchBooks({ query, page, size, sort })
-}
-
-export async function getBookByISBN(isbn: string) {
-  const client = getBookApiClient()
-  return client.getBookByISBN(isbn)
-}
-
-export async function getPopularBooks() {
-  const client = getBookApiClient()
-  return client.getPopularBooks()
-}
-
-export async function getApiUsageStatus() {
-  const client = getBookApiClient()
-  return client.getUsageStatus()
-}
-
-export async function searchMultipleBooks(queries: string[], maxResults = 5) {
-  const client = getBookApiClient()
-  return client.searchMultipleBooks(queries, maxResults)
+/**
+ * API 응답 스키마 생성 헬퍼
+ */
+export function createApiResponseSchema<T>(dataSchema: z.ZodSchema<T>) {
+  return z.object({
+    success: z.boolean(),
+    data: dataSchema.optional(),
+    error: z.object({
+      errorType: z.string(),
+      message: z.string(),
+      details: z.unknown().optional(),
+    }).optional(),
+  });
 }

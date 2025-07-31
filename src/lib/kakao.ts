@@ -71,7 +71,14 @@ export class KakaoBookAPI {
     const response = await this.search({ query: isbn, size: 1 })
     
     if (!response.success || !response.data) {
-      return response as unknown as ApiResponse<KakaoBook | null>
+      return {
+        success: false,
+        error: response.error || {
+          errorType: 'SEARCH_FAILED',
+          message: '도서 검색에 실패했습니다.'
+        },
+        usage: response.usage
+      }
     }
 
     const book = response.data.documents.find(book => 
