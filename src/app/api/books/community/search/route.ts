@@ -63,14 +63,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       OR: [
         {
           title: {
-            contains: query.trim(),
-            mode: 'insensitive' as const
+            contains: query.trim()
           }
         },
         {
           authors: {
-            contains: query.trim(),
-            mode: 'insensitive' as const
+            contains: query.trim()
           }
         }
       ]
