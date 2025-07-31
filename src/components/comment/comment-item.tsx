@@ -48,7 +48,7 @@ export function CommentItem({
   // 액션 메뉴 외부 클릭 처리
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
+      if (actionMenuRef.current && event.target instanceof Node && !actionMenuRef.current.contains(event.target)) {
         setShowActions(false)
       }
     }

@@ -92,13 +92,15 @@ export function useKeyboardNavigation({
     keysRef.current = enabledKeys
   }, [enabledKeys])
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: Event) => {
+    // KeyboardEvent로 타입 가드
+    if (!(event instanceof KeyboardEvent)) return
     // 비활성화된 경우 무시
     if (disabled) return
 
     // 입력 요소에서는 키보드 단축키 무시 (옵션)
-    if (ignoreInputs) {
-      const target = event.target as HTMLElement
+    if (ignoreInputs && event.target instanceof HTMLElement) {
+      const target = event.target
       const tagName = target.tagName.toLowerCase()
       const isEditable = target.contentEditable === 'true'
       const isInput = ['input', 'textarea', 'select'].includes(tagName) || isEditable
@@ -227,10 +229,10 @@ export function useKeyboardNavigation({
   useEffect(() => {
     const target = targetRef?.current || document
     
-    target.addEventListener('keydown', handleKeyDown as EventListener)
+    target.addEventListener('keydown', handleKeyDown)
     
     return () => {
-      target.removeEventListener('keydown', handleKeyDown as EventListener)
+      target.removeEventListener('keydown', handleKeyDown)
     }
   }, [handleKeyDown, targetRef])
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { TrendingUp, Book, Loader2 } from 'lucide-react'
-import { getPopularBooks } from '@/lib/api-client'
+import { getPopularBooks } from '@/lib/book-api'
 import type { KakaoBook } from '@/types/kakao'
 
 interface PopularBooksProps {
@@ -27,7 +27,7 @@ export function PopularBooks({ onSelect }: PopularBooksProps) {
       try {
         const response = await getPopularBooks()
         if (response.success && response.data) {
-          setData(response.data.data)
+          setData(response.data)
         } else {
           setError(response.error?.message || '인기 도서를 불러올 수 없습니다.')
         }

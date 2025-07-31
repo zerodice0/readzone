@@ -9,8 +9,8 @@ import { BookCard } from './book-card'
 import { SearchHistory } from './search-history'
 import { PopularBooks } from './popular-books'
 import { useDebounce } from '@/hooks/use-debounce'
-import { searchBooks } from '@/lib/api-client'
 import type { KakaoBook } from '@/types/kakao'
+import { searchBooks } from '@/lib/book-api'
 
 interface BookSearchProps {
   onBookSelect?: (book: KakaoBook) => void
@@ -76,17 +76,17 @@ export function BookSearch({
       if (response.success && response.data) {
         console.log('🟡 Parsing response data...')
         console.log('🟡 response.data structure:', Object.keys(response.data))
-        console.log('🟡 response.data.data:', response.data.data)
-        console.log('🟡 response.data.data?.documents:', response.data.data?.documents)
+        console.log('🟡 response.data:', response.data)
+        console.log('🟡 response.data?.documents:', response.data?.documents)
         
-        const newResults = response.data?.data?.documents || []
+        const newResults = response.data?.documents || []
         
         setSearchState(prev => ({
           ...prev,
           results: append ? [...prev.results, ...newResults] : newResults,
           isLoading: false,
-          hasMore: !response.data?.pagination?.isEnd,
-          totalCount: response.data?.pagination?.totalCount || 0,
+          hasMore: !response.data?.meta?.is_end,
+          totalCount: response.data?.meta?.total_count || 0,
           page
         }))
 

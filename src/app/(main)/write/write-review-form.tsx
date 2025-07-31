@@ -14,6 +14,8 @@ import { BookSelector } from '@/components/book/book-selector'
 import { RichTextEditor } from '@/components/editor/rich-text-editor'
 import { TagInput } from '@/components/ui/tag-input'
 import { useHtmlAutosave } from '@/hooks/use-html-autosave'
+import { postJson, extractData, ApiError } from '@/lib/api-client'
+import type { CreateReviewResponse } from '@/types/api-responses'
 import { 
   Save, 
   Eye, 
@@ -173,35 +175,36 @@ export default function WriteReviewForm() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookId: formData.bookId,
-          title: formData.title || undefined,
-          content: formData.content,
-          isRecommended: formData.isRecommended,
-          tags: formData.tags,
-          purchaseLink: formData.purchaseLink || undefined
-        })
-      })
+      // 타입 안전한 API 요청
+      const response = await postJson<CreateReviewResponse>('/api/reviews', {
+        bookId: formData.bookId,
+        title: formData.title || undefined,
+        content: formData.content,
+        isRecommended: formData.isRecommended,
+        tags: formData.tags,
+        purchaseLink: formData.purchaseLink || undefined
+      });
 
-      const result = await response.json()
-
-      if (result.success) {
-        // 임시저장 데이터 삭제
-        autosave.clear()
-        
-        toast.success('독후감이 성공적으로 게시되었습니다!')
-        router.push(`/review/${result.data.id}`)
-      } else {
-        throw new Error(result.error?.message || '게시에 실패했습니다.')
-      }
+      // 데이터 추출 (타입 안전)
+      const data = extractData(response);
+      
+      // 임시저장 데이터 삭제
+      autosave.clear();
+      
+      toast.success('독후감이 성공적으로 게시되었습니다!');
+      // 이제 TypeScript가 data.review.id의 존재를 보장합니다
+      router.push(`/review/${data.review.id}`);
     } catch (error) {
-      console.error('독후감 게시 실패:', error)
-      toast.error(error instanceof Error ? error.message : '게시에 실패했습니다.')
+      console.error('독후감 게시 실패:', error);
+      
+      // ApiError 타입 체크로 더 나은 에러 메시지 제공
+      if (error instanceof ApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error('독후감 게시에 실패했습니다.');
+      }
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 

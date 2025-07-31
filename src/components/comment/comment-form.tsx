@@ -85,7 +85,11 @@ export function CommentForm({
     // Ctrl/Cmd + Enter로 제출
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault()
-      handleSubmit(e as any)
+      const syntheticEvent = {
+        preventDefault: () => {},
+        target: e.target
+      } as React.FormEvent<HTMLFormElement>
+      handleSubmit(syntheticEvent)
     }
     
     // Escape로 취소
