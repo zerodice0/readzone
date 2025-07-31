@@ -31,7 +31,10 @@ interface BookReviewListProps {
   limit?: number
 }
 
-interface ReviewWithUser extends BookReview {
+interface ReviewWithUser extends Omit<BookReview, 'createdAt' | 'updatedAt'> {
+  // API 응답에서 Date 객체가 ISO 문자열로 직렬화되므로 실제 타입 반영
+  createdAt: string
+  updatedAt: string
   user: {
     id: string
     nickname: string
@@ -177,7 +180,7 @@ export function BookReviewList({ bookId, limit = 10 }: BookReviewListProps) {
                       
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Calendar className="h-3 w-3" aria-hidden="true" />
-                        <time dateTime={review.createdAt.toISOString()}>
+                        <time dateTime={review.createdAt}>
                           {formatDistanceToNow(new Date(review.createdAt), { 
                             addSuffix: true,
                             locale: ko
