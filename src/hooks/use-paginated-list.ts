@@ -47,7 +47,7 @@ export function usePaginatedList<T>(
     initialPage = 1,
     initialLimit = 20,
     autoFetch = true,
-    additionalParams = {}
+    additionalParams = undefined
   } = options
 
   const [currentPage, setCurrentPage] = useState(initialPage)
@@ -60,7 +60,7 @@ export function usePaginatedList<T>(
       page: currentPage.toString(),
       limit: limit.toString(),
       ...Object.fromEntries(
-        Object.entries(additionalParams).map(([key, value]) => [key, String(value)])
+        Object.entries(additionalParams || {}).map(([key, value]) => [key, String(value)])
       )
     })
     const url = `${baseUrl}?${params.toString()}`

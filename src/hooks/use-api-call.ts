@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 export interface ApiError {
   errorType: string
@@ -33,6 +33,10 @@ export function useApiCall<T = any>(options: UseApiCallOptions = {}): UseApiCall
   const [data, setData] = useState<T | null>(null)
   const [isLoading, setIsLoading] = useState(options.initialLoading || false)
   const [error, setError] = useState<string | null>(null)
+  
+  // options를 ref로 저장하여 의존성 배열에서 제외
+  const optionsRef = useRef(options)
+  optionsRef.current = options
 
   const call = useCallback(async (url: string, requestOptions: RequestInit = {}) => {
     try {
@@ -51,20 +55,20 @@ export function useApiCall<T = any>(options: UseApiCallOptions = {}): UseApiCall
 
       if (result.success && result.data) {
         setData(result.data)
-        options.onSuccess?.(result.data)
+        optionsRef.current.onSuccess?.(result.data)
       } else {
         const errorMessage = result.error?.message || 'API 호출 중 오류가 발생했습니다.'
         setError(errorMessage)
-        options.onError?.(result.error || { errorType: 'UNKNOWN', message: errorMessage })
+        optionsRef.current.onError?.(result.error || { errorType: 'UNKNOWN', message: errorMessage })
       }
     } catch (err) {
       const errorMessage = '네트워크 오류가 발생했습니다.'
       setError(errorMessage)
-      options.onError?.({ errorType: 'NETWORK_ERROR', message: errorMessage })
+      optionsRef.current.onError?.({ errorType: 'NETWORK_ERROR', message: errorMessage })
     } finally {
       setIsLoading(false)
     }
-  }, [options])
+  }, []) // options 의존성 제거
 
   const reset = useCallback(() => {
     setData(null)
