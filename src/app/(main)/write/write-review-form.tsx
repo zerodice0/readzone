@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -36,6 +36,16 @@ interface SelectedBook {
   thumbnail?: string
   publisher?: string
   genre?: string
+  isbn?: string
+  _kakaoData?: {
+    title: string
+    authors: string[]
+    publisher?: string
+    genre?: string
+    thumbnail?: string
+    isbn?: string
+    url?: string
+  }
 }
 
 interface ReviewFormData {
@@ -58,6 +68,7 @@ const POPULAR_TAGS = [
 export default function WriteReviewForm() {
   const { data: session } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   
   // 폼 상태
   const [selectedBook, setSelectedBook] = useState<SelectedBook | null>(null)
@@ -74,6 +85,8 @@ export default function WriteReviewForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showBookSelector, setShowBookSelector] = useState(true)
   const [tagSuggestions, setTagSuggestions] = useState<string[]>(POPULAR_TAGS)
+  const [isLoadingDraft, setIsLoadingDraft] = useState(false)
+  const [draftLoaded, setDraftLoaded] = useState(false)
 
   // HTML 콘텐츠 특화 자동저장 설정
   const autosave = useHtmlAutosave<{
@@ -125,8 +138,103 @@ export default function WriteReviewForm() {
     }
   }, [session, router])
 
-  // 초기 데이터 복구
+  // Draft 로딩 함수
+  const loadDraft = useCallback(async (draftId: string) => {
+    setIsLoadingDraft(true)
+    try {
+      const response = await fetch(`/api/reviews/draft/${draftId}`)
+      
+      if (!response.ok) {
+        throw new Error('Draft를 불러올 수 없습니다')
+      }
+
+      const data = await response.json()
+      const draft = data.data?.draft
+
+      if (!draft) {
+        throw new Error('Draft 데이터가 없습니다')
+      }
+
+      // Parse metadata if exists
+      let metadata: any = {}
+      try {
+        metadata = typeof draft.metadata === 'string' 
+          ? JSON.parse(draft.metadata) 
+          : draft.metadata || {}
+      } catch (e) {
+        console.warn('Failed to parse draft metadata:', e)
+      }
+
+      // Restore form data
+      setFormData({
+        bookId: draft.bookId || '',
+        title: draft.title || '',
+        content: draft.content || '',
+        isRecommended: metadata.isRecommended ?? true,
+        tags: metadata.tags || [],
+        purchaseLink: metadata.purchaseLink || ''
+      })
+
+      // Restore book data if available
+      if (metadata.book) {
+        setSelectedBook(metadata.book)
+        setShowBookSelector(false)
+      } else if (draft.bookData) {
+        // Handle legacy bookData format
+        try {
+          const bookData = typeof draft.bookData === 'string' 
+            ? JSON.parse(draft.bookData) 
+            : draft.bookData
+          
+          if (bookData) {
+            setSelectedBook({
+              id: draft.bookId || 'temp-' + Date.now(),
+              title: bookData.title,
+              authors: bookData.authors || [],
+              thumbnail: bookData.thumbnail,
+              publisher: bookData.publisher,
+              genre: bookData.genre,
+              isbn: bookData.isbn,
+              _kakaoData: bookData
+            })
+            setShowBookSelector(false)
+          }
+        } catch (e) {
+          console.warn('Failed to parse book data:', e)
+        }
+      }
+
+      setDraftLoaded(true)
+      toast.success('작성하던 독후감을 불러왔습니다')
+
+      // Clear draft from URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('draft')
+      router.replace(url.pathname + url.search, { scroll: false })
+
+    } catch (error) {
+      console.error('Draft loading error:', error)
+      toast.error(error instanceof Error ? error.message : 'Draft를 불러올 수 없습니다')
+    } finally {
+      setIsLoadingDraft(false)
+    }
+  }, [router])
+
+  // URL에서 draft ID 확인 및 로딩
   useEffect(() => {
+    const draftId = searchParams.get('draft')
+    if (draftId && session?.user?.id && !draftLoaded && !isLoadingDraft) {
+      loadDraft(draftId)
+    }
+  }, [searchParams, session?.user?.id, draftLoaded, isLoadingDraft, loadDraft])
+
+  // 초기 데이터 복구 (서버 draft가 없을 때만)
+  useEffect(() => {
+    const draftId = searchParams.get('draft')
+    
+    // 서버 draft가 있거나 이미 로딩했으면 localStorage 복구 안함
+    if (draftId || draftLoaded || isLoadingDraft) return
+    
     const restored = autosave.restore()
     if (restored && restored.selectedBook && restored.formData) {
       setSelectedBook(restored.selectedBook)
@@ -134,7 +242,7 @@ export default function WriteReviewForm() {
       setShowBookSelector(false)
       toast.success('이전에 작성하던 내용을 복원했습니다.')
     }
-  }, [autosave])
+  }, [autosave, searchParams, draftLoaded, isLoadingDraft])
 
   // 도서 선택 처리
   const handleBookSelect = (book: SelectedBook) => {
@@ -175,15 +283,37 @@ export default function WriteReviewForm() {
     setIsSubmitting(true)
 
     try {
-      // 타입 안전한 API 요청
-      const response = await postJson<CreateReviewResponse>('/api/reviews', {
+      // 임시 도서인 경우 카카오 데이터도 함께 전송
+      const requestData: any = {
         bookId: formData.bookId,
         title: formData.title || undefined,
         content: formData.content,
         isRecommended: formData.isRecommended,
         tags: formData.tags,
-        purchaseLink: formData.purchaseLink || undefined
-      });
+        purchaseLink: formData.purchaseLink || undefined,
+      }
+
+      // 임시 도서인 경우 카카오 원본 데이터 포함 (fallback 포함)
+      if (selectedBook && formData.bookId.startsWith('temp_')) {
+        if ('_kakaoData' in selectedBook && selectedBook._kakaoData) {
+          // 원본 카카오 데이터가 있는 경우
+          requestData._kakaoData = selectedBook._kakaoData
+        } else {
+          // fallback: selectedBook 자체를 카카오 데이터로 사용
+          requestData._kakaoData = {
+            title: selectedBook.title,
+            authors: selectedBook.authors,
+            publisher: selectedBook.publisher,
+            genre: selectedBook.genre,
+            thumbnail: selectedBook.thumbnail,
+            isbn: selectedBook.isbn,
+            url: undefined // 복원 시 손실된 경우
+          }
+        }
+      }
+
+      // 타입 안전한 API 요청
+      const response = await postJson<CreateReviewResponse>('/api/reviews', requestData);
 
       // 데이터 추출 (타입 안전)
       const data = extractData(response);
@@ -219,6 +349,16 @@ export default function WriteReviewForm() {
       <Card className="p-8 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-600 dark:text-gray-400" />
         <p className="text-gray-700 dark:text-gray-300">로그인 페이지로 이동 중...</p>
+      </Card>
+    )
+  }
+
+  // Draft 로딩 중 상태
+  if (isLoadingDraft) {
+    return (
+      <Card className="p-8 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary-600 dark:text-primary-400" />
+        <p className="text-gray-700 dark:text-gray-300">작성하던 독후감을 불러오는 중...</p>
       </Card>
     )
   }

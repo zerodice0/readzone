@@ -1,5 +1,6 @@
 import { type Metadata } from 'next'
 import WriteReviewForm from './write-review-form'
+import { DraftRestorationWrapper } from '@/components/draft'
 
 export const metadata: Metadata = {
   title: '독후감 작성 | ReadZone',
@@ -15,6 +16,9 @@ export default function WriteReviewPage() {
           독서 후 느낀 점을 자유롭게 작성하고 다른 독자들과 공유해보세요.
         </p>
       </div>
+
+      {/* Draft restoration modal */}
+      <DraftRestorationWrapper autoShow={true} />
 
       <WriteReviewForm />
     </div>
