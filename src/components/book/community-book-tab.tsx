@@ -217,6 +217,7 @@ export const CommunityBookTab = memo(function CommunityBookTab({
                       book={book} 
                       onSelect={(selectedBook) => onSelect(selectedBook as CommunityBook)}
                       variant="community"
+                      showReviewStatus={true}
                     />
                   </div>
                 )

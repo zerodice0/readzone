@@ -54,90 +54,117 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const data: CreateReviewInput = validationResult.data
 
-    // 도서 존재 확인
-    const book = await db.book.findUnique({
-      where: { id: data.bookId },
-      select: { id: true, title: true },
-    })
+    // 임시 도서 ID 확인 (temp_로 시작하는 경우)
+    const isTempBook = data.bookId.startsWith('temp_')
+    
+    // 트랜잭션으로 도서와 독후감 동시 처리
+    const result = await db.$transaction(async (tx) => {
+      let finalBookId = data.bookId
+      
+      if (isTempBook) {
+        // 임시 도서인 경우: 카카오 데이터로 새 도서 생성
+        const kakaoData = (data as any)._kakaoData
+        if (!kakaoData) {
+          throw new Error('임시 도서에 대한 카카오 데이터가 없습니다.')
+        }
 
-    if (!book) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            errorType: 'NOT_FOUND',
-            message: '존재하지 않는 도서입니다.',
-          },
-        },
-        { status: 404 }
-      )
-    }
+        // 중복 도서 확인 (제목 + 첫 번째 저자 조합)
+        const existingBook = await tx.book.findFirst({
+          where: {
+            title: kakaoData.title.trim(),
+            authors: {
+              contains: kakaoData.authors[0]?.trim()
+            }
+          }
+        })
 
-    // 사용자가 해당 도서에 대해 이미 독후감을 작성했는지 확인
-    const existingReview = await db.bookReview.findFirst({
-      where: {
-        userId: session.user.id,
-        bookId: data.bookId,
-      },
-      select: { id: true },
-    })
+        if (existingBook) {
+          // 이미 존재하는 도서 사용
+          finalBookId = existingBook.id
+        } else {
+          // 새 도서 생성
+          const newBook = await tx.book.create({
+            data: {
+              title: kakaoData.title.trim(),
+              authors: JSON.stringify(kakaoData.authors.map((author: string) => author.trim())),
+              publisher: kakaoData.publisher?.trim() || null,
+              genre: kakaoData.genre?.trim() || null,
+              thumbnail: kakaoData.thumbnail || null,
+              isbn: kakaoData.isbn || null,
+              isManualEntry: false
+            }
+          })
+          finalBookId = newBook.id
+        }
+      } else {
+        // 기존 도서 존재 확인
+        const book = await tx.book.findUnique({
+          where: { id: data.bookId },
+          select: { id: true, title: true },
+        })
 
-    if (existingReview) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            errorType: 'DUPLICATE_ENTRY',
-            message: '이미 해당 도서에 대한 독후감을 작성하셨습니다. 기존 독후감을 수정해주세요.',
-          },
-        },
-        { status: 409 }
-      )
-    }
+        if (!book) {
+          throw new Error('존재하지 않는 도서입니다.')
+        }
+      }
 
-    // 독후감 생성
-    const review = await db.bookReview.create({
-      data: {
-        title: data.title,
-        content: data.content,
-        isRecommended: data.isRecommended,
-        tags: JSON.stringify(data.tags), // SQLite에서는 JSON 문자열로 저장
-        purchaseLink: data.purchaseLink || null,
-        userId: session.user.id,
-        bookId: data.bookId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            nickname: true,
-            image: true,
+      // 중복 독후감 확인
+      const existingReview = await tx.bookReview.findFirst({
+        where: {
+          userId: session.user.id,
+          bookId: finalBookId,
+        },
+        select: { id: true },
+      })
+
+      if (existingReview) {
+        throw new Error('이미 해당 도서에 대한 독후감을 작성하셨습니다.')
+      }
+
+      // 독후감 생성
+      return await tx.bookReview.create({
+        data: {
+          title: data.title,
+          content: data.content,
+          isRecommended: data.isRecommended,
+          tags: JSON.stringify(data.tags), // SQLite에서는 JSON 문자열로 저장
+          purchaseLink: data.purchaseLink || null,
+          userId: session.user.id,
+          bookId: finalBookId, // 트랜잭션에서 결정된 최종 도서 ID 사용
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              nickname: true,
+              image: true,
+            },
+          },
+          book: {
+            select: {
+              id: true,
+              title: true,
+              authors: true,
+              thumbnail: true,
+            },
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: true,
+            },
           },
         },
-        book: {
-          select: {
-            id: true,
-            title: true,
-            authors: true,
-            thumbnail: true,
-          },
-        },
-        _count: {
-          select: {
-            likes: true,
-            comments: true,
-          },
-        },
-      },
+      })
     })
 
     // 응답 데이터 포맷팅
     const formattedReview = {
-      ...review,
-      tags: JSON.parse(review.tags || '[]'),
+      ...result,
+      tags: JSON.parse(result.tags || '[]'),
       book: {
-        ...review.book,
-        authors: JSON.parse(review.book.authors || '[]'),
+        ...result.book,
+        authors: JSON.parse(result.book.authors || '[]'),
       },
     }
 
@@ -150,6 +177,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
   } catch (error) {
     console.error('Create review error:', error)
+
+    // 에러 타입에 따른 적절한 응답
+    if (error instanceof Error) {
+      if (error.message.includes('이미 해당 도서에 대한 독후감을 작성하셨습니다')) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              errorType: 'DUPLICATE_ENTRY',
+              message: error.message,
+            },
+          },
+          { status: 409 }
+        )
+      }
+      
+      if (error.message.includes('존재하지 않는 도서입니다') || 
+          error.message.includes('임시 도서에 대한 카카오 데이터가 없습니다')) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              errorType: 'NOT_FOUND',
+              message: error.message,
+            },
+          },
+          { status: 404 }
+        )
+      }
+    }
 
     return NextResponse.json(
       {

@@ -1,6 +1,114 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBookAPI } from '@/lib/book-api'
+import { db } from '@/lib/db'
 import type { KakaoBookSearchParams } from '@/types/kakao'
+
+// 카카오 도서와 커뮤니티 도서 매칭을 위한 타입
+interface BookExistenceCheck {
+  title: string
+  authors: string[]
+  exists: boolean
+  existingBookId?: string
+  dbBook?: {
+    id: string
+    title: string
+    authors: string
+  }
+}
+
+/**
+ * 카카오 도서 검색 결과와 커뮤니티 DB를 배치 쿼리로 비교
+ * 1회 쿼리로 최대 50개 도서의 존재 여부를 확인
+ */
+async function checkBooksExistenceInCommunity(kakaoBooks: any[]): Promise<BookExistenceCheck[]> {
+  if (!kakaoBooks.length) return []
+  
+  try {
+    // 배치 쿼리를 위한 OR 조건 생성
+    const conditions = kakaoBooks
+      .map(book => {
+        const title = book.title?.trim()
+        const firstAuthor = book.authors?.[0]?.trim()
+        
+        if (!title || !firstAuthor) return null
+        
+        return {
+          title: title,
+          authors: {
+            contains: firstAuthor
+          }
+        }
+      })
+      .filter((condition): condition is NonNullable<typeof condition> => condition !== null)
+    
+    if (!conditions.length) {
+      return kakaoBooks.map(book => ({
+        title: book.title,
+        authors: book.authors,
+        exists: false
+      }))
+    }
+    
+    // 배치 쿼리 실행 - 1회 쿼리로 모든 도서 확인
+    const existingBooks = await db.book.findMany({
+      where: {
+        OR: conditions
+      },
+      select: {
+        id: true,
+        title: true,
+        authors: true
+      }
+    })
+    
+    // 빠른 조회를 위한 Map 생성
+    const existingBooksMap = new Map<string, typeof existingBooks[0]>()
+    existingBooks.forEach(book => {
+      try {
+        const authors = JSON.parse(book.authors)
+        const key = `${book.title}:${authors[0]}`
+        existingBooksMap.set(key, book)
+      } catch (error) {
+        console.warn('Failed to parse authors for book:', book.id, error)
+      }
+    })
+    
+    // 카카오 도서 각각에 대해 존재 여부 매핑
+    return kakaoBooks.map(kakaoBook => {
+      const title = kakaoBook.title?.trim()
+      const firstAuthor = kakaoBook.authors?.[0]?.trim()
+      
+      if (!title || !firstAuthor) {
+        return {
+          title: kakaoBook.title,
+          authors: kakaoBook.authors,
+          exists: false
+        }
+      }
+      
+      const key = `${title}:${firstAuthor}`
+      const existingBook = existingBooksMap.get(key)
+      
+      return {
+        title: kakaoBook.title,
+        authors: kakaoBook.authors,
+        exists: !!existingBook,
+        existingBookId: existingBook?.id,
+        dbBook: existingBook
+      }
+    })
+    
+  } catch (error) {
+    console.error('Batch book existence check failed:', error)
+    
+    // 에러 시 모든 도서를 '새 도서'로 표시 (Graceful degradation)
+    return kakaoBooks.map(book => ({
+      title: book.title,
+      authors: book.authors,
+      exists: false
+    }))
+  }
+}
 
 /**
  * 카카오 도서 검색 API 엔드포인트
@@ -87,12 +195,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // 성공 응답 (카카오 API 데이터 형식 정규화)
     const books = result.data?.documents || []
     
-    // 카카오 API 결과에 새 도서 표시를 위한 플래그 추가
-    const formattedBooks = books.map((book: any) => ({
-      ...book,
-      newBook: true, // 새 도서임을 명시
-      kakaoBook: true // 카카오 검색 결과임을 명시
-    }))
+    // 배치 쿼리로 커뮤니티 DB에 존재하는지 확인
+    const existenceChecks = await checkBooksExistenceInCommunity(books)
+    
+    // 카카오 API 결과에 커뮤니티 존재 여부 반영
+    const formattedBooks = books.map((book: any, index: number) => {
+      const existenceCheck = existenceChecks[index]
+      return {
+        ...book,
+        newBook: !existenceCheck?.exists, // 커뮤니티에 없을 때만 새 도서
+        kakaoBook: true, // 카카오 검색 결과임을 명시
+        communityExists: existenceCheck?.exists || false, // 커뮤니티 존재 여부
+        existingBookId: existenceCheck?.existingBookId // 기존 도서 ID (있는 경우)
+      }
+    })
 
     return NextResponse.json({
       success: true,

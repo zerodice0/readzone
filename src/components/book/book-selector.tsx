@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback, memo } from 'react'
-import { Clock, BookOpen } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { Clock, BookOpen, Loader2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { TabNavigation, type SearchTabId } from './tab-navigation'
@@ -23,13 +25,93 @@ interface BookSelectorState {
   
   // 공통 상태
   recentBooks: SelectedBook[]
+  
+  // 중복 독후감 확인 상태
+  isCheckingDuplicate: boolean
+  duplicateCheckError: string | null
 }
 
+// 기존 독후감 응답 타입
+interface ExistingReviewResponse {
+  success: boolean
+  data: {
+    items: Array<{
+      id: string
+      title?: string
+      createdAt: string
+    }>
+    pagination: {
+      total: number
+    }
+  }
+}
+
+// UX 개선을 위한 메시지 상수
+const UX_MESSAGES = {
+  CHECKING: '도서 정보를 확인하는 중...',
+  EXISTING_REVIEW_FOUND: (title: string) => `📖 ${title}에 대한 기존 독후감이 있습니다!`,
+  REDIRECTING: '기존 독후감으로 이동 중...',
+  BOOK_SELECTED: (title: string) => `✅ "${title}" 선택되었습니다`,
+  SELECTION_ERROR: '도서 선택 중 문제가 발생했습니다. 다시 시도해 주세요.',
+  INVALID_BOOK: '올바른 도서 정보가 아닙니다.',
+  CHECKING_FAILED_FALLBACK: '도서를 선택했습니다. 계속 진행해 주세요.'
+} as const
+
+
 export function BookSelector({ onSelect, className = '' }: BookSelectorProps) {
+  const router = useRouter()
+  const { data: session } = useSession()
+  
   const [state, setState] = useState<BookSelectorState>({
     activeTab: 'community',
-    recentBooks: []
+    recentBooks: [],
+    isCheckingDuplicate: false,
+    duplicateCheckError: null
   })
+
+  // 기존 독후감 확인 함수
+  const checkExistingReview = useCallback(async (bookId: string): Promise<{
+    id: string
+    title?: string
+    createdAt: string
+  } | null> => {
+    // 로그인하지 않은 사용자는 확인 생략
+    if (!session?.user?.id) {
+      return null
+    }
+
+    try {
+      const response = await fetch(
+        `/api/reviews?userId=${session.user.id}&bookId=${bookId}&limit=1`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // 3초 타임아웃
+          signal: AbortSignal.timeout(3000)
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const data: ExistingReviewResponse = await response.json()
+      
+      if (data.success && data.data.items.length > 0) {
+        return data.data.items[0]
+      }
+      
+      return null
+    } catch (error) {
+      // 에러 로그 기록 (사용자에게는 표시하지 않음)
+      console.error('기존 독후감 확인 실패:', error)
+      
+      // Graceful degradation - null 반환으로 정상 플로우 진행
+      return null
+    }
+  }, [session?.user?.id])
 
   // 탭 전환 처리
   const handleTabChange = useCallback((tabId: SearchTabId) => {
@@ -39,11 +121,17 @@ export function BookSelector({ onSelect, className = '' }: BookSelectorProps) {
     }))
   }, [])
 
-  // 도서 선택 처리
+  // 도서 선택 처리 (중복 독후감 방지 로직 포함)
   const handleBookSelect = useCallback(async (book: any) => {
-    // Ensure the book has an id before processing
+    // 1. 기본 검증
     if (!book.id) {
-      toast.error('도서 ID가 없습니다.')
+      toast.error(UX_MESSAGES.INVALID_BOOK, {
+        icon: '⚠️',
+        ariaProps: {
+          role: 'alert',
+          'aria-live': 'assertive'
+        }
+      })
       return
     }
 
@@ -57,21 +145,132 @@ export function BookSelector({ onSelect, className = '' }: BookSelectorProps) {
       isbn: book.isbn,
       isManualEntry: book.isManualEntry
     }
-    try {
-      onSelect(selectedBook)
+
+    // 2. 중복 독후감 확인 (로그인한 사용자만)
+    if (session?.user?.id) {
+      setState(prev => ({ ...prev, isCheckingDuplicate: true, duplicateCheckError: null }))
       
-      // 최근 선택 목록에 추가
-      setState(prev => ({
-        ...prev,
-        recentBooks: [selectedBook, ...prev.recentBooks.filter(b => b.id !== selectedBook.id)].slice(0, 5)
-      }))
-      
-      toast.success(`"${selectedBook.title}" 선택되었습니다.`)
-    } catch (error) {
-      console.error('도서 선택 실패:', error)
-      toast.error('도서 선택 중 오류가 발생했습니다.')
+      // 향상된 로딩 토스트 표시
+      const loadingToastId = toast.loading(UX_MESSAGES.CHECKING, {
+        icon: '🔍',
+        ariaProps: {
+          role: 'status',
+          'aria-live': 'polite'
+        }
+      })
+
+      try {
+        const existingReview = await checkExistingReview(book.id)
+        
+        // 로딩 토스트 해제
+        toast.dismiss(loadingToastId)
+
+        if (existingReview) {
+          // 기존 독후감 발견 시 향상된 피드백
+          const redirectToastId = toast.success(UX_MESSAGES.EXISTING_REVIEW_FOUND(selectedBook.title), {
+            duration: 4000,
+            icon: '📖',
+            ariaProps: {
+              role: 'alert',
+              'aria-live': 'assertive'
+            }
+          })
+          
+          // 리다이렉션 진행 표시
+          setTimeout(() => {
+            toast.loading(UX_MESSAGES.REDIRECTING, {
+              id: redirectToastId,
+              icon: '🔄',
+              duration: 1000
+            })
+          }, 1500)
+          
+          // 즉시 기존 독후감 상세 페이지로 이동
+          router.push(`/review/${existingReview.id}`)
+          return
+        }
+
+        // 3. 기존 독후감이 없는 경우 정상 플로우 진행
+        onSelect(selectedBook)
+        
+        // 최근 선택 목록에 추가
+        setState(prev => ({
+          ...prev,
+          recentBooks: [selectedBook, ...prev.recentBooks.filter(b => b.id !== selectedBook.id)].slice(0, 5),
+          isCheckingDuplicate: false
+        }))
+        
+        // 향상된 성공 메시지
+        toast.success(UX_MESSAGES.BOOK_SELECTED(selectedBook.title), {
+          icon: '✅',
+          duration: 3000,
+          ariaProps: {
+            role: 'status',
+            'aria-live': 'polite'
+          }
+        })
+
+      } catch (error) {
+        // 중복 확인 실패 시 향상된 Graceful Degradation
+        toast.dismiss(loadingToastId)
+        console.error('독후감 중복 확인 실패:', error)
+        
+        setState(prev => ({ 
+          ...prev, 
+          isCheckingDuplicate: false,
+          duplicateCheckError: error instanceof Error ? error.message : '확인 실패'
+        }))
+        
+        // 정상 플로우로 진행 (사용자 경험 보호)
+        onSelect(selectedBook)
+        
+        setState(prev => ({
+          ...prev,
+          recentBooks: [selectedBook, ...prev.recentBooks.filter(b => b.id !== selectedBook.id)].slice(0, 5)
+        }))
+        
+        // 부드러운 fallback 메시지 (에러를 숨기면서도 진행 상황 안내)
+        toast.success(UX_MESSAGES.CHECKING_FAILED_FALLBACK, {
+          icon: '📚',
+          duration: 2500,
+          ariaProps: {
+            role: 'status',
+            'aria-live': 'polite'
+          }
+        })
+      }
+    } else {
+      // 4. 로그인하지 않은 사용자는 즉시 정상 플로우 진행
+      try {
+        onSelect(selectedBook)
+        
+        setState(prev => ({
+          ...prev,
+          recentBooks: [selectedBook, ...prev.recentBooks.filter(b => b.id !== selectedBook.id)].slice(0, 5)
+        }))
+        
+        // 비로그인 사용자를 위한 친근한 메시지
+        toast.success(UX_MESSAGES.BOOK_SELECTED(selectedBook.title), {
+          icon: '✅',
+          duration: 3000,
+          ariaProps: {
+            role: 'status',
+            'aria-live': 'polite'
+          }
+        })
+      } catch (error) {
+        console.error('도서 선택 실패:', error)
+        toast.error(UX_MESSAGES.SELECTION_ERROR, {
+          icon: '⚠️',
+          duration: 4000,
+          ariaProps: {
+            role: 'alert',
+            'aria-live': 'assertive'
+          }
+        })
+      }
     }
-  }, [onSelect])
+  }, [onSelect, session?.user?.id, checkExistingReview, router])
 
   // 최근 선택한 도서 로드
   useEffect(() => {
@@ -95,14 +294,33 @@ export function BookSelector({ onSelect, className = '' }: BookSelectorProps) {
 
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* 중복 확인 중 상태 표시 */}
+      {state.isCheckingDuplicate && (
+        <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                {UX_MESSAGES.CHECKING}
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                기존 독후감이 있는지 확인하고 있습니다...
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* 탭 네비게이션 */}
-      <TabNavigation 
-        activeTab={state.activeTab}
-        onTabChange={handleTabChange}
-      />
+      <div className={state.isCheckingDuplicate ? 'opacity-75 pointer-events-none' : ''}>
+        <TabNavigation 
+          activeTab={state.activeTab}
+          onTabChange={handleTabChange}
+        />
+      </div>
 
       {/* 탭 패널들 */}
-      <div className="min-h-[400px]">
+      <div className={`min-h-[400px] ${state.isCheckingDuplicate ? 'opacity-75 pointer-events-none' : ''}`}>
         <CommunityBookTab
           onSelect={handleBookSelect}
           isActive={state.activeTab === 'community'}
@@ -135,6 +353,7 @@ export function BookSelector({ onSelect, className = '' }: BookSelectorProps) {
                 book={book} 
                 onSelect={handleBookSelect}
                 variant="recent"
+                showReviewStatus={true}
               />
             ))}
           </div>

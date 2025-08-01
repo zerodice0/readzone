@@ -21,8 +21,8 @@ import { LoadingSkeleton } from './shared/loading-skeleton'
 import { ErrorDisplay } from './shared/error-display'
 import { StatsSummary } from './shared/stats-summary'
 import { PaginationControls } from './shared/pagination-controls'
+import { SafeHtmlRenderer } from '@/components/review/safe-html-renderer'
 import { usePaginatedList } from '@/hooks/use-paginated-list'
-import { truncateText } from '@/lib/utils'
 import { UI_LABELS, ARIA_LABELS, EMPTY_STATE_MESSAGES } from '@/lib/constants/book'
 import type { BookReview } from '@prisma/client'
 
@@ -205,18 +205,26 @@ export function BookReviewList({ bookId, limit = 10 }: BookReviewListProps) {
 
                 {/* 독후감 내용 미리보기 */}
                 <div className="text-gray-700 leading-relaxed">
-                  <p className="whitespace-pre-wrap">
-                    {truncateText(review.content, 200)}
-                  </p>
-                  {review.content.length > 200 && (
-                    <Link 
-                      href={`/review/${review.id}`}
-                      className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 text-sm font-medium mt-2"
-                    >
-                      더보기
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                  )}
+                  <div className="review-preview">
+                    <SafeHtmlRenderer 
+                      content={review.content}
+                      maxLength={200}
+                      className="prose prose-sm max-w-none dark:prose-invert"
+                      strictMode={true}
+                      showCopyButton={false}
+                      showSecurityInfo={false}
+                      allowImages={false}
+                      allowLinks={true}
+                      lazyRender={true}
+                    />
+                  </div>
+                  <Link 
+                    href={`/review/${review.id}`}
+                    className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 text-sm font-medium mt-2"
+                  >
+                    더보기
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
                 </div>
 
                 {/* 태그 */}

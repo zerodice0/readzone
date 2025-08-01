@@ -21,6 +21,8 @@ export interface KakaoBook extends BaseBook {
   newBook?: boolean
   kakaoBook?: boolean
   url?: string
+  communityExists?: boolean
+  existingBookId?: string
 }
 
 export interface ManualBook extends BaseBook {
@@ -29,6 +31,15 @@ export interface ManualBook extends BaseBook {
 
 export interface SelectedBook extends BaseBook {
   id: string
+  _kakaoData?: {
+    title: string
+    authors: string[]
+    publisher?: string
+    genre?: string
+    thumbnail?: string
+    isbn?: string
+    url?: string
+  }
 }
 
 export type SearchTabId = 'community' | 'kakao' | 'manual'

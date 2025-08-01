@@ -1,10 +1,13 @@
-import { PrismaClient } from '@prisma/client'
+/**
+ * Database client with enhanced performance optimization
+ * Re-exports optimized connection pool for backward compatibility
+ */
+export { 
+  db, 
+  connectionMonitor, 
+  disconnectDb, 
+  checkDbHealth 
+} from './db/connection-pool'
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
-export const db = prisma
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Maintain backward compatibility
+export const prisma = require('./db/connection-pool').db

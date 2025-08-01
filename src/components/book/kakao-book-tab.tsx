@@ -127,43 +127,55 @@ export const KakaoBookTab = memo(function KakaoBookTab({
     }
   }, [])
 
-  // 카카오 도서 선택 처리 (커뮤니티에 저장)
+  // 카카오 도서 선택 처리 (임시 상태 또는 기존 도서 선택)
   const handleKakaoBookSelect = useCallback(async (book: KakaoBook) => {
     try {
-      const response = await fetch('/api/books/save-from-kakao', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // 이미 커뮤니티에 존재하는 도서인 경우 바로 선택 처리
+      if (book.communityExists && book.existingBookId) {
+        const existingBook = {
+          id: book.existingBookId,
           title: book.title,
           authors: book.authors,
           publisher: book.publisher,
           genre: book.genre,
           thumbnail: book.thumbnail,
-          isbn: book.isbn
-        })
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        const savedBook = {
-          ...result.data,
-          id: result.data.id
+          isbn: book.isbn,
+          isManualEntry: false
         }
         
-        onSelect(savedBook)
-        
-        if (result.data.alreadyExists) {
-          toast.success('이미 커뮤니티에 등록된 도서입니다.')
-        } else {
-          toast.success('도서가 커뮤니티에 추가되었습니다.')
-        }
-      } else {
-        throw new Error(result.error?.message || '도서 저장 실패')
+        onSelect(existingBook)
+        toast.success('커뮤니티 도서를 선택했습니다.')
+        return
       }
+
+      // 새 도서인 경우 임시 ID로 선택 처리 (실제 저장은 독후감 작성 시)
+      const tempBook = {
+        id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // 임시 ID 생성
+        title: book.title,
+        authors: book.authors,
+        publisher: book.publisher,
+        genre: book.genre,
+        thumbnail: book.thumbnail,
+        isbn: book.isbn,
+        isManualEntry: false,
+        // 카카오 원본 데이터 보존 (독후감 작성 시 사용)
+        _kakaoData: {
+          title: book.title,
+          authors: book.authors,
+          publisher: book.publisher,
+          genre: book.genre,
+          thumbnail: book.thumbnail,
+          isbn: book.isbn,
+          url: book.url
+        }
+      }
+      
+      onSelect(tempBook)
+      toast.success('새 도서를 선택했습니다. 독후감 작성 완료 시 커뮤니티에 추가됩니다.')
+      
     } catch (error) {
-      console.error('카카오 도서 저장 실패:', error)
-      toast.error('도서 저장 중 오류가 발생했습니다.')
+      console.error('카카오 도서 선택 실패:', error)
+      toast.error('도서 선택 중 오류가 발생했습니다.')
     }
   }, [onSelect])
 
@@ -218,7 +230,7 @@ export const KakaoBookTab = memo(function KakaoBookTab({
           {!isLoading && books.length > 0 && (
             <span className="flex items-center gap-1">
               <Sparkles className="h-3 w-3" />
-              {books.length}개의 새 도서{totalCount > books.length && ` (총 ${totalCount}개 중)`}
+              {books.length}개의 도서{totalCount > books.length && ` (총 ${totalCount}개 중)`}
             </span>
           )}
         </p>
@@ -238,10 +250,10 @@ export const KakaoBookTab = memo(function KakaoBookTab({
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              새 도서
+              카카오 도서 검색 결과
             </h3>
             <Badge variant="secondary" className="text-xs">
-              선택 시 커뮤니티에 추가됩니다
+              새 도서는 커뮤니티에 추가됩니다
             </Badge>
           </div>
           
@@ -265,6 +277,7 @@ export const KakaoBookTab = memo(function KakaoBookTab({
                       book={book} 
                       onSelect={handleKakaoBookSelect}
                       variant="kakao"
+                      showReviewStatus={true}
                     />
                   </div>
                 )
