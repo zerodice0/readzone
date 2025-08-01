@@ -57,6 +57,7 @@ model User {
   comments Comment[]
   commentLikes CommentLike[]
   drafts   ReviewDraft[]
+  draftAudits ReviewDraftAudit[]
 }
 
 model VerificationToken {
@@ -247,21 +248,78 @@ model ManualBookEntry {
   @@index([submittedBy])
 }
 
-// 독후감 임시저장
+// 독후감 임시저장 (Enhanced)
 model ReviewDraft {
+  // === Core Identity ===
+  id            String   @id @default(cuid())
+  userId        String
+  bookId        String?  // NULL for temporary books
+  
+  // === Content Fields ===
+  title         String?  // Optional custom title
+  content       String   // HTML content (up to 1MB)
+  metadata      String   @default("{}") // JSON metadata
+  
+  // === Enhancement Fields ===
+  bookData      String?  // Kakao API original data (JSON)
+  status        DraftStatus @default(DRAFT)
+  version       Int      @default(1) // Optimistic locking
+  
+  // === Lifecycle Management ===
+  expiresAt     DateTime // Auto-cleanup timestamp
+  lastAccessed  DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // === Relationships ===
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book? @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  audit ReviewDraftAudit[]
+  
+  // === Optimized Indexes ===
+  @@index([userId, updatedAt(sort: Desc)], name: "user_drafts_timeline")
+  @@index([expiresAt, status], name: "cleanup_queue")
+  @@index([status, lastAccessed], name: "status_activity")
+  @@index([bookId], name: "book_drafts")
+  @@index([userId, status], name: "user_status")
+  
+  @@map("review_drafts")
+}
+
+// === Enhanced Draft System Enums ===
+enum DraftStatus {
+  DRAFT     // Active draft
+  EXPIRED   // Expired but not cleaned
+  ABANDONED // User explicitly abandoned
+  MIGRATED  // Converted to published review
+  
+  @@map("draft_status")
+}
+
+enum AuditAction {
+  CREATED
+  UPDATED
+  BOOK_SYNCED
+  EXPIRED
+  DELETED
+  
+  @@map("audit_action")
+}
+
+// === Draft Audit System ===
+model ReviewDraftAudit {
   id        String   @id @default(cuid())
+  draftId   String
   userId    String
-  bookId    String?
-  title     String?
-  content   String
-  metadata  String   @default("{}") // JSON 메타데이터 (태그, 설정 등)
+  action    AuditAction
+  oldData   String?  // JSON snapshot
+  newData   String?  // JSON snapshot
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book Book? @relation(fields: [bookId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([bookId])
-  @@index([updatedAt])
+  
+  draft ReviewDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([draftId, createdAt])
+  @@index([userId, createdAt])
+  @@map("review_draft_audit")
 }
