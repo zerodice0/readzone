@@ -55,6 +55,7 @@ test-*.ts
 
 # Claude settings (contains local configurations)
 .claude/settings.local.json
+.serena/
 
 # temporary scripts for testing
 scripts/test-*.ts
