@@ -90,7 +90,7 @@ export async function GET(
           })
         ])
         
-        data = reviews.map(review => ({
+        data = reviews.map((review: typeof reviews[0]) => ({
           ...review,
           book: {
             ...review.book,
@@ -130,7 +130,7 @@ export async function GET(
           })
         ])
         
-        data = opinions.map(opinion => ({
+        data = opinions.map((opinion: typeof opinions[0]) => ({
           ...opinion,
           book: {
             ...opinion.book,
@@ -171,7 +171,7 @@ export async function GET(
           })
         ])
         
-        data = comments.map(comment => ({
+        data = comments.map((comment: typeof comments[0]) => ({
           ...comment,
           review: {
             ...comment.review,

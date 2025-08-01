@@ -3,7 +3,7 @@
  * Provides live metrics and alerts during test execution
  */
 
-import { chromium, Browser, Page } from '@playwright/test'
+import { chromium, type Browser, type Page } from '@playwright/test'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
@@ -476,11 +476,11 @@ export class PerformanceMonitor {
 
     // Check system resources
     const systemReport = this.generateSystemReport()
-    if (systemReport.cpu?.p95 > 80) {
+    if (systemReport.cpu?.p95 && systemReport.cpu.p95 > 80) {
       recommendations.push('Consider scaling up CPU resources - P95 CPU usage exceeds 80%')
     }
 
-    if (systemReport.memory?.p95 > 85) {
+    if (systemReport.memory?.p95 && systemReport.memory.p95 > 85) {
       recommendations.push('Optimize memory usage or increase available memory')
     }
 

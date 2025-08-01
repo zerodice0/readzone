@@ -9,7 +9,7 @@
  * - Success Rate: >99.9%
  */
 
-import { test, expect, Page, BrowserContext } from '@playwright/test'
+import { test, type Page, type BrowserContext } from '@playwright/test'
 import { performance } from 'perf_hooks'
 
 // Test Configuration
@@ -116,14 +116,12 @@ class MetricsCollector {
 // Virtual User Class
 class VirtualUser {
   private page: Page
-  private context: BrowserContext
   private userId: string
   private authToken: string
   private metrics: MetricsCollector
 
-  constructor(page: Page, context: BrowserContext, userId: string, metrics: MetricsCollector) {
+  constructor(page: Page, _context: BrowserContext, userId: string, metrics: MetricsCollector) {
     this.page = page
-    this.context = context
     this.userId = userId
     this.metrics = metrics
     this.authToken = ''
@@ -268,7 +266,7 @@ class VirtualUser {
   private async scenarioCreateAndSaveDraft() {
     // User creates new draft and saves multiple times
     const content = this.generateDraftContent()
-    const draftId = await this.saveDraft(content)
+    await this.saveDraft(content)
     
     // Simulate auto-save every 30 seconds
     for (let i = 0; i < 3; i++) {
@@ -448,23 +446,23 @@ test.describe('Draft System Load Test', () => {
 
 // Stress Test - Beyond Normal Load
 test.describe('Draft System Stress Test', () => {
-  test.skip('Stress test - 2x normal load', async ({ browser }) => {
+  test.skip('Stress test - 2x normal load', async ({ browser: _browser }) => {
     // Double the normal load to find breaking point
-    const stressConfig = {
-      ...CONFIG,
-      targetVirtualUsers: CONFIG.targetVirtualUsers * 2,
-      targetTPS: CONFIG.targetTPS * 2,
-      testDuration: 180 // 3 minutes
-    }
+    // const stressConfig = {
+    //   ...CONFIG,
+    //   targetVirtualUsers: CONFIG.targetVirtualUsers * 2,
+    //   targetTPS: CONFIG.targetTPS * 2,
+    //   testDuration: 180 // 3 minutes
+    // }
 
-    console.log('💥 Starting stress test with 2x load:', stressConfig)
+    // console.log('💥 Starting stress test with 2x load:', stressConfig)
     // Similar implementation to load test but with higher load
   })
 })
 
 // Spike Test - Sudden Load Increase
 test.describe('Draft System Spike Test', () => {
-  test.skip('Spike test - sudden load increase', async ({ browser }) => {
+  test.skip('Spike test - sudden load increase', async ({ browser: _browser }) => {
     // Test system behavior under sudden load spikes
     console.log('⚡ Starting spike test...')
     
@@ -477,13 +475,13 @@ test.describe('Draft System Spike Test', () => {
 
 // Endurance Test - Extended Duration
 test.describe('Draft System Endurance Test', () => {
-  test.skip('Endurance test - 1 hour sustained load', async ({ browser }) => {
+  test.skip('Endurance test - 1 hour sustained load', async ({ browser: _browser }) => {
     // Test system stability over extended period
-    const enduranceConfig = {
-      ...CONFIG,
-      testDuration: 3600, // 1 hour
-      targetVirtualUsers: 500 // Moderate sustained load
-    }
+    // const enduranceConfig = {
+    //   ...CONFIG,
+    //   testDuration: 3600, // 1 hour
+    //   targetVirtualUsers: 500 // Moderate sustained load
+    // }
 
     console.log('⏱️ Starting endurance test for 1 hour...')
     // Monitor for memory leaks, connection pool exhaustion, etc.

@@ -104,7 +104,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     })
 
     // 응답 데이터 포맷팅
-    const formattedBooks = books.map(book => ({
+    const formattedBooks = books.map((book: typeof books[0]) => ({
       id: book.id,
       title: book.title,
       authors: JSON.parse(book.authors),

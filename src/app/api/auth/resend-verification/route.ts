@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { logger } from '@/lib/logger'
+import { manageVerificationToken } from '@/lib/prisma-utils'
 import {
   getClientIP,
   validateRequestSecurity,
@@ -250,23 +251,8 @@ export async function POST(req: NextRequest) {
       token = generateSecureToken()
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24시간 후 만료
 
-      await prisma.$transaction(async (tx) => {
-        // Delete existing tokens for this email
-        await tx.verificationToken.deleteMany({
-          where: {
-            identifier: email,
-          },
-        })
-
-        // Create new verification token
-        await tx.verificationToken.create({
-          data: {
-            identifier: email,
-            token,
-            expires,
-          },
-        })
-      })
+      // 트랜잭션으로 토큰 교체 처리
+      await manageVerificationToken(email, token, expires)
       
       logger.info('Verification token created successfully', {
         email,

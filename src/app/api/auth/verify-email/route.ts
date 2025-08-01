@@ -4,6 +4,7 @@ import { verifyEmailSchema } from '@/lib/validations'
 import type { VerifyEmailResponse } from '@/types/auth'
 import { AuthErrorCode, createAuthError } from '@/types/error'
 import { handleAuthError, createErrorContext, createErrorResponse } from '@/lib/error-handler'
+import { completeEmailVerification } from '@/lib/prisma-utils'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -92,20 +93,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // 트랜잭션으로 이메일 인증 완료 처리
-    await prisma.$transaction(async (tx) => {
-      // 사용자 이메일 인증 완료
-      await tx.user.update({
-        where: { id: user.id },
-        data: {
-          emailVerified: new Date(),
-        },
-      })
-
-      // 사용된 토큰 삭제
-      await tx.verificationToken.delete({
-        where: { token },
-      })
-    })
+    await completeEmailVerification(user.id, token)
 
     return NextResponse.json(
       {

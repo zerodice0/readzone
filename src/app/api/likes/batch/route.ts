@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import type { PrismaTransaction } from '@/types/prisma'
 
 // 배치 요청 스키마
 const batchLikeSchema = z.object({
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const results: BatchResult = {}
 
     // 트랜잭션으로 모든 좋아요 처리를 원자적으로 실행
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: PrismaTransaction) => {
       // 독후감 좋아요 처리
       for (const reviewId of reviewIds) {
         const key = `review-${reviewId}`

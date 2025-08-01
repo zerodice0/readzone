@@ -6,6 +6,7 @@ import {
   logCommentAction 
 } from '@/lib/comment-security'
 import { logger } from '@/lib/logger'
+import type { PrismaTransaction } from '@/types/prisma'
 
 interface RouteParams {
   params: Promise<{
@@ -71,7 +72,7 @@ export async function POST(
                      'unknown'
 
     // 트랜잭션으로 좋아요 토글 및 카운트 조회를 원자적으로 처리
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: PrismaTransaction) => {
       // 기존 좋아요 확인
       const existingLike = await tx.commentLike.findUnique({
         where: {
@@ -199,7 +200,7 @@ export async function DELETE(
                      'unknown'
 
     // 트랜잭션으로 좋아요 삭제 및 카운트 조회
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: PrismaTransaction) => {
       // 기존 좋아요 확인 및 삭제
       const deletedLike = await tx.commentLike.deleteMany({
         where: {

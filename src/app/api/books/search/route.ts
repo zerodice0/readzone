@@ -107,7 +107,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           }
         })
 
-        const formattedBooks = books.map(book => ({
+        const formattedBooks = books.map((book: typeof books[0]) => ({
           id: book.id,
           title: book.title,
           authors: JSON.parse(book.authors),

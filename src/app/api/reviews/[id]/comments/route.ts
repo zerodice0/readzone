@@ -114,7 +114,7 @@ export async function GET(
     ])
 
     // 댓글 데이터 가공
-    const processedComments = comments.map(comment => ({
+    const processedComments = comments.map((comment: typeof comments[0]) => ({
       id: comment.id,
       content: comment.content,
       createdAt: comment.createdAt,
@@ -126,7 +126,7 @@ export async function GET(
       userId: comment.userId,
       reviewId: comment.reviewId,
       user: comment.user,
-      replies: comment.replies?.map(reply => ({
+      replies: comment.replies?.map((reply: NonNullable<typeof comment.replies>[0]) => ({
         ...reply,
         isLiked: false, // replies에는 likes 정보가 포함되지 않음
         canEdit: currentUserId === reply.userId,

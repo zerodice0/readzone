@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import type { PrismaTransaction } from '@/types/prisma'
 
 interface RouteParams {
   params: Promise<{
@@ -68,7 +69,7 @@ export async function POST(
     }
 
     // 트랜잭션으로 좋아요 토글 및 카운트 조회를 원자적으로 처리
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: PrismaTransaction) => {
       // 기존 좋아요 확인
       const existingLike = await tx.reviewLike.findUnique({
         where: {

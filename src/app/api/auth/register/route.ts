@@ -6,6 +6,7 @@ import type { RegisterResponse } from '@/types/auth'
 import { logger } from '@/lib/logger'
 import { AuthErrorCode, createAuthError } from '@/types/error'
 import { handleAuthError, createErrorContext, createErrorResponse } from '@/lib/error-handler'
+import { createUserWithTransaction } from '@/lib/prisma-utils'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   let body: any = null
@@ -67,29 +68,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24시간
 
     // 트랜잭션으로 사용자 생성 및 인증 토큰 저장
-    const result = await prisma.$transaction(async (tx) => {
-      // 사용자 생성
-      const newUser = await tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          nickname,
-          name: nickname, // NextAuth 호환성을 위해 name도 설정
-          emailVerified: null, // 이메일 인증 전이므로 null
-        },
-      })
-
-      // 이메일 인증 토큰 저장
-      await tx.verificationToken.create({
-        data: {
-          identifier: email,
-          token: verificationToken,
-          expires: tokenExpires,
-        },
-      })
-
-      return newUser
-    })
+    const { user: result } = await createUserWithTransaction(
+      {
+        email,
+        password: hashedPassword,
+        nickname,
+        name: nickname, // NextAuth 호환성을 위해 name도 설정
+        emailVerified: null, // 이메일 인증 전이므로 null
+      },
+      async (tx) => {
+        // 이메일 인증 토큰 저장
+        const verificationTokenRecord = await tx.verificationToken.create({
+          data: {
+            identifier: email,
+            token: verificationToken,
+            expires: tokenExpires,
+          },
+        })
+        return { verificationTokenRecord }
+      }
+    )
 
     // 이메일 인증 메일 발송
     try {

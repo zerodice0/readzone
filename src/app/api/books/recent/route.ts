@@ -44,7 +44,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     })
 
     // 응답 형태 변환
-    const formattedBooks = recentBooks.map(book => ({
+    const formattedBooks = recentBooks.map((book: typeof recentBooks[0]) => ({
       id: book.id,
       title: book.title,
       authors: JSON.parse(book.authors),

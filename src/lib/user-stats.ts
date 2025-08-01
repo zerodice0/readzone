@@ -228,9 +228,9 @@ async function getGenreStats(userId: string): Promise<Array<{ genre: string; cou
       LIMIT 10
     `
 
-    const totalCount = genreData.reduce((sum, item) => sum + Number(item.count), 0)
+    const totalCount = genreData.reduce((sum: number, item: typeof genreData[0]) => sum + Number(item.count), 0)
     
-    return genreData.map(item => ({
+    return genreData.map((item: typeof genreData[0]) => ({
       genre: item.genre,
       count: Number(item.count),
       percentage: totalCount > 0 ? Number(item.count) / totalCount : 0
@@ -305,7 +305,7 @@ async function getMonthlyActivity(userId: string): Promise<Array<{
       ORDER BY m.month DESC
     `
 
-    return monthlyData.map(item => ({
+    return monthlyData.map((item: typeof monthlyData[0]) => ({
       month: item.month,
       reviewCount: Number(item.reviewCount),
       opinionCount: Number(item.opinionCount),

@@ -12,6 +12,7 @@ import {
 } from '@/lib/validations'
 import { commentInclude } from '@/types/comment'
 import { logger } from '@/lib/logger'
+import type { PrismaTransaction } from '@/types/prisma'
 
 interface RouteParams {
   params: Promise<{
@@ -85,7 +86,7 @@ export async function GET(
       userId: detailedComment.userId,
       reviewId: detailedComment.reviewId,
       user: detailedComment.user,
-      replies: detailedComment.replies?.map(reply => ({
+      replies: detailedComment.replies?.map((reply: NonNullable<typeof detailedComment.replies>[0]) => ({
         ...reply,
         isLiked: false, // replies에는 likes 정보가 포함되지 않음
         canEdit: currentUserId === reply.userId,
@@ -363,7 +364,7 @@ export async function DELETE(
                      'unknown'
 
     // 트랜잭션으로 소프트 삭제 및 관련 데이터 정리
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: PrismaTransaction) => {
       // 답글이 있는지 확인
       const replyCount = await tx.comment.count({
         where: {
