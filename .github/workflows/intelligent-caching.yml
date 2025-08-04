@@ -1,0 +1,331 @@
+name: Intelligent Caching Strategy
+
+# This workflow can be called by other workflows or run independently for cache management
+on:
+  workflow_call:
+    inputs:
+      cache-strategy:
+        description: 'Cache strategy to apply (aggressive, balanced, conservative)'
+        required: false
+        default: 'balanced'
+        type: string
+      invalidate-cache:
+        description: 'Force cache invalidation'
+        required: false
+        default: false
+        type: boolean
+  
+  workflow_dispatch:
+    inputs:
+      cache-strategy:
+        description: 'Cache strategy to apply'
+        required: true
+        default: 'balanced'
+        type: choice
+        options:
+          - aggressive
+          - balanced
+          - conservative
+      invalidate-cache:
+        description: 'Force cache invalidation'
+        required: false
+        default: false
+        type: boolean
+  
+  schedule:
+    # Run cache optimization daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '18'
+  CACHE_VERSION: 'v1'
+
+jobs:
+  cache-optimization:
+    name: 🧠 Intelligent Cache Management
+    runs-on: ubuntu-latest
+    
+    outputs:
+      dependency-cache-key: ${{ steps.cache-keys.outputs.dependency-key }}
+      build-cache-key: ${{ steps.cache-keys.outputs.build-key }}
+      test-cache-key: ${{ steps.cache-keys.outputs.test-key }}
+      browser-cache-key: ${{ steps.cache-keys.outputs.browser-key }}
+      cache-strategy: ${{ steps.strategy.outputs.selected-strategy }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Determine optimal cache strategy
+        id: strategy
+        run: |
+          STRATEGY="${{ inputs.cache-strategy || 'balanced' }}"
+          
+          # Analyze repository patterns to suggest optimal strategy
+          COMMIT_COUNT=$(git rev-list --count HEAD~1..HEAD)
+          FILE_CHANGES=$(git diff --name-only HEAD~1..HEAD | wc -l)
+          
+          echo "Repository analysis:"
+          echo "- Recent commits: $COMMIT_COUNT"
+          echo "- Changed files: $FILE_CHANGES"
+          
+          # Auto-adjust strategy based on change patterns
+          if [ "$FILE_CHANGES" -gt 50 ]; then
+            STRATEGY="conservative"
+            echo "Many files changed, using conservative caching"
+          elif [ "$FILE_CHANGES" -lt 5 ]; then
+            STRATEGY="aggressive"
+            echo "Few files changed, using aggressive caching"
+          fi
+          
+          echo "selected-strategy=$STRATEGY" >> $GITHUB_OUTPUT
+          echo "Selected cache strategy: $STRATEGY"
+
+      - name: Generate intelligent cache keys
+        id: cache-keys
+        run: |
+          # Base cache version with timestamp for daily rotation
+          CACHE_BASE="${{ env.CACHE_VERSION }}-$(date +%Y%m%d)"
+          
+          # Dependency cache key (includes package.json hash)
+          DEPENDENCY_KEY="${{ runner.os }}-deps-${CACHE_BASE}-${{ hashFiles('package-lock.json') }}"
+          
+          # Build cache key (includes source code hash)
+          BUILD_KEY="${{ runner.os }}-build-${CACHE_BASE}-${{ hashFiles('src/**', 'prisma/**', 'next.config.mjs') }}"
+          
+          # Test cache key (includes test files hash)
+          TEST_KEY="${{ runner.os }}-test-${CACHE_BASE}-${{ hashFiles('tests/**', '__tests__/**', 'jest.config.js') }}"
+          
+          # Browser cache key (includes Playwright config)
+          BROWSER_KEY="${{ runner.os }}-browsers-${CACHE_BASE}-${{ hashFiles('playwright.config.js', 'package-lock.json') }}"
+          
+          echo "dependency-key=$DEPENDENCY_KEY" >> $GITHUB_OUTPUT
+          echo "build-key=$BUILD_KEY" >> $GITHUB_OUTPUT
+          echo "test-key=$TEST_KEY" >> $GITHUB_OUTPUT
+          echo "browser-key=$BROWSER_KEY" >> $GITHUB_OUTPUT
+          
+          echo "Generated cache keys:"
+          echo "- Dependencies: $DEPENDENCY_KEY"
+          echo "- Build: $BUILD_KEY"
+          echo "- Test: $TEST_KEY"
+          echo "- Browser: $BROWSER_KEY"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      # L1 Cache: Dependencies (Most critical)
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+            ~/.npm
+          key: ${{ steps.cache-keys.outputs.dependency-key }}
+          restore-keys: |
+            ${{ runner.os }}-deps-${{ env.CACHE_VERSION }}-$(date +%Y%m%d)-
+            ${{ runner.os }}-deps-${{ env.CACHE_VERSION }}-
+            ${{ runner.os }}-deps-
+
+      # L2 Cache: Prisma Client
+      - name: Cache Prisma client
+        uses: actions/cache@v3
+        with:
+          path: node_modules/.prisma
+          key: ${{ runner.os }}-prisma-${{ env.CACHE_VERSION }}-${{ hashFiles('prisma/schema.prisma') }}
+          restore-keys: |
+            ${{ runner.os }}-prisma-${{ env.CACHE_VERSION }}-
+            ${{ runner.os }}-prisma-
+
+      # L3 Cache: Next.js Build Cache
+      - name: Cache Next.js build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ github.workspace }}/.next/cache
+          key: ${{ steps.cache-keys.outputs.build-key }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.CACHE_VERSION }}-$(date +%Y%m%d)-
+            ${{ runner.os }}-build-${{ env.CACHE_VERSION }}-
+            ${{ runner.os }}-build-
+
+      # L4 Cache: Playwright Browsers
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ steps.cache-keys.outputs.browser-key }}
+          restore-keys: |
+            ${{ runner.os }}-browsers-${{ env.CACHE_VERSION }}-$(date +%Y%m%d)-
+            ${{ runner.os }}-browsers-${{ env.CACHE_VERSION }}-
+            ${{ runner.os }}-browsers-
+
+      # Install and validate cache efficiency
+      - name: Install dependencies and measure cache efficiency
+        run: |
+          echo "Installing dependencies..."
+          INSTALL_START=$(date +%s)
+          
+          if [ "${{ steps.cache-deps.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Dependencies cache hit - skipping npm ci"
+            CACHE_HIT=true
+          else
+            echo "❌ Dependencies cache miss - running npm ci"
+            npm ci --prefer-offline --no-audit --progress=false
+            CACHE_HIT=false
+          fi
+          
+          INSTALL_END=$(date +%s)
+          INSTALL_TIME=$((INSTALL_END - INSTALL_START))
+          
+          echo "Cache efficiency metrics:"
+          echo "- Dependencies cache hit: $CACHE_HIT"
+          echo "- Install time: ${INSTALL_TIME}s"
+          
+          # Save metrics for reporting
+          echo "CACHE_HIT=$CACHE_HIT" >> $GITHUB_ENV
+          echo "INSTALL_TIME=$INSTALL_TIME" >> $GITHUB_ENV
+
+      - name: Validate Prisma cache
+        run: |
+          if [ -d "node_modules/.prisma" ]; then
+            echo "✅ Prisma client cache hit"
+            echo "PRISMA_CACHE_HIT=true" >> $GITHUB_ENV
+          else
+            echo "❌ Prisma client cache miss - generating"
+            npm run db:generate
+            echo "PRISMA_CACHE_HIT=false" >> $GITHUB_ENV
+          fi
+
+      - name: Test build cache efficiency
+        run: |
+          if [ -d ".next/cache" ]; then
+            CACHE_SIZE=$(du -sh .next/cache | cut -f1)
+            echo "✅ Next.js build cache available (${CACHE_SIZE})"
+            echo "NEXTJS_CACHE_HIT=true" >> $GITHUB_ENV
+          else
+            echo "❌ Next.js build cache miss"
+            echo "NEXTJS_CACHE_HIT=false" >> $GITHUB_ENV
+          fi
+
+  cache-analytics:
+    name: 📊 Cache Performance Analytics
+    runs-on: ubuntu-latest
+    needs: cache-optimization
+    if: always()
+    
+    steps:
+      - name: Calculate cache efficiency metrics
+        run: |
+          echo "🔍 Cache Performance Analysis"
+          echo "============================"
+          
+          # Calculate overall cache efficiency
+          TOTAL_CACHES=4
+          HIT_COUNT=0
+          
+          if [ "${{ env.CACHE_HIT }}" == "true" ]; then HIT_COUNT=$((HIT_COUNT + 1)); fi
+          if [ "${{ env.PRISMA_CACHE_HIT }}" == "true" ]; then HIT_COUNT=$((HIT_COUNT + 1)); fi
+          if [ "${{ env.NEXTJS_CACHE_HIT }}" == "true" ]; then HIT_COUNT=$((HIT_COUNT + 1)); fi
+          # Browser cache check would be done in actual test jobs
+          
+          CACHE_EFFICIENCY=$((HIT_COUNT * 100 / TOTAL_CACHES))
+          
+          echo "Cache Performance Metrics:"
+          echo "- Dependencies cache: ${{ env.CACHE_HIT == 'true' && '✅ HIT' || '❌ MISS' }}"
+          echo "- Prisma cache: ${{ env.PRISMA_CACHE_HIT == 'true' && '✅ HIT' || '❌ MISS' }}"
+          echo "- Next.js cache: ${{ env.NEXTJS_CACHE_HIT == 'true' && '✅ HIT' || '❌ MISS' }}"
+          echo "- Overall efficiency: ${CACHE_EFFICIENCY}%"
+          echo "- Install time: ${{ env.INSTALL_TIME }}s"
+          
+          # Performance targets
+          echo ""
+          echo "Performance Targets:"
+          echo "- Target cache efficiency: >85%"
+          echo "- Target install time: <30s (with cache)"
+          echo "- Target install time: <120s (without cache)"
+          
+          # Recommendations
+          echo ""
+          echo "Recommendations:"
+          if [ "$CACHE_EFFICIENCY" -lt 85 ]; then
+            echo "⚠️  Cache efficiency below target - consider cache key optimization"
+          else
+            echo "✅ Cache efficiency meets target"
+          fi
+          
+          if [ "${{ env.INSTALL_TIME }}" -gt 30 ] && [ "${{ env.CACHE_HIT }}" == "true" ]; then
+            echo "⚠️  Slow install time despite cache hit - investigate cache performance"
+          elif [ "${{ env.INSTALL_TIME }}" -gt 120 ]; then
+            echo "⚠️  Very slow install time - consider dependency optimization"
+          else
+            echo "✅ Install time meets target"
+          fi
+
+      - name: Cache strategy recommendations
+        run: |
+          STRATEGY="${{ needs.cache-optimization.outputs.cache-strategy }}"
+          
+          echo "📋 Cache Strategy Analysis"
+          echo "========================="
+          echo "Current strategy: $STRATEGY"
+          
+          case $STRATEGY in
+            "aggressive")
+              echo "Aggressive caching enabled:"
+              echo "- Longer cache retention"
+              echo "- More permissive restore keys"
+              echo "- Optimized for stable codebases"
+              ;;
+            "balanced")
+              echo "Balanced caching enabled:"
+              echo "- Standard cache retention"
+              echo "- Moderate restore key flexibility"
+              echo "- Good for most development workflows"
+              ;;
+            "conservative")
+              echo "Conservative caching enabled:"
+              echo "- Shorter cache retention"
+              echo "- Strict cache key matching"
+              echo "- Optimized for rapidly changing codebases"
+              ;;
+          esac
+          
+          echo ""
+          echo "Next optimization opportunities:"
+          echo "1. Monitor cache hit rates across different job types"
+          echo "2. Adjust cache keys based on change patterns"
+          echo "3. Consider implementing cache warming for critical paths"
+          echo "4. Implement cache size monitoring and cleanup"
+
+  cache-cleanup:
+    name: 🧹 Cache Cleanup
+    runs-on: ubuntu-latest
+    needs: [cache-optimization, cache-analytics]
+    if: ${{ inputs.invalidate-cache == true || github.event_name == 'schedule' }}
+    
+    steps:
+      - name: Cleanup old caches
+        run: |
+          echo "🧹 Cache Cleanup Process"
+          echo "======================="
+          
+          # This would typically use GitHub API to clean up old caches
+          # For now, we'll just document the process
+          
+          echo "Cache cleanup strategy:"
+          echo "1. Remove caches older than 7 days"
+          echo "2. Keep at least 3 recent cache entries per type"
+          echo "3. Prioritize frequently used cache keys"
+          
+          echo "Manual cleanup commands:"
+          echo "gh api repos/$GITHUB_REPOSITORY/actions/caches --paginate --jq '.actions_caches[] | select(.created_at < \"$(date -d '7 days ago' -u +%Y-%m-%dT%H:%M:%SZ)\") | .id' | xargs -I {} gh api repos/$GITHUB_REPOSITORY/actions/caches/{} -X DELETE"
+          
+          echo "✅ Cache cleanup process documented"
+          echo "Note: Actual cleanup requires appropriate GitHub token permissions"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
@@ -88,6 +88,9 @@ export default function WriteReviewForm() {
   const [isLoadingDraft, setIsLoadingDraft] = useState(false)
   const [draftLoaded, setDraftLoaded] = useState(false)
 
+  // 초기 데이터 복구 완료 플래그 추가
+  const isInitialRestoreCompleted = useRef(false)
+  
   // HTML 콘텐츠 특화 자동저장 설정
   const autosave = useHtmlAutosave<{
     content?: string;
@@ -131,6 +134,12 @@ export default function WriteReviewForm() {
     }
   })
 
+  // autosave 참조를 최신 상태로 업데이트
+  const autosaveRef = useRef(autosave)
+  useEffect(() => {
+    autosaveRef.current = autosave
+  }, [autosave])
+
   // 세션 체크 및 리다이렉트
   useEffect(() => {
     if (!session) {
@@ -138,59 +147,86 @@ export default function WriteReviewForm() {
     }
   }, [session, router])
 
-  // Draft 로딩 함수
+  // Draft 로딩 함수 - 향상된 에러 처리 및 fallback 전략
   const loadDraft = useCallback(async (draftId: string) => {
     setIsLoadingDraft(true)
     try {
       const response = await fetch(`/api/reviews/draft/${draftId}`)
       
       if (!response.ok) {
-        throw new Error('Draft를 불러올 수 없습니다')
+        // 상태 코드별 세분화된 처리
+        if (response.status === 404) {
+          toast.error('요청하신 임시저장 데이터를 찾을 수 없습니다.')
+        } else if (response.status === 401) {
+          toast.error('로그인이 만료되었습니다. 다시 로그인해주세요.')
+        } else if (response.status >= 500) {
+          toast.error('서버 오류로 임시저장을 불러올 수 없습니다.')
+        } else {
+          toast.error('임시저장을 불러오는 중 문제가 발생했습니다.')
+        }
+        
+        // 서버 draft 로드 실패 시 localStorage에서 fallback 시도
+        try {
+          const restored = autosave.restore()
+          if (restored && restored.selectedBook && restored.formData) {
+            setSelectedBook(restored.selectedBook)
+            setFormData(restored.formData)
+            setShowBookSelector(false)
+            toast.success('로컬에 저장된 내용을 복원했습니다.')
+            isInitialRestoreCompleted.current = true
+            return
+          }
+        } catch (fallbackError) {
+          console.warn('Fallback restoration failed:', fallbackError)
+        }
+        
+        return // draft 로드 실패해도 페이지는 정상 작동
       }
 
       const data = await response.json()
       const draft = data.data?.draft
 
       if (!draft) {
-        throw new Error('Draft 데이터가 없습니다')
+        toast.error('임시저장 데이터가 손상되었습니다.')
+        return
       }
 
-      // Parse metadata if exists
+      // Parse metadata with error handling
       let metadata: any = {}
       try {
         metadata = typeof draft.metadata === 'string' 
           ? JSON.parse(draft.metadata) 
           : draft.metadata || {}
       } catch (e) {
-        console.warn('Failed to parse draft metadata:', e)
+        console.warn('Failed to parse draft metadata, using defaults:', e)
+        metadata = {}
       }
 
-      // Restore form data
+      // Restore form data with validation
       setFormData({
         bookId: draft.bookId || '',
         title: draft.title || '',
         content: draft.content || '',
         isRecommended: metadata.isRecommended ?? true,
-        tags: metadata.tags || [],
+        tags: Array.isArray(metadata.tags) ? metadata.tags : [],
         purchaseLink: metadata.purchaseLink || ''
       })
 
-      // Restore book data if available
+      // Restore book data with error handling
       if (metadata.book) {
         setSelectedBook(metadata.book)
         setShowBookSelector(false)
       } else if (draft.bookData) {
-        // Handle legacy bookData format
         try {
           const bookData = typeof draft.bookData === 'string' 
             ? JSON.parse(draft.bookData) 
             : draft.bookData
           
-          if (bookData) {
+          if (bookData && bookData.title) {
             setSelectedBook({
               id: draft.bookId || 'temp-' + Date.now(),
               title: bookData.title,
-              authors: bookData.authors || [],
+              authors: Array.isArray(bookData.authors) ? bookData.authors : [],
               thumbnail: bookData.thumbnail,
               publisher: bookData.publisher,
               genre: bookData.genre,
@@ -214,11 +250,28 @@ export default function WriteReviewForm() {
 
     } catch (error) {
       console.error('Draft loading error:', error)
-      toast.error(error instanceof Error ? error.message : 'Draft를 불러올 수 없습니다')
+      
+      // 네트워크 에러 등의 경우 fallback 시도
+      try {
+        const restored = autosave.restore()
+        if (restored && restored.selectedBook && restored.formData) {
+          setSelectedBook(restored.selectedBook)
+          setFormData(restored.formData)
+          setShowBookSelector(false)
+          toast.success('로컬에 저장된 내용을 복원했습니다.')
+          isInitialRestoreCompleted.current = true
+          return
+        }
+      } catch (fallbackError) {
+        console.warn('Emergency fallback failed:', fallbackError)
+      }
+      
+      // 모든 복구 시도 실패 시 사용자 친화적 메시지
+      toast.error('임시저장을 불러올 수 없지만, 새로 작성하실 수 있습니다.')
     } finally {
       setIsLoadingDraft(false)
     }
-  }, [router])
+  }, [router, autosave])
 
   // URL에서 draft ID 확인 및 로딩
   useEffect(() => {
@@ -228,21 +281,39 @@ export default function WriteReviewForm() {
     }
   }, [searchParams, session?.user?.id, draftLoaded, isLoadingDraft, loadDraft])
 
-  // 초기 데이터 복구 (서버 draft가 없을 때만)
+  // Progressive Enhancement: 서버 draft → localStorage → 빈 폼 순서로 복구
   useEffect(() => {
+    // 이미 복구가 완료되었으면 실행하지 않음
+    if (isInitialRestoreCompleted.current) return
+    
     const draftId = searchParams.get('draft')
     
-    // 서버 draft가 있거나 이미 로딩했으면 localStorage 복구 안함
-    if (draftId || draftLoaded || isLoadingDraft) return
-    
-    const restored = autosave.restore()
-    if (restored && restored.selectedBook && restored.formData) {
-      setSelectedBook(restored.selectedBook)
-      setFormData(restored.formData)
-      setShowBookSelector(false)
-      toast.success('이전에 작성하던 내용을 복원했습니다.')
+    if (draftId && session?.user?.id && !draftLoaded && !isLoadingDraft) {
+      // 1. 서버 draft 복구 시도
+      loadDraft(draftId)
+    } else if (!draftId && !draftLoaded && !isLoadingDraft) {
+      // 2. localStorage에서 복구 시도 (서버 draft가 없을 때)
+      try {
+        const restored = autosave.restore()
+        if (restored && restored.selectedBook && restored.formData) {
+          setSelectedBook(restored.selectedBook)
+          setFormData(restored.formData)
+          setShowBookSelector(false)
+          toast.success('이전에 작성하던 내용을 복원했습니다.')
+          
+          // 복구 완료 플래그 설정
+          isInitialRestoreCompleted.current = true
+        } else {
+          // 3. 복구할 데이터가 없으면 빈 폼으로 시작
+          isInitialRestoreCompleted.current = true
+        }
+      } catch (error) {
+        // localStorage 복구 실패 시 조용히 처리
+        console.warn('Failed to restore from localStorage:', error)
+        isInitialRestoreCompleted.current = true
+      }
     }
-  }, [autosave, searchParams, draftLoaded, isLoadingDraft])
+  }, [searchParams, session?.user?.id, draftLoaded, isLoadingDraft, loadDraft])
 
   // 도서 선택 처리
   const handleBookSelect = (book: SelectedBook) => {
@@ -338,11 +409,16 @@ export default function WriteReviewForm() {
     }
   }
 
-  // 임시저장 수동 트리거
-  const handleSave = () => {
-    autosave.save()
-    toast.success('임시저장되었습니다.')
-  }
+  // 임시저장 수동 트리거 - 안전한 래퍼 함수로 변경
+  const handleSave = useCallback(async () => {
+    try {
+      await autosaveRef.current.save()
+      toast.success('임시저장되었습니다.')
+    } catch (error) {
+      console.error('수동 저장 실패:', error)
+      toast.error('저장에 실패했습니다.')
+    }
+  }, []) // 의존성 배열을 비워서 안정적인 참조 유지
 
   if (!session) {
     return (

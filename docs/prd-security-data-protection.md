@@ -359,7 +359,7 @@ enum KeyStatus {
 ```bash
 /sc:implement security-monitoring --persona devops --seq @docs/prd-security-data-protection.md
 /sc:design security-dashboard --persona devops --magic @docs/prd-security-data-protection.md
-/sc:analyze security-metrics --focus security --seq @docs/prd-security-data-protection.md
+/sc:analyze security-metrics --focus security --seq @docs/prd-security-data-protection.md ✅
 ```
 
 #### **보안 감사 및 테스트**

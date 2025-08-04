@@ -1,0 +1,114 @@
+# ReadZone Docker Compose - Staging Environment
+version: '3.8'
+
+services:
+  # Next.js Application - Staging
+  readzone-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: readzone-app-staging
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/staging.db
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - KAKAO_BOOK_API_KEY=${KAKAO_BOOK_API_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - readzone-staging-data:/app/data
+      - readzone-staging-logs:/app/logs
+    networks:
+      - readzone-staging-network
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: readzone-redis-staging
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - readzone-staging-redis-data:/data
+    networks:
+      - readzone-staging-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+
+  # Nginx Reverse Proxy (optional - for production-like setup)
+  nginx:
+    image: nginx:alpine
+    container_name: readzone-nginx-staging
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/staging.conf:/etc/nginx/nginx.conf:ro
+      - readzone-staging-logs:/var/log/nginx
+    networks:
+      - readzone-staging-network
+    restart: unless-stopped
+    depends_on:
+      - readzone-app
+    profiles:
+      - proxy
+
+  # Monitoring and observability
+  watchtower:
+    image: containrrr/watchtower
+    container_name: readzone-watchtower-staging  
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300
+      - WATCHTOWER_INCLUDE_STOPPED=true
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+# Volumes for data persistence
+volumes:
+  readzone-staging-data:
+    driver: local
+  readzone-staging-logs:
+    driver: local
+  readzone-staging-redis-data:
+    driver: local
+
+# Networks
+networks:
+  readzone-staging-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

@@ -35,15 +35,25 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Coverage and test results
+# Testing
 coverage/
 .nyc_output
 .coverage
 *.lcov
 test-results/
 playwright-report/
+tests/
+e2e/
+**/__tests__/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+jest.config.js
+jest.setup.js
+playwright.config.ts
 
-# Build outputs
+# Build outputs (keep only necessary for production)
 dist/
 build/
 .next/
@@ -86,51 +96,63 @@ pids
 .pnp
 .pnp.js
 
-# ESLint
+# Linting and formatting
 .eslintcache
-
-# Prettier
 .prettierignore
-
-# Stylelint
 .stylelintcache
 
 # TypeScript
 *.tsbuildinfo
 
-# Optional npm cache directory
+# Package managers
 .npm
+.pnpm-debug.log*
+.yarn-integrity
+*.tgz
 
 # Optional REPL history
 .node_repl_history
 
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env.test
-
-# Local database files
+# Local database files (development only)
 *.sqlite
 *.sqlite3
 *.db
+!prisma/schema.prisma
+!prisma/seed.ts
 
 # Uploads and user-generated content
 uploads/
 public/uploads/
 
-# SSL certificates
+# SSL certificates and secrets
 *.pem
 *.key
 *.crt
+*.p12
 
 # Backup files
 *.backup
 *.bak
 
-# Development specific
+# Development and CI/CD specific
 .vscode/
 *.code-workspace
+.github/
+scripts/run-*.ts
+scripts/validate-*.ts
+scripts/penetration-test.js
+
+# Legacy and backup directories
+docs/legacy-ci/
+
+# Security test reports
+*-security-test-report.json
+*-penetration-test-report.json
+penetration-test-report.json
+security-load-test-report.json
+comprehensive-security-test-report.json
+
+# Monitoring and configuration
+nginx/
+monitoring/
+redis/

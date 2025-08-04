@@ -26,18 +26,30 @@ export function useDraftRestoration({
     setError(null)
 
     try {
-      const response = await fetch('/api/reviews/draft', {
+      // 쿼리 파라미터 추가하여 API 검증 통과
+      const response = await fetch('/api/reviews/draft?page=1&limit=10&includeExpired=false', {
         headers: {
           'Cache-Control': 'no-cache',
         },
       })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch drafts')
+        // 상태 코드별 세분화된 에러 처리
+        if (response.status === 401) {
+          setError('로그인이 만료되었습니다. 다시 로그인해주세요.')
+          return
+        }
+        if (response.status >= 500) {
+          setError('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+          return
+        }
+        // 400 등 기타 에러는 조용히 처리 (사용자 차단 안함)
+        console.warn('Draft fetch failed with status:', response.status)
+        return // 에러 상태 설정하지 않고 조용히 실패
       }
 
       const data = await response.json()
-      const fetchedDrafts = data.data || []
+      const fetchedDrafts = data.data?.items || [] // API 응답 구조에 맞게 수정
       
       setDrafts(fetchedDrafts)
       
@@ -46,8 +58,9 @@ export function useDraftRestoration({
         setIsModalOpen(true)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
-      console.error('Error fetching drafts:', err)
+      // 네트워크 에러 등은 콘솔에만 로그, 사용자 차단하지 않음
+      console.error('Network error fetching drafts:', err)
+      // 네트워크 에러도 페이지 진입을 차단하지 않도록 에러 설정 안함
     } finally {
       setLoading(false)
     }

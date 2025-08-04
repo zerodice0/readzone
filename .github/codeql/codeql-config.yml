@@ -1,0 +1,173 @@
+# CodeQL Configuration for ReadZone Security Analysis
+# Advanced security patterns for Next.js, React, and Node.js applications
+
+name: "ReadZone Security Analysis"
+
+# Disable default queries to use custom query suites
+disable-default-queries: false
+
+# Custom query suites for enhanced security coverage
+queries:
+  # Core security queries
+  - name: javascript-security-extended
+    uses: security-extended
+  
+  # Next.js specific security patterns
+  - name: nextjs-security-patterns
+    uses: ./.github/codeql/queries/
+  
+  # React security patterns
+  - name: react-security-patterns  
+    uses: ./.github/codeql/queries/react/
+    
+  # Node.js backend security
+  - name: nodejs-backend-security
+    uses: ./.github/codeql/queries/nodejs/
+
+# Path filters to focus analysis on security-critical areas
+paths:
+  - "src/app/api/**"          # API routes - highest security priority
+  - "src/lib/auth/**"         # Authentication logic
+  - "src/lib/security/**"     # Security utilities
+  - "src/lib/encryption/**"   # Encryption services
+  - "src/middleware.ts"       # Next.js middleware
+  - "src/app/api/auth/**"     # NextAuth.js configuration
+  - "scripts/**"             # Security scripts
+  
+# Exclude test files and development utilities from security analysis
+paths-ignore:
+  - "**/*.test.ts"
+  - "**/*.spec.ts"
+  - "__tests__/**"
+  - "tests/**"
+  - "*.config.js"
+  - "*.config.ts"
+  - "docs/**"
+  - ".next/**"
+  - "node_modules/**"
+
+# Advanced analysis configuration
+packs:
+  # Use CodeQL security pack for comprehensive coverage
+  javascript:
+    - "codeql/javascript-queries:Security"
+    - "codeql/javascript-queries:SecurityExtended"
+    
+# Extract configuration
+extractor:
+  javascript:
+    # Enable advanced dataflow analysis
+    index:
+      # Increase memory for complex Next.js applications
+      ram: 2048
+      # Extended timeout for thorough analysis
+      timeout: 900
+      
+    # Custom extraction patterns for Next.js
+    buildless:
+      # Include API routes and middleware
+      include:
+        - "src/app/api/**/*.ts"
+        - "src/app/api/**/*.js"
+        - "src/middleware.ts"
+        - "middleware.ts"
+        
+    # TypeScript compilation options
+    typescript:
+      # Enable strict mode analysis
+      strict: true
+      # Include type information for enhanced analysis
+      noImplicitAny: true
+      
+# Custom threat modeling configuration
+threat-models:
+  # Web application security model
+  - name: "web-application"
+    sources:
+      - "RemoteFlowSource"      # User input from HTTP requests
+      - "ClientSideRemoteFlowSource"  # Client-side user input
+    sinks:
+      - "SqlInjectionSink"      # SQL injection vulnerabilities
+      - "XssSink"               # Cross-site scripting sinks
+      - "CommandInjectionSink"  # Command injection vulnerabilities
+      - "PathInjectionSink"     # Path traversal vulnerabilities
+      - "ReflectedXssSink"      # Reflected XSS vulnerabilities
+      - "StoredXssSink"         # Stored XSS vulnerabilities
+      
+  # Authentication and authorization model  
+  - name: "auth-model"
+    sources:
+      - "AuthenticationBypass"  # Authentication bypass sources
+      - "AuthorizationBypass"   # Authorization bypass sources
+    sinks:
+      - "SensitiveDataExposure" # Sensitive data leakage
+      - "PrivilegeEscalation"   # Privilege escalation sinks
+      
+  # Cryptographic security model
+  - name: "crypto-model"
+    sources:
+      - "CryptographicSource"   # Cryptographic operations
+    sinks:
+      - "WeakCryptoSink"        # Weak cryptographic implementations
+      - "HardcodedCredentialsSink"  # Hardcoded secrets
+
+# Analysis performance tuning
+analysis:
+  # Enable all security-relevant analyses
+  cpp:
+    enabled: false
+  csharp:
+    enabled: false
+  go:
+    enabled: false
+  java:
+    enabled: false
+  javascript:
+    enabled: true
+    # Enhanced security analysis settings
+    security:
+      # Enable deep taint tracking
+      taint-tracking: true
+      # Maximum analysis depth
+      max-depth: 10
+      # Enable inter-procedural analysis
+      inter-procedural: true
+      
+  python:
+    enabled: false
+  ruby:
+    enabled: false
+
+# Custom security annotations
+annotations:
+  # Mark security-critical functions
+  - pattern: "authenticate.*"
+    annotation: "security-critical"
+  - pattern: "authorize.*"
+    annotation: "security-critical"
+  - pattern: "encrypt.*"
+    annotation: "security-critical"
+  - pattern: "decrypt.*"
+    annotation: "security-critical"
+  - pattern: "hash.*"
+    annotation: "security-critical"
+  - pattern: "sanitize.*"
+    annotation: "security-critical"
+  - pattern: "validate.*"
+    annotation: "security-critical"
+
+# Security-specific compiler flags
+compile_commands:
+  # TypeScript compilation with security focus
+  - "tsc --strict --noImplicitAny --noImplicitThis --strictNullChecks --strictFunctionTypes"
+  
+# Environment variables for build context
+build_environment:
+  # Disable external network access during analysis
+  NO_NETWORK: "true"
+  # Use test database for analysis
+  DATABASE_URL: "file:./codeql-test.db"
+  # Skip environment validation
+  SKIP_ENV_VALIDATION: "true"
+  # Disable telemetry during analysis
+  NEXT_TELEMETRY_DISABLED: "1"

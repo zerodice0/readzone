@@ -63,8 +63,8 @@ export function DraftRestorationWrapper({
         />
       </DraftErrorBoundary>
       
-      {/* Enhanced error handling with accessibility */}
-      {error && (
+      {/* Enhanced error handling with accessibility - 조용한 처리 */}
+      {error && error.includes('서버 오류') && (
         <div 
           className={`fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${AccessibilityStyles.status.error}`}
           role="alert"
@@ -72,6 +72,12 @@ export function DraftRestorationWrapper({
           aria-label="독후감 초안 오류"
         >
           <p className="text-sm font-medium">{error}</p>
+          <button 
+            className="text-xs underline mt-1 hover:no-underline"
+            onClick={() => window.location.reload()}
+          >
+            새로고침
+          </button>
         </div>
       )}
     </div>

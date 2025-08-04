@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Docker and production deployment configuration
+  output: 'standalone',
+  
   // Image optimization settings (updated for Next.js 15)
   images: {
     remotePatterns: [
@@ -22,12 +25,15 @@ const nextConfig = {
     ],
     formats: ['image/webp', 'image/avif'],
   },
+  
   // Strict mode for better development experience
   reactStrictMode: true,
+  
   // ESLint configuration
   eslint: {
     dirs: ['src'],
   },
+  
   // Performance optimizations for Next.js 15
   experimental: {
     // Enable advanced bundling optimizations
@@ -36,6 +42,32 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000'],
     },
+  },
+  
+  // Production optimizations
+  compress: true,
+  
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+    ]
   },
 }
 
