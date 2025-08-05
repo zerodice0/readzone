@@ -77,6 +77,15 @@ export const createReviewSchema = z.object({
     .url('올바른 URL 형식이 아닙니다.')
     .optional()
     .or(z.literal('')),
+  kakaoData: z.object({
+    title: z.string(),
+    authors: z.array(z.string()),
+    publisher: z.string().optional(),
+    genre: z.string().optional(),
+    thumbnail: z.string().optional(),
+    isbn: z.string().optional(),
+    url: z.string().optional(),
+  }).optional(),
 })
 
 export const updateReviewSchema = createReviewSchema.partial().omit({ bookId: true })

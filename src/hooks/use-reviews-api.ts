@@ -51,6 +51,15 @@ export interface CreateReviewRequest {
   tags: string[]
   purchaseLink?: string
   bookId: string
+  kakaoData?: {
+    title: string
+    authors: string[]
+    publisher?: string
+    genre?: string
+    thumbnail?: string
+    isbn?: string
+    url?: string
+  }
 }
 
 // API 호출 함수들

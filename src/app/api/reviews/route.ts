@@ -7,6 +7,7 @@ import {
   type CreateReviewInput,
   type ListReviewsQuery 
 } from '@/lib/validations'
+import type { CreateReviewRequest } from '@/hooks/use-reviews-api'
 
 /**
  * 독후감 API 라우트
@@ -52,28 +53,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    const data: CreateReviewInput = validationResult.data
+    const data: CreateReviewRequest = validationResult.data
 
     // 임시 도서 ID 확인 (temp_로 시작하는 경우)
     const isTempBook = data.bookId.startsWith('temp_')
     
     // 트랜잭션으로 도서와 독후감 동시 처리
-    const result = await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (transaction) => {
       let finalBookId = data.bookId
       
       if (isTempBook) {
         // 임시 도서인 경우: 카카오 데이터로 새 도서 생성
-        const kakaoData = (data as any)._kakaoData
-        if (!kakaoData) {
+
+        if (!data.kakaoData) {
           throw new Error('임시 도서에 대한 카카오 데이터가 없습니다.')
         }
+        
+        const { title, authors, publisher, genre, thumbnail, isbn } = data.kakaoData
 
         // 중복 도서 확인 (제목 + 첫 번째 저자 조합)
-        const existingBook = await tx.book.findFirst({
+        const existingBook = await transaction.book.findFirst({
           where: {
-            title: kakaoData.title.trim(),
+            title: title.trim(),
             authors: {
-              contains: kakaoData.authors[0]?.trim()
+              contains: authors[0]?.trim()
             }
           }
         })
@@ -82,15 +85,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           // 이미 존재하는 도서 사용
           finalBookId = existingBook.id
         } else {
+
           // 새 도서 생성
-          const newBook = await tx.book.create({
+          const newBook = await transaction.book.create({
             data: {
-              title: kakaoData.title.trim(),
-              authors: JSON.stringify(kakaoData.authors.map((author: string) => author.trim())),
-              publisher: kakaoData.publisher?.trim() || null,
-              genre: kakaoData.genre?.trim() || null,
-              thumbnail: kakaoData.thumbnail || null,
-              isbn: kakaoData.isbn || null,
+              title: title.trim(),
+              authors: JSON.stringify(authors.map((author: string) => author.trim())),
+              publisher: publisher?.trim() || null,
+              genre: genre?.trim() || null,
+              thumbnail: thumbnail || null,
+              isbn: isbn || null,
               isManualEntry: false
             }
           })
@@ -98,7 +102,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
       } else {
         // 기존 도서 존재 확인
-        const book = await tx.book.findUnique({
+        const book = await transaction.book.findUnique({
           where: { id: data.bookId },
           select: { id: true, title: true },
         })
@@ -109,7 +113,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
 
       // 중복 독후감 확인
-      const existingReview = await tx.bookReview.findFirst({
+      const existingReview = await transaction.bookReview.findFirst({
         where: {
           userId: session.user.id,
           bookId: finalBookId,
@@ -122,7 +126,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
 
       // 독후감 생성
-      return await tx.bookReview.create({
+      return await transaction.bookReview.create({
         data: {
           title: data.title,
           content: data.content,

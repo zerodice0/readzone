@@ -28,6 +28,7 @@ import {
   AlertCircle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import type { CreateReviewRequest } from '@/hooks/use-reviews-api'
 
 interface SelectedBook {
   id: string
@@ -37,7 +38,7 @@ interface SelectedBook {
   publisher?: string
   genre?: string
   isbn?: string
-  _kakaoData?: {
+  kakaoData?: {
     title: string
     authors: string[]
     publisher?: string
@@ -231,7 +232,7 @@ export default function WriteReviewForm() {
               publisher: bookData.publisher,
               genre: bookData.genre,
               isbn: bookData.isbn,
-              _kakaoData: bookData
+              kakaoData: bookData
             })
             setShowBookSelector(false)
           }
@@ -355,7 +356,7 @@ export default function WriteReviewForm() {
 
     try {
       // 임시 도서인 경우 카카오 데이터도 함께 전송
-      const requestData: any = {
+      const requestData: CreateReviewRequest = {
         bookId: formData.bookId,
         title: formData.title || undefined,
         content: formData.content,
@@ -366,12 +367,12 @@ export default function WriteReviewForm() {
 
       // 임시 도서인 경우 카카오 원본 데이터 포함 (fallback 포함)
       if (selectedBook && formData.bookId.startsWith('temp_')) {
-        if ('_kakaoData' in selectedBook && selectedBook._kakaoData) {
+        if ('kakaoData' in selectedBook && selectedBook.kakaoData) {
           // 원본 카카오 데이터가 있는 경우
-          requestData._kakaoData = selectedBook._kakaoData
+          requestData.kakaoData = selectedBook.kakaoData
         } else {
           // fallback: selectedBook 자체를 카카오 데이터로 사용
-          requestData._kakaoData = {
+          requestData.kakaoData = {
             title: selectedBook.title,
             authors: selectedBook.authors,
             publisher: selectedBook.publisher,
@@ -384,7 +385,7 @@ export default function WriteReviewForm() {
       }
 
       // 타입 안전한 API 요청
-      const response = await postJson<CreateReviewResponse>('/api/reviews', requestData);
+      const response = await postJson<CreateReviewRequest, CreateReviewResponse>('/api/reviews', requestData);
 
       // 데이터 추출 (타입 안전)
       const data = extractData(response);
@@ -418,7 +419,23 @@ export default function WriteReviewForm() {
       console.error('수동 저장 실패:', error)
       toast.error('저장에 실패했습니다.')
     }
-  }, []) // 의존성 배열을 비워서 안정적인 참조 유지
+  }, [])
+
+
+  // event callback
+  const handlePreview = () => 
+    window.open(`/review/preview?data=${encodeURIComponent(JSON.stringify({ selectedBook, formData }))}`, '_blank');
+
+  const handleChangePurchaseLink = (e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ purchaseLink: e.target.value });
+  const handleCancel = () => {
+    if (confirm('작성을 취소하시겠습니까? 저장되지 않은 내용은 사라집니다.')) {
+      router.push('/')
+    }
+  }
+  const handleChangeTags = (tags: string[]) => updateFormData({ tags });
+  const handleChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ title: e.target.value });
+  const handleChangeIsRecommended = (recommend: boolean) => updateFormData({ isRecommended: recommend });
+  const handleChangeContent = (content: string) => updateFormData({ content });
 
   if (!session) {
     return (
@@ -530,7 +547,7 @@ export default function WriteReviewForm() {
               id="title"
               placeholder="독후감 제목을 입력하세요"
               value={formData.title}
-              onChange={(e) => updateFormData({ title: e.target.value })}
+              onChange={handleChangeTitle}
               maxLength={200}
               className="mt-2"
             />
@@ -547,7 +564,7 @@ export default function WriteReviewForm() {
             <div className="flex items-center gap-4 mt-3">
               <Button
                 variant={formData.isRecommended ? "default" : "outline"}
-                onClick={() => updateFormData({ isRecommended: true })}
+                onClick={() => handleChangeIsRecommended(true)}
                 className="flex items-center gap-2"
               >
                 <Heart className={`h-4 w-4 ${formData.isRecommended ? 'fill-current' : ''}`} />
@@ -555,7 +572,7 @@ export default function WriteReviewForm() {
               </Button>
               <Button
                 variant={!formData.isRecommended ? "default" : "outline"}
-                onClick={() => updateFormData({ isRecommended: false })}
+                onClick={() => handleChangeIsRecommended(false)}
                 className="flex items-center gap-2"
               >
                 <HeartOff className="h-4 w-4" />
@@ -572,7 +589,7 @@ export default function WriteReviewForm() {
             <div className="mt-3">
               <RichTextEditor
                 value={formData.content}
-                onChange={(content) => updateFormData({ content })}
+                onChange={handleChangeContent}
                 placeholder="독후감 내용을 작성해주세요..."
                 height="500px"
                 onSave={handleSave}
@@ -596,7 +613,7 @@ export default function WriteReviewForm() {
             <Label className="text-base font-medium text-gray-900 dark:text-gray-100">해시태그</Label>
             <TagInput
               value={formData.tags}
-              onChange={(tags) => updateFormData({ tags })}
+              onChange={handleChangeTags}
               suggestions={tagSuggestions}
               placeholder="태그를 입력하세요"
               maxTags={10}
@@ -621,7 +638,7 @@ export default function WriteReviewForm() {
                 type="url"
                 placeholder="https://example.com/book"
                 value={formData.purchaseLink}
-                onChange={(e) => updateFormData({ purchaseLink: e.target.value })}
+                onChange={handleChangePurchaseLink}
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -638,11 +655,7 @@ export default function WriteReviewForm() {
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
-                onClick={() => {
-                  if (confirm('작성을 취소하시겠습니까? 저장되지 않은 내용은 사라집니다.')) {
-                    router.push('/')
-                  }
-                }}
+                onClick={handleCancel}
                 disabled={isSubmitting}
               >
                 취소
@@ -664,7 +677,7 @@ export default function WriteReviewForm() {
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => window.open(`/review/preview?data=${encodeURIComponent(JSON.stringify({ selectedBook, formData }))}`, '_blank')}
+                onClick={handlePreview}
                 disabled={isSubmitting || !formData.content}
                 className="hidden sm:flex"
               >

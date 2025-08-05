@@ -147,12 +147,12 @@ export async function safeApiRequest<T>(
 /**
  * JSON 데이터를 POST하는 헬퍼 함수
  */
-export async function postJson<T>(
+export async function postJson<RequestData, ResponseData>(
   url: string,
-  data: unknown,
+  data: RequestData,
   options?: ApiClientOptions
-): Promise<ApiResponse<T>> {
-  return apiRequest<T>(url, {
+): Promise<ApiResponse<ResponseData>> {
+  return apiRequest<ResponseData>(url, {
     ...options,
     method: 'POST',
     headers: {
