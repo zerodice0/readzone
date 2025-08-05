@@ -19,13 +19,11 @@ import type { CreateReviewResponse } from '@/types/api-responses'
 import { 
   Save, 
   Eye, 
-  Clock, 
   BookOpen, 
   Heart, 
   HeartOff,
   Link,
   Loader2,
-  AlertCircle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import type { CreateReviewRequest } from '@/hooks/use-reviews-api'
@@ -459,7 +457,7 @@ export default function WriteReviewForm() {
   return (
     <div className="space-y-6">
       {/* 자동저장 제어 */}
-      <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+      {/* <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -489,7 +487,7 @@ export default function WriteReviewForm() {
             </Button>
           </div>
         </div>
-      </Card>
+      </Card> */}
 
       {/* 도서 선택 */}
       {showBookSelector ? (
