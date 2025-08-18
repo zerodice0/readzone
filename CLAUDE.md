@@ -8,15 +8,33 @@ ReadZone 프로젝트 개발 가이드 - 독서 후 의견을 공유하는 **독
 
 ## 🛠️ 핵심 기술 스택
 
-- **Framework**: Next.js 14+ (App Router)
-- **Language**: TypeScript (strict mode)  
-- **Database**: SQLite + Prisma ORM
-- **Authentication**: NextAuth.js
-- **State**: Zustand + TanStack Query
-- **UI**: Tailwind CSS + Radix UI
-- **Editor**: React Quill 2.0+ (WYSIWYG HTML)
-- **Security**: DOMPurify (XSS 방지)
+### 🌐 배포 및 인프라 (비용 최적화)
+- **배포**: Vercel (Hobby Plan - 무료)
+- **데이터베이스**: Neon PostgreSQL (Free Tier - 무료)
+- **파일 저장소**: Cloudinary (Free Plan - 무료)
+- **이메일**: Resend (3,000개/월 - 무료)
+- **분석**: Google Analytics 4 (추후 도입)
+
+### Backend
+- **Framework**: Hono (서버리스 함수 + API Routes)
+- **Runtime**: Node.js 18+
+- **Language**: TypeScript (strict mode)
+- **ORM**: Prisma (PostgreSQL 최적화)
+- **Authentication**: NextAuth.js + JWT
 - **API**: 카카오 도서 검색 API
+
+### Frontend
+- **Bundler**: Vite
+- **Framework**: React 18+
+- **Language**: TypeScript (strict mode)
+- **State**: Zustand + TanStack Query
+- **UI**: Tailwind CSS + shadcn/ui
+- **Router**: TanStack Router
+- **Forms**: React Hook Form + Zod
+- **Editor**: 
+  - 독후감: @uiw/react-md-editor (Markdown)
+  - 짧은 독후감: Native textarea
+- **Security**: DOMPurify (XSS 방지)
 
 ## 🚨 핵심 개발 규칙
 
@@ -48,7 +66,7 @@ npm run type-check # 타입 체크 (0개 에러 필수)
 4. **비밀번호 찾기** (`/forgot-password`) - 이메일 재설정
 5. **이메일 인증** (`/verify-email`) - 회원가입 후 처리
 6. **도서 검색** (`/search`) - 카카오 API + 수동 입력
-7. **도서 상세** (`/books/[id]`) - 도서 정보 + 280자 의견
+7. **도서 상세** (`/books/[id]`) - 도서 정보 + 독후감 목록
 8. **독후감 작성** (`/write`) - React Quill 에디터 + 자동저장
 9. **독후감 상세** (`/review/[id]`) - 안전한 HTML 렌더링 + 댓글
 10. **프로필** (`/profile/[userId]`) - 기본 정보 + 활동 통계
@@ -58,20 +76,24 @@ npm run type-check # 타입 체크 (0개 에러 필수)
 
 ```
 readzone/
-├── app/                     # Next.js App Router
-│   ├── (auth)/             # 인증: login, register, verify-email
-│   ├── (main)/             # 메인: search, books, write, review, profile, settings  
-│   └── api/                # API Routes: auth, books, reviews
-├── components/             # 재사용 컴포넌트
-│   ├── ui/                # Radix UI 기반
-│   ├── editor/            # React Quill 에디터
-│   ├── feed/              # 피드 시스템
-│   └── book/              # 도서 관련
-├── lib/                   # 유틸리티
-├── hooks/                 # 커스텀 훅
-├── store/                 # Zustand 스토어
-├── types/                 # TypeScript 타입
-└── prisma/               # 데이터베이스
+├── packages/
+│   ├── frontend/          # Vite + React 프론트엔드
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   ├── hooks/
+│   │   │   ├── store/
+│   │   │   └── lib/
+│   │   └── vite.config.ts
+│   └── backend/           # Hono 백엔드
+│       ├── src/
+│       │   ├── routes/
+│       │   ├── services/
+│       │   ├── middleware/
+│       │   └── db/
+│       └── prisma/
+├── docs/                  # 프로젝트 문서
+└── package.json          # 모노레포 루트
 ```
 
 ## 🚀 빠른 시작
@@ -95,14 +117,15 @@ npx prisma migrate dev
 ### 3단계 도서 검색
 1. **서버 DB 검색** → 2. **카카오 API** → 3. **수동 입력**
 
-### React Quill 에디터
-- WYSIWYG HTML 편집
-- 자동저장 (5분 간격 + 로컬 백업)
+### Markdown 에디터
+- 독후감 작성: 마크다운 에디터 + 실시간 프리뷰
+- 짧은 독후감: 일반 텍스트 입력
 - 다크테마 완전 지원
+- 페이지 이탈 시 저장 확인
 
 ### 소셜 기능
 - 좋아요/댓글 시스템
-- 도서 의견 (280자)
+- 독후감 (모든 길이 통합)
 - SNS 공유 최적화
 
 ## 📊 Phase별 개발 현황
@@ -116,7 +139,7 @@ npx prisma migrate dev
 
 ### 주요 성과
 - 총 11개 페이지 모두 구현 완료
-- React Quill 에디터 마이그레이션 완료 (Toast UI → React Quill)
+- Markdown 에디터 시스템 구축 완료
 - 성능 메트릭 목표 달성 (LCP <2.5s, FID <100ms, CLS <0.1)
 - PWA 기능 구현 완료
 
@@ -133,11 +156,36 @@ npx prisma migrate dev
 - [🚀 배포 가이드](./docs/deployment.md) - 배포, 보안, 트러블슈팅
 - [👥 사용자 흐름](./docs/user-flows.md) - UI/UX 플로우차트
 
+## 🔑 환경 변수 설정
+
+### 필수 환경 변수
+```bash
+# 데이터베이스 (Neon)
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."  # Prisma 마이그레이션용
+
+# 인증 (NextAuth.js)
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"  # 배포 시 실제 도메인
+
+# 파일 저장 (Cloudinary)
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+
+# 이메일 (Resend)
+RESEND_API_KEY="re_your-api-key"
+
+# 카카오 API
+KAKAO_REST_API_KEY="your-kakao-api-key"
+```
+
 ## 🔒 중요 보안 주의사항
 
 ### 환경 변수 보안 (필수)
 - **모든 API 키와 시크릿은 `.env.local`에 저장**
 - **환경 변수 파일은 절대 Git에 커밋하지 않음**
+- **Vercel 배포 시 환경 변수 별도 설정**
 - 정기적인 키 로테이션 실시
 
 ### 애플리케이션 보안
@@ -147,3 +195,4 @@ npx prisma migrate dev
 - 모든 사용자 입력 Zod 스키마 검증
 
 ReadZone은 독서 커뮤니티 SNS 플랫폼으로, 6개 Phase에 걸쳐 완전히 구현되었습니다. 각 문서에서 상세한 정보를 확인하실 수 있습니다.
+- @docs/user-flows.md 5-2. 마지막에 '저장하기'와 '독후감 삭제'가 동일한 '에러 메시지'로 연결되는데, 두 개의 플로우에 따라서 구체화된 메시지를 표시하는 걸로 업데이트해줬으면 좋겠어. '저장에 실패했습니다.' '독후감 삭제에 실패했습니다' 등으로.
