@@ -1,87 +1,132 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# Production builds
+/dist/
+/build/
 /.next/
 /out/
+.vite/
 
-# production
-/build
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+dev.log
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# uploads
-/public/uploads/
-
-# database files
-*.db
-*.db-journal
-*.db-wal
-
-# development/test files
-test-*.js
-test-*.ts
-/src/app/test-*/
-
-# Claude settings (contains local configurations)
-.claude/settings.local.json
-.serena/
-
-# temporary scripts for testing
-scripts/test-*.ts
-scripts/test-*.js
-
-# Playwright testing files
-/playwright-report/
+# Testing
+/coverage/
 /test-results/
-/e2e/
-playwright.config.ts
-
-# Performance testing scripts
-/scripts/performance-tests/
-
-# Test files and directories
+/playwright-report/
 **/__tests__/
 *.test.ts
 *.test.js
 *.spec.ts
 *.spec.js
 
-# Development logs
-dev.log
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
 
-# Local environment files
-.env.local
-.env.development
-.env.test
-.env.production
+# Database files
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Prisma
+packages/backend/prisma/migrations/
+!packages/backend/prisma/migrations/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.pem
+
+# Uploads
+/public/uploads/
+uploads/
+
+# Local development
+.vercel
+.netlify
+.pm2
+
+# Lock files (keep only pnpm-lock.yaml)
+package-lock.json
+yarn.lock
+
+# Claude settings (contains local configurations)
+.claude/settings.local.json
+.serena/
+
+# Temporary files
+*.tmp
+*.temp
+test-*.js
+test-*.ts
+scripts/test-*
+
+# Cache directories
+.npm
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Output of 'npm pack'
+*.tgz
+
+# Storybook
+storybook-static/
+
+# Editor files
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
