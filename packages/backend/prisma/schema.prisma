@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  nickname      String   @unique
+  password      String
+  bio           String?
+  profileImage  String?
+  isVerified    Boolean  @default(false)
+  verificationToken String?
+  resetToken    String?
+  resetTokenExpires DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  reviews       Review[]
+  likes         Like[]
+  comments      Comment[]
+  following     Follow[] @relation("UserFollowing")
+  followers     Follow[] @relation("UserFollowers")
+  notifications Notification[] @relation("NotificationReceiver")
+  sentNotifications Notification[] @relation("NotificationSender")
+
+  @@map("users")
+}
+
+model Book {
+  id          String  @id @default(cuid())
+  isbn        String? @unique
+  title       String
+  author      String
+  publisher   String?
+  publishedAt String? // Store as string for flexibility
+  description String?
+  thumbnail   String?
+  category    String?
+  pages       Int?
+  
+  // Book source tracking
+  source      String @default("MANUAL") // "KAKAO_API" | "DATABASE" | "MANUAL"
+  externalId  String? // Kakao book ID or other external ID
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  reviews     Review[]
+
+  @@map("books")
+}
+
+model Review {
+  id           String      @id @default(cuid())
+  title        String
+  content      String
+  isRecommended Boolean    @default(true)
+  rating       Int?       @default(5) // 1-5 stars, nullable for flexibility
+  tags         String?    // JSON array of strings
+  
+  // Privacy and status
+  isPublic     Boolean    @default(true)
+  status       String @default("PUBLISHED") // "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Foreign keys
+  userId       String
+  bookId       String
+
+  // Relations
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book         Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  likes        Like[]
+  comments     Comment[]
+
+  @@map("reviews")
+}
+
+model Like {
+  id       String @id @default(cuid())
+  
+  // Foreign keys
+  userId   String
+  reviewId String
+  
+  createdAt DateTime @default(now())
+
+  // Relations
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate likes
+  @@unique([userId, reviewId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  
+  // Optional parent for replies
+  parentId  String?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Foreign keys
+  userId    String
+  reviewId  String
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+model Follow {
+  id          String @id @default(cuid())
+  
+  // Foreign keys
+  followerId  String // User who follows
+  followingId String // User being followed
+  
+  createdAt   DateTime @default(now())
+
+  // Relations
+  follower    User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // Prevent self-follow and duplicate follows
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        String // "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
+  message     String
+  isRead      Boolean          @default(false)
+  
+  // Optional data for different notification types
+  data        String?          // JSON data for additional context
+  
+  createdAt   DateTime         @default(now())
+
+  // Foreign keys
+  userId      String           // Recipient
+  senderId    String?          // Who triggered the notification
+  reviewId    String?          // Related review (optional)
+  commentId   String?          // Related comment (optional)
+
+  // Relations
+  user        User             @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
+  sender      User?            @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
+
+// SQLite doesn't support enums, use String with constraints
+// BookSource: "KAKAO_API" | "DATABASE" | "MANUAL"
+// ReviewStatus: "DRAFT" | "PUBLISHED" | "ARCHIVED"  
+// NotificationType: "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
