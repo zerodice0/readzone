@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.8.2",
+    "@hono/zod-validator": "^0.7.2",
     "@prisma/client": "^5.7.1",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",

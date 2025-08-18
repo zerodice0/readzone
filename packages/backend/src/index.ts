@@ -29,6 +29,9 @@ app.get('/api/health', (c) => {
   })
 })
 
+// Import routes
+// import reviewRoutes from './routes/reviews.js'
+
 // API routes
 app.get('/api', (c) => {
   return c.json({
@@ -36,6 +39,47 @@ app.get('/api', (c) => {
     message: 'Welcome to ReadZone API',
     version: '1.0.0',
     docs: '/api/docs',
+  })
+})
+
+// Register review routes
+// app.route('/api/reviews', reviewRoutes)
+
+// Temporary basic feed endpoint for testing
+app.get('/api/reviews/feed', (c) => {
+  const { tab = 'recommended', limit = 20 } = c.req.query()
+  
+  // Return mock data for now
+  const mockReviews = [
+    {
+      id: '1',
+      content: '어른이 되어 다시 읽는 어린왕자는 어린 시절과는 다른 감동을 줍니다...',
+      createdAt: new Date().toISOString(),
+      author: {
+        id: 'user1',
+        username: '책벌레김',
+        profileImage: null
+      },
+      book: {
+        id: 'book1',
+        title: '어린왕자',
+        author: '앙투안 드 생텍쥐페리',
+        cover: null
+      },
+      stats: {
+        likes: 5,
+        comments: 2,
+        shares: 0
+      },
+      userInteraction: null
+    }
+  ]
+  
+  return c.json({
+    success: true,
+    reviews: mockReviews,
+    nextCursor: null,
+    hasMore: false
   })
 })
 
