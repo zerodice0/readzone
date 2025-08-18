@@ -130,5 +130,3 @@ pids
 *.pid
 *.seed
 *.pid.lock
-
-packages/
