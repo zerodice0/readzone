@@ -1,8 +1,9 @@
+import './styles/globals.css'
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import './styles/globals.css'
+import { createRouter, RouterProvider } from '@tanstack/react-router'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
@@ -13,7 +14,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5분
       retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // 지수 백오프
+      retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000), // 지수 백오프
     },
     mutations: {
       retry: 1,

@@ -47,7 +47,7 @@ app.get('/api', (c) => {
 
 // Temporary basic feed endpoint for testing
 app.get('/api/reviews/feed', (c) => {
-  const { tab = 'recommended', limit = 20 } = c.req.query()
+  const { tab: _tab = 'recommended', limit: _limit = 20 } = c.req.query()
   
   // Return mock data for now
   const mockReviews = [

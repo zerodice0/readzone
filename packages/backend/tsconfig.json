@@ -76,6 +76,12 @@
   ],
   "ts-node": {
     "esm": true,
-    "experimentalSpecifierResolution": "node"
+    "experimentalSpecifierResolution": "node",
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+        "@prisma/client": ["node_modules/.prisma/client"]
+      }
+    }
   }
 }

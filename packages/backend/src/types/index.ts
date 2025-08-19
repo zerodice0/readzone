@@ -1,13 +1,87 @@
-// Import directly from the generated client
-import type { 
-  Book as PrismaBook, 
-  Comment as PrismaComment, 
-  Follow as PrismaFollow, 
-  Like as PrismaLike, 
-  Notification as PrismaNotification, 
-  Review as PrismaReview, 
-  User as PrismaUser 
-} from '../../node_modules/.prisma/client'
+// 타입 문제 해결을 위한 기본 인터페이스 정의
+interface PrismaUser {
+  id: string
+  email: string
+  nickname: string
+  password: string
+  bio?: string | null
+  profileImage?: string | null
+  isVerified: boolean
+  verificationToken?: string | null
+  resetToken?: string | null
+  resetTokenExpires?: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface PrismaBook {
+  id: string
+  isbn?: string | null
+  title: string
+  author: string
+  publisher?: string | null
+  publishedAt?: string | null
+  description?: string | null
+  thumbnail?: string | null
+  category?: string | null
+  pages?: number | null
+  source: string
+  externalId?: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface PrismaReview {
+  id: string
+  title: string
+  content: string
+  isRecommended: boolean
+  rating?: number | null
+  tags?: string | null
+  isPublic: boolean
+  status: string
+  createdAt: Date
+  updatedAt: Date
+  userId: string
+  bookId: string
+}
+
+interface PrismaLike {
+  id: string
+  userId: string
+  reviewId: string
+  createdAt: Date
+}
+
+interface PrismaComment {
+  id: string
+  content: string
+  parentId?: string | null
+  createdAt: Date
+  updatedAt: Date
+  userId: string
+  reviewId: string
+}
+
+interface PrismaFollow {
+  id: string
+  followerId: string
+  followingId: string
+  createdAt: Date
+}
+
+interface PrismaNotification {
+  id: string
+  type: string
+  message: string
+  isRead: boolean
+  data?: string | null
+  createdAt: Date
+  userId: string
+  senderId?: string | null
+  reviewId?: string | null
+  commentId?: string | null
+}
 
 // Re-export Prisma types with original names
 export type User = PrismaUser

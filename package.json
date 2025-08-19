@@ -3,37 +3,40 @@
   "version": "1.0.0",
   "description": "독서 후 의견을 공유하는 독서 전용 커뮤니티 SNS 플랫폼",
   "private": true,
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "npm@10.9.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
-    "dev:frontend": "pnpm --filter @readzone/frontend dev",
-    "dev:backend": "pnpm --filter @readzone/backend dev",
-    "build": "pnpm run build:backend && pnpm run build:frontend",
-    "build:frontend": "pnpm --filter @readzone/frontend build",
-    "build:backend": "pnpm --filter @readzone/backend build",
-    "lint": "pnpm run lint:frontend && pnpm run lint:backend",
-    "lint:frontend": "pnpm --filter @readzone/frontend lint",
-    "lint:backend": "pnpm --filter @readzone/backend lint",
-    "type-check": "pnpm run type-check:frontend && pnpm run type-check:backend",
-    "type-check:frontend": "pnpm --filter @readzone/frontend type-check",
-    "type-check:backend": "pnpm --filter @readzone/backend type-check",
-    "test": "pnpm run test:frontend && pnpm run test:backend",
-    "test:frontend": "pnpm --filter @readzone/frontend test",
-    "test:backend": "pnpm --filter @readzone/backend test",
-    "db:generate": "pnpm --filter @readzone/backend db:generate",
-    "db:migrate": "pnpm --filter @readzone/backend db:migrate",
-    "db:reset": "pnpm --filter @readzone/backend db:reset",
-    "db:seed": "pnpm --filter @readzone/backend db:seed",
-    "clean": "rm -rf node_modules && rm -rf packages/*/node_modules && rm -rf packages/*/dist && rm -rf packages/*/.next && rm -rf pnpm-lock.yaml",
-    "fresh-install": "pnpm clean && pnpm install"
+    "dev": "turbo dev",
+    "dev:frontend": "turbo dev --filter=@readzone/frontend",
+    "dev:backend": "turbo dev --filter=@readzone/backend",
+    "build": "turbo build",
+    "build:frontend": "turbo build --filter=@readzone/frontend",
+    "build:backend": "turbo build --filter=@readzone/backend",
+    "lint": "turbo lint",
+    "lint:frontend": "turbo lint --filter=@readzone/frontend",
+    "lint:backend": "turbo lint --filter=@readzone/backend",
+    "type-check": "turbo type-check",
+    "type-check:frontend": "turbo type-check --filter=@readzone/frontend",
+    "type-check:backend": "turbo type-check --filter=@readzone/backend",
+    "test": "turbo test",
+    "test:frontend": "turbo test --filter=@readzone/frontend",
+    "test:backend": "turbo test --filter=@readzone/backend",
+    "db:generate": "turbo db:generate --filter=@readzone/backend",
+    "db:migrate": "turbo db:migrate --filter=@readzone/backend",
+    "db:reset": "turbo db:reset --filter=@readzone/backend",
+    "db:seed": "turbo db:seed --filter=@readzone/backend",
+    "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
+    "turbo": "^2.5.6",
     "typescript": "^5.3.0"
   },
   "engines": {
     "node": ">=18.17.0",
-    "pnpm": ">=8.0.0"
+    "npm": ">=8.0.0"
   },
   "keywords": [
     "독서",

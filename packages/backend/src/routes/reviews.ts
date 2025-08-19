@@ -35,8 +35,19 @@ app.get('/feed', zValidator('query', FeedQuerySchema), async (c) => {
       isPublic: true
     }
 
-    let orderBy: any = {}
-    let where: any = baseConditions
+    // 타입 안전성을 위한 구체적인 타입 정의
+    type OrderByType = 
+      | { createdAt: 'desc' | 'asc' }
+      | { createdAt: 'desc' | 'asc' }[]
+      | undefined
+
+    interface WhereType {
+      status: string
+      isPublic: boolean
+    }
+
+    let orderBy: OrderByType = { createdAt: 'desc' }
+    const where: WhereType = baseConditions
 
     switch (tab) {
       case 'recommended':
@@ -62,43 +73,45 @@ app.get('/feed', zValidator('query', FeedQuerySchema), async (c) => {
         })
     }
 
+    const REVIEW_INCLUDE_CONFIG = {
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+          profileImage: true
+        }
+      },
+      book: {
+        select: {
+          id: true,
+          title: true,
+          author: true,
+          thumbnail: true
+        }
+      },
+      likes: {
+        select: {
+          id: true,
+          userId: true
+        }
+      },
+      comments: {
+        select: {
+          id: true
+        }
+      },
+      _count: {
+        select: {
+          likes: true,
+          comments: true
+        }
+      }
+    } as const
+
     // Get reviews with all related data
     const reviews = await prisma.review.findMany({
       where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            nickname: true,
-            profileImage: true
-          }
-        },
-        book: {
-          select: {
-            id: true,
-            title: true,
-            author: true,
-            thumbnail: true
-          }
-        },
-        likes: {
-          select: {
-            id: true,
-            userId: true
-          }
-        },
-        comments: {
-          select: {
-            id: true
-          }
-        },
-        _count: {
-          select: {
-            likes: true,
-            comments: true
-          }
-        }
-      },
+      include: REVIEW_INCLUDE_CONFIG,
       orderBy,
       take: limit + 1, // Take one extra to determine if there are more
       ...cursorCondition
@@ -112,9 +125,30 @@ app.get('/feed', zValidator('query', FeedQuerySchema), async (c) => {
     const nextCursor = hasMore ? reviewsToReturn[reviewsToReturn.length - 1]?.id : null
 
     // Transform data to match the API interface
-    const transformedReviews = reviewsToReturn.map(review => ({
+    interface ReviewWithRelations {
+      id: string
+      content: string
+      createdAt: Date
+      user: {
+        id: string
+        nickname: string
+        profileImage?: string | null
+      }
+      book: {
+        id: string
+        title: string
+        author: string
+        thumbnail?: string | null
+      }
+      _count: {
+        likes: number
+        comments: number
+      }
+    }
+
+    const transformedReviews = reviewsToReturn.map((review: ReviewWithRelations) => ({
       id: review.id,
-      content: review.content.length > 150 ? review.content.substring(0, 150) + '...' : review.content,
+      content: review.content.length > 150 ? `${review.content.substring(0, 150)}...` : review.content,
       createdAt: review.createdAt.toISOString(),
       author: {
         id: review.user.id,
@@ -141,9 +175,9 @@ app.get('/feed', zValidator('query', FeedQuerySchema), async (c) => {
       nextCursor,
       hasMore
     })
-
   } catch (error) {
     console.error('Feed API Error:', error)
+
     return c.json({
       success: false,
       message: 'Failed to fetch feed'
@@ -152,13 +186,15 @@ app.get('/feed', zValidator('query', FeedQuerySchema), async (c) => {
 })
 
 // POST /api/reviews/:id/like
-app.post('/:id/like', zValidator('json', LikeRequestSchema), async (c) => {
+app.post('/:id/like', zValidator('json', LikeRequestSchema), (c) => {
   try {
-    const reviewId = c.req.param('id')
-    const { action } = c.req.valid('json')
-    
     // TODO: Get user ID from auth token
     // For now, return an error since auth is not implemented
+    
+    // Suppress unused variables warning for future implementation
+    c.req.param('id') // reviewId for future use
+    c.req.valid('json') // action for future use
+
     return c.json({
       success: false,
       message: 'Authentication required'
@@ -199,6 +235,7 @@ app.post('/:id/like', zValidator('json', LikeRequestSchema), async (c) => {
 
   } catch (error) {
     console.error('Like API Error:', error)
+
     return c.json({
       success: false,
       message: 'Failed to update like'

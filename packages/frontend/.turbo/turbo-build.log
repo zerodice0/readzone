@@ -1,0 +1,17 @@
+
+> @readzone/frontend@1.0.0 build
+> tsc && vite build
+
+vite v5.4.19 building for production...
+transforming...
+✓ 1497 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   1.69 kB │ gzip:  0.67 kB
+dist/assets/index-ChiuFUwH.css   13.83 kB │ gzip:  3.43 kB
+dist/assets/ui-NGEPQMFD.js        2.47 kB │ gzip:  0.97 kB │ map:   6.48 kB
+dist/assets/index-Bdkaraz7.js    19.41 kB │ gzip:  7.08 kB │ map:  80.10 kB
+dist/assets/query-CFwDtlpL.js    39.28 kB │ gzip: 11.76 kB │ map: 145.16 kB
+dist/assets/router-Cru2QmzA.js   76.00 kB │ gzip: 24.52 kB │ map: 320.02 kB
+dist/assets/vendor-CIP6LD3P.js  140.92 kB │ gzip: 45.30 kB │ map: 344.51 kB
+✓ built in 1.24s
