@@ -130,3 +130,6 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Turbopack cache
+.turbo
