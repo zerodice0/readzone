@@ -133,6 +133,5 @@ pids
 
 # Turbopack cache
 .turbo
-packages/frontend/.turbo/turbo-lint.log
 .env.example.draft-system
 .env.cron.example
