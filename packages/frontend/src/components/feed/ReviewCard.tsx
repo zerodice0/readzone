@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Heart, MessageCircle, MoreHorizontal, Share } from 'lucide-react';
 import type { ReviewCard as ReviewCardType } from '@/types/feed';
 import { formatTimeAgo } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReviewCardProps {
   review: ReviewCardType;
@@ -25,11 +26,15 @@ const ReviewCard = ({
   isAuthenticated
 }: ReviewCardProps) => {
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+  const { toast } = useToast();
 
   const handleLike = () => {
     if (!isAuthenticated) {
-      // TODO: Replace with proper toast notification
-      console.warn('로그인이 필요한 기능입니다.');
+      toast({
+        variant: 'warning',
+        title: '로그인 필요',
+        description: '좋아요를 누르려면 로그인이 필요합니다.',
+      });
       
       return;
     }
@@ -43,8 +48,11 @@ const ReviewCard = ({
 
   const handleComment = () => {
     if (!isAuthenticated) {
-      // TODO: Replace with proper toast notification
-      console.warn('로그인이 필요한 기능입니다.');
+      toast({
+        variant: 'warning',
+        title: '로그인 필요',
+        description: '댓글을 남기려면 로그인이 필요합니다.',
+      });
       
       return;
     }

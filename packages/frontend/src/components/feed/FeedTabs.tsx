@@ -1,4 +1,5 @@
 import type { FeedTab } from '@/types/feed';
+import { useToast } from '@/hooks/use-toast';
 
 interface FeedTabsProps {
   activeTab: FeedTab;
@@ -7,6 +8,7 @@ interface FeedTabsProps {
 }
 
 const FeedTabs = ({ activeTab, onTabChange, isAuthenticated }: FeedTabsProps) => {
+  const { toast } = useToast();
   const tabs = [
     { id: 'recommended' as const, label: '추천', description: '인기 독후감' },
     { id: 'latest' as const, label: '최신', description: '새로운 독후감' },
@@ -16,8 +18,11 @@ const FeedTabs = ({ activeTab, onTabChange, isAuthenticated }: FeedTabsProps) =>
   const handleTabClick = (tabId: FeedTab) => {
     // 팔로잉 탭은 로그인 사용자만 접근 가능
     if (tabId === 'following' && !isAuthenticated) {
-      // TODO: Replace with proper toast notification
-      console.warn('로그인이 필요한 기능입니다.');
+      toast({
+        variant: 'warning',
+        title: '로그인 필요',
+        description: '팔로잉 피드를 보려면 로그인이 필요합니다.',
+      });
       
       return;
     }

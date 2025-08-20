@@ -6,11 +6,13 @@ import InfiniteScroll from '@/components/common/InfiniteScroll';
 import useFeedStore, { useFeedCursor, useFeedReviews } from '@/store/feedStore';
 import { useFeed, useLikeMutation } from '@/hooks/useFeedApi';
 import type { FeedTab } from '@/types/feed';
+import { useToast } from '@/hooks/use-toast';
 
 const FEED_LIMIT = 20;
 
 const MainFeed = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const {
@@ -135,8 +137,11 @@ const MainFeed = () => {
     } else {
       // 웹 공유 API 미지원시 클립보드 복사
       await navigator.clipboard.writeText(shareUrl);
-      // TODO: Replace with proper toast notification
-      console.warn('링크가 클립보드에 복사되었습니다.');
+      toast({
+        variant: 'success',
+        title: '링크 복사됨',
+        description: '독후감 링크가 클립보드에 복사되었습니다.',
+      });
     }
   };
 
