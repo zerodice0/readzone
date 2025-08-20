@@ -133,5 +133,7 @@ pids
 
 # Turbopack cache
 .turbo
+/packages/frontend/.turbo
+/packages/backend/.turbo
 .env.example.draft-system
 .env.cron.example
