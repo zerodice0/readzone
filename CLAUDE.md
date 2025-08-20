@@ -24,7 +24,7 @@ ReadZone 프로젝트 개발 가이드 - 독서 후 의견을 공유하는 **독
 - **API**: 카카오 도서 검색 API
 
 ### 개발 환경
-- **패키지 관리**: pnpm (모노레포 워크스페이스)
+- **패키지 관리**: npm + Turborepo (모노레포 워크스페이스)
 - **Node.js**: 18.17.0+ (권장)
 - **TypeScript**: 5.3+ (strict mode)
 - **개발 도구**: ESLint (0 경고 정책), Vitest
@@ -40,7 +40,7 @@ ReadZone 프로젝트 개발 가이드 - 독서 후 의견을 공유하는 **독
 
 ### Frontend
 - **Bundler**: Vite (포트 3000)
-- **Framework**: React 18+
+- **Framework**: React 19+
 - **Language**: TypeScript (strict mode)
 - **State**: Zustand + TanStack Query
 - **UI**: Tailwind CSS + shadcn/ui
@@ -65,8 +65,8 @@ ReadZone 프로젝트 개발 가이드 - 독서 후 의견을 공유하는 **독
 
 ### 필수 검증 명령어
 ```bash
-pnpm lint       # 린트 검사 (0개 에러 필수)
-pnpm type-check # 타입 체크 (0개 에러 필수)
+npm run lint       # 린트 검사 (0개 에러 필수)
+npm run type-check # 타입 체크 (0개 에러 필수)
 ```
 
 **⚠️ 중요**: 실제 동작과 무관하게 모든 타입 에러와 린트 경고는 반드시 해결해야 합니다.
@@ -116,28 +116,28 @@ readzone/
 ```bash
 # 환경 설정
 nvm use 18.17.0
-pnpm install
+npm install
 cp .env.example .env.local
 
 # 개발 실행 (프론트엔드 + 백엔드 동시 실행)
-pnpm dev
+npm run dev
 
 # 개별 실행
-pnpm dev:frontend  # 포트 3000
-pnpm dev:backend   # 포트 3001
+npm run dev:frontend  # 포트 3000
+npm run dev:backend   # 포트 3001
 
 # 데이터베이스 설정
-pnpm db:generate   # Prisma 클라이언트 생성
-pnpm db:migrate    # 데이터베이스 마이그레이션
-pnpm db:seed       # 샘플 데이터 추가
+npm run db:generate   # Prisma 클라이언트 생성
+npm run db:migrate    # 데이터베이스 마이그레이션
+npm run db:seed       # 샘플 데이터 추가
 
 # 코드 품질 검사
-pnpm lint          # 모든 린트 검사
-pnpm type-check    # 타입 체크
-pnpm test          # 테스트 실행
+npm run lint          # 모든 린트 검사 (Turborepo로 병렬 실행)
+npm run type-check    # 타입 체크 (Turborepo로 병렬 실행)
+npm run test          # 테스트 실행
 
 # 빌드
-pnpm build         # 프로덕션 빌드
+npm run build         # 프로덕션 빌드 (Turborepo로 최적화)
 ```
 
 ## 🎯 핵심 기능
