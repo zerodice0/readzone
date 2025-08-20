@@ -9,6 +9,9 @@ import { Toaster } from '@/components/ui/toaster'
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 
+// Import auth initialization
+import { initializeApp } from '@/lib/auth'
+
 // Create a QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +35,9 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
+
+// Initialize the app
+initializeApp()
 
 const root = document.getElementById('root')
 

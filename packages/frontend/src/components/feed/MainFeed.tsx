@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import FeedTabs from '@/components/feed/FeedTabs';
 import ReviewCard from '@/components/feed/ReviewCard';
@@ -7,13 +7,18 @@ import useFeedStore, { useFeedCursor, useFeedReviews } from '@/store/feedStore';
 import { useFeed, useLikeMutation } from '@/hooks/useFeedApi';
 import type { FeedTab } from '@/types/feed';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthGuard } from '@/components/auth/AuthGuard';
 
 const FEED_LIMIT = 20;
 
-const MainFeed = () => {
+interface MainFeedProps {
+  className?: string;
+}
+
+export const MainFeed = ({ className }: MainFeedProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { requireAuth, isAuthenticated } = useAuthGuard();
 
   const {
     activeTab,
@@ -41,13 +46,6 @@ const MainFeed = () => {
   });
 
   const likeMutation = useLikeMutation();
-
-  // 인증 상태 확인
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    setIsAuthenticated(!!token);
-  }, []);
 
   // 피드 데이터 처리
   useEffect(() => {
@@ -80,46 +78,49 @@ const MainFeed = () => {
   };
 
   const handleLike = async (reviewId: string) => {
-    if (!isAuthenticated) {
-      navigate({ to: '/login' });
+    return requireAuth(async () => {
+      const review = reviews.find(r => r.id === reviewId);
 
-      return;
-    }
+      if (!review) {
+        return;
+      }
 
-    const review = reviews.find(r => r.id === reviewId);
+      const isLiked = review.userInteraction?.isLiked ?? false;
+      const action = isLiked ? 'unlike' : 'like';
 
-    if (!review) {
-      return;
-    }
+      // 낙관적 업데이트
+      updateUserInteraction(reviewId, { 
+        isLiked: !isLiked,
+        isBookmarked: review.userInteraction?.isBookmarked ?? false
+      });
+      updateReviewStats(reviewId, { 
+        likes: review.stats.likes + (isLiked ? -1 : 1) 
+      });
 
-    const isLiked = review.userInteraction?.isLiked ?? false;
-    const action = isLiked ? 'unlike' : 'like';
-
-    // 낙관적 업데이트
-    updateUserInteraction(reviewId, { 
-      isLiked: !isLiked,
-      isBookmarked: review.userInteraction?.isBookmarked ?? false
+      try {
+        await likeMutation.mutateAsync({ reviewId, action });
+      } catch (_error) {
+        // 실패 시 롤백
+        updateUserInteraction(reviewId, review.userInteraction);
+        updateReviewStats(reviewId, { likes: review.stats.likes });
+      }
+    }, {
+      message: {
+        title: '로그인 필요',
+        description: '좋아요를 누르려면 로그인이 필요합니다.'
+      }
     });
-    updateReviewStats(reviewId, { 
-      likes: review.stats.likes + (isLiked ? -1 : 1) 
-    });
-
-    try {
-      await likeMutation.mutateAsync({ reviewId, action });
-    } catch (_error) {
-      // 실패 시 롤백
-      updateUserInteraction(reviewId, review.userInteraction);
-      updateReviewStats(reviewId, { likes: review.stats.likes });
-    }
   };
 
   const handleComment = (reviewId: string) => {
-    if (!isAuthenticated) {
-      navigate({ to: '/login' });
-
-      return;
-    }
-    navigate({ to: `/review/${reviewId}#comments` });
+    return requireAuth(() => {
+      navigate({ to: `/review/${reviewId}#comments` });
+    }, {
+      message: {
+        title: '로그인 필요',
+        description: '댓글을 남기려면 로그인이 필요합니다.'
+      }
+    });
   };
 
   const handleShare = async (reviewId: string) => {
@@ -176,7 +177,7 @@ const MainFeed = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={className}>
       <div className="container max-w-2xl mx-auto">
         {/* 피드 탭 */}
         <FeedTabs
@@ -203,7 +204,6 @@ const MainFeed = () => {
                 onProfileClick={handleProfileClick}
                 onBookClick={handleBookClick}
                 onReviewClick={handleReviewClick}
-                isAuthenticated={isAuthenticated}
               />
             ))}
             
@@ -223,5 +223,3 @@ const MainFeed = () => {
     </div>
   );
 };
-
-export default MainFeed;

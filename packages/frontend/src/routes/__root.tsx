@@ -1,4 +1,5 @@
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
+import { GlobalLoginRequiredModal } from '@/components/auth/LoginRequiredModal'
 
 export const Route = createRootRoute({
   component: () => (
@@ -9,6 +10,7 @@ export const Route = createRootRoute({
         </h1>
         <Outlet />
       </div>
+      <GlobalLoginRequiredModal />
     </div>
   ),
 })
