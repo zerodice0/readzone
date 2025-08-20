@@ -14,7 +14,7 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="container mx-auto px-4 py-6">
       {/* 페이지 헤더 (스크린 리더용) */}
       <div className="sr-only">
         <h1>ReadZone 메인 피드</h1>

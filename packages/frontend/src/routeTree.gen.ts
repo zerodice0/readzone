@@ -9,6 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WriteRouteImport } from './routes/write'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -17,6 +20,21 @@ import { Route as ReviewReviewIdRouteImport } from './routes/review.$reviewId'
 import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
 import { Route as BooksBookIdRouteImport } from './routes/books.$bookId'
 
+const WriteRoute = WriteRouteImport.update({
+  id: '/write',
+  path: '/write',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -58,6 +76,9 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userId': typeof ProfileUserIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
@@ -67,6 +88,9 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userId': typeof ProfileUserIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
@@ -77,6 +101,9 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
+  '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userId': typeof ProfileUserIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
@@ -88,6 +115,9 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/search'
+    | '/settings'
+    | '/write'
     | '/books/$bookId'
     | '/profile/$userId'
     | '/review/$reviewId'
@@ -97,6 +127,9 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/search'
+    | '/settings'
+    | '/write'
     | '/books/$bookId'
     | '/profile/$userId'
     | '/review/$reviewId'
@@ -106,6 +139,9 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/search'
+    | '/settings'
+    | '/write'
     | '/books/$bookId'
     | '/profile/$userId'
     | '/review/$reviewId'
@@ -116,6 +152,9 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
+  WriteRoute: typeof WriteRoute
   BooksBookIdRoute: typeof BooksBookIdRoute
   ProfileUserIdRoute: typeof ProfileUserIdRoute
   ReviewReviewIdRoute: typeof ReviewReviewIdRoute
@@ -123,6 +162,27 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/write': {
+      id: '/write'
+      path: '/write'
+      fullPath: '/write'
+      preLoaderRoute: typeof WriteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -180,6 +240,9 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRoute,
+  WriteRoute: WriteRoute,
   BooksBookIdRoute: BooksBookIdRoute,
   ProfileUserIdRoute: ProfileUserIdRoute,
   ReviewReviewIdRoute: ReviewReviewIdRoute,

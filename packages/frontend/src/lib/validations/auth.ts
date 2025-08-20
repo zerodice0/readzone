@@ -19,6 +19,15 @@ export type LoginFormData = z.infer<typeof loginSchema>
 
 // 회원가입 폼 검증 스키마
 export const registerSchema = z.object({
+  userId: z
+    .string()
+    .min(1, '아이디를 입력해주세요.')
+    .min(6, '아이디는 최소 6자 이상이어야 합니다.')
+    .max(20, '아이디는 최대 20자까지 가능합니다.')
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      '아이디는 영문, 숫자, _, - 만 사용 가능합니다.'
+    ),
   email: z
     .string()
     .min(1, '이메일을 입력해주세요.')
@@ -26,12 +35,9 @@ export const registerSchema = z.object({
     .max(255, '이메일이 너무 깁니다.'),
   password: z
     .string()
-    .min(8, '비밀번호는 최소 8자 이상이어야 합니다.')
-    .max(100, '비밀번호가 너무 깁니다.')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      '비밀번호는 영문 대/소문자, 숫자를 포함해야 합니다.'
-    ),
+    .min(1, '비밀번호를 입력해주세요.')
+    .min(6, '비밀번호는 최소 6자 이상이어야 합니다.')
+    .max(100, '비밀번호가 너무 깁니다.'),
   confirmPassword: z.string().min(1, '비밀번호 확인을 입력해주세요.'),
   nickname: z
     .string()
@@ -102,6 +108,7 @@ export const AUTH_ERROR_MESSAGES = {
   EMAIL_NOT_VERIFIED: '이메일 인증이 필요합니다. 이메일을 확인해주세요.',
   ACCOUNT_LOCKED: '계정이 잠겼습니다. 잠시 후 다시 시도해주세요.',
   TOO_MANY_ATTEMPTS: '로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.',
+  USERID_ALREADY_EXISTS: '이미 사용중인 아이디입니다.',
   EMAIL_ALREADY_EXISTS: '이미 가입된 이메일입니다.',
   NICKNAME_ALREADY_EXISTS: '이미 사용중인 닉네임입니다.',
   INVALID_TOKEN: '유효하지 않은 토큰입니다.',

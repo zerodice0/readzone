@@ -178,7 +178,7 @@ export const MainFeed = ({ className }: MainFeedProps) => {
 
   return (
     <div className={className}>
-      <div className="container max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         {/* 피드 탭 */}
         <FeedTabs
           activeTab={activeTab}
@@ -187,7 +187,7 @@ export const MainFeed = ({ className }: MainFeedProps) => {
         />
 
         {/* 독후감 목록 */}
-        <div className="px-4">
+        <div>
           <InfiniteScroll
             hasMore={hasMore}
             isLoading={isLoading}
