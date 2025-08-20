@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { ServiceIntro } from '@/components/auth/ServiceIntro'
+import { BookOpen } from 'lucide-react'
+import { ActivityPreview } from '@/components/auth/ActivityPreview'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { GuestOnlyRoute } from '@/components/auth/AuthRedirect'
 
@@ -29,16 +30,31 @@ export function LoginPage() {
           <p>독서 후 감상을 공유하는 커뮤니티에 로그인하세요.</p>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
-            {/* 서비스 소개 섹션 */}
-            <div className="order-2 lg:order-1">
-              <ServiceIntro />
+        <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-2rem)]">
+          {/* 큰 화면에서 상단 중앙 헤더 */}
+          <div className="hidden lg:block text-center mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <BookOpen className="h-10 w-10 text-primary mr-3" />
+              <h1 className="text-3xl font-bold text-primary">ReadZone</h1>
+            </div>
+            <h2 className="text-2xl font-semibold text-foreground">
+              다시 돌아오신 것을 환영합니다!
+            </h2>
+            <p className="text-muted-foreground">
+              로그인하고 새로운 독후감과 소식들을 확인해보세요
+            </p>
+          </div>
+
+          {/* 모바일: 로그인 폼만 표시, 큰 화면: 좌우 2단 구조 */}
+          <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] lg:min-h-0 lg:grid lg:grid-cols-2 lg:gap-12 lg:items-start lg:items-center max-w-6xl mx-auto lg:h-full">
+            {/* 최근 활동 미리보기 섹션 - 큰 화면에서만 표시 */}
+            <div className="hidden lg:block lg:order-1">
+              <ActivityPreview hideHeader />
             </div>
 
-            {/* 로그인 폼 섹션 */}
-            <div className="order-1 lg:order-2 flex justify-center lg:justify-start">
-              <div className="w-full max-w-md">
+            {/* 로그인 폼 섹션 - 모바일에서는 중앙 정렬, 큰 화면에서는 우측 */}
+            <div className="w-full max-w-md lg:flex lg:justify-start lg:order-2">
+              <div className="w-full">
                 <LoginForm />
               </div>
             </div>

@@ -31,6 +31,7 @@ app.get('/api/health', (c) => {
 
 // Import routes
 // import reviewRoutes from './routes/reviews.js'
+import { content as contentRoutes } from './routes/content'
 
 // API routes
 app.get('/api', (c) => {
@@ -42,8 +43,9 @@ app.get('/api', (c) => {
   })
 })
 
-// Register review routes
+// Register routes
 // app.route('/api/reviews', reviewRoutes)
+app.route('/api/content', contentRoutes)
 
 // Temporary basic feed endpoint for testing
 app.get('/api/reviews/feed', (c) => {

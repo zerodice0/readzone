@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator'
+import { TermsDialog } from './TermsDialog'
 
 import { type RegisterFormData, registerSchema } from '@/lib/validations/auth'
 
@@ -47,14 +48,28 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
     message: ''
   })
 
+  // 약관 다이얼로그 상태
+  const [termsDialogOpen, setTermsDialogOpen] = useState(false)
+  const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false)
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch
+    watch,
+    setValue
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    mode: 'onBlur'
+    mode: 'onBlur',
+    defaultValues: {
+      userId: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      nickname: '',
+      terms: false,
+      privacy: false
+    }
   })
 
   const watchedPassword = watch('password', '')
@@ -125,15 +140,7 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
   }
 
   return (
-    <div className="w-full max-w-md space-y-6">
-      {/* 헤더 */}
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">회원가입</h1>
-        <p className="text-sm text-muted-foreground">
-          ReadZone에서 독서의 즐거움을 나누어보세요
-        </p>
-      </div>
-
+    <div className="w-full max-w-md space-y-4">
       {/* 에러 메시지 */}
       {error && (
         <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
@@ -270,10 +277,27 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
           <div className="flex items-center space-x-2">
             <Checkbox
               id="terms"
-              {...register('terms')}
+              checked={watch('terms')}
+              onClick={(e) => {
+                e.preventDefault() // 기본 체크 동작 방지
+                if (watch('terms')) {
+                  // 이미 체크된 상태면 체크 해제
+                  setValue('terms', false)
+                } else {
+                  // 체크되지 않은 상태면 다이얼로그 열기
+                  setTermsDialogOpen(true)
+                }
+              }}
             />
-            <Label htmlFor="terms" className="text-sm">
-              <span className="text-primary">서비스 이용약관</span>에 동의합니다. *
+            <Label 
+              htmlFor="terms" 
+              className="text-sm cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault()
+                setTermsDialogOpen(true)
+              }}
+            >
+              <span className="text-primary underline">서비스 이용약관</span>에 동의합니다. *
             </Label>
           </div>
           {errors.terms && (
@@ -283,10 +307,27 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
           <div className="flex items-center space-x-2">
             <Checkbox
               id="privacy"
-              {...register('privacy')}
+              checked={watch('privacy')}
+              onClick={(e) => {
+                e.preventDefault() // 기본 체크 동작 방지
+                if (watch('privacy')) {
+                  // 이미 체크된 상태면 체크 해제
+                  setValue('privacy', false)
+                } else {
+                  // 체크되지 않은 상태면 다이얼로그 열기
+                  setPrivacyDialogOpen(true)
+                }
+              }}
             />
-            <Label htmlFor="privacy" className="text-sm">
-              <span className="text-primary">개인정보 처리방침</span>에 동의합니다. *
+            <Label 
+              htmlFor="privacy" 
+              className="text-sm cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault()
+                setPrivacyDialogOpen(true)
+              }}
+            >
+              <span className="text-primary underline">개인정보 처리방침</span>에 동의합니다. *
             </Label>
           </div>
           {errors.privacy && (
@@ -324,6 +365,25 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
           로그인하기
         </Link>
       </div>
+
+      {/* 약관 다이얼로그 */}
+      <TermsDialog
+        open={termsDialogOpen}
+        onOpenChange={setTermsDialogOpen}
+        type="terms"
+        onAgree={() => {
+          setValue('terms', true)
+        }}
+      />
+      
+      <TermsDialog
+        open={privacyDialogOpen}
+        onOpenChange={setPrivacyDialogOpen}
+        type="privacy"
+        onAgree={() => {
+          setValue('privacy', true)
+        }}
+      />
     </div>
   )
 }
