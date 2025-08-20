@@ -1,19 +1,11 @@
-const nextJest = require('next/jest');
-
-// Next.js 앱 디렉토리 경로 설정
-const createJestConfig = nextJest({
-  dir: './',
-});
-
-// Jest 설정
-const customJestConfig = {
+export default {
   displayName: 'Frontend Tests',
   
   // 테스트 환경
   testEnvironment: 'jsdom',
   
   // 모듈 이름 매핑
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   
@@ -25,7 +17,7 @@ const customJestConfig = {
   
   // 테스트 제외 패턴
   testPathIgnorePatterns: [
-    '<rootDir>/.next/',
+    '<rootDir>/dist/',
     '<rootDir>/node_modules/',
     '<rootDir>/tests/e2e/'
   ],
@@ -34,8 +26,7 @@ const customJestConfig = {
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
-    '!src/pages/_app.tsx',
-    '!src/pages/_document.tsx',
+    '!src/main.tsx',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
   ],
   
@@ -54,29 +45,29 @@ const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   
   // 변환 설정
+  preset: 'ts-jest',
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: 'tsconfig.json'
+    }],
+    '^.+\\.(js|jsx)$': 'babel-jest',
   },
   
   // 모듈 파일 확장자
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   
-  // 테스트 환경 변수
+  // 변환 무시 패턴 (MSW 모듈 변환 허용)
+  transformIgnorePatterns: [
+    'node_modules/(?!(msw|@mswjs/interceptors)/)',
+  ],
+  
+  // 테스트 환경 옵션 (TextEncoder/TextDecoder 추가)
   testEnvironmentOptions: {
     url: 'http://localhost:3000',
   },
   
-  // Mock 설정
-  moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-  },
-  
-  // 전역 변수
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-    },
-  },
+  // 글로벌 설정
+  setupFiles: ['<rootDir>/jest.setup.js'],
   
   // 성능 설정
   maxWorkers: '50%',
@@ -84,5 +75,3 @@ const customJestConfig = {
   // 세부 출력
   verbose: true,
 };
-
-module.exports = createJestConfig(customJestConfig);
