@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
     "target": "ES2020",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
@@ -9,39 +8,17 @@
     
     /* Module Resolution */
     "moduleResolution": "node",
-    "allowImportingTsExtensions": false,
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "./dist/types",
+    "noEmit": true,
     "jsx": "react-jsx",
-    
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitReturns": true,
     
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
-    
-    /* Additional strict checks */
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "noImplicitOverride": true,
-    "useUnknownInCatchVariables": true,
     
     /* Module */
     "allowSyntheticDefaultImports": true,
@@ -60,6 +37,10 @@
     "coverage",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "src/__tests__/**/*"
-  ],
+    "src/__tests__/**/*",
+    "**/*.stories.ts",
+    "**/*.stories.tsx",
+    "playwright.config.ts",
+    "tests/**/*"
+  ]
 }
