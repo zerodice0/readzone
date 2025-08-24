@@ -29,6 +29,9 @@
     "db:seed": "turbo db:seed --filter=@readzone/backend",
     "clean": "turbo clean && rm -rf node_modules"
   },
+  "prisma": {
+    "seed": "ts-node ./prisma/seed.ts"
+  },
   "dependencies": {
     "@tanstack/react-router": "^1.131.27",
     "@testing-library/jest-dom": "^6.7.0",
