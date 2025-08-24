@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
+import { authMiddleware, requireEmailVerification } from '../middleware/auth'
 
 const prisma = new PrismaClient()
 
@@ -16,6 +17,16 @@ const FeedQuerySchema = z.object({
 
 const LikeRequestSchema = z.object({
   action: z.enum(['like', 'unlike'])
+})
+
+const CreateReviewSchema = z.object({
+  bookId: z.string().min(1, 'Book ID is required'),
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  content: z.string().min(1, 'Content is required'),
+  isRecommended: z.boolean().default(true),
+  rating: z.number().int().min(1).max(5).optional(),
+  tags: z.array(z.string()).optional(),
+  isPublic: z.boolean().default(true)
 })
 
 // GET /api/reviews/feed
@@ -187,62 +198,168 @@ app.get('/feed', zValidator('query', FeedQuerySchema as never), async (c) => {
   }
 })
 
-// POST /api/reviews/:id/like
-app.post('/:id/like', zValidator('json', LikeRequestSchema as never), (c) => {
-  try {
-    // TODO: Get user ID from auth token
-    // For now, return an error since auth is not implemented
-    
-    // Suppress unused variables warning for future implementation
-    c.req.param('id') // reviewId for future use
-    c.req.valid('json') // action for future use
+// POST /api/reviews
+app.post('/', 
+  authMiddleware, 
+  requireEmailVerification,
+  zValidator('json', CreateReviewSchema as never), 
+  async (c) => {
+    try {
+      const reviewData = c.req.valid('json') as z.infer<typeof CreateReviewSchema>
+      const user = c.get('user')
+      
+      if (!user) {
+        return c.json({
+          success: false,
+          message: 'Authentication required'
+        }, 401)
+      }
 
-    return c.json({
-      success: false,
-      message: 'Authentication required'
-    }, 401)
-
-    // Future implementation:
-    /*
-    const userId = getUserFromToken(c) // Get from auth middleware
-    
-    if (action === 'like') {
-      await prisma.like.create({
-        data: {
-          userId,
-          reviewId
-        }
+      // Check if book exists
+      const book = await prisma.book.findUnique({
+        where: { id: reviewData.bookId }
       })
-    } else {
-      await prisma.like.delete({
-        where: {
-          userId_reviewId: {
-            userId,
-            reviewId
+
+      if (!book) {
+        return c.json({
+          success: false,
+          message: 'Book not found'
+        }, 404)
+      }
+
+      // Create the review
+      const review = await prisma.review.create({
+        data: {
+          title: reviewData.title,
+          content: reviewData.content,
+          isRecommended: reviewData.isRecommended,
+          rating: reviewData.rating,
+          tags: reviewData.tags ? JSON.stringify(reviewData.tags) : null,
+          isPublic: reviewData.isPublic,
+          status: 'PUBLISHED',
+          userId: user.id,
+          bookId: reviewData.bookId
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              nickname: true,
+              profileImage: true
+            }
+          },
+          book: {
+            select: {
+              id: true,
+              title: true,
+              author: true,
+              thumbnail: true
+            }
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: true
+            }
           }
         }
       })
+      
+      return c.json({
+        success: true,
+        data: {
+          id: review.id,
+          title: review.title,
+          content: review.content,
+          isRecommended: review.isRecommended,
+          rating: review.rating,
+          tags: review.tags ? JSON.parse(review.tags) : [],
+          isPublic: review.isPublic,
+          status: review.status,
+          createdAt: review.createdAt.toISOString(),
+          updatedAt: review.updatedAt.toISOString(),
+          user: review.user,
+          book: review.book,
+          stats: {
+            likes: review._count.likes,
+            comments: review._count.comments
+          }
+        }
+      }, 201)
+
+    } catch (error) {
+      console.error('Create review error:', error)
+
+      return c.json({
+        success: false,
+        message: 'Failed to create review'
+      }, 500)
     }
-    
-    const likesCount = await prisma.like.count({
-      where: { reviewId }
-    })
-    
-    return c.json({
-      success: true,
-      likesCount,
-      isLiked: action === 'like'
-    })
-    */
-
-  } catch (error) {
-    console.error('Like API Error:', error)
-
-    return c.json({
-      success: false,
-      message: 'Failed to update like'
-    }, 500)
   }
-})
+)
+
+// POST /api/reviews/:id/like
+app.post('/:id/like', 
+  authMiddleware, 
+  requireEmailVerification,
+  zValidator('json', LikeRequestSchema as never), 
+  async (c) => {
+    try {
+      const reviewId = c.req.param('id')
+      const { action } = c.req.valid('json') as { action: 'like' | 'unlike' }
+      const user = c.get('user')
+      
+      if (!user) {
+        return c.json({
+          success: false,
+          message: 'Authentication required'
+        }, 401)
+      }
+
+      if (action === 'like') {
+        // Create like (ignore if already exists)
+        await prisma.like.upsert({
+          where: {
+            userId_reviewId: {
+              userId: user.id,
+              reviewId
+            }
+          },
+          create: {
+            userId: user.id,
+            reviewId
+          },
+          update: {}
+        })
+      } else {
+        // Remove like (ignore if doesn't exist)
+        await prisma.like.deleteMany({
+          where: {
+            userId: user.id,
+            reviewId
+          }
+        })
+      }
+      
+      const likesCount = await prisma.like.count({
+        where: { reviewId }
+      })
+      
+      return c.json({
+        success: true,
+        likesCount,
+        isLiked: action === 'like'
+      })
+
+    } catch (error) {
+      console.error('Like API Error:', error)
+
+      return c.json({
+        success: false,
+        message: 'Failed to update like'
+      }, 500)
+    }
+  }
+)
 
 export default app

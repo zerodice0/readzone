@@ -30,7 +30,7 @@ app.get('/api/health', (c) => {
 })
 
 // Import routes
-// import reviewRoutes from './routes/reviews.js'
+import reviewRoutes from './routes/reviews'
 import { content as contentRoutes } from './routes/content'
 import authRoutes from './routes/auth'
 import { createSwaggerUI, getOpenAPISpec } from './lib/swagger'
@@ -46,7 +46,7 @@ app.get('/api', (c) => {
 })
 
 // Register routes
-// app.route('/api/reviews', reviewRoutes)
+app.route('/api/reviews', reviewRoutes)
 app.route('/api/content', contentRoutes)
 app.route('/api/auth', authRoutes)
 

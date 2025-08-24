@@ -1,4 +1,4 @@
-import { MessageCircle, BookOpen } from 'lucide-react'
+import { BookOpen, MessageCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
 /**

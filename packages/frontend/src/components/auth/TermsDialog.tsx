@@ -36,7 +36,8 @@ export function TermsDialog({ open, onOpenChange, type, onAgree }: TermsDialogPr
     
     try {
       const data = await getContent(type)
-      setContent(data)
+
+      setContent(data ?? null)
     } catch (error) {
       console.error(`Failed to load ${type} content:`, error)
       setLoadingState({

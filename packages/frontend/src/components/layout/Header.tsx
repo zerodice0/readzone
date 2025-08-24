@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bell, Menu, Search, Edit, User, LogOut, Settings } from 'lucide-react';
+import { Bell, Edit, LogOut, Menu, Search, Settings, User } from 'lucide-react';
 import { useState } from 'react';
 
 export function Header() {

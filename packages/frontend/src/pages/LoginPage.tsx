@@ -1,10 +1,17 @@
 import { useEffect } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import { BookOpen } from 'lucide-react'
 import { ActivityPreview } from '@/components/auth/ActivityPreview'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { GuestOnlyRoute } from '@/components/auth/AuthRedirect'
 
+interface LoginSearch {
+  message?: string
+}
+
 export function LoginPage() {
+  const search = useSearch({ strict: false }) as LoginSearch
+
   // SEO 및 접근성을 위한 페이지 메타데이터 설정
   useEffect(() => {
     document.title = '로그인 - ReadZone'
@@ -38,15 +45,15 @@ export function LoginPage() {
               <h1 className="text-3xl font-bold text-primary">ReadZone</h1>
             </div>
             <h2 className="text-2xl font-semibold text-foreground">
-              다시 돌아오신 것을 환영합니다!
+              {search.message ? '회원가입 완료!' : '다시 돌아오신 것을 환영합니다!'}
             </h2>
             <p className="text-muted-foreground">
-              로그인하고 새로운 독후감과 소식들을 확인해보세요
+              {search.message ?? '로그인하고 새로운 독후감과 소식들을 확인해보세요'}
             </p>
           </div>
 
           {/* 모바일: 로그인 폼만 표시, 큰 화면: 좌우 2단 구조 */}
-          <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] lg:min-h-0 lg:grid lg:grid-cols-2 lg:gap-12 lg:items-start lg:items-center max-w-6xl mx-auto lg:h-full">
+          <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] lg:min-h-0 lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center max-w-6xl mx-auto lg:h-full">
             {/* 최근 활동 미리보기 섹션 - 큰 화면에서만 표시 */}
             <div className="hidden lg:block lg:order-1">
               <ActivityPreview hideHeader />

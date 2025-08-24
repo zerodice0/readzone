@@ -150,7 +150,13 @@ export const useAuthStore = create<AuthStore>()(
             body: JSON.stringify(credentials),
           })
           
-          const { user, accessToken, refreshToken } = response
+          // 백엔드 응답 형식: { success: true, data: { user, tokens, emailVerificationRequired } }
+          if (!response.success || !response.data) {
+            throw new Error(response.error?.message ?? '로그인에 실패했습니다.')
+          }
+          
+          const { user, tokens } = response.data
+          const { accessToken, refreshToken } = tokens
           
           // 토큰 저장
           setTokens(accessToken, refreshToken, credentials.rememberMe)
@@ -231,12 +237,19 @@ export const useAuthStore = create<AuthStore>()(
             body: JSON.stringify({ refreshToken: tokens.refreshToken }),
           })
           
-          const { accessToken, refreshToken } = response
+          // 백엔드 응답 형식 확인
+          if (!response.success || !response.data) {
+            throw new Error(response.error?.message ?? '토큰 갱신에 실패했습니다.')
+          }
+          
+          const { tokens: newTokens, user } = response.data
+          const { accessToken, refreshToken } = newTokens
           
           // 새 토큰 저장
           setTokens(accessToken, refreshToken, tokens.rememberMe)
           
           set({
+            user,
             accessToken,
             refreshToken,
             isAuthenticated: true,

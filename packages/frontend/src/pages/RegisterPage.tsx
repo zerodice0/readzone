@@ -5,11 +5,14 @@ import { BookOpen } from 'lucide-react'
 import { RegisterForm } from '@/components/auth/RegisterForm'
 import { GuestOnlyRoute } from '@/components/auth/AuthRedirect'
 import { type RegisterFormData } from '@/lib/validations/auth'
+import { register } from '@/lib/api/auth'
+import { useAuthStore } from '@/store/authStore'
 
 export function RegisterPage() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { setLoginRequiredModal } = useAuthStore()
 
   // SEO 및 접근성을 위한 페이지 메타데이터 설정
   useEffect(() => {
@@ -27,21 +30,48 @@ export function RegisterPage() {
     }
   }, [])
 
-  const handleRegister = async (_data: RegisterFormData) => {
+  const handleRegister = async (data: RegisterFormData) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      // 여기서 실제 회원가입 API 호출
-      // TODO: 실제 API 호출 구현
+      // 실제 회원가입 API 호출
+      const result = await register({
+        email: data.email,
+        nickname: data.nickname,
+        password: data.password
+      })
+
+      // 회원가입 성공 시 authStore 상태 업데이트 (자동 로그인)
+      if (result.tokens && result.user) {
+        // 토큰 저장 (localStorage 사용 - 회원가입 시 기본적으로 로그인 유지)
+        localStorage.setItem('accessToken', result.tokens.accessToken)
+        localStorage.setItem('refreshToken', result.tokens.refreshToken)
+        
+        // authStore 상태 업데이트 (Zustand의 setState 패턴 사용)
+        useAuthStore.setState({
+          user: result.user,
+          accessToken: result.tokens.accessToken,
+          refreshToken: result.tokens.refreshToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          rememberMe: true
+        })
+      }
+
+      // 메인 피드로 리다이렉트 (이메일 인증 상태와 관계없이)
+      navigate({ to: '/' })
       
-      // 임시로 2초 대기 (실제 API 호출 시뮬레이션)
-      await new Promise(resolve => setTimeout(resolve, 2000))
+    } catch (error) {
+      console.error('Registration error:', error)
       
-      // 성공 시 이메일 인증 페이지로 이동 (임시로 로그인 페이지로 이동)
-      navigate({ to: '/login' })
-    } catch (_error) {
-      setError('회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      // API 에러 메시지 추출
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
