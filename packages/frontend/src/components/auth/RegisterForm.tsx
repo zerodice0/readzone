@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator'
 import { TermsDialog } from './TermsDialog'
+import { checkDuplicate } from '@/lib/api/auth'
 
 import { type RegisterFormData, registerSchema } from '@/lib/validations/auth'
 
@@ -30,12 +31,6 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
   // 중복 체크 상태
-  const [userIdCheck, setUserIdCheck] = useState<DuplicationCheckState>({
-    isChecking: false,
-    isAvailable: null,
-    message: ''
-  })
-  
   const [emailCheck, setEmailCheck] = useState<DuplicationCheckState>({
     isChecking: false,
     isAvailable: null,
@@ -62,7 +57,6 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
     resolver: zodResolver(registerSchema),
     mode: 'onBlur',
     defaultValues: {
-      userId: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -74,36 +68,39 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
 
   const watchedPassword = watch('password', '')
 
-  // 중복 체크 시뮬레이션 함수 (실제로는 API 호출)
-  const checkDuplication = async (type: 'userId' | 'email' | 'nickname', value: string) => {
+  // 실제 API를 사용한 중복 체크 함수
+  const checkDuplication = async (type: 'email' | 'nickname', value: string) => {
     if (!value || value.length < 2) {
       return
     }
 
-    const setState = type === 'userId' ? setUserIdCheck : 
-                     type === 'email' ? setEmailCheck : setNicknameCheck
+    const setState = type === 'email' ? setEmailCheck : setNicknameCheck
 
     setState(prev => ({ ...prev, isChecking: true }))
 
-    // 시뮬레이션을 위한 딜레이
-    await new Promise(resolve => setTimeout(resolve, 800))
+    try {
+      const result = await checkDuplicate(type, value)
 
-    // 임시 중복 체크 로직 (실제로는 API 호출)
-    const isDuplicate = Math.random() > 0.7 // 30% 확률로 중복
-
-    setState({
-      isChecking: false,
-      isAvailable: !isDuplicate,
-      message: isDuplicate 
-        ? `이미 사용중인 ${type === 'userId' ? '아이디' : type === 'email' ? '이메일' : '닉네임'}입니다.`
-        : `사용 가능한 ${type === 'userId' ? '아이디' : type === 'email' ? '이메일' : '닉네임'}입니다.`
-    })
+      setState({
+        isChecking: false,
+        isAvailable: !result.isDuplicate,
+        message: result.isDuplicate 
+          ? `이미 사용중인 ${type === 'email' ? '이메일' : '닉네임'}입니다.`
+          : `사용 가능한 ${type === 'email' ? '이메일' : '닉네임'}입니다.`
+      })
+    } catch (error) {
+      console.error('Duplicate check error:', error)
+      setState({
+        isChecking: false,
+        isAvailable: null,
+        message: '중복 확인 중 오류가 발생했습니다. 다시 시도해주세요.'
+      })
+    }
   }
 
   const handleFormSubmit = async (data: RegisterFormData) => {
     // 중복 체크가 완료되지 않았거나 사용 불가능한 경우 검증
-    if (userIdCheck.isAvailable !== true || 
-        emailCheck.isAvailable !== true || 
+    if (emailCheck.isAvailable !== true || 
         nicknameCheck.isAvailable !== true) {
       return
     }
@@ -149,31 +146,6 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
       )}
 
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-        {/* 아이디 */}
-        <div className="space-y-2">
-          <Label htmlFor="userId">아이디 *</Label>
-          <div className="relative">
-            <Input
-              id="userId"
-              placeholder="6-20자의 영문, 숫자, _, - 조합"
-              className={getDuplicationStyle(userIdCheck)}
-              {...register('userId')}
-              onBlur={(e) => checkDuplication('userId', e.target.value)}
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              {getDuplicationIcon(userIdCheck)}
-            </div>
-          </div>
-          {errors.userId && (
-            <p className="text-sm text-red-600">{errors.userId.message}</p>
-          )}
-          {userIdCheck.message && (
-            <p className={`text-sm ${userIdCheck.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-              {userIdCheck.message}
-            </p>
-          )}
-        </div>
-
         {/* 이메일 */}
         <div className="space-y-2">
           <Label htmlFor="email">이메일 *</Label>
@@ -340,7 +312,6 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
           type="submit"
           className="w-full"
           disabled={isLoading || 
-                   userIdCheck.isAvailable !== true || 
                    emailCheck.isAvailable !== true || 
                    nicknameCheck.isAvailable !== true}
         >

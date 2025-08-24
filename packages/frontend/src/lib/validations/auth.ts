@@ -19,34 +19,25 @@ export type LoginFormData = z.infer<typeof loginSchema>
 
 // 회원가입 폼 검증 스키마
 export const registerSchema = z.object({
-  userId: z
-    .string()
-    .min(1, '아이디를 입력해주세요.')
-    .min(6, '아이디는 최소 6자 이상이어야 합니다.')
-    .max(20, '아이디는 최대 20자까지 가능합니다.')
-    .regex(
-      /^[a-zA-Z0-9_-]+$/,
-      '아이디는 영문, 숫자, _, - 만 사용 가능합니다.'
-    ),
   email: z
     .string()
     .min(1, '이메일을 입력해주세요.')
     .email('올바른 이메일 형식을 입력해주세요.')
-    .max(255, '이메일이 너무 깁니다.'),
+    .max(320, '이메일이 너무 깁니다.'),
   password: z
     .string()
     .min(1, '비밀번호를 입력해주세요.')
     .min(6, '비밀번호는 최소 6자 이상이어야 합니다.')
-    .max(100, '비밀번호가 너무 깁니다.'),
+    .max(128, '비밀번호가 너무 깁니다.'),
   confirmPassword: z.string().min(1, '비밀번호 확인을 입력해주세요.'),
   nickname: z
     .string()
     .min(1, '닉네임을 입력해주세요.')
     .min(2, '닉네임은 최소 2자 이상이어야 합니다.')
-    .max(20, '닉네임은 최대 20자까지 가능합니다.')
+    .max(50, '닉네임은 최대 50자까지 가능합니다.')
     .regex(
-      /^[가-힣a-zA-Z0-9_-]+$/,
-      '닉네임은 한글, 영문, 숫자, _, - 만 사용 가능합니다.'
+      /^[가-힣a-zA-Z0-9_]+$/,
+      '닉네임은 한글, 영문, 숫자, 언더스코어만 사용 가능합니다.'
     ),
   terms: z.boolean().refine((val) => val === true, {
     message: '서비스 이용약관에 동의해주세요.',

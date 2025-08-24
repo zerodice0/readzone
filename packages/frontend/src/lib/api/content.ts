@@ -36,7 +36,7 @@ const API_BASE_URL = import.meta.env.MODE === 'development'
 /**
  * 서비스 이용약관 조회
  */
-export async function getTermsContent(version?: string): Promise<ContentResponse> {
+export async function getTermsContent(version?: string): Promise<ContentResponse | undefined> {
   const url = new URL(`${API_BASE_URL}/content/terms`)
   
   if (version) {
@@ -51,7 +51,7 @@ export async function getTermsContent(version?: string): Promise<ContentResponse
 
   const result: ApiResponse<ContentResponse> = await response.json()
   
-  if (!result.success ?? !result.data) {
+  if (!result.success && !result.data) {
     throw new Error(result.error ?? 'Failed to fetch terms content')
   }
 
@@ -61,7 +61,7 @@ export async function getTermsContent(version?: string): Promise<ContentResponse
 /**
  * 개인정보 처리방침 조회
  */
-export async function getPrivacyContent(version?: string): Promise<ContentResponse> {
+export async function getPrivacyContent(version?: string): Promise<ContentResponse | undefined> {
   const url = new URL(`${API_BASE_URL}/content/privacy`)
 
   if (version) {
@@ -76,7 +76,7 @@ export async function getPrivacyContent(version?: string): Promise<ContentRespon
 
   const result: ApiResponse<ContentResponse> = await response.json()
   
-  if (!result.success ?? !result.data) {
+  if (!result.success && !result.data) {
     throw new Error(result.error ?? 'Failed to fetch privacy content')
   }
 
@@ -86,7 +86,7 @@ export async function getPrivacyContent(version?: string): Promise<ContentRespon
 /**
  * 콘텐츠 조회 (통합)
  */
-export async function getContent(type: 'terms' | 'privacy', version?: string): Promise<ContentResponse> {
+export async function getContent(type: 'terms' | 'privacy', version?: string): Promise<ContentResponse | undefined> {
   return type === 'terms' 
     ? getTermsContent(version)
     : getPrivacyContent(version)
@@ -95,7 +95,7 @@ export async function getContent(type: 'terms' | 'privacy', version?: string): P
 /**
  * 특정 타입의 최신 버전 조회
  */
-export async function getLatestVersion(type: 'terms' | 'privacy'): Promise<string> {
+export async function getLatestVersion(type: 'terms' | 'privacy'): Promise<string | undefined> {
   const response = await fetch(`${API_BASE_URL}/content/${type}/version`)
   
   if (!response.ok) {
@@ -104,17 +104,17 @@ export async function getLatestVersion(type: 'terms' | 'privacy'): Promise<strin
 
   const result: ApiResponse<{ version: string }> = await response.json()
   
-  if (!result.success ?? !result.data) {
+  if (!result.success && !result.data) {
     throw new Error(result.error ?? `Failed to fetch ${type} version`)
   }
 
-  return result.data.version
+  return result.data?.version
 }
 
 /**
  * 버전 히스토리 조회
  */
-export async function getVersionHistory(type: 'terms' | 'privacy'): Promise<ContentMetadata['changeLog']> {
+export async function getVersionHistory(type: 'terms' | 'privacy'): Promise<ContentMetadata['changeLog'] | undefined> {
   const response = await fetch(`${API_BASE_URL}/content/${type}/history`)
   
   if (!response.ok) {
@@ -123,11 +123,11 @@ export async function getVersionHistory(type: 'terms' | 'privacy'): Promise<Cont
 
   const result: ApiResponse<{ history: ContentMetadata['changeLog'] }> = await response.json()
   
-  if (!result.success ?? !result.data) {
+  if (!result.success && !result.data) {
     throw new Error(result.error ?? `Failed to fetch ${type} history`)
   }
 
-  return result.data.history
+  return result.data?.history
 }
 
 export type { ContentResponse, ContentMetadata }
