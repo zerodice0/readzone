@@ -3,27 +3,27 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
   id            String   @id @default(cuid())
-  email         String   @unique
-  nickname      String   @unique
-  password      String
-  bio           String?
-  profileImage  String?
+  email         String   @unique @db.VarChar(320)
+  nickname      String   @unique @db.VarChar(50)
+  password      String   @db.VarChar(255)
+  bio           String?  @db.VarChar(500)
+  profileImage  String?  @db.VarChar(255)
   isVerified    Boolean  @default(false)
-  verificationToken String?
-  resetToken    String?
+  verificationToken String? @db.Text
+  resetToken    String?  @db.Text
   resetTokenExpires DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
 
   // Relations
   reviews       Review[]
@@ -39,22 +39,22 @@ model User {
 
 model Book {
   id          String  @id @default(cuid())
-  isbn        String? @unique
-  title       String
-  author      String
-  publisher   String?
-  publishedAt String? // Store as string for flexibility
-  description String?
-  thumbnail   String?
-  category    String?
+  isbn        String? @unique @db.VarChar(20)
+  title       String  @db.VarChar(500)
+  author      String  @db.VarChar(200)
+  publisher   String? @db.VarChar(200)
+  publishedAt String? @db.VarChar(20) // Store as string for flexibility
+  description String? @db.Text
+  thumbnail   String? @db.VarChar(500)
+  category    String? @db.VarChar(100)
   pages       Int?
   
   // Book source tracking
-  source      String @default("MANUAL") // "KAKAO_API" | "DATABASE" | "MANUAL"
-  externalId  String? // Kakao book ID or other external ID
+  source      String @default("MANUAL") @db.VarChar(20) // "KAKAO_API" | "DATABASE" | "MANUAL"
+  externalId  String? @db.VarChar(100) // Kakao book ID or other external ID
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
 
   // Relations
   reviews     Review[]
@@ -64,18 +64,18 @@ model Book {
 
 model Review {
   id           String      @id @default(cuid())
-  title        String
-  content      String
+  title        String      @db.VarChar(200)
+  content      String      @db.Text
   isRecommended Boolean    @default(true)
   rating       Int?       @default(5) // 1-5 stars, nullable for flexibility
-  tags         String?    // JSON array of strings
+  tags         String?    @db.Text // JSON array of strings
   
   // Privacy and status
   isPublic     Boolean    @default(true)
-  status       String @default("PUBLISHED") // "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  status       String @default("PUBLISHED") @db.VarChar(20) // "DRAFT" | "PUBLISHED" | "ARCHIVED"
   
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
 
   // Foreign keys
   userId       String
@@ -97,7 +97,7 @@ model Like {
   userId   String
   reviewId String
   
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   // Relations
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -110,13 +110,13 @@ model Like {
 
 model Comment {
   id        String    @id @default(cuid())
-  content   String
+  content   String    @db.Text
   
   // Optional parent for replies
   parentId  String?
   
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
 
   // Foreign keys
   userId    String
@@ -138,7 +138,7 @@ model Follow {
   followerId  String // User who follows
   followingId String // User being followed
   
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
 
   // Relations
   follower    User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
@@ -151,14 +151,14 @@ model Follow {
 
 model Notification {
   id          String           @id @default(cuid())
-  type        String // "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
-  message     String
+  type        String @db.VarChar(20) // "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
+  message     String @db.VarChar(500)
   isRead      Boolean          @default(false)
   
   // Optional data for different notification types
-  data        String?          // JSON data for additional context
+  data        String?          @db.Text // JSON data for additional context
   
-  createdAt   DateTime         @default(now())
+  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
 
   // Foreign keys
   userId      String           // Recipient
@@ -173,7 +173,10 @@ model Notification {
   @@map("notifications")
 }
 
-// SQLite doesn't support enums, use String with constraints
+// PostgreSQL optimizations and indexes
 // BookSource: "KAKAO_API" | "DATABASE" | "MANUAL"
 // ReviewStatus: "DRAFT" | "PUBLISHED" | "ARCHIVED"  
 // NotificationType: "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
+
+// Additional indexes for better performance
+// These will be created via migrations for better control
