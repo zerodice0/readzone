@@ -43,10 +43,12 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.10.5",
     "@types/nodemailer": "^6.4.14",
+    "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",
     "eslint": "^8.57.1",
     "globals": "^16.3.0",
+    "supertest": "^7.1.4",
     "tsx": "^4.6.2",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"

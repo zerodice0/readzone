@@ -26,7 +26,8 @@ export function generateAccessToken(payload: Omit<JWTPayload, 'type' | 'iat' | '
   const options: SignOptions = { 
     expiresIn: JWT_EXPIRES_IN as ms.StringValue,
     issuer: 'readzone-api',
-    audience: 'readzone-client'
+    audience: 'readzone-client',
+    jwtid: crypto.randomUUID() // 유니크 ID 추가
   }
 
   return jwt.sign(payloadData, JWT_SECRET, options)
@@ -40,7 +41,8 @@ export function generateRefreshToken(payload: Omit<JWTPayload, 'type' | 'iat' | 
   const options: SignOptions = { 
     expiresIn: JWT_REFRESH_EXPIRES_IN as ms.StringValue,
     issuer: 'readzone-api',
-    audience: 'readzone-client'
+    audience: 'readzone-client',
+    jwtid: crypto.randomUUID() // 유니크 ID 추가
   }
 
   return jwt.sign(payloadData, JWT_SECRET, options)
