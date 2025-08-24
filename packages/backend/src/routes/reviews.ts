@@ -19,15 +19,15 @@ const LikeRequestSchema = z.object({
 })
 
 // GET /api/reviews/feed
-app.get('/feed', zValidator('query', FeedQuerySchema), async (c) => {
+app.get('/feed', zValidator('query', FeedQuerySchema as never), async (c) => {
   try {
-    const { tab, cursor, limit } = c.req.valid('query')
+    const { tab, cursor, limit } = c.req.valid('query') as {
+      tab: 'recommended' | 'latest' | 'following';
+      cursor?: string;
+      limit: number;
+    }
     
-    // Build cursor-based pagination
-    const cursorCondition = cursor ? {
-      cursor: { id: cursor },
-      skip: 1 // Skip the cursor record itself
-    } : {}
+    // Cursor-based pagination will be handled in the query options
 
     // Build base query conditions
     const baseConditions = {
@@ -109,13 +109,15 @@ app.get('/feed', zValidator('query', FeedQuerySchema), async (c) => {
     } as const
 
     // Get reviews with all related data
-    const reviews = await prisma.review.findMany({
+    const findManyOptions = {
       where,
       include: REVIEW_INCLUDE_CONFIG,
       orderBy,
       take: limit + 1, // Take one extra to determine if there are more
-      ...cursorCondition
-    })
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {})
+    }
+    
+    const reviews = await prisma.review.findMany(findManyOptions)
 
     // Determine if there are more records
     const hasMore = reviews.length > limit
@@ -186,7 +188,7 @@ app.get('/feed', zValidator('query', FeedQuerySchema), async (c) => {
 })
 
 // POST /api/reviews/:id/like
-app.post('/:id/like', zValidator('json', LikeRequestSchema), (c) => {
+app.post('/:id/like', zValidator('json', LikeRequestSchema as never), (c) => {
   try {
     // TODO: Get user ID from auth token
     // For now, return an error since auth is not implemented

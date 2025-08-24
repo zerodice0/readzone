@@ -1,12 +1,12 @@
 import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
+import { OpenAPIHono } from '@hono/zod-openapi'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { secureHeaders } from 'hono/secure-headers'
 import 'dotenv/config'
 
-const app = new Hono()
+const app = new OpenAPIHono()
 
 // Middleware
 app.use('*', logger())
@@ -32,6 +32,8 @@ app.get('/api/health', (c) => {
 // Import routes
 // import reviewRoutes from './routes/reviews.js'
 import { content as contentRoutes } from './routes/content'
+import authRoutes from './routes/auth'
+import { createSwaggerUI, getOpenAPISpec } from './lib/swagger'
 
 // API routes
 app.get('/api', (c) => {
@@ -46,6 +48,13 @@ app.get('/api', (c) => {
 // Register routes
 // app.route('/api/reviews', reviewRoutes)
 app.route('/api/content', contentRoutes)
+app.route('/api/auth', authRoutes)
+
+// Swagger documentation
+app.doc('/api/docs/openapi.json', getOpenAPISpec())
+
+app.get('/api/docs', createSwaggerUI())
+app.get('/api/docs/*', createSwaggerUI())
 
 // Temporary basic feed endpoint for testing
 app.get('/api/reviews/feed', (c) => {
