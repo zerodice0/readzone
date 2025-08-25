@@ -7,7 +7,7 @@ import useFeedStore, { useFeedCursor, useFeedReviews } from '@/store/feedStore';
 import { useFeed, useLikeMutation } from '@/hooks/useFeedApi';
 import type { FeedTab } from '@/types/feed';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthGuard } from '@/components/auth/AuthGuard';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 
 const FEED_LIMIT = 20;
 

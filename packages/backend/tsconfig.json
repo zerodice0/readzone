@@ -72,8 +72,7 @@
     "dist",
     "build",
     "coverage",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "src/__tests__/**/*"
   ],
   "ts-node": {
     "esm": true,

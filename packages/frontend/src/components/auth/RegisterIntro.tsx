@@ -51,6 +51,7 @@ export function RegisterIntro() {
         </p>
         <Link 
           to="/login" 
+          search={{ redirect: undefined }}
           className="text-primary hover:underline font-medium"
         >
           로그인하기 →

@@ -19,7 +19,7 @@ export function initializeAuth() {
  * API 인터셉터 설정
  */
 function setupApiInterceptors() {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001'
   
   // fetch 인터셉터
   const originalFetch = window.fetch
@@ -104,7 +104,7 @@ export function setupTokenSynchronization() {
 export function setupUnloadProtection() {
   window.addEventListener('beforeunload', (event) => {
     // 작성 중인 폼이 있는지 확인하는 로직은 각 페이지에서 구현
-    const hasUnsavedChanges = window.__unsavedChanges || false
+    const hasUnsavedChanges = window.__unsavedChanges ?? false
     
     if (hasUnsavedChanges) {
       event.preventDefault()
@@ -128,7 +128,7 @@ export function setupSecurityHeaders() {
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: https:;
-    connect-src 'self' ${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'};
+    connect-src 'self' ${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001'};
     font-src 'self';
     object-src 'none';
     base-uri 'self';
@@ -148,7 +148,7 @@ export function setupAccessibility() {
     if (event.key === 'Escape') {
       const activeElement = document.activeElement as HTMLElement
 
-      if (activeElement && activeElement.blur) {
+      if (activeElement?.blur) {
         activeElement.blur()
       }
     }
@@ -157,7 +157,7 @@ export function setupAccessibility() {
     if (event.key === 'Enter' && event.target instanceof HTMLElement) {
       const target = event.target
 
-      if (target.role === 'button' && !(target as any).disabled) {
+      if (target.role === 'button' && !(target as HTMLButtonElement).disabled) {
         target.click()
       }
     }

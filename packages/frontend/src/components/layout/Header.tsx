@@ -18,7 +18,7 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLoginClick = () => {
-    navigate({ to: '/login' });
+    navigate({ to: '/login', search: { redirect: undefined } });
   };
 
   const handleRegisterClick = () => {
@@ -99,7 +99,7 @@ export function Header() {
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="text-sm">
-                          {user?.nickname?.charAt(0).toUpperCase() || 'U'}
+                          {user?.nickname?.charAt(0).toUpperCase() ?? 'U'}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -108,7 +108,7 @@ export function Header() {
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
-                          {user?.nickname || '사용자'}
+                          {user?.nickname ?? '사용자'}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user?.email}

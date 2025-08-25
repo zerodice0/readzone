@@ -181,7 +181,7 @@ export async function checkDuplicate(
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '중복 확인 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '중복 확인 중 오류가 발생했습니다')
   }
 
   return response.data
@@ -197,7 +197,7 @@ export async function register(data: RegisterRequest): Promise<RegisterResponse>
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '회원가입 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '회원가입 중 오류가 발생했습니다')
   }
 
   return response.data
@@ -213,7 +213,7 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '로그인 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '로그인 중 오류가 발생했습니다')
   }
 
   return response.data
@@ -229,7 +229,7 @@ export async function refreshToken(refreshToken: string): Promise<RefreshTokenRe
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '토큰 갱신 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '토큰 갱신 중 오류가 발생했습니다')
   }
 
   return response.data
@@ -244,7 +244,7 @@ export async function verifyToken(): Promise<VerifyTokenResponse> {
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '토큰 검증 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '토큰 검증 중 오류가 발생했습니다')
   }
 
   return response.data
@@ -259,7 +259,7 @@ export async function getCurrentUser(): Promise<User> {
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '사용자 정보 조회 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '사용자 정보 조회 중 오류가 발생했습니다')
   }
 
   return response.data.user
@@ -274,7 +274,7 @@ export async function logout(): Promise<void> {
   })
 
   if (!response.success) {
-    throw new Error(response.error?.message || '로그아웃 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '로그아웃 중 오류가 발생했습니다')
   }
 
   // 로컬 스토리지에서 토큰 제거
@@ -292,7 +292,7 @@ export async function sendEmailVerification(email: string): Promise<SendVerifica
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '이메일 인증 발송 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '이메일 인증 발송 중 오류가 발생했습니다')
   }
 
   return response.data
@@ -308,7 +308,7 @@ export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '이메일 인증 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '이메일 인증 중 오류가 발생했습니다')
   }
 
   // 인증 성공 시 토큰 저장
@@ -328,7 +328,7 @@ export async function resendEmailVerification(email: string): Promise<ResendVeri
   })
 
   if (!response.success || !response.data) {
-    throw new Error(response.error?.message || '인증 이메일 재발송 중 오류가 발생했습니다')
+    throw new Error(response.error?.message  ?? '인증 이메일 재발송 중 오류가 발생했습니다')
   }
 
   return response.data

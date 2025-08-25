@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WriteRouteImport } from './routes/write'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -23,6 +24,11 @@ import { Route as BooksBookIdRouteImport } from './routes/books.$bookId'
 const WriteRoute = WriteRouteImport.update({
   id: '/write',
   path: '/write',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userId': typeof ProfileUserIdRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userId': typeof ProfileUserIdRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userId': typeof ProfileUserIdRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/settings'
+    | '/verify-email'
     | '/write'
     | '/books/$bookId'
     | '/profile/$userId'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/settings'
+    | '/verify-email'
     | '/write'
     | '/books/$bookId'
     | '/profile/$userId'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/search'
     | '/settings'
+    | '/verify-email'
     | '/write'
     | '/books/$bookId'
     | '/profile/$userId'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   WriteRoute: typeof WriteRoute
   BooksBookIdRoute: typeof BooksBookIdRoute
   ProfileUserIdRoute: typeof ProfileUserIdRoute
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/write'
       fullPath: '/write'
       preLoaderRoute: typeof WriteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   WriteRoute: WriteRoute,
   BooksBookIdRoute: BooksBookIdRoute,
   ProfileUserIdRoute: ProfileUserIdRoute,

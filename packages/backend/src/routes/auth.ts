@@ -1,9 +1,10 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { prisma } from '../lib/prisma'
 import { hashPassword, validatePasswordPolicy, verifyPassword } from '../lib/password'
-import { generateEmailVerificationToken, generateTokenPair, verifyToken, validateTokenType } from '../lib/jwt'
+import { generateEmailVerificationToken, generateTokenPair, validateTokenType, verifyToken } from '../lib/jwt'
 import { createAuthRouteResponse } from '../schemas/common'
 import { AuthRequest, CheckDuplicateData, LoginData, RegisterData } from '../schemas/auth'
+import { logEmailInDevelopment, sendEmailVerification } from '../lib/email'
 
 const auth = new OpenAPIHono()
 
@@ -316,6 +317,28 @@ auth.openapi(registerRoute, async (c) => {
       data: { verificationToken: emailVerificationToken }
     })
 
+    // 이메일 인증 메일 발송
+    try {
+      const emailResult = await sendEmailVerification(
+        user.email,
+        user.nickname,
+        emailVerificationToken
+      )
+
+      if (emailResult.success) {
+        logEmailInDevelopment(
+          user.email,
+          '[ReadZone] 이메일 인증을 완료해주세요',
+          `http://localhost:3000/verify-email?token=${emailVerificationToken}`
+        )
+      } else {
+        console.warn('Email sending failed during registration:', emailResult.error)
+      }
+    } catch (error) {
+      console.error('Email sending error during registration:', error)
+      // 이메일 발송 실패해도 회원가입은 계속 진행
+    }
+
     // JWT 토큰 생성 (이메일 인증 전이므로 제한된 접근)
     const tokens = generateTokenPair({
       userId: user.id,
@@ -439,6 +462,274 @@ auth.openapi(refreshRoute, async (c) => {
       error: {
         code: 'TOKEN_REFRESH_FAILED',
         message: '토큰 갱신 중 오류가 발생했습니다'
+      }
+    }, 500)
+  }
+})
+
+// Resend Verification Route
+const resendVerificationRoute = createRoute({
+  method: 'post',
+  path: '/resend-verification',
+  tags: ['Authentication'],
+  summary: '이메일 인증 재발송',
+  description: '이메일 인증을 재발송합니다.',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: AuthRequest.resendVerification
+        }
+      }
+    }
+  },
+  responses: createAuthRouteResponse(RegisterData, {
+    successDescription: '이메일 재발송 성공'
+  })
+})
+
+auth.openapi(resendVerificationRoute, async (c) => {
+  try {
+    const { email } = c.req.valid('json')
+
+    // 사용자 찾기
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        nickname: true,
+        isVerified: true,
+        verificationToken: true
+      }
+    })
+
+    if (!user) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'USER_NOT_FOUND',
+          message: '해당 이메일의 사용자를 찾을 수 없습니다'
+        }
+      }, 404)
+    }
+
+    if (user.isVerified) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'ALREADY_VERIFIED',
+          message: '이미 인증된 계정입니다'
+        }
+      }, 400)
+    }
+
+    // 새 인증 토큰 생성
+    const emailVerificationToken = generateEmailVerificationToken({
+      userId: user.id,
+      email: user.email,
+      nickname: user.nickname
+    })
+
+    // 토큰 업데이트
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verificationToken: emailVerificationToken }
+    })
+
+    // 이메일 재발송
+    try {
+      const emailResult = await sendEmailVerification(
+        user.email,
+        user.nickname,
+        emailVerificationToken
+      )
+
+      if (emailResult.success) {
+        logEmailInDevelopment(
+          user.email,
+          '[ReadZone] 이메일 인증을 완료해주세요 (재발송)',
+          `http://localhost:3000/verify-email?token=${emailVerificationToken}`
+        )
+
+        return c.json({
+          success: true as const,
+          data: {
+            user: {
+              id: user.id,
+              email: user.email,
+              nickname: user.nickname,
+              isVerified: user.isVerified,
+              createdAt: new Date().toISOString()
+            },
+            tokens: generateTokenPair({
+              userId: user.id,
+              email: user.email,
+              nickname: user.nickname
+            }),
+            emailVerificationRequired: true as const,
+            message: '인증 이메일이 재발송되었습니다. 이메일을 확인해주세요.'
+          }
+        }, 200)
+      } else {
+        throw new Error(emailResult.error ?? 'Email sending failed')
+      }
+    } catch (error) {
+      console.error('Email resend error:', error)
+
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'EMAIL_SEND_FAILED',
+          message: '이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.'
+        }
+      }, 500)
+    }
+
+  } catch (error) {
+    console.error('Resend verification error:', error)
+
+    return c.json({
+      success: false as const,
+      error: {
+        code: 'RESEND_VERIFICATION_FAILED',
+        message: '이메일 재발송 중 오류가 발생했습니다'
+      }
+    }, 500)
+  }
+})
+
+// Verify Email Route
+const verifyEmailRoute = createRoute({
+  method: 'post',
+  path: '/verify-email',
+  tags: ['Authentication'],
+  summary: '이메일 인증 확인',
+  description: '이메일 인증 토큰을 확인하고 계정을 활성화합니다.',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: AuthRequest.verifyEmail
+        }
+      }
+    }
+  },
+  responses: createAuthRouteResponse(LoginData, {
+    successDescription: '이메일 인증 성공'
+  })
+})
+
+auth.openapi(verifyEmailRoute, async (c) => {
+  try {
+    const { token } = c.req.valid('json')
+
+    // 토큰 검증
+    let payload
+    
+    try {
+      payload = verifyToken(token)
+    } catch (_error) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'INVALID_TOKEN',
+          message: '유효하지 않은 인증 토큰입니다'
+        }
+      }, 400)
+    }
+
+    // 이메일 인증 토큰인지 확인
+    if (payload.type !== 'email-verification') {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'INVALID_TOKEN_TYPE',
+          message: '이메일 인증 토큰이 아닙니다'
+        }
+      }, 400)
+    }
+
+    // 사용자 찾기 및 토큰 확인
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        email: true,
+        nickname: true,
+        isVerified: true,
+        verificationToken: true
+      }
+    })
+
+    if (!user) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'USER_NOT_FOUND',
+          message: '사용자를 찾을 수 없습니다'
+        }
+      }, 404)
+    }
+
+    if (user.isVerified) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'ALREADY_VERIFIED',
+          message: '이미 인증된 계정입니다'
+        }
+      }, 400)
+    }
+
+    if (user.verificationToken !== token) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'TOKEN_MISMATCH',
+          message: '인증 토큰이 일치하지 않습니다'
+        }
+      }, 400)
+    }
+
+    // 사용자 인증 완료
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { 
+        isVerified: true,
+        verificationToken: null
+      }
+    })
+
+    // 새 JWT 토큰 생성 (인증된 사용자)
+    const tokens = generateTokenPair({
+      userId: user.id,
+      email: user.email,
+      nickname: user.nickname
+    })
+
+    return c.json({
+      success: true as const,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          nickname: user.nickname,
+          isVerified: true
+        },
+        tokens,
+        emailVerificationRequired: false as const
+      }
+    }, 200)
+
+  } catch (error) {
+    console.error('Email verification error:', error)
+
+    return c.json({
+      success: false as const,
+      error: {
+        code: 'EMAIL_VERIFICATION_FAILED',
+        message: '이메일 인증 중 오류가 발생했습니다'
       }
     }, 500)
   }

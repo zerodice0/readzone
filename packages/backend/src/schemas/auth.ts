@@ -79,5 +79,15 @@ export const AuthRequest = {
   // 토큰 갱신 요청
   refresh: z.object({
     refreshToken: z.string().min(1, '리프레시 토큰이 필요합니다')
+  }),
+
+  // 이메일 인증 재발송 요청
+  resendVerification: z.object({
+    email: z.string().email('올바른 이메일 형식이 아닙니다').max(320)
+  }),
+
+  // 이메일 인증 처리 요청
+  verifyEmail: z.object({
+    token: z.string().min(1, '인증 토큰이 필요합니다')
   })
 }

@@ -6,13 +6,11 @@ import { RegisterForm } from '@/components/auth/RegisterForm'
 import { GuestOnlyRoute } from '@/components/auth/AuthRedirect'
 import { type RegisterFormData } from '@/lib/validations/auth'
 import { register } from '@/lib/api/auth'
-import { useAuthStore } from '@/store/authStore'
 
 export function RegisterPage() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { setLoginRequiredModal } = useAuthStore()
 
   // SEO 및 접근성을 위한 페이지 메타데이터 설정
   useEffect(() => {
@@ -42,27 +40,25 @@ export function RegisterPage() {
         password: data.password
       })
 
-      // 회원가입 성공 시 authStore 상태 업데이트 (자동 로그인)
-      if (result.tokens && result.user) {
-        // 토큰 저장 (localStorage 사용 - 회원가입 시 기본적으로 로그인 유지)
+      // 회원가입 성공 시 토큰 저장
+      if (result.tokens) {
         localStorage.setItem('accessToken', result.tokens.accessToken)
         localStorage.setItem('refreshToken', result.tokens.refreshToken)
-        
-        // authStore 상태 업데이트 (Zustand의 setState 패턴 사용)
-        useAuthStore.setState({
-          user: result.user,
-          accessToken: result.tokens.accessToken,
-          refreshToken: result.tokens.refreshToken,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-          rememberMe: true
-        })
       }
 
-      // 메인 피드로 리다이렉트 (이메일 인증 상태와 관계없이)
-      navigate({ to: '/' })
-      
+      // 이메일 인증이 필요한 경우
+      if (result.emailVerificationRequired) {
+        // 임시로 로그인 페이지로 리다이렉트 (이메일 인증 페이지는 나중에 추가)
+        navigate({ 
+          to: '/login',
+          search: { 
+            redirect: undefined
+          }
+        })
+      } else {
+        // 이메일 인증이 불필요한 경우 바로 메인 페이지로
+        navigate({ to: '/' })
+      }
     } catch (error) {
       console.error('Registration error:', error)
       

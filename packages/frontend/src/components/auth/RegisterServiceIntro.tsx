@@ -75,6 +75,7 @@ export function RegisterServiceIntro() {
         <span className="text-muted-foreground">이미 계정이 있으신가요? </span>
         <Link
           to="/login"
+          search={{ redirect: undefined }}
           className="text-primary hover:underline font-medium"
         >
           로그인하기

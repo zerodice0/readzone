@@ -4,6 +4,7 @@ export interface User {
   nickname: string
   bio?: string
   profileImage?: string
+  isVerified: boolean
   createdAt: string
   updatedAt: string
 }

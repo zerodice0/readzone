@@ -19,7 +19,9 @@ export function EmailVerificationBanner({ onDismiss }: EmailVerificationBannerPr
   }
 
   const handleResendEmail = async () => {
-    if (!user?.email) return
+    if (!user?.email) {
+      return
+    }
 
     setIsResending(true)
     setError(null)

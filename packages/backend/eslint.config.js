@@ -12,7 +12,8 @@ export default [
       'build',
       'prisma/migrations',
       '*.config.js',
-      '*.config.ts'
+      '*.config.ts',
+      'src/__tests__/**/*'
     ],
   },
   {

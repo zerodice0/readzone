@@ -22,14 +22,9 @@ export function useAuth() {
   // 로그인 래퍼
   const handleLogin = useCallback(
     async (credentials: LoginRequest) => {
-      try {
-        await login(credentials)
-        // 로그인 성공 시 사용자 정보 가져오기
-        await getCurrentUser()
-      } catch (error) {
-        // 에러는 이미 store에서 처리됨
-        throw error
-      }
+      await login(credentials)
+      // 로그인 성공 시 사용자 정보 가져오기
+      await getCurrentUser()
     },
     [login, getCurrentUser]
   )
@@ -102,7 +97,7 @@ export function useAuth() {
  * 로그인이 필요한 액션을 수행하는 훅
  */
 export function useRequireAuth() {
-  const { isAuthenticated, login } = useAuth()
+  const { isAuthenticated } = useAuth()
   
   return useCallback(
     (action: () => void | Promise<void>, redirectToLogin = true) => {
@@ -113,10 +108,10 @@ export function useRequireAuth() {
         window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`
       } else {
         // 로그인 필요 알림만 표시
-        alert('로그인이 필요한 기능입니다.')
+        console.warn('로그인이 필요한 기능입니다.')
       }
     },
-    [isAuthenticated, login]
+    [isAuthenticated]
   )
 }
 
