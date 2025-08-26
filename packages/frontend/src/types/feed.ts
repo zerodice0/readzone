@@ -4,6 +4,7 @@ export interface ReviewCard {
   createdAt: string;
   author: {
     id: string;
+    userid: string;
     username: string;
     profileImage?: string;
   };

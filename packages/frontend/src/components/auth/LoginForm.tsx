@@ -34,7 +34,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      emailOrUserid: '',
       password: '',
       rememberMe: false,
     },
@@ -45,7 +45,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const onSubmit = async (data: LoginFormData) => {
     try {
       clearError()
-      await login(data)
+      // LoginRequest는 rememberMe 없이 emailOrUserid와 password만 필요
+      await login({
+        emailOrUserid: data.emailOrUserid,
+        password: data.password
+      })
       
       // 로그인 성공 시 리다이렉트 또는 콜백 실행
       if (onSuccess) {
@@ -61,8 +65,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         const message = error.message
         
         // 특정 필드 에러인지 확인
-        if (message.includes('email') || message.includes('이메일')) {
-          setError('email', { message })
+        if (message.includes('email') || message.includes('이메일') || message.includes('아이디')) {
+          setError('emailOrUserid', { message })
         } else if (message.includes('password') || message.includes('비밀번호')) {
           setError('password', { message })
         }
@@ -96,21 +100,21 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* 이메일 입력 */}
+          {/* 이메일 또는 아이디 입력 */}
           <div className="space-y-2">
-            <Label htmlFor="email">이메일</Label>
+            <Label htmlFor="emailOrUserid">이메일 또는 아이디</Label>
             <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="example@email.com"
-              error={!!errors.email}
-              {...register('email')}
-              aria-describedby={errors.email ? 'email-error' : undefined}
+              id="emailOrUserid"
+              type="text"
+              autoComplete="username"
+              placeholder="이메일 또는 아이디를 입력하세요"
+              error={!!errors.emailOrUserid}
+              {...register('emailOrUserid')}
+              aria-describedby={errors.emailOrUserid ? 'emailOrUserid-error' : undefined}
             />
-            {errors.email && (
-              <p id="email-error" className="text-sm text-destructive" role="alert">
-                {errors.email.message}
+            {errors.emailOrUserid && (
+              <p id="emailOrUserid-error" className="text-sm text-destructive" role="alert">
+                {errors.emailOrUserid.message}
               </p>
             )}
           </div>

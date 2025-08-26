@@ -35,6 +35,7 @@ export function RegisterPage() {
     try {
       // 실제 회원가입 API 호출
       const result = await register({
+        userid: data.userid,
         email: data.email,
         nickname: data.nickname,
         password: data.password

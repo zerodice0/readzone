@@ -43,6 +43,7 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.4",
     "@radix-ui/react-toast": "^1.2.3",
+    "@tanstack/router-vite-plugin": "^1.131.27",
     "@types/jest": "^29.5.14",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",

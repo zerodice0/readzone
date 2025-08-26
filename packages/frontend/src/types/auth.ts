@@ -1,5 +1,6 @@
 export interface User {
   id: string
+  userid: string
   email: string
   nickname: string
   bio?: string
@@ -10,9 +11,8 @@ export interface User {
 }
 
 export interface LoginRequest {
-  email: string
+  emailOrUserid: string
   password: string
-  rememberMe: boolean
 }
 
 export interface LoginResponse {

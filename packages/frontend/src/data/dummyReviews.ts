@@ -11,6 +11,7 @@ export const dummyReviews: ReviewCard[] = [
     createdAt: '2024-08-20T10:30:00Z',
     author: {
       id: 'user-1',
+      userid: 'bookworm_kim',
       username: '책벌레김독서',
       profileImage: '/avatars/user-1.jpg'
     },
@@ -33,6 +34,7 @@ export const dummyReviews: ReviewCard[] = [
     createdAt: '2024-08-20T09:15:00Z',
     author: {
       id: 'user-2',
+      userid: 'social_critic',
       username: '사회비평가',
       profileImage: '/avatars/user-2.jpg'
     },
@@ -55,6 +57,7 @@ export const dummyReviews: ReviewCard[] = [
     createdAt: '2024-08-20T08:45:00Z',
     author: {
       id: 'user-3',
+      userid: 'fantasy_newbie',
       username: '판타지초보',
       profileImage: '/avatars/user-3.jpg'
     },

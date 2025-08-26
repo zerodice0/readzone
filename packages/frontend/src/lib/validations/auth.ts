@@ -2,16 +2,15 @@ import { z } from 'zod'
 
 // 로그인 폼 검증 스키마
 export const loginSchema = z.object({
-  email: z
+  emailOrUserid: z
     .string()
-    .min(1, '이메일을 입력해주세요.')
-    .email('올바른 이메일 형식을 입력해주세요.')
-    .max(255, '이메일이 너무 깁니다.'),
+    .min(1, '이메일 또는 아이디를 입력해주세요.')
+    .max(320, '입력값이 너무 깁니다.'),
   password: z
     .string()
     .min(1, '비밀번호를 입력해주세요.')
-    .min(8, '비밀번호는 최소 8자 이상이어야 합니다.')
-    .max(100, '비밀번호가 너무 깁니다.'),
+    .min(6, '비밀번호는 최소 6자 이상이어야 합니다.')
+    .max(128, '비밀번호가 너무 깁니다.'),
   rememberMe: z.boolean().default(false),
 })
 
@@ -19,6 +18,15 @@ export type LoginFormData = z.infer<typeof loginSchema>
 
 // 회원가입 폼 검증 스키마
 export const registerSchema = z.object({
+  userid: z
+    .string()
+    .min(1, '아이디를 입력해주세요.')
+    .min(3, '아이디는 최소 3자 이상이어야 합니다.')
+    .max(30, '아이디는 최대 30자까지 가능합니다.')
+    .regex(
+      /^[a-z0-9_-]+$/,
+      '아이디는 영문 소문자, 숫자, _, - 만 사용 가능합니다.'
+    ),
   email: z
     .string()
     .min(1, '이메일을 입력해주세요.')

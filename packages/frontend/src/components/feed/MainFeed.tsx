@@ -146,8 +146,8 @@ export const MainFeed = ({ className }: MainFeedProps) => {
     }
   };
 
-  const handleProfileClick = (userId: string) => {
-    navigate({ to: `/profile/${userId}` });
+  const handleProfileClick = (userid: string) => {
+    navigate({ to: `/profile/${userid}` });
   };
 
   const handleBookClick = (bookId: string) => {

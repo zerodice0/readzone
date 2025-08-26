@@ -43,6 +43,12 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
     message: ''
   })
 
+  const [useridCheck, setUseridCheck] = useState<DuplicationCheckState>({
+    isChecking: false,
+    isAvailable: null,
+    message: ''
+  })
+
   // 약관 다이얼로그 상태
   const [termsDialogOpen, setTermsDialogOpen] = useState(false)
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false)
@@ -57,6 +63,7 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
     resolver: zodResolver(registerSchema),
     mode: 'onBlur',
     defaultValues: {
+      userid: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -69,24 +76,28 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
   const watchedPassword = watch('password', '')
 
   // 실제 API를 사용한 중복 체크 함수
-  const checkDuplication = async (type: 'email' | 'nickname', value: string) => {
-    if (!value || value.length < 2) {
+  const checkDuplication = async (type: 'email' | 'nickname' | 'userid', value: string) => {
+    if (!value || (type === 'userid' ? value.length < 3 : value.length < 2)) {
       return
     }
 
-    const setState = type === 'email' ? setEmailCheck : setNicknameCheck
+    const setState = type === 'email' ? setEmailCheck : 
+                   type === 'nickname' ? setNicknameCheck : setUseridCheck
 
     setState(prev => ({ ...prev, isChecking: true }))
 
     try {
       const result = await checkDuplicate(type, value)
 
+      const fieldName = type === 'email' ? '이메일' : 
+                       type === 'nickname' ? '닉네임' : '아이디'
+
       setState({
         isChecking: false,
         isAvailable: !result.isDuplicate,
         message: result.isDuplicate 
-          ? `이미 사용중인 ${type === 'email' ? '이메일' : '닉네임'}입니다.`
-          : `사용 가능한 ${type === 'email' ? '이메일' : '닉네임'}입니다.`
+          ? `이미 사용중인 ${fieldName}입니다.`
+          : `사용 가능한 ${fieldName}입니다.`
       })
     } catch (error) {
       console.error('Duplicate check error:', error)
@@ -100,7 +111,8 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
 
   const handleFormSubmit = async (data: RegisterFormData) => {
     // 중복 체크가 완료되지 않았거나 사용 불가능한 경우 검증
-    if (emailCheck.isAvailable !== true || 
+    if (useridCheck.isAvailable !== true ||
+        emailCheck.isAvailable !== true || 
         nicknameCheck.isAvailable !== true) {
       return
     }
@@ -168,6 +180,31 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
           {emailCheck.message && (
             <p className={`text-sm ${emailCheck.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
               {emailCheck.message}
+            </p>
+          )}
+        </div>
+
+        {/* 아이디 */}
+        <div className="space-y-2">
+          <Label htmlFor="userid">아이디 *</Label>
+          <div className="relative">
+            <Input
+              id="userid"
+              placeholder="3-30자의 영문 소문자, 숫자, _, - 조합"
+              className={getDuplicationStyle(useridCheck)}
+              {...register('userid')}
+              onBlur={(e) => checkDuplication('userid', e.target.value)}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {getDuplicationIcon(useridCheck)}
+            </div>
+          </div>
+          {errors.userid && (
+            <p className="text-sm text-red-600">{errors.userid.message}</p>
+          )}
+          {useridCheck.message && (
+            <p className={`text-sm ${useridCheck.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+              {useridCheck.message}
             </p>
           )}
         </div>
@@ -312,6 +349,7 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
           type="submit"
           className="w-full"
           disabled={isLoading || 
+                   useridCheck.isAvailable !== true ||
                    emailCheck.isAvailable !== true || 
                    nicknameCheck.isAvailable !== true}
         >

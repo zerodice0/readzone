@@ -158,8 +158,8 @@ export const useAuthStore = create<AuthStore>()(
           const { user, tokens } = response.data
           const { accessToken, refreshToken } = tokens
           
-          // 토큰 저장
-          setTokens(accessToken, refreshToken, credentials.rememberMe)
+          // 토큰 저장 - rememberMe는 로그인 폼에서 별도 관리
+          setTokens(accessToken, refreshToken, false)
           
           set({
             user,
@@ -168,7 +168,7 @@ export const useAuthStore = create<AuthStore>()(
             isAuthenticated: true,
             isLoading: false,
             error: null,
-            rememberMe: credentials.rememberMe,
+            rememberMe: false,
           })
         } catch (error) {
           const authError: AuthError = {

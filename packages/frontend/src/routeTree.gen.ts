@@ -18,7 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewReviewIdRouteImport } from './routes/review.$reviewId'
-import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
+import { Route as ProfileUseridRouteImport } from './routes/profile.$userid'
 import { Route as BooksBookIdRouteImport } from './routes/books.$bookId'
 
 const WriteRoute = WriteRouteImport.update({
@@ -66,9 +66,9 @@ const ReviewReviewIdRoute = ReviewReviewIdRouteImport.update({
   path: '/review/$reviewId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileUserIdRoute = ProfileUserIdRouteImport.update({
-  id: '/profile/$userId',
-  path: '/profile/$userId',
+const ProfileUseridRoute = ProfileUseridRouteImport.update({
+  id: '/profile/$userid',
+  path: '/profile/$userid',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BooksBookIdRoute = BooksBookIdRouteImport.update({
@@ -87,7 +87,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
-  '/profile/$userId': typeof ProfileUserIdRoute
+  '/profile/$userid': typeof ProfileUseridRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
 }
 export interface FileRoutesByTo {
@@ -100,7 +100,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
-  '/profile/$userId': typeof ProfileUserIdRoute
+  '/profile/$userid': typeof ProfileUseridRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
 }
 export interface FileRoutesById {
@@ -114,7 +114,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
-  '/profile/$userId': typeof ProfileUserIdRoute
+  '/profile/$userid': typeof ProfileUseridRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
 }
 export interface FileRouteTypes {
@@ -129,7 +129,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/write'
     | '/books/$bookId'
-    | '/profile/$userId'
+    | '/profile/$userid'
     | '/review/$reviewId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -142,7 +142,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/write'
     | '/books/$bookId'
-    | '/profile/$userId'
+    | '/profile/$userid'
     | '/review/$reviewId'
   id:
     | '__root__'
@@ -155,7 +155,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/write'
     | '/books/$bookId'
-    | '/profile/$userId'
+    | '/profile/$userid'
     | '/review/$reviewId'
   fileRoutesById: FileRoutesById
 }
@@ -169,7 +169,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   WriteRoute: typeof WriteRoute
   BooksBookIdRoute: typeof BooksBookIdRoute
-  ProfileUserIdRoute: typeof ProfileUserIdRoute
+  ProfileUseridRoute: typeof ProfileUseridRoute
   ReviewReviewIdRoute: typeof ReviewReviewIdRoute
 }
 
@@ -238,11 +238,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewReviewIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile/$userId': {
-      id: '/profile/$userId'
-      path: '/profile/$userId'
-      fullPath: '/profile/$userId'
-      preLoaderRoute: typeof ProfileUserIdRouteImport
+    '/profile/$userid': {
+      id: '/profile/$userid'
+      path: '/profile/$userid'
+      fullPath: '/profile/$userid'
+      preLoaderRoute: typeof ProfileUseridRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/books/$bookId': {
@@ -265,7 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   WriteRoute: WriteRoute,
   BooksBookIdRoute: BooksBookIdRoute,
-  ProfileUserIdRoute: ProfileUserIdRoute,
+  ProfileUseridRoute: ProfileUseridRoute,
   ReviewReviewIdRoute: ReviewReviewIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -8,18 +8,19 @@ interface ApiResponse<T> {
 }
 
 interface CheckDuplicateRequest {
-  field: 'email' | 'nickname'
+  field: 'email' | 'nickname' | 'userid'
   value: string
 }
 
 interface CheckDuplicateResponse {
-  field: 'email' | 'nickname'
+  field: 'email' | 'nickname' | 'userid'
   value: string
   isDuplicate: boolean
 }
 
 interface User {
   id: string
+  userid: string
   email: string
   nickname: string
   bio?: string
@@ -43,6 +44,7 @@ interface TokenPair {
 }
 
 interface RegisterRequest {
+  userid: string
   email: string
   nickname: string
   password: string
@@ -56,7 +58,7 @@ interface RegisterResponse {
 }
 
 interface LoginRequest {
-  email: string
+  emailOrUserid: string
   password: string
 }
 
@@ -169,10 +171,10 @@ async function authenticatedFetch<T>(
 }
 
 /**
- * 이메일/닉네임 중복 체크
+ * 이메일/닉네임/아이디 중복 체크
  */
 export async function checkDuplicate(
-  field: 'email' | 'nickname',
+  field: 'email' | 'nickname' | 'userid',
   value: string
 ): Promise<CheckDuplicateResponse> {
   const response = await authFetch<CheckDuplicateResponse>('/check-duplicate', {
@@ -263,6 +265,33 @@ export async function getCurrentUser(): Promise<User> {
   }
 
   return response.data.user
+}
+
+/**
+ * userid로 사용자 프로필 조회
+ */
+export async function getUserProfile(userid: string): Promise<User> {
+  const API_BASE_URL = import.meta.env.MODE === 'development' 
+    ? 'http://localhost:3001/api'
+    : '/api'
+
+  const response = await fetch(`${API_BASE_URL}/users/${userid}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
+
+  const result = await response.json()
+
+  if (!result.success || !result.data) {
+    throw new Error(result.error?.message ?? '사용자 프로필 조회 중 오류가 발생했습니다')
+  }
+
+  return result.data.user
 }
 
 /**

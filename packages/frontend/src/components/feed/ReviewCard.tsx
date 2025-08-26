@@ -47,7 +47,7 @@ const ReviewCard = ({
       {/* 작성자 정보 */}
       <div className="flex items-center space-x-3">
         <button
-          onClick={() => onProfileClick(review.author.id)}
+          onClick={() => onProfileClick(review.author.userid)}
           className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
         >
           <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">

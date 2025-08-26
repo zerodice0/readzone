@@ -34,8 +34,8 @@ export function Header() {
   };
 
   const handleProfileClick = () => {
-    if (user?.id) {
-      navigate({ to: `/profile/${user.id}` });
+    if (user?.userid) {
+      navigate({ to: `/profile/${user.userid}` });
     }
   };
 
