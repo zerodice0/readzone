@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  userid        String   @unique @db.VarChar(30) // 사용자 아이디 (로그인, 프로필 URL 등)
+  email         String?  @db.VarChar(320) // nullable, unique 제거 (향후 OAuth 대비)
+  primaryEmail  String?  @db.VarChar(320) // 실제 연락용 이메일 (알림, 비밀번호 재설정 등)
+  nickname      String   @db.VarChar(50) // unique 제거 (변경 가능한 표시명)
+  password      String?  @db.VarChar(255) // nullable (향후 OAuth 대비)
+  bio           String?  @db.VarChar(500)
+  profileImage  String?  @db.VarChar(255)
+  isVerified    Boolean  @default(false)
+  verificationToken String? @db.Text
+  resetToken    String?  @db.Text
+  resetTokenExpires DateTime?
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  accounts      Account[] // 연결된 로그인 계정들
+  reviews       Review[]
+  likes         Like[]
+  comments      Comment[]
+  following     Follow[] @relation("UserFollowing")
+  followers     Follow[] @relation("UserFollowers")
+  notifications Notification[] @relation("NotificationReceiver")
+  sentNotifications Notification[] @relation("NotificationSender")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String  @default("email") @db.VarChar(20) // "email" | "oauth"
+  provider          String  @default("email") @db.VarChar(20) // "email" | "apple" | "google" | "kakao"
+  providerAccountId String  @db.VarChar(100) // OAuth provider's user ID, email 타입의 경우 userId와 동일
+  email             String? @db.VarChar(320) // 로그인에 사용되는 이메일
+  
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@index([email]) // 이메일 검색 성능 향상
+  @@map("accounts")
+}
+
+model Book {
+  id          String  @id @default(cuid())
+  isbn        String? @unique @db.VarChar(20)
+  title       String  @db.VarChar(500)
+  author      String  @db.VarChar(200)
+  publisher   String? @db.VarChar(200)
+  publishedAt String? @db.VarChar(20) // Store as string for flexibility
+  description String? @db.Text
+  thumbnail   String? @db.VarChar(500)
+  category    String? @db.VarChar(100)
+  pages       Int?
+  
+  // Book source tracking
+  source      String @default("MANUAL") @db.VarChar(20) // "KAKAO_API" | "DATABASE" | "MANUAL"
+  externalId  String? @db.VarChar(100) // Kakao book ID or other external ID
+  
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  reviews     Review[]
+
+  @@map("books")
+}
+
+model Review {
+  id           String      @id @default(cuid())
+  title        String      @db.VarChar(200)
+  content      String      @db.Text
+  isRecommended Boolean    @default(true)
+  rating       Int?       @default(5) // 1-5 stars, nullable for flexibility
+  tags         String?    @db.Text // JSON array of strings
+  
+  // Privacy and status
+  isPublic     Boolean    @default(true)
+  status       String @default("PUBLISHED") @db.VarChar(20) // "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  
+  createdAt    DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(6)
+
+  // Foreign keys
+  userId       String
+  bookId       String
+
+  // Relations
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book         Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  likes        Like[]
+  comments     Comment[]
+
+  @@map("reviews")
+}
+
+model Like {
+  id       String @id @default(cuid())
+  
+  // Foreign keys
+  userId   String
+  reviewId String
+  
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  // Prevent duplicate likes
+  @@unique([userId, reviewId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String    @db.Text
+  
+  // Optional parent for replies
+  parentId  String?
+  
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+
+  // Foreign keys
+  userId    String
+  reviewId  String
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+model Follow {
+  id          String @id @default(cuid())
+  
+  // Foreign keys
+  followerId  String // User who follows
+  followingId String // User being followed
+  
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  follower    User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // Prevent self-follow and duplicate follows
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        String @db.VarChar(20) // "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
+  message     String @db.VarChar(500)
+  isRead      Boolean          @default(false)
+  
+  // Optional data for different notification types
+  data        String?          @db.Text // JSON data for additional context
+  
+  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
+
+  // Foreign keys
+  userId      String           // Recipient
+  senderId    String?          // Who triggered the notification
+  reviewId    String?          // Related review (optional)
+  commentId   String?          // Related comment (optional)
+
+  // Relations
+  user        User             @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
+  sender      User?            @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
+
+// PostgreSQL optimizations and indexes
+// BookSource: "KAKAO_API" | "DATABASE" | "MANUAL"
+// ReviewStatus: "DRAFT" | "PUBLISHED" | "ARCHIVED"  
+// NotificationType: "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
+
+// Additional indexes for better performance
+// These will be created via migrations for better control

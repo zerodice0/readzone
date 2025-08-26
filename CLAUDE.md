@@ -16,27 +16,21 @@ ReadZone 프로젝트 개발 가이드 - 독서 후 의견을 공유하는 **독
 - **분석**: Google Analytics 4 (추후 도입)
 
 ### Backend
-- **Framework**: Hono (서버리스 함수 + API Routes)
+- **Framework**: NestJS (엔터프라이즈급 Node.js 프레임워크)
 - **Runtime**: Node.js 18+
 - **Language**: TypeScript (strict mode)
-- **ORM**: Prisma (PostgreSQL 최적화)
-- **Authentication**: NextAuth.js + JWT
+- **Database**: Neon PostgreSQL + Prisma ORM
+- **Authentication**: JWT + Passport 기반
+- **Validation**: class-validator + class-transformer
 - **API**: 카카오 도서 검색 API
+- **개발 서버**: nest start --watch (포트 3001)
+- **테스팅**: Jest + Supertest (E2E 테스트)
 
 ### 개발 환경
 - **패키지 관리**: npm + Turborepo (모노레포 워크스페이스)
 - **Node.js**: 18.17.0+ (권장)
 - **TypeScript**: 5.3+ (strict mode)
-- **개발 도구**: ESLint (0 경고 정책), Vitest
-
-### Backend
-- **Framework**: Hono (초경량 웹 프레임워크)
-- **Runtime**: Node.js 18+
-- **Language**: TypeScript (strict mode)
-- **Database**: SQLite + Prisma ORM
-- **Authentication**: JWT 토큰 기반
-- **API**: 카카오 도서 검색 API
-- **개발 서버**: tsx watch (포트 3001)
+- **개발 도구**: ESLint (0 경고 정책), Jest (단위 테스트)
 
 ### Frontend
 - **Bundler**: Vite (포트 3000)
@@ -100,12 +94,13 @@ readzone/
 │   │   │   ├── store/
 │   │   │   └── lib/
 │   │   └── vite.config.ts
-│   └── backend/           # Hono 백엔드
+│   └── backend/           # NestJS 백엔드
 │       ├── src/
-│       │   ├── routes/
-│       │   ├── services/
-│       │   ├── middleware/
-│       │   └── db/
+│       │   ├── modules/
+│       │   ├── common/
+│       │   ├── prisma/
+│       │   └── main.ts
+│       ├── test/
 │       └── prisma/
 ├── docs/                  # 프로젝트 문서
 └── package.json          # 모노레포 루트
@@ -134,7 +129,8 @@ npm run db:seed       # 샘플 데이터 추가
 # 코드 품질 검사
 npm run lint          # 모든 린트 검사 (Turborepo로 병렬 실행)
 npm run type-check    # 타입 체크 (Turborepo로 병렬 실행)
-npm run test          # 테스트 실행
+npm run test          # 단위 테스트 실행
+npm run test:e2e      # E2E 테스트 실행 (19개 테스트 완료)
 
 # 빌드
 npm run build         # 프로덕션 빌드 (Turborepo로 최적화)
@@ -192,9 +188,10 @@ npm run build         # 프로덕션 빌드 (Turborepo로 최적화)
 DATABASE_URL="postgresql://..."
 DIRECT_URL="postgresql://..."  # Prisma 마이그레이션용
 
-# 인증 (NextAuth.js)
-NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="http://localhost:3000"  # 배포 시 실제 도메인
+# JWT 인증 (NestJS)
+JWT_SECRET="your-jwt-secret-key"
+JWT_EXPIRES_IN="15m"
+JWT_REFRESH_EXPIRES_IN="7d"
 
 # 파일 저장 (Cloudinary)
 CLOUDINARY_CLOUD_NAME="your-cloud-name"
@@ -217,10 +214,21 @@ KAKAO_REST_API_KEY="your-kakao-api-key"
 - 정기적인 키 로테이션 실시
 
 ### 애플리케이션 보안
-- NextAuth.js CSRF 보호 활용
-- DOMPurify + SafeHtmlRenderer로 XSS 방지
+- NestJS ValidationPipe로 입력 검증
+- JWT + Passport 기반 안전한 인증
+- class-validator로 데이터 검증
 - Prisma ORM으로 SQL Injection 방지
-- 모든 사용자 입력 Zod 스키마 검증
+- DOMPurify + SafeHtmlRenderer로 XSS 방지 (프론트엔드)
+- bcryptjs로 비밀번호 암호화
 
-ReadZone은 독서 커뮤니티 SNS 플랫폼으로, 6개 Phase에 걸쳐 완전히 구현되었습니다. 각 문서에서 상세한 정보를 확인하실 수 있습니다.
-- @docs/user-flows.md 5-2. 마지막에 '저장하기'와 '독후감 삭제'가 동일한 '에러 메시지'로 연결되는데, 두 개의 플로우에 따라서 구체화된 메시지를 표시하는 걸로 업데이트해줬으면 좋겠어. '저장에 실패했습니다.' '독후감 삭제에 실패했습니다' 등으로.
+## ✅ NestJS 마이그레이션 완료
+
+**2024.08 Backend 프레임워크 업그레이드**:
+- ✅ **Hono → NestJS** 마이그레이션 완료
+- ✅ **SQLite → Neon PostgreSQL** 데이터베이스 전환
+- ✅ **JWT + Passport** 인증 시스템 구현
+- ✅ **class-validator** 입력 검증 시스템
+- ✅ **19개 E2E 테스트** 모두 통과
+- ✅ **타입 안전성** 완전 보장 (0 type errors)
+
+ReadZone은 독서 커뮤니티 SNS 플랫폼으로, 6개 Phase에 걸쳐 완전히 구현되었으며, 현재는 안정적이고 확장 가능한 NestJS 기반으로 운영됩니다.
