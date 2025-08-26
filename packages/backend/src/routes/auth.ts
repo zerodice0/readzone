@@ -35,21 +35,66 @@ const loginRoute = createRoute({
 
 auth.openapi(loginRoute, async (c) => {
   try {
-    const { email, password } = c.req.valid('json')
+    const { emailOrUserid, password } = c.req.valid('json')
 
-    // 사용자 찾기
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        nickname: true,
-        password: true,
-        isVerified: true
+    // 이메일 형식인지 확인하여 검색 방법 결정
+    const isEmail = emailOrUserid.includes('@')
+
+    let account
+
+    if (isEmail) {
+      // Account 테이블에서 이메일로 사용자 찾기
+      account = await prisma.account.findFirst({
+        where: { 
+          email: emailOrUserid,
+          provider: 'email'
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              userid: true,
+              email: true,
+              nickname: true,
+              password: true,
+              isVerified: true
+            }
+          }
+        }
+      })
+    } else {
+      // User 테이블에서 userid로 직접 찾기
+      const user = await prisma.user.findUnique({
+        where: { userid: emailOrUserid },
+        select: {
+          id: true,
+          userid: true,
+          email: true,
+          nickname: true,
+          password: true,
+          isVerified: true
+        }
+      })
+
+      if (user) {
+        account = { user }
       }
-    })
+    }
 
-    if (!user) {
+    if (!account || !account.user) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'INVALID_CREDENTIALS',
+          message: '이메일 또는 비밀번호가 올바르지 않습니다'
+        }
+      }, 401)
+    }
+
+    const user = account.user
+
+    // 이메일 계정인 경우 비밀번호가 있어야 함
+    if (!user.password) {
       return c.json({
         success: false as const,
         error: {
@@ -82,6 +127,7 @@ auth.openapi(loginRoute, async (c) => {
     // 응답 데이터 (비밀번호 제외) - 스키마 순서에 맞게 구성
     const userResponse = {
       id: user.id,
+      userid: user.userid,
       email: user.email,
       nickname: user.nickname,
       isVerified: user.isVerified
@@ -114,8 +160,8 @@ const checkDuplicateRoute = createRoute({
   method: 'post',
   path: '/check-duplicate',
   tags: ['Authentication'],
-  summary: '이메일/닉네임 중복 체크',
-  description: '회원가입 시 이메일 또는 닉네임 중복을 확인합니다.',
+  summary: '이메일/닉네임/아이디 중복 체크',
+  description: '회원가입 시 이메일, 닉네임 또는 아이디 중복을 확인합니다.',
   request: {
     body: {
       content: {
@@ -174,17 +220,55 @@ auth.openapi(checkDuplicateRoute, async (c) => {
       }
     }
 
+    if (field === 'userid') {
+      // 아이디 길이는 이미 스키마에서 검증됨
+      if (value.length < 3 || value.length > 30) {
+        return c.json({
+          success: false as const,
+          error: {
+            code: 'INVALID_USERID_LENGTH',
+            message: '아이디는 3자 이상 30자 이하여야 합니다'
+          }
+        }, 400)
+      }
+
+      // 아이디 형식 체크 (영문 소문자, 숫자, 언더스코어, 하이픈만 허용)
+      const useridPattern = /^[a-z0-9_-]+$/
+
+      if (!useridPattern.test(value)) {
+        return c.json({
+          success: false as const,
+          error: {
+            code: 'INVALID_USERID_FORMAT',
+            message: '아이디는 영문 소문자, 숫자, 언더스코어, 하이픈만 사용할 수 있습니다'
+          }
+        }, 400)
+      }
+    }
+
     // 데이터베이스에서 중복 체크
     let existingUser
 
     if (field === 'email') {
-      existingUser = await prisma.user.findUnique({
-        where: { email: value },
+      // Account 테이블에서 이메일 중복 체크
+      const existingAccount = await prisma.account.findFirst({
+        where: { 
+          email: value,
+          provider: 'email'
+        },
         select: { id: true }
       })
+
+      existingUser = existingAccount
+
     } else if (field === 'nickname') {
-      existingUser = await prisma.user.findUnique({
+      existingUser = await prisma.user.findFirst({
         where: { nickname: value },
+        select: { id: true }
+      })
+    } else if (field === 'userid') {
+      existingUser = await prisma.user.findUnique({
+        where: { userid: value },
         select: { id: true }
       })
     }
@@ -237,7 +321,7 @@ const registerRoute = createRoute({
 
 auth.openapi(registerRoute, async (c) => {
   try {
-    const { email, nickname, password } = c.req.valid('json')
+    const { userid, email, nickname, password } = c.req.valid('json')
 
     // 비밀번호 정책 검증
     const passwordValidation = validatePasswordPolicy(password)
@@ -252,9 +336,12 @@ auth.openapi(registerRoute, async (c) => {
       }, 400)
     }
 
-    // 이메일 중복 체크
-    const existingEmail = await prisma.user.findUnique({
-      where: { email },
+    // 이메일 중복 체크 (Account 테이블)
+    const existingEmail = await prisma.account.findFirst({
+      where: { 
+        email,
+        provider: 'email'
+      },
       select: { id: true }
     })
 
@@ -268,8 +355,24 @@ auth.openapi(registerRoute, async (c) => {
       }, 400)
     }
 
+    // userid 중복 체크
+    const existingUserid = await prisma.user.findUnique({
+      where: { userid },
+      select: { id: true }
+    })
+
+    if (existingUserid) {
+      return c.json({
+        success: false as const,
+        error: {
+          code: 'USERID_ALREADY_EXISTS',
+          message: '이미 사용중인 아이디입니다'
+        }
+      }, 400)
+    }
+
     // 닉네임 중복 체크
-    const existingNickname = await prisma.user.findUnique({
+    const existingNickname = await prisma.user.findFirst({
       where: { nickname },
       select: { id: true }
     })
@@ -287,24 +390,49 @@ auth.openapi(registerRoute, async (c) => {
     // 비밀번호 해싱
     const hashedPassword = await hashPassword(password)
 
-    // 사용자 생성
-    const user = await prisma.user.create({
-      data: {
-        email,
-        nickname,
-        password: hashedPassword,
-        isVerified: false // 이메일 인증 필요
-      },
-      select: {
-        id: true,
-        email: true,
-        nickname: true,
-        isVerified: true,
-        createdAt: true
-      }
+    // 사용자 생성 (트랜잭션으로 User + Account 동시 생성)
+    const result = await prisma.$transaction(async (tx) => {
+      // User 생성
+      const user = await tx.user.create({
+        data: {
+          userid,
+          email,
+          primaryEmail: email, // 연락용 이메일 설정
+          nickname,
+          password: hashedPassword,
+          isVerified: false // 이메일 인증 필요
+        },
+        select: {
+          id: true,
+          userid: true,
+          email: true,
+          nickname: true,
+          isVerified: true,
+          createdAt: true
+        }
+      })
+
+      // Account 생성
+      const account = await tx.account.create({
+        data: {
+          userId: user.id,
+          type: 'email',
+          provider: 'email',
+          providerAccountId: user.id,
+          email
+        }
+      })
+
+      return { user, account }
     })
 
-    // 이메일 인증 토큰 생성
+    const user = result.user
+
+    // 이메일 인증 토큰 생성 (신규 가입이므로 email은 항상 존재)
+    if (!user.email) {
+      throw new Error('User email is required for registration')
+    }
+
     const emailVerificationToken = generateEmailVerificationToken({
       userId: user.id,
       email: user.email,
@@ -320,14 +448,14 @@ auth.openapi(registerRoute, async (c) => {
     // 이메일 인증 메일 발송
     try {
       const emailResult = await sendEmailVerification(
-        user.email,
+        user.email, // 위에서 null 체크를 했으므로 안전
         user.nickname,
         emailVerificationToken
       )
 
       if (emailResult.success) {
         logEmailInDevelopment(
-          user.email,
+          user.email, // 위에서 null 체크를 했으므로 안전
           '[ReadZone] 이메일 인증을 완료해주세요',
           `http://localhost:3000/verify-email?token=${emailVerificationToken}`
         )
@@ -349,6 +477,7 @@ auth.openapi(registerRoute, async (c) => {
     // 스키마 순서에 맞게 사용자 응답 구성
     const userResponse = {
       id: user.id,
+      userid: user.userid,
       email: user.email,
       nickname: user.nickname,
       isVerified: user.isVerified,
@@ -422,6 +551,7 @@ auth.openapi(refreshRoute, async (c) => {
       where: { id: payload.userId },
       select: {
         id: true,
+        userid: true,
         email: true,
         nickname: true,
         isVerified: true
@@ -492,17 +622,27 @@ auth.openapi(resendVerificationRoute, async (c) => {
   try {
     const { email } = c.req.valid('json')
 
-    // 사용자 찾기
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        nickname: true,
-        isVerified: true,
-        verificationToken: true
+    // Account 테이블에서 이메일로 사용자 찾기
+    const account = await prisma.account.findFirst({
+      where: { 
+        email,
+        provider: 'email'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            userid: true,
+            email: true,
+            nickname: true,
+            isVerified: true,
+            verificationToken: true
+          }
+        }
       }
     })
+
+    const user = account?.user
 
     if (!user) {
       return c.json({
@@ -524,7 +664,11 @@ auth.openapi(resendVerificationRoute, async (c) => {
       }, 400)
     }
 
-    // 새 인증 토큰 생성
+    // 새 인증 토큰 생성 (이메일 재발송이므로 email은 항상 존재해야 함)
+    if (!user.email) {
+      throw new Error('User email is required for resend verification')
+    }
+
     const emailVerificationToken = generateEmailVerificationToken({
       userId: user.id,
       email: user.email,
@@ -540,14 +684,14 @@ auth.openapi(resendVerificationRoute, async (c) => {
     // 이메일 재발송
     try {
       const emailResult = await sendEmailVerification(
-        user.email,
+        user.email, // 위에서 null 체크를 했으므로 안전
         user.nickname,
         emailVerificationToken
       )
 
       if (emailResult.success) {
         logEmailInDevelopment(
-          user.email,
+          user.email, // 위에서 null 체크를 했으므로 안전
           '[ReadZone] 이메일 인증을 완료해주세요 (재발송)',
           `http://localhost:3000/verify-email?token=${emailVerificationToken}`
         )
@@ -557,6 +701,7 @@ auth.openapi(resendVerificationRoute, async (c) => {
           data: {
             user: {
               id: user.id,
+              userid: user.userid,
               email: user.email,
               nickname: user.nickname,
               isVerified: user.isVerified,
@@ -655,7 +800,9 @@ auth.openapi(verifyEmailRoute, async (c) => {
       where: { id: payload.userId },
       select: {
         id: true,
+        userid: true,
         email: true,
+        primaryEmail: true,
         nickname: true,
         isVerified: true,
         verificationToken: true
@@ -704,7 +851,7 @@ auth.openapi(verifyEmailRoute, async (c) => {
     // 새 JWT 토큰 생성 (인증된 사용자)
     const tokens = generateTokenPair({
       userId: user.id,
-      email: user.email,
+      email: user.email ?? user.primaryEmail ?? '',
       nickname: user.nickname
     })
 
@@ -713,6 +860,7 @@ auth.openapi(verifyEmailRoute, async (c) => {
       data: {
         user: {
           id: user.id,
+          userid: user.userid,
           email: user.email,
           nickname: user.nickname,
           isVerified: true

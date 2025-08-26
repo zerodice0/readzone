@@ -1,11 +1,17 @@
 import * as fs from 'fs'
 import * as path from 'path'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 
 // 템플릿 변수 타입 정의
 export type TemplateVariables = Record<string, string>
 
 // 템플릿 캐시
 const templateCache = new Map<string, string>()
+
+// ES 모듈에서 __dirname 대체
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // 템플릿 디렉토리 경로
 const TEMPLATES_DIR = path.join(__dirname, '../templates')

@@ -5,7 +5,7 @@ import type ms from 'ms'
 // JWT 페이로드 타입
 export interface JWTPayload {
   userId: string
-  email: string
+  email: string | null
   nickname: string
   type: 'access' | 'refresh' | 'email-verification' | 'password-reset'
   iat?: number

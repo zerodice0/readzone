@@ -47,7 +47,7 @@
     
     /* Output */
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -65,6 +65,7 @@
   "include": [
     "src/**/*",
     "src/**/*.ts",
+    "scripts/**/*.ts",
     "prisma/schema.prisma"
   ],
   "exclude": [

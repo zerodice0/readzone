@@ -13,9 +13,11 @@ datasource db {
 
 model User {
   id            String   @id @default(cuid())
-  email         String   @unique @db.VarChar(320)
-  nickname      String   @unique @db.VarChar(50)
-  password      String   @db.VarChar(255)
+  userid        String   @unique @db.VarChar(30) // 사용자 아이디 (로그인, 프로필 URL 등)
+  email         String?  @db.VarChar(320) // nullable, unique 제거 (향후 OAuth 대비)
+  primaryEmail  String?  @db.VarChar(320) // 실제 연락용 이메일 (알림, 비밀번호 재설정 등)
+  nickname      String   @db.VarChar(50) // unique 제거 (변경 가능한 표시명)
+  password      String?  @db.VarChar(255) // nullable (향후 OAuth 대비)
   bio           String?  @db.VarChar(500)
   profileImage  String?  @db.VarChar(255)
   isVerified    Boolean  @default(false)
@@ -26,6 +28,7 @@ model User {
   updatedAt     DateTime @updatedAt @db.Timestamptz(6)
 
   // Relations
+  accounts      Account[] // 연결된 로그인 계정들
   reviews       Review[]
   likes         Like[]
   comments      Comment[]
@@ -35,6 +38,25 @@ model User {
   sentNotifications Notification[] @relation("NotificationSender")
 
   @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String  @default("email") @db.VarChar(20) // "email" | "oauth"
+  provider          String  @default("email") @db.VarChar(20) // "email" | "apple" | "google" | "kakao"
+  providerAccountId String  @db.VarChar(100) // OAuth provider's user ID, email 타입의 경우 userId와 동일
+  email             String? @db.VarChar(320) // 로그인에 사용되는 이메일
+  
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@index([email]) // 이메일 검색 성능 향상
+  @@map("accounts")
 }
 
 model Book {

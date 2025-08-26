@@ -33,6 +33,7 @@ app.get('/api/health', (c) => {
 import reviewRoutes from './routes/reviews'
 import { content as contentRoutes } from './routes/content'
 import authRoutes from './routes/auth'
+import { users as userRoutes } from './routes/users'
 import { createSwaggerUI, getOpenAPISpec } from './lib/swagger'
 
 // API routes
@@ -49,6 +50,7 @@ app.get('/api', (c) => {
 app.route('/api/reviews', reviewRoutes)
 app.route('/api/content', contentRoutes)
 app.route('/api/auth', authRoutes)
+app.route('/api/users', userRoutes)
 
 // Swagger documentation
 app.doc('/api/docs/openapi.json', getOpenAPISpec())

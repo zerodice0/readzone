@@ -24,6 +24,7 @@ async function main() {
     const users = await Promise.all([
       prisma.user.create({
         data: {
+          userid: 'bookworm_kim',
           email: 'reader1@readzone.com',
           nickname: '책벌레김',
           password: hashedPassword,
@@ -33,6 +34,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
+          userid: 'literature_girl',
           email: 'reader2@readzone.com',
           nickname: '문학소녀',
           password: hashedPassword,
@@ -42,6 +44,7 @@ async function main() {
       }),
       prisma.user.create({
         data: {
+          userid: 'knowledge_seeker',
           email: 'reader3@readzone.com',
           nickname: '지식탐구자',
           password: hashedPassword,

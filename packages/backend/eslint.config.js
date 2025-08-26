@@ -100,9 +100,9 @@ export default [
     },
   },
   {
-    files: ['src/db/seed.ts', '**/*.test.ts', '**/*.spec.ts'],
+    files: ['src/db/seed.ts', 'scripts/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
     rules: {
-      'no-console': 'off', // Allow console in seed files and tests
+      'no-console': 'off', // Allow console in seed files, scripts and tests
     },
   },
 ]

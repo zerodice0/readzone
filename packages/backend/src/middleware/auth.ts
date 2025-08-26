@@ -7,7 +7,7 @@ declare module 'hono' {
   interface ContextVariableMap {
     user: {
       id: string
-      email: string
+      email: string | null
       nickname: string
       isVerified: boolean
     }

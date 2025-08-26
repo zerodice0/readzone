@@ -7,7 +7,8 @@ import { z } from 'zod'
 // 로그인용 사용자 정보 스키마 (createdAt 없음)
 export const LoginUserInfo = z.object({
   id: z.string(),
-  email: z.string(),
+  userid: z.string(),
+  email: z.string().nullable(),
   nickname: z.string(),
   isVerified: z.boolean()
 })
@@ -15,7 +16,8 @@ export const LoginUserInfo = z.object({
 // 회원가입용 사용자 정보 스키마 (createdAt 포함)
 export const RegisterUserInfo = z.object({
   id: z.string(),
-  email: z.string(),
+  userid: z.string(),
+  email: z.string().nullable(),
   nickname: z.string(),
   isVerified: z.boolean(),
   createdAt: z.string()
@@ -46,7 +48,7 @@ export const RegisterData = z.object({
 
 // 중복 체크 응답 데이터 스키마
 export const CheckDuplicateData = z.object({
-  field: z.enum(['email', 'nickname']),
+  field: z.enum(['email', 'nickname', 'userid']),
   value: z.string(),
   isDuplicate: z.boolean()
 })
@@ -57,12 +59,16 @@ export const CheckDuplicateData = z.object({
 export const AuthRequest = {
   // 로그인 요청
   login: z.object({
-    email: z.string().email('올바른 이메일 형식이 아닙니다'),
-    password: z.string().min(1)
+    emailOrUserid: z.string().min(1, '이메일 또는 아이디를 입력해주세요'),
+    password: z.string().min(1, '비밀번호를 입력해주세요')
   }),
   
   // 회원가입 요청
   register: z.object({
+    userid: z.string()
+      .min(3, '아이디는 3자 이상이어야 합니다')
+      .max(30, '아이디는 30자 이하여야 합니다')
+      .regex(/^[a-z0-9_-]+$/, '아이디는 영문 소문자, 숫자, _, - 만 사용 가능합니다'),
     email: z.string().email('올바른 이메일 형식이 아닙니다').max(320),
     nickname: z.string().min(2, '닉네임은 2자 이상이어야 합니다').max(50, '닉네임은 50자 이하여야 합니다'),
     password: z.string().min(6, '비밀번호는 6자 이상이어야 합니다').max(128)
@@ -70,8 +76,8 @@ export const AuthRequest = {
 
   // 중복 체크 요청
   checkDuplicate: z.object({
-    field: z.enum(['email', 'nickname'], {
-      message: 'field는 email 또는 nickname이어야 합니다'
+    field: z.enum(['email', 'nickname', 'userid'], {
+      message: 'field는 email, nickname 또는 userid이어야 합니다'
     }),
     value: z.string().min(1, '값이 필요합니다').max(320, '값이 너무 깁니다')
   }),
