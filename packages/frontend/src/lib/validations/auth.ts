@@ -2,10 +2,15 @@ import { z } from 'zod'
 
 // 로그인 폼 검증 스키마
 export const loginSchema = z.object({
-  emailOrUserid: z
+  userid: z
     .string()
-    .min(1, '이메일 또는 아이디를 입력해주세요.')
-    .max(320, '입력값이 너무 깁니다.'),
+    .min(1, '아이디를 입력해주세요.')
+    .min(3, '아이디는 최소 3자 이상이어야 합니다.')
+    .max(30, '아이디는 최대 30자까지 가능합니다.')
+    .regex(
+      /^[a-z0-9_-]+$/,
+      '아이디는 영문 소문자, 숫자, _, - 만 사용 가능합니다.'
+    ),
   password: z
     .string()
     .min(1, '비밀번호를 입력해주세요.')
@@ -35,8 +40,12 @@ export const registerSchema = z.object({
   password: z
     .string()
     .min(1, '비밀번호를 입력해주세요.')
-    .min(6, '비밀번호는 최소 6자 이상이어야 합니다.')
-    .max(128, '비밀번호가 너무 깁니다.'),
+    .min(8, '비밀번호는 최소 8자 이상이어야 합니다.')
+    .max(64, '비밀번호는 최대 64자까지 입력할 수 있습니다.')
+    .regex(
+      /^(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{}|;:,.<>?])[A-Za-z\d!@#$%^&*()_+\-=[\]{}|;:,.<>?]+$/,
+      '비밀번호는 소문자, 숫자, 특수문자(!@#$%^&*()_+-=[]{}|;:,.<>?)를 각각 최소 1개씩 포함해야 합니다.'
+    ),
   confirmPassword: z.string().min(1, '비밀번호 확인을 입력해주세요.'),
   nickname: z
     .string()
@@ -103,6 +112,8 @@ export type ResendVerificationFormData = z.infer<typeof resendVerificationSchema
 
 // 일반적인 에러 메시지
 export const AUTH_ERROR_MESSAGES = {
+  UNAUTHORIZED: '아이디 또는 비밀번호가 올바르지 않습니다.',
+  LOGIN_FAILED: '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.',
   INVALID_CREDENTIALS: '이메일 또는 비밀번호가 올바르지 않습니다.',
   EMAIL_NOT_VERIFIED: '이메일 인증이 필요합니다. 이메일을 확인해주세요.',
   ACCOUNT_LOCKED: '계정이 잠겼습니다. 잠시 후 다시 시도해주세요.',

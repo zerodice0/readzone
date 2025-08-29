@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { FeedRequest, FeedResponse, LikeRequest, LikeResponse } from '@/types/feed';
+import { useAuthStore } from '@/store/authStore';
 
 const API_BASE_URL = 'http://localhost:3001/api';
 
@@ -17,11 +18,8 @@ const fetchFeed = async (params: FeedRequest): Promise<FeedResponse> => {
   const response = await fetch(`${API_BASE_URL}/reviews/feed?${searchParams}`, {
     headers: {
       'Content-Type': 'application/json',
-      // JWT 토큰이 있는 경우 추가
-      ...(localStorage.getItem('token') && {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      })
-    }
+    },
+    credentials: 'include' // Cookie 기반 인증
   });
 
   if (!response.ok) {
@@ -31,13 +29,19 @@ const fetchFeed = async (params: FeedRequest): Promise<FeedResponse> => {
   return response.json();
 };
 
-const likeReview = async ({ reviewId, action }: { reviewId: string } & LikeRequest): Promise<LikeResponse> => {
+const likeReview = async ({ reviewId, action, accessToken }: { reviewId: string; accessToken: string | null } & LikeRequest): Promise<LikeResponse> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
   const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}/like`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    },
+    headers,
+    credentials: 'include', // Cookie 기반 인증
     body: JSON.stringify({ action })
   });
 
@@ -61,9 +65,11 @@ export const useFeed = (params: FeedRequest) => {
 
 export const useLikeMutation = () => {
   const queryClient = useQueryClient();
+  const { accessToken } = useAuthStore();
 
   return useMutation({
-    mutationFn: likeReview,
+    mutationFn: (params: { reviewId: string } & LikeRequest) => 
+      likeReview({ ...params, accessToken }),
     onSuccess: () => {
       // 관련 피드 쿼리들 무효화
       queryClient.invalidateQueries({ 

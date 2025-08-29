@@ -12,14 +12,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginDto = void 0;
 const class_validator_1 = require("class-validator");
 class LoginDto {
-    email;
+    userid;
     password;
 }
 exports.LoginDto = LoginDto;
 __decorate([
-    (0, class_validator_1.IsEmail)({}, { message: '올바른 이메일 형식이 아닙니다.' }),
+    (0, class_validator_1.IsString)({ message: '아이디를 입력해주세요.' }),
+    (0, class_validator_1.Length)(3, 30, { message: '아이디는 3자 이상 30자 이하로 입력해주세요.' }),
+    (0, class_validator_1.Matches)(/^[a-z0-9_-]+$/, {
+        message: '아이디는 영문 소문자, 숫자, _, - 만 사용 가능합니다.',
+    }),
     __metadata("design:type", String)
-], LoginDto.prototype, "email", void 0);
+], LoginDto.prototype, "userid", void 0);
 __decorate([
     (0, class_validator_1.IsString)({ message: '비밀번호를 입력해주세요.' }),
     __metadata("design:type", String)

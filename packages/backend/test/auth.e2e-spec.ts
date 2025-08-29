@@ -224,7 +224,7 @@ describe('Auth (e2e)', () => {
       const response: Response = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
-          email: userCredentials.email,
+          userid: userCredentials.userid,
           password: userCredentials.password,
         })
         .expect(200);
@@ -242,18 +242,18 @@ describe('Auth (e2e)', () => {
       expect(body.tokens).toHaveProperty('refreshToken');
     });
 
-    it('should fail with invalid email', async () => {
+    it('should fail with invalid userid', async () => {
       const response: Response = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
-          email: 'nonexistent@example.com',
+          userid: 'nonexistentuser',
           password: userCredentials.password,
         })
         .expect(401);
 
       const body = response.body as AuthResponse;
       expect(body.message).toContain(
-        '이메일 또는 비밀번호가 올바르지 않습니다',
+        '아이디 또는 비밀번호가 올바르지 않습니다',
       );
     });
 
@@ -261,14 +261,14 @@ describe('Auth (e2e)', () => {
       const response: Response = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
-          email: userCredentials.email,
+          userid: userCredentials.userid,
           password: 'wrongpassword',
         })
         .expect(401);
 
       const body = response.body as AuthResponse;
       expect(body.message).toContain(
-        '이메일 또는 비밀번호가 올바르지 않습니다',
+        '아이디 또는 비밀번호가 올바르지 않습니다',
       );
     });
 
@@ -276,7 +276,7 @@ describe('Auth (e2e)', () => {
       await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
-          email: userCredentials.email,
+          userid: userCredentials.userid,
           // missing password
         })
         .expect(400);

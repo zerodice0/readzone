@@ -41,11 +41,7 @@ export function RegisterPage() {
         password: data.password
       })
 
-      // 회원가입 성공 시 토큰 저장
-      if (result.tokens) {
-        localStorage.setItem('accessToken', result.tokens.accessToken)
-        localStorage.setItem('refreshToken', result.tokens.refreshToken)
-      }
+      // Cookie 기반 인증으로 전환됨 - 토큰은 자동으로 Cookie에 저장됨
 
       // 이메일 인증이 필요한 경우
       if (result.emailVerificationRequired) {

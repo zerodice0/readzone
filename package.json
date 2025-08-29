@@ -23,10 +23,6 @@
     "test": "turbo test",
     "test:frontend": "turbo test --filter=@readzone/frontend",
     "test:backend": "turbo test --filter=@readzone/backend",
-    "db:generate": "turbo db:generate --filter=@readzone/backend",
-    "db:migrate": "turbo db:migrate --filter=@readzone/backend",
-    "db:reset": "turbo db:reset --filter=@readzone/backend",
-    "db:seed": "turbo db:seed --filter=@readzone/backend",
     "clean": "turbo clean && rm -rf node_modules"
   },
   "prisma": {

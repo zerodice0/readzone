@@ -11,7 +11,7 @@ export interface User {
 }
 
 export interface LoginRequest {
-  emailOrUserid: string
+  userid: string
   password: string
 }
 
@@ -35,7 +35,7 @@ export interface TokenResponse {
 export interface AuthState {
   user: User | null
   accessToken: string | null
-  refreshToken: string | null
+  // refreshToken 제거 - Cookie로 관리
   isAuthenticated: boolean
   isLoading: boolean
   error: AuthError | null
@@ -43,8 +43,8 @@ export interface AuthState {
 }
 
 export interface AuthActions {
-  login: (credentials: LoginRequest) => Promise<void>
-  logout: () => void
+  login: (credentials: LoginRequest) => Promise<boolean> // 성공 여부 반환으로 변경
+  logout: () => Promise<void> // Cookie 기반으로 변경되어 async
   verifyToken: () => Promise<boolean>
   refreshTokens: () => Promise<boolean>
   clearError: () => void

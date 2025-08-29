@@ -7,22 +7,25 @@ exports.isValidEmail = isValidEmail;
 exports.logEmailInDevelopment = logEmailInDevelopment;
 const resend_1 = require("resend");
 const template_loader_1 = require("./template-loader");
-const apiKey = process.env.RESEND_API_KEY || 'test-key';
-const resend = new resend_1.Resend(apiKey);
-async function sendEmail(to, template, fromName = 'ReadZone') {
+async function sendEmail(to, template, configService, fromName = 'ReadZone') {
     try {
-        if (process.env.NODE_ENV === 'test' ||
-            (process.env.NODE_ENV === 'development' && !process.env.ENABLE_DEV_EMAIL)) {
+        const nodeEnv = configService.get('NODE_ENV');
+        const enableDevEmail = configService.get('ENABLE_DEV_EMAIL');
+        const resendApiKey = configService.get('RESEND_API_KEY');
+        if (nodeEnv === 'test' || (nodeEnv === 'development' && !enableDevEmail)) {
             return {
                 success: true,
                 messageId: `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             };
         }
-        if (!process.env.RESEND_API_KEY) {
+        if (!resendApiKey) {
             throw new Error('RESEND_API_KEY is not configured');
         }
+        const resend = new resend_1.Resend(resendApiKey);
+        const fromEmail = configService.get('RESEND_FROM_EMAIL') ||
+            `${fromName} <onboarding@resend.dev>`;
         const result = await resend.emails.send({
-            from: `${fromName} <noreply@readzone.com>`,
+            from: fromEmail,
             to: [to],
             subject: template.subject,
             html: template.html,
@@ -48,28 +51,31 @@ async function sendEmail(to, template, fromName = 'ReadZone') {
         };
     }
 }
-async function sendEmailVerification(email, nickname, verificationToken) {
-    const baseUrl = process.env.NODE_ENV === 'production'
+async function sendEmailVerification(email, nickname, verificationToken, configService) {
+    const nodeEnv = configService.get('NODE_ENV');
+    const baseUrl = nodeEnv === 'production'
         ? 'https://readzone.vercel.app'
         : 'http://localhost:3000';
     const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
     const template = (0, template_loader_1.createEmailVerificationTemplate)(nickname, verificationUrl);
-    return await sendEmail(email, template);
+    return await sendEmail(email, template, configService);
 }
-async function sendPasswordResetEmail(email, nickname, resetToken) {
-    const baseUrl = process.env.NODE_ENV === 'production'
+async function sendPasswordResetEmail(email, nickname, resetToken, configService) {
+    const nodeEnv = configService.get('NODE_ENV');
+    const baseUrl = nodeEnv === 'production'
         ? 'https://readzone.vercel.app'
         : 'http://localhost:3000';
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
     const template = (0, template_loader_1.createPasswordResetTemplate)(nickname, resetUrl);
-    return await sendEmail(email, template);
+    return await sendEmail(email, template, configService);
 }
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email) && email.length <= 320;
 }
-function logEmailInDevelopment(to, subject, verificationUrl) {
-    if (process.env.NODE_ENV === 'development') {
+function logEmailInDevelopment(to, subject, verificationUrl, configService) {
+    const nodeEnv = configService?.get('NODE_ENV') || process.env.NODE_ENV;
+    if (nodeEnv === 'development') {
         const timestamp = new Date().toLocaleString('ko-KR', {
             year: 'numeric',
             month: '2-digit',

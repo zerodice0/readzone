@@ -21,6 +21,22 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
+        // Cookie 전달을 위한 설정
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            // Cookie 헤더 보존
+            if (req.headers.cookie) {
+              proxyReq.setHeader('Cookie', req.headers.cookie);
+            }
+          });
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            // Set-Cookie 헤더 보존
+            const setCookie = proxyRes.headers['set-cookie'];
+            if (setCookie) {
+              res.setHeader('Set-Cookie', setCookie);
+            }
+          });
+        },
       },
     },
   },

@@ -40,9 +40,9 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(8, { message: '비밀번호는 최소 8자 이상이어야 합니다.' }),
-    (0, class_validator_1.MaxLength)(255, { message: '비밀번호는 최대 255자까지 입력할 수 있습니다.' }),
-    (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-        message: '비밀번호는 대문자, 소문자, 숫자, 특수문자를 각각 최소 1개씩 포함해야 합니다.',
+    (0, class_validator_1.MaxLength)(64, { message: '비밀번호는 최대 64자까지 입력할 수 있습니다.' }),
+    (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{}|;:,.<>?])[A-Za-z\d!@#$%^&*()_+\-=[\]{}|;:,.<>?]+$/, {
+        message: '비밀번호는 소문자, 숫자, 특수문자(!@#$%^&*()_+-=[]{}|;:,.<>?)를 각각 최소 1개씩 포함해야 합니다.',
     }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);

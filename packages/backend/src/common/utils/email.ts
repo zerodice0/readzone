@@ -1,12 +1,9 @@
 import { Resend } from 'resend';
+import { ConfigService } from '@nestjs/config';
 import {
   createEmailVerificationTemplate,
   createPasswordResetTemplate,
 } from './template-loader';
-
-// Resend 클라이언트 초기화 (테스트 환경에서는 더미 키 사용)
-const apiKey = process.env.RESEND_API_KEY || 'test-key';
-const resend = new Resend(apiKey);
 
 // 이메일 템플릿 인터페이스
 interface EmailTemplate {
@@ -21,14 +18,16 @@ interface EmailTemplate {
 export async function sendEmail(
   to: string,
   template: EmailTemplate,
+  configService: ConfigService,
   fromName = 'ReadZone',
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
+    const nodeEnv = configService.get<string>('NODE_ENV');
+    const enableDevEmail = configService.get<string>('ENABLE_DEV_EMAIL');
+    const resendApiKey = configService.get<string>('RESEND_API_KEY');
+
     // 테스트 또는 개발 환경에서 ENABLE_DEV_EMAIL이 설정되지 않은 경우 콘솔 로깅으로 대체
-    if (
-      process.env.NODE_ENV === 'test' ||
-      (process.env.NODE_ENV === 'development' && !process.env.ENABLE_DEV_EMAIL)
-    ) {
+    if (nodeEnv === 'test' || (nodeEnv === 'development' && !enableDevEmail)) {
       // 테스트/개발 환경에서는 항상 성공으로 처리하고 로깅만 수행
       return {
         success: true,
@@ -37,12 +36,20 @@ export async function sendEmail(
     }
 
     // 프로덕션 환경에서만 실제 이메일 발송
-    if (!process.env.RESEND_API_KEY) {
+    if (!resendApiKey) {
       throw new Error('RESEND_API_KEY is not configured');
     }
 
+    // ConfigService에서 가져온 API 키로 Resend 클라이언트 생성
+    const resend = new Resend(resendApiKey);
+
+    // ConfigService에서 발신 이메일 주소 가져오기
+    const fromEmail =
+      configService.get<string>('RESEND_FROM_EMAIL') ||
+      `${fromName} <onboarding@resend.dev>`;
+
     const result = await resend.emails.send({
-      from: `${fromName} <noreply@readzone.com>`,
+      from: fromEmail,
       to: [to],
       subject: template.subject,
       html: template.html,
@@ -79,16 +86,18 @@ export async function sendEmailVerification(
   email: string,
   nickname: string,
   verificationToken: string,
+  configService: ConfigService,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const nodeEnv = configService.get<string>('NODE_ENV');
   const baseUrl =
-    process.env.NODE_ENV === 'production'
+    nodeEnv === 'production'
       ? 'https://readzone.vercel.app'
       : 'http://localhost:3000';
 
   const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
   const template = createEmailVerificationTemplate(nickname, verificationUrl);
 
-  return await sendEmail(email, template);
+  return await sendEmail(email, template, configService);
 }
 
 /**
@@ -98,16 +107,18 @@ export async function sendPasswordResetEmail(
   email: string,
   nickname: string,
   resetToken: string,
+  configService: ConfigService,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const nodeEnv = configService.get<string>('NODE_ENV');
   const baseUrl =
-    process.env.NODE_ENV === 'production'
+    nodeEnv === 'production'
       ? 'https://readzone.vercel.app'
       : 'http://localhost:3000';
 
   const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
   const template = createPasswordResetTemplate(nickname, resetUrl);
 
-  return await sendEmail(email, template);
+  return await sendEmail(email, template, configService);
 }
 
 // 이메일 유효성 검증
@@ -124,8 +135,11 @@ export function logEmailInDevelopment(
   to: string,
   subject: string,
   verificationUrl?: string,
+  configService?: ConfigService,
 ) {
-  if (process.env.NODE_ENV === 'development') {
+  const nodeEnv =
+    configService?.get<string>('NODE_ENV') || process.env.NODE_ENV;
+  if (nodeEnv === 'development') {
     const timestamp = new Date().toLocaleString('ko-KR', {
       year: 'numeric',
       month: '2-digit',

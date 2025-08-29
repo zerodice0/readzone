@@ -81,7 +81,7 @@ let AuthService = class AuthService {
                 email: registerDto.email,
             },
         });
-        await (0, email_1.sendEmailVerification)(registerDto.email, registerDto.nickname, verificationToken);
+        await (0, email_1.sendEmailVerification)(registerDto.email, registerDto.nickname, verificationToken, this.configService);
         return {
             success: true,
             message: '회원가입이 완료되었습니다. 이메일을 확인하여 인증을 완료해주세요.',
@@ -90,14 +90,14 @@ let AuthService = class AuthService {
     }
     async login(loginDto) {
         const user = await this.prismaService.user.findFirst({
-            where: { email: loginDto.email },
+            where: { userid: loginDto.userid },
         });
         if (!user || !user.password) {
-            throw new common_1.UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
+            throw new common_1.UnauthorizedException('아이디 또는 비밀번호가 올바르지 않습니다.');
         }
         const isPasswordValid = await (0, password_1.verifyPassword)(loginDto.password, user.password);
         if (!isPasswordValid) {
-            throw new common_1.UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
+            throw new common_1.UnauthorizedException('아이디 또는 비밀번호가 올바르지 않습니다.');
         }
         const tokenPayload = {
             userId: user.id,
@@ -123,36 +123,37 @@ let AuthService = class AuthService {
         };
     }
     async checkDuplicate(checkDuplicateDto) {
-        const conditions = [];
+        let field;
+        let value;
         if (checkDuplicateDto.userid) {
-            conditions.push({ userid: checkDuplicateDto.userid });
+            field = 'userid';
+            value = checkDuplicateDto.userid;
         }
-        if (checkDuplicateDto.email) {
-            conditions.push({ email: checkDuplicateDto.email });
+        else if (checkDuplicateDto.email) {
+            field = 'email';
+            value = checkDuplicateDto.email;
         }
-        if (checkDuplicateDto.nickname) {
-            conditions.push({ nickname: checkDuplicateDto.nickname });
+        else if (checkDuplicateDto.nickname) {
+            field = 'nickname';
+            value = checkDuplicateDto.nickname;
         }
-        if (conditions.length === 0) {
-            throw new common_1.BadRequestException('확인할 필드를 하나 이상 제공해주세요.');
+        else {
+            throw new common_1.BadRequestException('확인할 필드를 하나 제공해주세요.');
         }
         const existingUser = await this.prismaService.user.findFirst({
-            where: { OR: conditions },
+            where: {
+                [field]: value,
+            },
             select: { userid: true, email: true, nickname: true },
         });
-        const result = {};
-        if (checkDuplicateDto.userid) {
-            result.userid = existingUser?.userid === checkDuplicateDto.userid;
-        }
-        if (checkDuplicateDto.email) {
-            result.email = existingUser?.email === checkDuplicateDto.email;
-        }
-        if (checkDuplicateDto.nickname) {
-            result.nickname = existingUser?.nickname === checkDuplicateDto.nickname;
-        }
+        const isDuplicate = !!existingUser;
         return {
             success: true,
-            data: result,
+            data: {
+                field,
+                value,
+                isDuplicate,
+            },
         };
     }
     async verifyEmail(token) {
@@ -176,6 +177,55 @@ let AuthService = class AuthService {
             success: true,
             message: '이메일 인증이 완료되었습니다.',
         };
+    }
+    async refresh(refreshToken) {
+        try {
+            const decoded = (0, jwt_1.verifyToken)(refreshToken);
+            if (decoded.type !== 'refresh') {
+                throw new common_1.UnauthorizedException('Invalid refresh token type');
+            }
+            const user = await this.prismaService.user.findUnique({
+                where: { id: decoded.userId },
+                select: {
+                    id: true,
+                    userid: true,
+                    email: true,
+                    nickname: true,
+                    bio: true,
+                    profileImage: true,
+                    isVerified: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            });
+            if (!user) {
+                throw new common_1.UnauthorizedException('User not found');
+            }
+            const tokens = (0, jwt_1.generateTokenPair)({
+                userId: user.id,
+                email: user.email,
+                nickname: user.nickname,
+            });
+            return {
+                success: true,
+                message: 'Tokens refreshed successfully',
+                user: {
+                    id: user.id,
+                    userid: user.userid,
+                    email: user.email,
+                    nickname: user.nickname,
+                    bio: user.bio,
+                    profileImage: user.profileImage,
+                    isVerified: user.isVerified,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt,
+                },
+                tokens,
+            };
+        }
+        catch {
+            throw new common_1.UnauthorizedException('Invalid refresh token');
+        }
     }
 };
 exports.AuthService = AuthService;

@@ -30,11 +30,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     formState: { errors, isSubmitting },
     setValue,
     watch,
-    setError,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      emailOrUserid: '',
+      userid: '',
       password: '',
       rememberMe: false,
     },
@@ -43,35 +42,25 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const rememberMe = watch('rememberMe')
 
   const onSubmit = async (data: LoginFormData) => {
-    try {
-      clearError()
-      // LoginRequest는 rememberMe 없이 emailOrUserid와 password만 필요
-      await login({
-        emailOrUserid: data.emailOrUserid,
-        password: data.password
-      })
-      
-      // 로그인 성공 시 리다이렉트 또는 콜백 실행
+    clearError()
+    
+    // LoginRequest는 rememberMe 없이 userid와 password만 필요
+    const loginSuccess = await login({
+      userid: data.userid,
+      password: data.password
+    })
+    
+    // 로그인 성공 시 리다이렉트 또는 콜백 실행
+    if (loginSuccess) {
       if (onSuccess) {
         onSuccess()
       } else {
         const redirectTo = (search as { redirect?: string })?.redirect ?? '/'
-
         await navigate({ to: redirectTo })
       }
-    } catch (error) {
-      // 에러는 authStore에서 처리되므로 여기서는 UI 관련 에러만 처리
-      if (error instanceof Error) {
-        const message = error.message
-        
-        // 특정 필드 에러인지 확인
-        if (message.includes('email') || message.includes('이메일') || message.includes('아이디')) {
-          setError('emailOrUserid', { message })
-        } else if (message.includes('password') || message.includes('비밀번호')) {
-          setError('password', { message })
-        }
-      }
     }
+    // 로그인 실패 시 에러는 authStore에서 관리되므로 추가 처리 불필요
+    // error 상태는 화면에서 자동으로 표시됨
   }
 
   const getErrorMessage = () => {
@@ -100,21 +89,21 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* 이메일 또는 아이디 입력 */}
+          {/* 아이디 입력 */}
           <div className="space-y-2">
-            <Label htmlFor="emailOrUserid">이메일 또는 아이디</Label>
+            <Label htmlFor="userid">아이디</Label>
             <Input
-              id="emailOrUserid"
+              id="userid"
               type="text"
               autoComplete="username"
-              placeholder="이메일 또는 아이디를 입력하세요"
-              error={!!errors.emailOrUserid}
-              {...register('emailOrUserid')}
-              aria-describedby={errors.emailOrUserid ? 'emailOrUserid-error' : undefined}
+              placeholder="아이디를 입력하세요"
+              error={!!errors.userid}
+              {...register('userid')}
+              aria-describedby={errors.userid ? 'userid-error' : undefined}
             />
-            {errors.emailOrUserid && (
-              <p id="emailOrUserid-error" className="text-sm text-destructive" role="alert">
-                {errors.emailOrUserid.message}
+            {errors.userid && (
+              <p id="userid-error" className="text-sm text-destructive" role="alert">
+                {errors.userid.message}
               </p>
             )}
           </div>

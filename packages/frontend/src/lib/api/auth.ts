@@ -58,7 +58,7 @@ interface RegisterResponse {
 }
 
 interface LoginRequest {
-  emailOrUserid: string
+  userid: string
   password: string
 }
 
@@ -125,6 +125,20 @@ const API_BASE_URL = import.meta.env.MODE === 'development'
   : '/api'
 
 /**
+ * 백엔드 로그인 응답 타입 정의
+ */
+interface BackendLoginResponse {
+  success: boolean
+  message?: string
+  user?: User
+  tokens?: TokenPair
+  error?: {
+    code: string
+    message: string | string[]
+  }
+}
+
+/**
  * 인증 API 요청을 위한 fetch 래퍼
  */
 async function authFetch<T>(
@@ -142,32 +156,18 @@ async function authFetch<T>(
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
+    // 에러 응답 처리
+    const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }))
+    
+    // validation 에러 배열 처리
+    if (errorData.message && Array.isArray(errorData.message)) {
+      throw new Error(errorData.message.join(', '))
+    }
+    
+    throw new Error(errorData.message ?? `HTTP error! status: ${response.status}`)
   }
 
   return response.json()
-}
-
-/**
- * 인증 토큰이 필요한 API 요청을 위한 fetch 래퍼
- */
-async function authenticatedFetch<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  const token = localStorage.getItem('accessToken')
-  
-  if (!token) {
-    throw new Error('No access token found')
-  }
-
-  return authFetch<T>(endpoint, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-  })
 }
 
 /**
@@ -179,7 +179,7 @@ export async function checkDuplicate(
 ): Promise<CheckDuplicateResponse> {
   const response = await authFetch<CheckDuplicateResponse>('/check-duplicate', {
     method: 'POST',
-    body: JSON.stringify({ field, value }),
+    body: JSON.stringify({ [field]: value }),
   })
 
   if (!response.success || !response.data) {
@@ -209,16 +209,32 @@ export async function register(data: RegisterRequest): Promise<RegisterResponse>
  * 로그인
  */
 export async function login(data: LoginRequest): Promise<LoginResponse> {
-  const response = await authFetch<LoginResponse>('/login', {
+  const response = await authFetch<BackendLoginResponse>('/login', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 
-  if (!response.success || !response.data) {
-    throw new Error(response.error?.message  ?? '로그인 중 오류가 발생했습니다')
+  // 기존 data 래핑 형식 지원
+  if (response.success && response.data) {
+    const backendData = response.data
+
+    if (backendData.user && backendData.tokens) {
+      return {
+        user: backendData.user,
+        tokens: backendData.tokens,
+        emailVerificationRequired: !backendData.user.isVerified
+      }
+    }
   }
 
-  return response.data
+  // 에러 처리
+  const errorMessage = response.error?.message
+
+  if (Array.isArray(errorMessage)) {
+    throw new Error(errorMessage.join(', '))
+  }
+  
+  throw new Error(errorMessage ?? '로그인 중 오류가 발생했습니다.')
 }
 
 /**
@@ -241,30 +257,14 @@ export async function refreshToken(refreshToken: string): Promise<RefreshTokenRe
  * 토큰 검증
  */
 export async function verifyToken(): Promise<VerifyTokenResponse> {
-  const response = await authenticatedFetch<VerifyTokenResponse>('/verify-token', {
-    method: 'POST',
-  })
-
-  if (!response.success || !response.data) {
-    throw new Error(response.error?.message  ?? '토큰 검증 중 오류가 발생했습니다')
-  }
-
-  return response.data
+  throw new Error('Use useAuthStore().verifyToken() instead')
 }
 
 /**
  * 현재 사용자 정보 조회
  */
 export async function getCurrentUser(): Promise<User> {
-  const response = await authenticatedFetch<{ user: User }>('/me', {
-    method: 'GET',
-  })
-
-  if (!response.success || !response.data) {
-    throw new Error(response.error?.message  ?? '사용자 정보 조회 중 오류가 발생했습니다')
-  }
-
-  return response.data.user
+  throw new Error('Use useAuthStore().getCurrentUser() instead')
 }
 
 /**
@@ -298,17 +298,7 @@ export async function getUserProfile(userid: string): Promise<User> {
  * 로그아웃
  */
 export async function logout(): Promise<void> {
-  const response = await authenticatedFetch<{ message: string }>('/logout', {
-    method: 'POST',
-  })
-
-  if (!response.success) {
-    throw new Error(response.error?.message  ?? '로그아웃 중 오류가 발생했습니다')
-  }
-
-  // 로컬 스토리지에서 토큰 제거
-  localStorage.removeItem('accessToken')
-  localStorage.removeItem('refreshToken')
+  throw new Error('Use useAuthStore().logout() instead')
 }
 
 /**
@@ -340,10 +330,7 @@ export async function verifyEmail(token: string): Promise<VerifyEmailResponse> {
     throw new Error(response.error?.message  ?? '이메일 인증 중 오류가 발생했습니다')
   }
 
-  // 인증 성공 시 토큰 저장
-  localStorage.setItem('accessToken', response.data.tokens.accessToken)
-  localStorage.setItem('refreshToken', response.data.tokens.refreshToken)
-
+  // 토큰 저장은 호출하는 곳에서 authStore를 통해 처리
   return response.data
 }
 

@@ -46,11 +46,34 @@ export declare class AuthService {
     checkDuplicate(checkDuplicateDto: CheckDuplicateDto): Promise<{
         success: boolean;
         data: {
-            [key: string]: boolean;
+            field: string;
+            value: string;
+            isDuplicate: boolean;
         };
     }>;
     verifyEmail(token: string): Promise<{
         success: boolean;
         message: string;
+    }>;
+    refresh(refreshToken: string): Promise<{
+        success: boolean;
+        message: string;
+        user: {
+            id: string;
+            userid: string;
+            email: string | null;
+            nickname: string;
+            bio: string | null;
+            profileImage: string | null;
+            isVerified: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        tokens: {
+            accessToken: string;
+            refreshToken: string;
+            expiresIn: string;
+            tokenType: string;
+        };
     }>;
 }

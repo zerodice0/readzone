@@ -1,101 +1,19 @@
-import { useAuthStore } from '@/store/authStore'
+import { setupApiInterceptors } from '@/store/authStore'
 
 /**
- * 앱 초기화 시 인증 관련 설정
+ * 앱 초기화 시 인증 관련 설정 (Cookie 기반)
  */
-export function initializeAuth() {
-  // API 인터셉터 설정
+export function initializeApp() {
+  // Cookie 기반 API 인터셉터 설정
   setupApiInterceptors()
-  
-  // 페이지 로드 시 토큰 검증
-  const authStore = useAuthStore.getState()
-
-  if (authStore.accessToken) {
-    authStore.verifyToken()
-  }
 }
 
 /**
- * API 인터셉터 설정
- */
-function setupApiInterceptors() {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001'
-  
-  // fetch 인터셉터
-  const originalFetch = window.fetch
-  
-  window.fetch = async (input, init = {}) => {
-    const url = typeof input === 'string' ? input : (input as Request).url
-    
-    // ReadZone API 호출인지 확인
-    if (url.startsWith(API_BASE_URL)) {
-      const authStore = useAuthStore.getState()
-      
-      // Authorization 헤더 자동 추가
-      if (authStore.accessToken) {
-        const headers = new Headers(init.headers)
-
-        if (!headers.has('Authorization')) {
-          headers.set('Authorization', `Bearer ${authStore.accessToken}`)
-        }
-        init.headers = headers
-      }
-      
-      // Content-Type 자동 추가 (body가 있는 경우)
-      if (init.body && typeof init.body === 'string') {
-        const headers = new Headers(init.headers)
-
-        if (!headers.has('Content-Type')) {
-          headers.set('Content-Type', 'application/json')
-        }
-        init.headers = headers
-      }
-    }
-    
-    const response = await originalFetch(input, init)
-    
-    // 401 에러 시 자동 토큰 갱신 시도
-    if (response.status === 401 && url.startsWith(API_BASE_URL)) {
-      const authStore = useAuthStore.getState()
-      
-      // refresh 엔드포인트가 아닌 경우에만 토큰 갱신 시도
-      if (!url.includes('/auth/refresh') && authStore.refreshToken) {
-        const refreshed = await authStore.refreshTokens()
-        
-        if (refreshed) {
-          // 갱신된 토큰으로 재시도
-          const headers = new Headers(init.headers)
-
-          headers.set('Authorization', `Bearer ${authStore.accessToken}`)
-          init.headers = headers
-
-          return originalFetch(input, init)
-        }
-      }
-    }
-    
-    return response
-  }
-}
-
-/**
- * 브라우저 탭 간 토큰 동기화
+ * 브라우저 탭 간 토큰 동기화 (Cookie 기반에서는 불필요)
+ * Cookie는 모든 탭에서 자동으로 공유됨
  */
 export function setupTokenSynchronization() {
-  // storage 이벤트 리스너로 다른 탭에서의 로그인/로그아웃 감지
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'accessToken') {
-      const authStore = useAuthStore.getState()
-      
-      if (event.newValue === null) {
-        // 다른 탭에서 로그아웃
-        authStore.logout()
-      } else if (event.newValue !== authStore.accessToken) {
-        // 다른 탭에서 로그인 또는 토큰 갱신
-        authStore.verifyToken()
-      }
-    }
-  })
+  // Cookie 기반에서는 브라우저가 자동으로 동기화하므로 별도 작업 불필요
 }
 
 /**
@@ -215,10 +133,11 @@ export function setupErrorTracking() {
 }
 
 /**
- * 모든 초기화 함수 실행
+ * 모든 초기화 함수 실행 (이미 위에서 정의됨)
+ * 추가 초기화 함수들 호출
  */
-export function initializeApp() {
-  initializeAuth()
+export function initializeFullApp() {
+  initializeApp() // Cookie 기반 인증 초기화
   setupTokenSynchronization()
   setupUnloadProtection()
   setupAccessibility()

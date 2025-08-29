@@ -35,8 +35,7 @@ export function VerifyEmailPage() {
         setStatus('loading')
         await verifyEmail(token)
         
-        // verifyEmail 함수가 이미 localStorage에 토큰을 저장함
-        // 별도로 상태 업데이트할 필요 없음
+        // Cookie 기반 인증으로 전환됨 - 토큰은 자동으로 Cookie에 저장됨
         
         setStatus('success')
         

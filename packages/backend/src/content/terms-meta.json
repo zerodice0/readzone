@@ -1,0 +1,26 @@
+{
+  "title": "ReadZone 서비스 이용약관",
+  "type": "terms-of-service",
+  "version": "1.0.0",
+  "effectiveDate": "2024-08-20T00:00:00.000Z",
+  "lastModified": "2024-08-20T00:00:00.000Z",
+  "language": "ko",
+  "previousVersions": [],
+  "changeLog": [
+    {
+      "version": "1.0.0",
+      "date": "2024-08-20T00:00:00.000Z",
+      "changes": [
+        "최초 약관 작성",
+        "독서 후기 서비스에 특화된 약관 내용 수립",
+        "회원의 권리와 의무 명시",
+        "서비스 제공 범위 정의"
+      ],
+      "author": "ReadZone 개발팀"
+    }
+  ],
+  "nextReviewDate": "2025-02-20T00:00:00.000Z",
+  "isActive": true,
+  "legalBasis": "개인정보보호법, 정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+  "contentPath": "./terms.md"
+}

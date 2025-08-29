@@ -216,7 +216,7 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
-              placeholder="6자 이상의 비밀번호"
+              placeholder="8자 이상 (소문자, 숫자, 특수문자 포함)"
               {...register('password')}
             />
             <button
@@ -230,6 +230,9 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
           {errors.password && (
             <p className="text-sm text-red-600">{errors.password.message}</p>
           )}
+          <p className="text-xs text-muted-foreground">
+            {'사용 가능한 특수문자: !@#$%^&*()_+-=[]{}|;:,.<>?'}
+          </p>
           <PasswordStrengthIndicator password={watchedPassword} />
         </div>
 
