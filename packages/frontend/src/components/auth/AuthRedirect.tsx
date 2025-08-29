@@ -24,15 +24,15 @@ export function AuthRedirect({
   redirectTo,
   fallback 
 }: AuthRedirectProps) {
-  const { isAuthenticated, isLoading, verifyToken } = useAuthStore()
+  const { isAuthenticated, isLoading } = useAuthStore()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    // 앱 시작 시 토큰 검증
-    if (!isAuthenticated && !isLoading) {
-      verifyToken()
-    }
-  }, [isAuthenticated, isLoading, verifyToken])
+  // 초기 토큰 검증은 setupApiInterceptors에서 이미 수행되므로 중복 제거
+  // useEffect(() => {
+  //   if (!isAuthenticated && !isLoading) {
+  //     verifyToken()
+  //   }
+  // }, [isAuthenticated, isLoading, verifyToken])
 
   useEffect(() => {
     if (!isLoading) {

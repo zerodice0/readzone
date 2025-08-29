@@ -1,56 +1,9 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
 import type { AuthActions, AuthError, AuthState, LoginRequest, User } from '@/types/auth'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001'
 
-// 토큰 저장소 관리 (localStorage vs sessionStorage)
-const getStorage = (rememberMe: boolean) => {
-  return rememberMe ? localStorage : sessionStorage
-}
-
-const getStoredTokens = () => {
-  // localStorage와 sessionStorage 모두 확인
-  const localTokens = {
-    accessToken: localStorage.getItem('accessToken'),
-    refreshToken: localStorage.getItem('refreshToken'),
-    rememberMe: true
-  }
-  
-  const sessionTokens = {
-    accessToken: sessionStorage.getItem('accessToken'),
-    refreshToken: sessionStorage.getItem('refreshToken'),
-    rememberMe: false
-  }
-  
-  // localStorage 토큰이 있으면 우선 사용
-  if (localTokens.accessToken) {return localTokens}
-  if (sessionTokens.accessToken) {return sessionTokens}
-  
-  return { accessToken: null, refreshToken: null, rememberMe: false }
-}
-
-const setTokens = (accessToken: string, refreshToken: string, rememberMe: boolean) => {
-  const storage = getStorage(rememberMe)
-  const otherStorage = rememberMe ? sessionStorage : localStorage
-  
-  // 현재 저장소에 토큰 저장
-  storage.setItem('accessToken', accessToken)
-  storage.setItem('refreshToken', refreshToken)
-  
-  // 다른 저장소에서 토큰 제거
-  otherStorage.removeItem('accessToken')
-  otherStorage.removeItem('refreshToken')
-}
-
-const clearTokens = () => {
-  localStorage.removeItem('accessToken')
-  localStorage.removeItem('refreshToken')
-  sessionStorage.removeItem('accessToken')
-  sessionStorage.removeItem('refreshToken')
-}
-
-// API 호출 헬퍼
+// Cookie 기반 API 호출 헬퍼
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`
   
@@ -62,28 +15,46 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const response = await fetch(url, {
     ...options,
     headers: defaultHeaders,
+    credentials: 'include', // Cookie 자동 포함
   })
   
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-
-    throw new Error(errorData.message ?? `HTTP ${response.status}`)
+    try {
+      const errorData = await response.json()
+      
+      // 백엔드의 새로운 에러 응답 구조에 맞춘 처리
+      if (errorData.success === false && errorData.error) {
+        const error = new Error(errorData.error.message)
+        // @ts-ignore
+        error.code = errorData.error.code
+        throw error
+      }
+      
+      // 기존 형식 (fallback)
+      throw new Error(errorData.message ?? `HTTP ${response.status}`)
+    } catch (parseError) {
+      // JSON 파싱 실패 시 기본 에러 메시지
+      if (parseError instanceof Error && parseError.message !== `HTTP ${response.status}`) {
+        throw parseError
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
   }
   
   return response.json()
 }
 
-// 인증된 API 호출 헬퍼
+// 인증된 API 호출 헬퍼 (Cookie + AccessToken)
 const authenticatedApiCall = async (endpoint: string, options: RequestInit = {}) => {
-  const tokens = getStoredTokens()
+  const currentState = useAuthStore.getState()
   
-  if (!tokens.accessToken) {
+  if (!currentState.accessToken) {
     throw new Error('No access token available')
   }
   
   const headers = {
     ...options.headers,
-    Authorization: `Bearer ${tokens.accessToken}`,
+    Authorization: `Bearer ${currentState.accessToken}`,
   }
   
   try {
@@ -94,10 +65,10 @@ const authenticatedApiCall = async (endpoint: string, options: RequestInit = {})
       const refreshed = await useAuthStore.getState().refreshTokens()
 
       if (refreshed) {
-        const newTokens = getStoredTokens()
+        const newState = useAuthStore.getState()
         const newHeaders = {
           ...options.headers,
-          Authorization: `Bearer ${newTokens.accessToken}`,
+          Authorization: `Bearer ${newState.accessToken}`,
         }
 
         return await apiCall(endpoint, { ...options, headers: newHeaders })
@@ -116,18 +87,15 @@ interface LoginRequiredModalState {
   redirectTo?: string | undefined;
 }
 
-type AuthStore = AuthState & AuthActions & {
+type AuthStore = Omit<AuthState, 'refreshToken'> & AuthActions & {
   loginRequiredModal: LoginRequiredModalState;
   setLoginRequiredModal: (modal: LoginRequiredModalState) => void;
 }
 
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set, get) => ({
-      // State
+export const useAuthStore = create<AuthStore>((set, get) => ({
+      // State (refreshToken 제거 - Cookie로 관리)
       user: null,
-      accessToken: null,
-      refreshToken: null,
+      accessToken: null, // 메모리에만 저장
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -150,29 +118,51 @@ export const useAuthStore = create<AuthStore>()(
             body: JSON.stringify(credentials),
           })
           
-          // 백엔드 응답 형식: { success: true, data: { user, tokens, emailVerificationRequired } }
-          if (!response.success || !response.data) {
-            throw new Error(response.error?.message ?? '로그인에 실패했습니다.')
+          // Cookie 기반 응답 형식: { success: true, message, user, tokens: { accessToken } }
+          if (!response.success) {
+            const authError: AuthError = {
+              code: 'LOGIN_FAILED',
+              message: response.message ?? '로그인에 실패했습니다.',
+            }
+            
+            set({
+              isLoading: false,
+              error: authError,
+              isAuthenticated: false,
+            })
+            return false // 성공 여부 반환
           }
           
-          const { user, tokens } = response.data
-          const { accessToken, refreshToken } = tokens
+          // RefreshToken은 Cookie로 자동 설정됨
+          if (!response.user || !response.tokens?.accessToken) {
+            const authError: AuthError = {
+              code: 'LOGIN_FAILED',
+              message: '로그인 응답 형식이 올바르지 않습니다.',
+            }
+            
+            set({
+              isLoading: false,
+              error: authError,
+              isAuthenticated: false,
+            })
+            return false
+          }
           
-          // 토큰 저장 - rememberMe는 로그인 폼에서 별도 관리
-          setTokens(accessToken, refreshToken, false)
+          const { user, tokens } = response
+          const { accessToken } = tokens
           
           set({
             user,
-            accessToken,
-            refreshToken,
+            accessToken, // 메모리에만 저장
             isAuthenticated: true,
             isLoading: false,
             error: null,
             rememberMe: false,
           })
+          return true // 로그인 성공
         } catch (error) {
           const authError: AuthError = {
-            code: 'LOGIN_FAILED',
+            code: (error as any)?.code || 'LOGIN_FAILED',
             message: error instanceof Error ? error.message : '로그인에 실패했습니다.',
           }
           
@@ -181,16 +171,38 @@ export const useAuthStore = create<AuthStore>()(
             error: authError,
             isAuthenticated: false,
           })
-          throw error
+          return false // 로그인 실패
         }
       },
 
-      logout: () => {
-        clearTokens()
+      logout: async () => {
+        try {
+          // 서버에 로그아웃 요청 (Cookie 삭제)
+          await apiCall('/api/auth/logout', {
+            method: 'POST',
+          })
+        } catch {
+          // 서버 에러가 있어도 클라이언트 상태는 초기화
+        }
+        
+        // localStorage에서 auth 관련 데이터 모두 제거
+        try {
+          localStorage.removeItem('auth-storage')
+          localStorage.removeItem('readzone-auth-store')
+          // Zustand persist 미들웨어가 생성했을 수 있는 모든 auth 관련 키 정리
+          Object.keys(localStorage).forEach(key => {
+            if (key.includes('auth') || key.includes('readzone')) {
+              localStorage.removeItem(key)
+            }
+          })
+        } catch (error) {
+          // localStorage 접근 실패 시 무시 (private mode 등)
+          console.warn('Failed to clear localStorage:', error)
+        }
+        
         set({
           user: null,
           accessToken: null,
-          refreshToken: null,
           isAuthenticated: false,
           isLoading: false,
           error: null,
@@ -199,42 +211,29 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       verifyToken: async () => {
-        const tokens = getStoredTokens()
+        const currentState = get()
         
-        if (!tokens.accessToken) {
-          return false
+        // 메모리에 accessToken이 있으면 검증
+        if (currentState.accessToken) {
+          try {
+            await authenticatedApiCall('/api/auth/verify-token')
+
+            return true
+          } catch {
+            // accessToken이 만료되었으면 갱신 시도
+            return await get().refreshTokens()
+          }
         }
         
-        try {
-          await authenticatedApiCall('/api/auth/verify-token')
-          
-          set({
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            rememberMe: tokens.rememberMe,
-            isAuthenticated: true,
-          })
-          
-          return true
-        } catch {
-          // 토큰이 유효하지 않으면 갱신 시도
-          return await get().refreshTokens()
-        }
+        // accessToken이 없으면 refreshToken으로 갱신 시도
+        return await get().refreshTokens()
       },
 
       refreshTokens: async () => {
-        const tokens = getStoredTokens()
-        
-        if (!tokens.refreshToken) {
-          get().logout()
-
-          return false
-        }
-        
         try {
           const response = await apiCall('/api/auth/refresh', {
             method: 'POST',
-            body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+            // RefreshToken은 Cookie에서 자동으로 전송됨
           })
           
           // 백엔드 응답 형식 확인
@@ -242,22 +241,18 @@ export const useAuthStore = create<AuthStore>()(
             throw new Error(response.error?.message ?? '토큰 갱신에 실패했습니다.')
           }
           
-          const { tokens: newTokens, user } = response.data
-          const { accessToken, refreshToken } = newTokens
-          
-          // 새 토큰 저장
-          setTokens(accessToken, refreshToken, tokens.rememberMe)
+          const { tokens, user } = response.data
+          const { accessToken } = tokens
           
           set({
             user,
-            accessToken,
-            refreshToken,
+            accessToken, // 메모리에만 저장
             isAuthenticated: true,
           })
           
           return true
-        } catch {
-          get().logout()
+        } catch (_error) {
+          await get().logout()
 
           return false
         }
@@ -285,77 +280,81 @@ export const useAuthStore = create<AuthStore>()(
       setLoginRequiredModal: (modal: LoginRequiredModalState) => {
         set({ loginRequiredModal: modal })
       },
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        user: state.user,
-        rememberMe: state.rememberMe,
-      }),
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          // 앱 시작 시 토큰 확인
-          const tokens = getStoredTokens()
 
-          if (tokens.accessToken) {
-            state.accessToken = tokens.accessToken
-            state.refreshToken = tokens.refreshToken
-            state.rememberMe = tokens.rememberMe
-            state.verifyToken()
-          }
-        }
-      },
-    }
-  )
-)
+}))
 
-// API 인터셉터 설정
-export const setupApiInterceptors = () => {
-  // fetch 요청을 가로채서 자동으로 토큰 추가 및 갱신
-  const originalFetch = window.fetch
-  
-  window.fetch = async (...args) => {
-    const [url, options = {}] = args
+// localStorage 정리 헬퍼
+const cleanupOldAuthData = () => {
+  try {
+    // 기존에 남아있을 수 있는 auth 관련 localStorage 키들 정리
+    const keysToRemove = [
+      'auth-storage', 
+      'readzone-auth-store',
+      // Zustand persist가 생성했을 수 있는 다른 키들
+      'auth-store',
+      'readzone-auth',
+      'zustand-auth'
+    ]
     
-    // ReadZone API 호출인지 확인
-    if (typeof url === 'string' && url.startsWith(API_BASE_URL)) {
-      const tokens = getStoredTokens()
-      
-      if (tokens.accessToken) {
-        const headers = new Headers(options.headers)
-
-        if (!headers.has('Authorization')) {
-          headers.set('Authorization', `Bearer ${tokens.accessToken}`)
-        }
-        options.headers = headers
+    keysToRemove.forEach(key => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key)
+        console.info(`Cleaned up legacy auth storage key: ${key}`)
       }
-    }
+    })
     
-    const response = await originalFetch(url, options)
-    
-    // 401 에러 시 자동 토큰 갱신
-    if (response.status === 401 && typeof url === 'string' && url.startsWith(API_BASE_URL)) {
-      const authStore = useAuthStore.getState()
-      const refreshed = await authStore.refreshTokens()
-      
-      if (refreshed) {
-        // 갱신된 토큰으로 재시도
-        const newTokens = getStoredTokens()
-
-        if (newTokens.accessToken) {
-          const headers = new Headers(options.headers)
-
-          headers.set('Authorization', `Bearer ${newTokens.accessToken}`)
-          options.headers = headers
-
-          return originalFetch(url, options)
-        }
+    // 패턴 매칭으로 auth 관련 키들 추가 정리
+    Object.keys(localStorage).forEach(key => {
+      if ((key.includes('auth') || key.includes('readzone')) && 
+          key !== 'readzone-settings' && // 설정 키는 보존
+          key !== 'readzone-drafts') {   // 임시저장 키는 보존
+        localStorage.removeItem(key)
+        console.info(`Cleaned up auth-related storage key: ${key}`)
       }
-    }
+    })
     
-    return response
+    // 불필요한 인증 쿠키 정리 (authjs.session-token 등)
+    document.cookie.split(';').forEach(cookie => {
+      const [name] = cookie.trim().split('=')
+      if (name && (name.includes('authjs') || name.includes('next-auth') || name.includes('session-token'))) {
+        // localhost용 쿠키 삭제
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+        // 도메인별 쿠키 삭제
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.localhost`
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=localhost`
+        console.info(`Cleaned up external auth cookie: ${name}`)
+      }
+    })
+  } catch (error) {
+    // localStorage 접근 실패 시 무시 (private mode 등)
+    console.warn('Failed to cleanup localStorage:', error)
   }
+}
+
+// 초기화 상태 플래그
+let isInitialized = false
+
+// Cookie 기반 API 인터셉터 설정 (간소화)
+export const setupApiInterceptors = () => {
+  // 중복 초기화 방지
+  if (isInitialized) {
+    console.info('setupApiInterceptors: Already initialized, skipping')
+    return
+  }
+  isInitialized = true
+  console.info('setupApiInterceptors: Initializing auth interceptors')
+  
+  // 초기화 시 불필요한 localStorage 데이터 정리
+  cleanupOldAuthData()
+  
+  // 페이지 로드 시 토큰 갱신 시도
+  const initAuth = async () => {
+    await useAuthStore.getState().refreshTokens()
+  }
+  
+  initAuth().catch(() => {
+    // 초기 인증 실패는 무시 (로그인하지 않은 상태일 수 있음)
+  })
 }
 
 export { authenticatedApiCall }
