@@ -18,7 +18,10 @@ const auth_service_1 = require("./auth.service");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const check_duplicate_dto_1 = require("./dto/check-duplicate.dto");
+const forgot_password_dto_1 = require("./dto/forgot-password.dto");
+const reset_password_dto_1 = require("./dto/reset-password.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const jwt_1 = require("../../common/utils/jwt");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -29,11 +32,12 @@ let AuthController = class AuthController {
     }
     async login(loginDto, res) {
         const result = await this.authService.login(loginDto);
+        const refreshTokenMaxAge = (0, jwt_1.getTokenExpirationTimeMs)(process.env.JWT_REFRESH_EXPIRES_IN ?? '7d');
         res.cookie('refreshToken', result.tokens.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            maxAge: refreshTokenMaxAge,
             path: '/',
         });
         return {
@@ -48,6 +52,37 @@ let AuthController = class AuthController {
     async checkDuplicate(checkDuplicateDto) {
         return this.authService.checkDuplicate(checkDuplicateDto);
     }
+    async forgotPassword(body, req) {
+        const userAgent = req.headers?.['user-agent'];
+        const ip = req.ip;
+        return this.authService.requestPasswordReset(body.email, body.recaptchaToken, {
+            userAgent,
+            ip,
+        });
+    }
+    async validateResetToken(token) {
+        return this.authService.checkResetToken(token);
+    }
+    async resetPassword(body, res) {
+        const result = await this.authService.resetPassword(body.token, body.newPassword, body.confirmPassword);
+        const refreshTokenMaxAge = (0, jwt_1.getTokenExpirationTimeMs)(process.env.JWT_REFRESH_EXPIRES_IN ?? '7d');
+        res.cookie('refreshToken', result.tokens.refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            maxAge: refreshTokenMaxAge,
+            path: '/',
+        });
+        return {
+            success: true,
+            message: result.message,
+            user: result.user,
+            tokens: {
+                accessToken: result.tokens.accessToken,
+            },
+            invalidatedSessions: result.invalidatedSessions,
+        };
+    }
     async verifyEmail(token) {
         return this.authService.verifyEmail(token);
     }
@@ -57,11 +92,12 @@ let AuthController = class AuthController {
             throw new Error('No refresh token provided');
         }
         const result = await this.authService.refresh(refreshToken);
+        const refreshTokenMaxAge = result.refreshTokenMaxAgeMs;
         res.cookie('refreshToken', result.tokens.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            maxAge: refreshTokenMaxAge,
             path: '/',
         });
         return {
@@ -135,6 +171,32 @@ __decorate([
     __metadata("design:paramtypes", [check_duplicate_dto_1.CheckDuplicateDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "checkDuplicate", null);
+__decorate([
+    (0, common_1.Post)('forgot-password'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, common_1.Get)('reset-password'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Query)('token')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "validateResetToken", null);
+__decorate([
+    (0, common_1.Post)('reset-password'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Response)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resetPassword", null);
 __decorate([
     (0, common_1.Get)('verify-email'),
     __param(0, (0, common_1.Query)('token')),

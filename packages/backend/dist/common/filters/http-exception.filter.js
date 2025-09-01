@@ -21,8 +21,16 @@ let HttpExceptionFilter = HttpExceptionFilter_1 = class HttpExceptionFilter {
         let code;
         if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
             const responseObj = exceptionResponse;
-            message = responseObj.message || exception.message;
-            code = responseObj.code || this.getErrorCode(status);
+            const resMessage = responseObj.message;
+            const resCode = responseObj.code;
+            message =
+                typeof resMessage === 'string' && resMessage.length > 0
+                    ? resMessage
+                    : exception.message;
+            code =
+                typeof resCode === 'string' && resCode.length > 0
+                    ? resCode
+                    : this.getErrorCode(status);
         }
         else {
             message = exception.message;

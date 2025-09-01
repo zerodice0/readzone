@@ -11,43 +11,56 @@ exports.verifyToken = verifyToken;
 exports.extractUserIdFromToken = extractUserIdFromToken;
 exports.generateTokenPair = generateTokenPair;
 exports.getTokenExpirationTime = getTokenExpirationTime;
+exports.getTokenExpirationTimeMs = getTokenExpirationTimeMs;
 exports.generateSecureToken = generateSecureToken;
 exports.validateTokenType = validateTokenType;
 exports.getTimeUntilExpiration = getTimeUntilExpiration;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
-const JWT_SECRET = process.env.JWT_SECRET ?? 'default-secret-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '15m';
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d';
-const EMAIL_TOKEN_EXPIRES_IN = process.env.EMAIL_TOKEN_EXPIRES_IN ?? '24h';
+function getEnv(name, fallback) {
+    const val = process.env[name];
+    return val && val.length > 0 ? val : fallback;
+}
+function getJwtSecret() {
+    return getEnv('JWT_SECRET', 'default-secret-change-in-production');
+}
+function getAccessExpiresIn() {
+    return getEnv('JWT_EXPIRES_IN', '15m');
+}
+function getRefreshExpiresIn() {
+    return getEnv('JWT_REFRESH_EXPIRES_IN', '7d');
+}
+function getEmailTokenExpiresIn() {
+    return getEnv('EMAIL_TOKEN_EXPIRES_IN', '24h');
+}
 function generateAccessToken(payload) {
     const payloadData = { ...payload, type: 'access' };
     const options = {
-        expiresIn: JWT_EXPIRES_IN,
+        expiresIn: getAccessExpiresIn(),
         issuer: 'readzone-api',
         audience: 'readzone-client',
         jwtid: crypto_1.default.randomUUID(),
     };
-    return jsonwebtoken_1.default.sign(payloadData, JWT_SECRET, options);
+    return jsonwebtoken_1.default.sign(payloadData, getJwtSecret(), options);
 }
-function generateRefreshToken(payload) {
+function generateRefreshToken(payload, expiresInOverride) {
     const payloadData = { ...payload, type: 'refresh' };
     const options = {
-        expiresIn: JWT_REFRESH_EXPIRES_IN,
+        expiresIn: (expiresInOverride ?? getRefreshExpiresIn()),
         issuer: 'readzone-api',
         audience: 'readzone-client',
         jwtid: crypto_1.default.randomUUID(),
     };
-    return jsonwebtoken_1.default.sign(payloadData, JWT_SECRET, options);
+    return jsonwebtoken_1.default.sign(payloadData, getJwtSecret(), options);
 }
 function generateEmailVerificationToken(payload) {
     const payloadData = { ...payload, type: 'email-verification' };
     const options = {
-        expiresIn: EMAIL_TOKEN_EXPIRES_IN,
+        expiresIn: getEmailTokenExpiresIn(),
         issuer: 'readzone-api',
         audience: 'readzone-client',
     };
-    return jsonwebtoken_1.default.sign(payloadData, JWT_SECRET, options);
+    return jsonwebtoken_1.default.sign(payloadData, getJwtSecret(), options);
 }
 function generatePasswordResetToken(payload) {
     const payloadData = { ...payload, type: 'password-reset' };
@@ -56,7 +69,7 @@ function generatePasswordResetToken(payload) {
         issuer: 'readzone-api',
         audience: 'readzone-client',
     };
-    return jsonwebtoken_1.default.sign(payloadData, JWT_SECRET, options);
+    return jsonwebtoken_1.default.sign(payloadData, getJwtSecret(), options);
 }
 function verifyToken(token) {
     try {
@@ -64,7 +77,7 @@ function verifyToken(token) {
             issuer: 'readzone-api',
             audience: 'readzone-client',
         };
-        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET, options);
+        const decoded = jsonwebtoken_1.default.verify(token, getJwtSecret(), options);
         return decoded;
     }
     catch (error) {
@@ -89,11 +102,11 @@ function extractUserIdFromToken(token) {
         return null;
     }
 }
-function generateTokenPair(payload) {
+function generateTokenPair(payload, refreshExpiresInOverride) {
     return {
         accessToken: generateAccessToken(payload),
-        refreshToken: generateRefreshToken(payload),
-        expiresIn: JWT_EXPIRES_IN,
+        refreshToken: generateRefreshToken(payload, refreshExpiresInOverride),
+        expiresIn: getAccessExpiresIn(),
         tokenType: 'Bearer',
     };
 }
@@ -112,6 +125,9 @@ function getTokenExpirationTime(expiresIn) {
         default:
             return 900;
     }
+}
+function getTokenExpirationTimeMs(expiresIn) {
+    return getTokenExpirationTime(expiresIn) * 1000;
 }
 function generateSecureToken(length = 32) {
     return crypto_1.default.randomBytes(length).toString('hex');
