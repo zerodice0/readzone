@@ -56,6 +56,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         onSuccess()
       } else {
         const redirectTo = (search as { redirect?: string })?.redirect ?? '/'
+
         await navigate({ to: redirectTo })
       }
     }
@@ -179,12 +180,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       <CardFooter className="flex flex-col space-y-4">
         {/* 추가 링크들 */}
         <div className="flex items-center justify-between w-full text-sm">
-          <Link
-            to="/forgot-password"
-            className="text-primary hover:underline"
-          >
-            비밀번호를 잊으셨나요?
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/forgot-password"
+              className="text-primary hover:underline"
+              aria-label="비밀번호 재설정 페이지로 이동"
+            >
+              비밀번호를 잊으셨나요?
+            </Link>
+            <span className="text-xs text-muted-foreground hidden sm:inline">이메일로 재설정 링크를 보내드려요</span>
+          </div>
         </div>
 
         {/* 회원가입 링크 */}

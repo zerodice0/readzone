@@ -15,7 +15,10 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { CheckDuplicateDto } from './dto/check-duplicate.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { getTokenExpirationTimeMs } from '../../common/utils/jwt';
 
 @Controller('auth')
 export class AuthController {
@@ -34,12 +37,15 @@ export class AuthController {
   ) {
     const result = await this.authService.login(loginDto);
 
-    // RefreshToken을 HttpOnly Cookie로 설정
+    // RefreshToken을 HttpOnly Cookie로 설정 (환경변수 기반 만료시간)
+    const refreshTokenMaxAge = getTokenExpirationTimeMs(
+      process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
+    );
     res.cookie('refreshToken', result.tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      maxAge: refreshTokenMaxAge,
       path: '/',
     });
 
@@ -59,6 +65,70 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async checkDuplicate(@Body() checkDuplicateDto: CheckDuplicateDto) {
     return this.authService.checkDuplicate(checkDuplicateDto);
+  }
+
+  // 비밀번호 재설정 요청
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(
+    @Body() body: ForgotPasswordDto,
+    @Request() req: { headers?: Record<string, string>; ip?: string },
+  ) {
+    const userAgent = req.headers?.['user-agent'];
+    const ip = req.ip;
+
+    return this.authService.requestPasswordReset(
+      body.email,
+      body.recaptchaToken,
+      {
+        userAgent,
+        ip,
+      },
+    );
+  }
+
+  // 재설정 토큰 검증
+  @Get('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async validateResetToken(@Query('token') token: string) {
+    return this.authService.checkResetToken(token);
+  }
+
+  // 비밀번호 재설정 처리 + 자동 로그인
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() body: ResetPasswordDto,
+    @Response({ passthrough: true }) res: ExpressResponse,
+  ) {
+    const result = await this.authService.resetPassword(
+      body.token,
+      body.newPassword,
+      body.confirmPassword,
+    );
+
+    // 자동 로그인: RefreshToken을 Cookie로 설정
+    const refreshTokenMaxAge = getTokenExpirationTimeMs(
+      process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
+    );
+
+    res.cookie('refreshToken', result.tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: refreshTokenMaxAge,
+      path: '/',
+    });
+
+    return {
+      success: true,
+      message: result.message,
+      user: result.user,
+      tokens: {
+        accessToken: result.tokens.accessToken,
+      },
+      invalidatedSessions: result.invalidatedSessions,
+    };
   }
 
   @Get('verify-email')
@@ -81,11 +151,14 @@ export class AuthController {
     const result = await this.authService.refresh(refreshToken);
 
     // 새 RefreshToken 발급 (Token Rotation)
+    // 절대 만료 유지: 서비스에서 계산한 남은 수명(ms) 사용
+    const refreshTokenMaxAge = result.refreshTokenMaxAgeMs;
+
     res.cookie('refreshToken', result.tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      maxAge: refreshTokenMaxAge,
       path: '/',
     });
 

@@ -10,16 +10,33 @@ export interface JWTPayload {
   type: 'access' | 'refresh' | 'email-verification' | 'password-reset';
   iat?: number;
   exp?: number;
+  jti?: string;
 }
 
-// JWT 설정
-const JWT_SECRET: string =
-  process.env.JWT_SECRET ?? 'default-secret-change-in-production';
-const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN ?? '15m'; // Access token: 15분
-const JWT_REFRESH_EXPIRES_IN: string =
-  process.env.JWT_REFRESH_EXPIRES_IN ?? '7d'; // Refresh token: 7일
-const EMAIL_TOKEN_EXPIRES_IN: string =
-  process.env.EMAIL_TOKEN_EXPIRES_IN ?? '24h'; // 이메일 인증: 24시간
+// 환경변수 접근을 지연시켜 ConfigModule 초기화 이후 값을 사용
+function getEnv(name: string, fallback: string): string {
+  const val = process.env[name];
+  return val && val.length > 0 ? val : fallback;
+}
+
+function getJwtSecret(): string {
+  return getEnv('JWT_SECRET', 'default-secret-change-in-production');
+}
+
+function getAccessExpiresIn(): string {
+  // Access token: 기본 15분
+  return getEnv('JWT_EXPIRES_IN', '15m');
+}
+
+function getRefreshExpiresIn(): string {
+  // Refresh token: 기본 7일
+  return getEnv('JWT_REFRESH_EXPIRES_IN', '7d');
+}
+
+function getEmailTokenExpiresIn(): string {
+  // 이메일 인증: 기본 24시간
+  return getEnv('EMAIL_TOKEN_EXPIRES_IN', '24h');
+}
 
 /**
  * JWT 토큰 생성
@@ -29,13 +46,13 @@ export function generateAccessToken(
 ): string {
   const payloadData = { ...payload, type: 'access' as const };
   const options: SignOptions = {
-    expiresIn: JWT_EXPIRES_IN as ms.StringValue,
+    expiresIn: getAccessExpiresIn() as ms.StringValue,
     issuer: 'readzone-api',
     audience: 'readzone-client',
     jwtid: crypto.randomUUID(), // 유니크 ID 추가
   };
 
-  return jwt.sign(payloadData, JWT_SECRET, options);
+  return jwt.sign(payloadData, getJwtSecret(), options);
 }
 
 /**
@@ -43,16 +60,19 @@ export function generateAccessToken(
  */
 export function generateRefreshToken(
   payload: Omit<JWTPayload, 'type' | 'iat' | 'exp'>,
+  expiresInOverride?: ms.StringValue | number,
 ): string {
   const payloadData = { ...payload, type: 'refresh' as const };
   const options: SignOptions = {
-    expiresIn: JWT_REFRESH_EXPIRES_IN as ms.StringValue,
+    expiresIn: (expiresInOverride ?? getRefreshExpiresIn()) as
+      | ms.StringValue
+      | number,
     issuer: 'readzone-api',
     audience: 'readzone-client',
     jwtid: crypto.randomUUID(), // 유니크 ID 추가
   };
 
-  return jwt.sign(payloadData, JWT_SECRET, options);
+  return jwt.sign(payloadData, getJwtSecret(), options);
 }
 
 /**
@@ -63,12 +83,12 @@ export function generateEmailVerificationToken(
 ): string {
   const payloadData = { ...payload, type: 'email-verification' as const };
   const options: SignOptions = {
-    expiresIn: EMAIL_TOKEN_EXPIRES_IN as ms.StringValue,
+    expiresIn: getEmailTokenExpiresIn() as ms.StringValue,
     issuer: 'readzone-api',
     audience: 'readzone-client',
   };
 
-  return jwt.sign(payloadData, JWT_SECRET, options);
+  return jwt.sign(payloadData, getJwtSecret(), options);
 }
 
 /**
@@ -84,7 +104,7 @@ export function generatePasswordResetToken(
     audience: 'readzone-client',
   };
 
-  return jwt.sign(payloadData, JWT_SECRET, options);
+  return jwt.sign(payloadData, getJwtSecret(), options);
 }
 
 /**
@@ -96,7 +116,7 @@ export function verifyToken(token: string): JWTPayload {
       issuer: 'readzone-api',
       audience: 'readzone-client',
     };
-    const decoded = jwt.verify(token, JWT_SECRET, options) as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret(), options) as JWTPayload;
 
     return decoded;
   } catch (error) {
@@ -131,11 +151,12 @@ export function extractUserIdFromToken(token: string): string | null {
  */
 export function generateTokenPair(
   payload: Omit<JWTPayload, 'type' | 'iat' | 'exp'>,
+  refreshExpiresInOverride?: ms.StringValue | number,
 ) {
   return {
     accessToken: generateAccessToken(payload),
-    refreshToken: generateRefreshToken(payload),
-    expiresIn: JWT_EXPIRES_IN,
+    refreshToken: generateRefreshToken(payload, refreshExpiresInOverride),
+    expiresIn: getAccessExpiresIn(),
     tokenType: 'Bearer',
   };
 }
@@ -159,6 +180,13 @@ export function getTokenExpirationTime(expiresIn: string): number {
     default:
       return 900; // 기본값: 15분
   }
+}
+
+/**
+ * 토큰 만료 시간 계산 (밀리초 단위) - Cookie maxAge용
+ */
+export function getTokenExpirationTimeMs(expiresIn: string): number {
+  return getTokenExpirationTime(expiresIn) * 1000;
 }
 
 /**

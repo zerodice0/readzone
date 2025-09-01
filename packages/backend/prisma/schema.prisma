@@ -37,6 +37,9 @@ model User {
   notifications Notification[] @relation("NotificationReceiver")
   sentNotifications Notification[] @relation("NotificationSender")
 
+  // Refresh token records
+  refreshTokens RefreshToken[]
+
   @@map("users")
 }
 
@@ -202,3 +205,22 @@ model Notification {
 
 // Additional indexes for better performance
 // These will be created via migrations for better control
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  // DB 유출 시 피해를 줄이기 위해 jti는 해시로 저장
+  jtiHash    String   @unique @db.VarChar(128)
+  isRevoked  Boolean  @default(false)
+  issuedAt   DateTime @default(now()) @db.Timestamptz(6)
+  expiresAt  DateTime @db.Timestamptz(6)
+  userAgent  String?  @db.VarChar(255)
+  ip         String?  @db.VarChar(64)
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}

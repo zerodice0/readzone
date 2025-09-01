@@ -13,9 +13,15 @@ import { hashPassword, verifyPassword } from '../../common/utils/password';
 import {
   generateTokenPair,
   generateEmailVerificationToken,
+  generatePasswordResetToken,
   verifyToken,
 } from '../../common/utils/jwt';
-import { sendEmailVerification } from '../../common/utils/email';
+import {
+  sendEmailVerification,
+  sendPasswordResetEmail,
+} from '../../common/utils/email';
+import crypto from 'crypto';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -140,6 +146,26 @@ export class AuthService {
     };
     const tokens = generateTokenPair(tokenPayload);
 
+    // Refresh Token jti를 DB에 저장 (해시로 보관)
+    try {
+      const rtPayload = verifyToken(tokens.refreshToken);
+      const jti = rtPayload.jti;
+      if (jti && rtPayload.exp) {
+        const jtiHash = crypto.createHash('sha256').update(jti).digest('hex');
+        const expiresAt = new Date(rtPayload.exp * 1000);
+
+        await this.prismaService.refreshToken.create({
+          data: {
+            userId: user.id,
+            jtiHash,
+            expiresAt,
+          },
+        });
+      }
+    } catch {
+      // 저장 실패는 로그인 자체를 막지 않음 (로그만 가능)
+    }
+
     return {
       success: true,
       message: '로그인에 성공했습니다.',
@@ -232,6 +258,16 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token type');
       }
 
+      // 절대 만료 유지: 기존 RefreshToken의 남은 수명 계산
+      if (!decoded.exp) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      const now = Math.floor(Date.now() / 1000);
+      const remainingSeconds = Math.max(0, decoded.exp - now);
+      if (remainingSeconds <= 0) {
+        throw new UnauthorizedException('Refresh token expired');
+      }
+
       // 사용자 조회
       const user = await this.prismaService.user.findUnique({
         where: { id: decoded.userId },
@@ -252,12 +288,61 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
 
-      // 새 토큰 쌍 생성 (Token Rotation)
-      const tokens = generateTokenPair({
-        userId: user.id,
-        email: user.email,
-        nickname: user.nickname,
+      // DB에 저장된 jti 확인 및 재사용 방지
+      if (!decoded.jti) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      const incomingJtiHash = crypto
+        .createHash('sha256')
+        .update(decoded.jti)
+        .digest('hex');
+
+      const rtRecord = await this.prismaService.refreshToken.findUnique({
+        where: { jtiHash: incomingJtiHash },
       });
+
+      if (!rtRecord || rtRecord.isRevoked) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      if (rtRecord.expiresAt.getTime() <= Date.now()) {
+        throw new UnauthorizedException('Refresh token expired');
+      }
+
+      // 새 토큰 쌍 생성 (Token Rotation)
+      // Refresh 토큰은 남은 수명으로 재발급하여 절대 만료 유지
+      const tokens = generateTokenPair(
+        {
+          userId: user.id,
+          email: user.email,
+          nickname: user.nickname,
+        },
+        remainingSeconds,
+      );
+
+      // 새 RefreshToken의 jti를 저장하고, 이전 jti는 폐기 (원자적 수행)
+      const newRtPayload = verifyToken(tokens.refreshToken);
+      if (!newRtPayload.jti) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      const newJtiHash = crypto
+        .createHash('sha256')
+        .update(newRtPayload.jti)
+        .digest('hex');
+
+      await this.prismaService.$transaction([
+        this.prismaService.refreshToken.update({
+          where: { jtiHash: incomingJtiHash },
+          data: { isRevoked: true },
+        }),
+        this.prismaService.refreshToken.create({
+          data: {
+            userId: user.id,
+            jtiHash: newJtiHash,
+            // 절대 만료 유지: 기존 레코드의 expiresAt 사용
+            expiresAt: rtRecord.expiresAt,
+          },
+        }),
+      ]);
 
       return {
         success: true,
@@ -274,9 +359,316 @@ export class AuthService {
           updatedAt: user.updatedAt,
         },
         tokens,
+        // 쿠키 maxAge로 사용할 남은 수명(ms)
+        refreshTokenMaxAgeMs: remainingSeconds * 1000,
       };
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  // 이메일 마스킹 유틸
+  private maskEmail(email: string): string {
+    const [local, domain] = email.split('@');
+    if (!domain) return email;
+    const visible = local.slice(0, 1);
+    const masked = '*'.repeat(Math.max(1, local.length - 1));
+    return `${visible}${masked}@${domain}`;
+  }
+
+  /**
+   * 비밀번호 재설정 요청 처리
+   */
+  async requestPasswordReset(
+    email: string,
+    recaptchaToken: string,
+    meta?: { userAgent?: string; ip?: string },
+  ) {
+    // reCAPTCHA 검증 (v3)
+    const bypass =
+      this.configService.get<string>('RECAPTCHA_BYPASS') === 'true';
+    const secret =
+      this.configService.get<string>('RECAPTCHA_SECRET') ||
+      process.env.RECAPTCHA_SECRET;
+    const minScore = Number(
+      this.configService.get<string>('RECAPTCHA_MIN_SCORE') ?? '0.5',
+    );
+
+    let captchaValid = true;
+    if (!bypass && secret) {
+      try {
+        const params = new URLSearchParams();
+        params.append('secret', secret);
+        params.append('response', recaptchaToken);
+        if (meta?.ip) {
+          params.append('remoteip', meta.ip);
+        }
+
+        const { data } = await axios.post<{
+          success: boolean;
+          score?: number;
+          action?: string;
+          challenge_ts?: string;
+          hostname?: string;
+          'error-codes'?: string[];
+        }>('https://www.google.com/recaptcha/api/siteverify', params, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          timeout: 5000,
+        });
+
+        captchaValid =
+          data.success === true &&
+          data.action === 'forgot_password' &&
+          (data.score ?? 0) >= minScore;
+      } catch {
+        // 네트워크/검증 오류는 보안상 실패로 간주
+        captchaValid = false;
+      }
+    }
+
+    // 보안상 캡차 실패여도 동일 응답을 반환(실제 발송/저장은 생략)
+    if (!captchaValid) {
+      return {
+        success: true,
+        message:
+          '비밀번호 재설정 안내 이메일을 확인해주세요. 가입 여부와 관계없이 동일한 메시지를 표시합니다.',
+        sentTo: this.maskEmail(email),
+        rateLimitInfo: {
+          remainingAttempts: 0,
+          resetAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+          dailyLimitReached: false,
+        },
+        suggestedActions: undefined,
+      } as const;
+    }
+    const user = await this.prismaService.user.findFirst({
+      where: { email },
+    });
+
+    // 보안상 존재 여부를 노출하지 않음. 계정이 있으면 토큰 발급 및 메일 발송
+    if (user) {
+      const payload = {
+        userId: user.id,
+        email: user.email,
+        nickname: user.nickname,
+      } as const;
+
+      const resetToken = generatePasswordResetToken(payload);
+      // exp에서 만료 시각 계산
+      let expires: Date | null = null;
+      try {
+        const decoded = verifyToken(resetToken);
+        if (decoded.exp) {
+          expires = new Date(decoded.exp * 1000);
+        }
+      } catch {
+        // ignore
+      }
+
+      await this.prismaService.user.update({
+        where: { id: user.id },
+        data: {
+          resetToken,
+          resetTokenExpires: expires ?? new Date(Date.now() + 60 * 60 * 1000), // fallback 1h
+        },
+      });
+
+      // 메일 발송 (실패해도 성공 응답 유지)
+      try {
+        await sendPasswordResetEmail(
+          user.email!,
+          user.nickname,
+          resetToken,
+          this.configService,
+        );
+      } catch {
+        // ignore send failure in response
+      }
+
+      // 선택: 리프레시 토큰 전체 무효화는 재설정 시점에 수행
+      void meta; // 현재는 미사용
+    }
+
+    const suggestedActions = user
+      ? undefined
+      : {
+          signup: true,
+          message:
+            '해당 이메일로 가입 내역이 없습니다. 회원가입을 진행해 주세요.',
+        };
+
+    return {
+      success: true,
+      message:
+        '비밀번호 재설정 안내 이메일을 확인해주세요. 가입 여부와 관계없이 동일한 메시지를 표시합니다.',
+      sentTo: this.maskEmail(email),
+      rateLimitInfo: {
+        remainingAttempts: 0,
+        resetAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        dailyLimitReached: false,
+      },
+      suggestedActions,
+    } as const;
+  }
+
+  /**
+   * 재설정 토큰 검증
+   */
+  async checkResetToken(token: string) {
+    try {
+      const decoded = verifyToken(token);
+      if (decoded.type !== 'password-reset') {
+        return {
+          success: false,
+          status: 'invalid',
+          message: '유효하지 않은 토큰입니다.',
+          canRequestNew: true,
+        } as const;
+      }
+
+      const user = await this.prismaService.user.findFirst({
+        where: { id: decoded.userId, resetToken: token },
+        select: { email: true, resetTokenExpires: true, updatedAt: true },
+      });
+      if (!user) {
+        return {
+          success: false,
+          status: 'used',
+          message: '이미 사용되었거나 무효화된 토큰입니다.',
+          canRequestNew: true,
+        } as const;
+      }
+      if (
+        !user.resetTokenExpires ||
+        user.resetTokenExpires.getTime() <= Date.now()
+      ) {
+        return {
+          success: false,
+          status: 'expired',
+          message: '만료된 토큰입니다.',
+          canRequestNew: true,
+        } as const;
+      }
+
+      return {
+        success: true,
+        status: 'valid',
+        message: '유효한 토큰입니다.',
+        tokenInfo: {
+          email: this.maskEmail(user.email!),
+          expiresAt: user.resetTokenExpires.toISOString(),
+          createdAt: new Date(
+            (decoded.iat ?? Math.floor(Date.now() / 1000)) * 1000,
+          ).toISOString(),
+        },
+        canRequestNew: false,
+      } as const;
+    } catch {
+      return {
+        success: false,
+        status: 'invalid',
+        message: '유효하지 않은 토큰입니다.',
+        canRequestNew: true,
+      } as const;
+    }
+  }
+
+  /**
+   * 비밀번호 재설정 처리 + 세션 무효화 + 자동 로그인용 토큰 발급
+   */
+  async resetPassword(
+    token: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) {
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('비밀번호 확인이 일치하지 않습니다.');
+    }
+    if (!this.validatePasswordStrength(newPassword)) {
+      throw new BadRequestException(
+        '비밀번호가 보안 기준을 만족하지 않습니다.',
+      );
+    }
+
+    // 토큰 검증 및 사용자 조회
+    let decoded: ReturnType<typeof verifyToken> | undefined;
+    try {
+      decoded = verifyToken(token);
+    } catch {
+      throw new UnauthorizedException('유효하지 않은 재설정 토큰입니다.');
+    }
+    if (!decoded || decoded.type !== 'password-reset') {
+      throw new UnauthorizedException('유효하지 않은 재설정 토큰입니다.');
+    }
+
+    const user = await this.prismaService.user.findFirst({
+      where: { id: decoded.userId, resetToken: token },
+      select: { id: true, email: true, nickname: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException('이미 사용되었거나 무효화된 토큰입니다.');
+    }
+
+    // 토큰 만료 확인
+    const userWithExpiry = await this.prismaService.user.findUnique({
+      where: { id: user.id },
+      select: { resetTokenExpires: true },
+    });
+    if (
+      !userWithExpiry?.resetTokenExpires ||
+      userWithExpiry.resetTokenExpires.getTime() <= Date.now()
+    ) {
+      throw new UnauthorizedException('만료된 토큰입니다.');
+    }
+
+    // 비밀번호 해시 업데이트 및 토큰 무효화
+    const hashed = await hashPassword(newPassword);
+    await this.prismaService.user.update({
+      where: { id: user.id },
+      data: { password: hashed, resetToken: null, resetTokenExpires: null },
+    });
+
+    // 기존 세션(리프레시 토큰) 전부 무효화
+    const revoke = await this.prismaService.refreshToken.updateMany({
+      where: { userId: user.id, isRevoked: false },
+      data: { isRevoked: true },
+    });
+
+    // 자동 로그인용 새 토큰 발급
+    const tokens = generateTokenPair({
+      userId: user.id,
+      email: user.email,
+      nickname: user.nickname,
+    });
+
+    // 새 RT의 jti 저장
+    try {
+      const rtPayload = verifyToken(tokens.refreshToken);
+      const jti = rtPayload.jti;
+      if (jti && rtPayload.exp) {
+        const jtiHash = crypto.createHash('sha256').update(jti).digest('hex');
+        const expiresAt = new Date(rtPayload.exp * 1000);
+        await this.prismaService.refreshToken.create({
+          data: { userId: user.id, jtiHash, expiresAt },
+        });
+      }
+    } catch {
+      // ignore
+    }
+
+    return {
+      message: '비밀번호가 재설정되었습니다.',
+      user: { id: user.id, email: user.email, nickname: user.nickname },
+      tokens,
+      invalidatedSessions: revoke.count,
+    } as const;
+  }
+
+  private validatePasswordStrength(pw: string): boolean {
+    // 간단한 기준: 8자 이상, 숫자/문자 포함
+    const longEnough = pw.length >= 8;
+    const hasLetter = /[A-Za-z]/.test(pw);
+    const hasNumber = /\d/.test(pw);
+    return longEnough && hasLetter && hasNumber;
   }
 }

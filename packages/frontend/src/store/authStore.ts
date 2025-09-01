@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { AuthActions, AuthError, AuthState, LoginRequest, User } from '@/types/auth'
+import { getTokenTimeUntilExpiration, isTokenExpired, logTokenInfo } from '@/lib/jwt'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001'
 
@@ -25,12 +26,14 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
       // 백엔드의 새로운 에러 응답 구조에 맞춘 처리
       if (errorData.success === false && errorData.error) {
         const error = new Error(errorData.error.message)
-        // @ts-ignore
+
+        // @ts-expect-error - Adding code property to Error instance
         error.code = errorData.error.code
         throw error
       }
       
       // 기존 형식 (fallback)
+
       throw new Error(errorData.message ?? `HTTP ${response.status}`)
     } catch (parseError) {
       // JSON 파싱 실패 시 기본 에러 메시지
@@ -90,6 +93,10 @@ interface LoginRequiredModalState {
 type AuthStore = Omit<AuthState, 'refreshToken'> & AuthActions & {
   loginRequiredModal: LoginRequiredModalState;
   setLoginRequiredModal: (modal: LoginRequiredModalState) => void;
+  // 토큰 만료 체크 관련
+  tokenExpirationCheckId: number | null;
+  startTokenExpirationCheck: () => void;
+  stopTokenExpirationCheck: () => void;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -107,6 +114,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         message: undefined as { title: string; description: string; } | undefined,
         redirectTo: undefined as string | undefined
       },
+
+      // Token Expiration Check State
+      tokenExpirationCheckId: null,
 
       // Actions
       login: async (credentials: LoginRequest) => {
@@ -130,6 +140,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
               error: authError,
               isAuthenticated: false,
             })
+
             return false // 성공 여부 반환
           }
           
@@ -145,6 +156,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
               error: authError,
               isAuthenticated: false,
             })
+
             return false
           }
           
@@ -159,10 +171,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             error: null,
             rememberMe: false,
           })
+          
+          // 개발 모드에서 토큰 정보 로그
+          if (import.meta.env.DEV) {
+            logTokenInfo(accessToken, 'Access Token')
+          }
+          
+          // 토큰 만료 체크 시작
+
+          get().startTokenExpirationCheck()
+          
           return true // 로그인 성공
         } catch (error) {
           const authError: AuthError = {
-            code: (error as any)?.code || 'LOGIN_FAILED',
+            code: (error as Record<string, unknown>)?.code as string ?? 'LOGIN_FAILED',
             message: error instanceof Error ? error.message : '로그인에 실패했습니다.',
           }
           
@@ -171,11 +193,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             error: authError,
             isAuthenticated: false,
           })
+
           return false // 로그인 실패
         }
       },
 
       logout: async () => {
+        // 토큰 만료 체크 중지
+        get().stopTokenExpirationCheck()
+        
         try {
           // 서버에 로그아웃 요청 (Cookie 삭제)
           await apiCall('/api/auth/logout', {
@@ -250,6 +276,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             isAuthenticated: true,
           })
           
+          // 개발 모드에서 토큰 정보 로그
+          if (import.meta.env.DEV) {
+            logTokenInfo(accessToken, 'Refreshed Access Token')
+          }
+          
+          // 토큰 만료 체크 시작 (기존 체크가 있다면 재시작)
+          get().stopTokenExpirationCheck()
+          get().startTokenExpirationCheck()
+          
           return true
         } catch (_error) {
           await get().logout()
@@ -281,6 +316,83 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         set({ loginRequiredModal: modal })
       },
 
+      // Token Expiration Check Actions
+      startTokenExpirationCheck: () => {
+        const state = get()
+        
+        // 기존 체크가 있다면 정지
+        if (state.tokenExpirationCheckId) {
+          clearInterval(state.tokenExpirationCheckId)
+        }
+        
+        // AccessToken이 없다면 체크하지 않음
+        if (!state.accessToken) {
+          return
+        }
+        
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.log('[Auth] Starting token expiration check')
+        }
+        
+        // 10초마다 토큰 만료 체크
+        const intervalId = window.setInterval(async () => {
+          const currentState = get()
+          
+          if (!currentState.accessToken || !currentState.isAuthenticated) {
+            // 토큰이 없거나 인증되지 않은 상태면 체크 중지
+            get().stopTokenExpirationCheck()
+
+            return
+          }
+          
+          // 토큰이 만료되었는지 확인
+          if (isTokenExpired(currentState.accessToken)) {
+            if (import.meta.env.DEV) {
+              // eslint-disable-next-line no-console
+              console.log('[Auth] Access token expired, attempting refresh')
+            }
+            
+            // RefreshToken으로 갱신 시도
+            const refreshSuccess = await get().refreshTokens()
+            
+            if (!refreshSuccess) {
+              if (import.meta.env.DEV) {
+                // eslint-disable-next-line no-console
+                console.log('[Auth] Refresh failed, logging out')
+              }
+              // RefreshToken도 만료되었거나 실패하면 로그아웃
+              await get().logout()
+            }
+          } else {
+            // 개발 모드에서 남은 시간 로그
+            if (import.meta.env.DEV) {
+              const timeUntil = getTokenTimeUntilExpiration(currentState.accessToken)
+
+              if (timeUntil !== null && timeUntil <= 60) {
+                // eslint-disable-next-line no-console
+                console.log(`[Auth] Token expires in ${timeUntil}s`)
+              }
+            }
+          }
+        }, 10000) // 10초마다 체크
+        
+        set({ tokenExpirationCheckId: intervalId })
+      },
+
+      stopTokenExpirationCheck: () => {
+        const state = get()
+        
+        if (state.tokenExpirationCheckId) {
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log('[Auth] Stopping token expiration check')
+          }
+          clearInterval(state.tokenExpirationCheckId)
+          set({ tokenExpirationCheckId: null })
+        }
+      },
+
 }))
 
 // localStorage 정리 헬퍼
@@ -299,6 +411,8 @@ const cleanupOldAuthData = () => {
     keysToRemove.forEach(key => {
       if (localStorage.getItem(key)) {
         localStorage.removeItem(key)
+
+        // eslint-disable-next-line no-console
         console.info(`Cleaned up legacy auth storage key: ${key}`)
       }
     })
@@ -309,19 +423,25 @@ const cleanupOldAuthData = () => {
           key !== 'readzone-settings' && // 설정 키는 보존
           key !== 'readzone-drafts') {   // 임시저장 키는 보존
         localStorage.removeItem(key)
+        
+        // eslint-disable-next-line no-console
         console.info(`Cleaned up auth-related storage key: ${key}`)
       }
     })
     
     // 불필요한 인증 쿠키 정리 (authjs.session-token 등)
+
     document.cookie.split(';').forEach(cookie => {
       const [name] = cookie.trim().split('=')
+
       if (name && (name.includes('authjs') || name.includes('next-auth') || name.includes('session-token'))) {
         // localhost용 쿠키 삭제
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
         // 도메인별 쿠키 삭제
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.localhost`
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=localhost`
+        
+        // eslint-disable-next-line no-console
         console.info(`Cleaned up external auth cookie: ${name}`)
       }
     })
@@ -338,10 +458,14 @@ let isInitialized = false
 export const setupApiInterceptors = () => {
   // 중복 초기화 방지
   if (isInitialized) {
+    // eslint-disable-next-line no-console
     console.info('setupApiInterceptors: Already initialized, skipping')
+
     return
   }
   isInitialized = true
+  
+  // eslint-disable-next-line no-console
   console.info('setupApiInterceptors: Initializing auth interceptors')
   
   // 초기화 시 불필요한 localStorage 데이터 정리
@@ -349,7 +473,12 @@ export const setupApiInterceptors = () => {
   
   // 페이지 로드 시 토큰 갱신 시도
   const initAuth = async () => {
-    await useAuthStore.getState().refreshTokens()
+    const refreshSuccess = await useAuthStore.getState().refreshTokens()
+    
+    // 갱신 성공 시 토큰 만료 체크 시작
+    if (refreshSuccess) {
+      useAuthStore.getState().startTokenExpirationCheck()
+    }
   }
   
   initAuth().catch(() => {

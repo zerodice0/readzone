@@ -350,6 +350,82 @@ export async function resendEmailVerification(email: string): Promise<ResendVeri
   return response.data
 }
 
+/**
+ * 비밀번호 재설정 요청
+ */
+export async function requestPasswordReset(email: string, recaptchaToken?: string): Promise<{
+  success: boolean
+  message: string
+  sentTo: string
+  rateLimitInfo?: unknown
+  suggestedActions?: unknown
+}> {
+  const url = `${API_BASE_URL}/auth/forgot-password`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email, recaptchaToken }),
+  })
+  const data = await res.json()
+
+  if (!res.ok) {
+    throw new Error(data?.error?.message ?? data?.message ?? '비밀번호 재설정 요청 중 오류가 발생했습니다')
+  }
+
+  return data
+}
+
+/**
+ * 재설정 토큰 검증
+ */
+export async function checkResetToken(token: string): Promise<{
+  success: boolean
+  status: 'valid' | 'invalid' | 'expired' | 'used'
+  message: string
+  tokenInfo?: { email: string; expiresAt: string; createdAt: string }
+  canRequestNew: boolean
+}> {
+  const url = `${API_BASE_URL}/auth/reset-password?token=${encodeURIComponent(token)}`
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+  })
+  const data = await res.json()
+
+  if (!res.ok) {
+    throw new Error(data?.error?.message ?? data?.message ?? '재설정 토큰 확인 중 오류가 발생했습니다')
+  }
+
+  return data
+}
+
+/**
+ * 비밀번호 재설정 처리
+ */
+export async function resetPasswordWithToken(payload: { token: string; newPassword: string; confirmPassword: string }): Promise<{
+  success: boolean
+  message: string
+  user?: User
+  tokens?: TokenPair
+  invalidatedSessions?: number
+}> {
+  const url = `${API_BASE_URL}/auth/reset-password`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  })
+  const data = await res.json()
+
+  if (!res.ok || data?.success === false) {
+    throw new Error(data?.error?.message ?? data?.message ?? '비밀번호 재설정 중 오류가 발생했습니다')
+  }
+
+  return data
+}
+
 // 타입 내보내기
 export type {
   CheckDuplicateRequest,
