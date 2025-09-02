@@ -25,12 +25,14 @@
 
 ## 핵심 기능
 
-### 1. 3단계 도서 검색 시스템
-- **1단계**: 서버 DB에서 기존 등록 도서 검색
-- **2단계**: 카카오 도서 검색 API 호출
-- **3단계**: 수동 도서 정보 입력
-- **검색 결과**: 표지 이미지, 제목, 저자, 출간연도, ISBN
+### 1. 카카오 API 전용 도서 검색 시스템
+- **검색 방식**: 카카오 도서 검색 API 단일 사용 (최대 커버리지 확보)
+- **검색 결과 표시**: 표지 이미지, 제목, 저자, 출간연도, ISBN, API 소스 배지
 - **도서 선택**: 클릭으로 선택, 선택된 도서 하이라이트
+- **DB 저장**: 독후감 게시 시점에 도서 정보 자동 DB 생성 (ISBN 중복 방지)
+- **수동 입력**: API에서 찾을 수 없는 도서는 수동 정보 입력 카드 제공
+
+> **참고**: 일반 도서 검색 페이지(`/search`)는 DB 우선 검색으로 리뷰가 있는 도서만 표시하여, 독후감 작성과 도서 탐색을 목적별로 분리
 
 ### 2. 마크다운 에디터
 - **실시간 미리보기**: 분할 화면 (편집 | 미리보기)
@@ -60,65 +62,57 @@
 ```typescript
 interface BookSearchRequest {
   query: string;
-  page?: number;
-  size?: number;
-  source?: 'db' | 'kakao';
+  page?: number; // 기본 1
+  size?: number; // 기본 20
+  // 독후감 작성 페이지에서는 'kakao' 고정 (카카오 API 전용)
+  source: 'kakao';
 }
 
 interface BookSearchResponse {
   books: Book[];
-  total: number;
-  hasMore: boolean;
-  source: 'db' | 'kakao';
+  total?: number; // 제공되면 총계 표시, 미제공 시 클라이언트가 대체 표기
+  hasMore: boolean; // 다음 페이지 여부 (미제공 시 size 비교로 추론)
+  source: 'kakao'; // 독후감 작성 페이지에서는 카카오 API만 사용
 }
 
 interface Book {
-  id?: string; // DB에 있는 경우만
+  id?: string; // 카카오 API 결과는 null, DB 도서는 ID 포함
   title: string;
   author: string;
   publisher: string;
   publishedDate: string;
   isbn: string;
-  coverImage?: string;
+  coverImage?: string; // 또는 thumbnail
   description?: string;
-  isExisting: boolean; // DB에 존재 여부
+  isExisting: boolean; // DB에 존재 여부 (카카오 API는 false)
+  source: 'api' | 'manual'; // 카카오 API 또는 수동 입력
 }
 ```
 
-### POST `/api/books`
-```typescript
-interface CreateBookRequest {
-  title: string;
-  author: string;
-  publisher: string;
-  publishedDate: string;
-  isbn?: string;
-  coverImage?: string;
-  description?: string;
-}
-
-interface CreateBookResponse {
-  success: boolean;
-  book: {
-    id: string;
-    title: string;
-    author: string;
-    publisher: string;
-    publishedDate: string;
-    isbn?: string;
-    coverImage?: string;
-  };
-}
-```
+### ~~POST `/api/books`~~ (삭제됨)
+도서 생성은 독후감 게시 시점에 자동으로 처리됩니다. 별도 도서 생성 API는 사용하지 않습니다.
 
 ### POST `/api/reviews`
 ```typescript
 interface CreateReviewRequest {
-  bookId: string;
-  content: string; // 마크다운 형식
-  rating: 'recommend' | 'not_recommend';
+  // 기존 도서 ID (DB에 있는 경우)
+  bookId?: string;
+  
+  // 새 도서 정보 (카카오 API 선택 시)
+  bookData?: {
+    isbn?: string;
+    title: string;
+    author: string;
+    publisher?: string;
+    publishedAt?: string;
+    thumbnail?: string;
+    description?: string;
+  };
+  
+  content: string; // HTML 형식
+  isRecommended: boolean; // 추천 여부
   tags: string[];
-  visibility: 'public' | 'followers' | 'private';
+  isPublic: boolean; // 공개 여부 (private는 false)
 }
 
 interface CreateReviewResponse {
@@ -816,3 +810,50 @@ const VirtualizedEditor = React.memo(({ value, onChange }: {
 - 자동저장 응답: < 2초
 - 이미지 업로드: < 5초
 - 미리보기 렌더링: < 500ms
+
+## 도입 기술 및 설치 패키지
+
+### 에디터 및 콘텐츠 처리
+- 에디터: Lexical 기반 WYSIWYG 에디터 채택
+  - 패키지: `lexical`, `@lexical/react`, `@lexical/rich-text`, `@lexical/history`, `@lexical/utils`, `@lexical/link`, `@lexical/list`, `@lexical/code`, `@lexical/selection`, `@lexical/html`, `@lexical/markdown`
+  - 목적: 마크다운 문법 입력 시 즉시 서식 적용(Markdown Shortcuts), 미리보기 없이 WYSIWYG 편집, 커스텀 노드 확장성 확보(이미지/북카드 등)
+- 마크다운 지원: `@lexical/markdown`으로 기본 MD 입력 패턴 자동 변환(혼합 경험: 입력은 MD, 결과는 리치 텍스트)
+- 렌더링 보안: `DOMPurify`로 HTML sanitize 후 출력(이미 의존성 존재)
+
+### 저장 포맷 및 자동저장
+- 초안 저장(Draft): Lexical JSON(`contentJson`) + Sanitized HTML(`contentHtml`) 동시 보관(서버/로컬)
+- 게시 저장(Publish): `Review.content`에 Sanitized HTML 저장(향후 `contentJson` 컬럼 추가 여지)
+- 자동저장: 2초 디바운스 + 30초 주기 저장, 페이지 이탈 보호(beforeunload)
+
+### 가시성(Visibility) 및 추천 정책
+- 추천: `isRecommended`(boolean)만 사용(별점(0~5) 미도입)
+- 가시성 타입(프론트): `'public' | 'followers' | 'private'`
+  - 현재 매핑: `public` → `isPublic=true`, `private` → `isPublic=false`
+  - `followers`는 UI에 노출 가능하나 서버 저장은 보류(추후 권한/모델 확장 시 활성화)
+
+### 초안 모델(ReviewDraft) 분리
+- 테이블 분리: `ReviewDraft` 별도 테이블로 관리(권장)
+  - 이점: 피드/통계 쿼리 오염 방지, 초안 전용 TTL/버전 관리, 자동저장 쓰기 부하 분리, 대용량 JSON 보관 용이
+  - 핵심 필드 예: `id, userId, bookId?, isRecommended?, tags(json), visibility?, contentHtml, contentJson, updatedAt`
+
+### 검색 페이지 전략 (업데이트됨)
+- **독후감 작성** (`/write`): 카카오 API 전용으로 모든 도서 검색 가능
+- **도서 검색** (`/search`): DB 우선으로 실제 리뷰가 있는 도서만 표시
+- **작성 연계**: 도서 검색에서 선택 시 `bookId`로 전달, 독후감 작성에서는 게시 시 자동 생성
+
+### 설치/도입 패키지 목록
+- Frontend
+  - `lexical`, `@lexical/react`, `@lexical/rich-text`, `@lexical/history`, `@lexical/utils`, `@lexical/link`, `@lexical/list`, `@lexical/code`, `@lexical/selection`, `@lexical/html`, `@lexical/markdown`
+  - `dompurify`(이미 사용 중)
+- Backend
+  - `cloudinary`(서버사이드 업로드/서명 지원)
+  - `multer`(multipart 처리, 이미 의존성 존재)
+
+### 환경 변수(예시)
+- Kakao: `KAKAO_API_KEY`, `KAKAO_BOOK_API_URL`
+- Cloudinary: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+
+### 향후 확장 포인트
+- `Review.contentJson` 컬럼 도입으로 WYSIWYG 재편집 정확도 향상
+- `visibility` 컬럼(ENUM) 및 팔로워 기반 접근 제어 가드 도입
+- Lexical 커스텀 노드(이미지 캡션/정렬, 북카드, 해시태그 칩) 추가

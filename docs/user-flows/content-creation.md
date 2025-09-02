@@ -8,14 +8,9 @@ flowchart TD
     WriteButton --> WritePage[독후감 작성 페이지]
     
     WritePage --> BookSearchInput[도서 검색을 위한 키워드 입력]
-    BookSearchInput --> ServerDB{서버 DB 검색}
-    
-    ServerDB -->|검색 성공| DBResults[DB 검색 결과]
-    DBResults --> SelectBook[도서 선택]
-    
-    ServerDB -->|결과 없음| KakaoAPI{카카오 API 검색}
+    BookSearchInput --> KakaoAPI{카카오 API 검색(전용)}
     KakaoAPI -->|검색 성공| APIResults[API 검색 결과]
-    APIResults --> SelectBook
+    APIResults --> SelectBook[도서 선택]
     
     KakaoAPI -->|결과 없음| ManualEntry[수동 입력 옵션 제공]
     ManualEntry --> InputBookInfo[도서 정보 직접 입력]
@@ -35,7 +30,7 @@ flowchart TD
     AddTags --> PublishReview
     AddBookStores --> PublishReview
     
-    PublishReview -->|성공| SaveBookIfNew[새 도서인 경우 DB 저장]
+    PublishReview -->|성공| SaveBookIfNew[API 선택 도서인 경우 DB 생성]
     SaveBookIfNew --> ReviewDetail[독후감 상세 페이지]
     PublishReview -->|실패| ErrorHandling[에러 처리]
     
