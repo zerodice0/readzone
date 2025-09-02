@@ -9,12 +9,52 @@ import {
   Min,
   Max,
   IsInt,
+  ValidateNested,
+  IsObject,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class BookDataDto {
+  @IsOptional()
+  @IsString()
+  isbn?: string;
+
+  @IsString()
+  @MinLength(1, { message: 'Book title is required' })
+  title: string;
+
+  @IsString()
+  @MinLength(1, { message: 'Book author is required' })
+  author: string;
+
+  @IsOptional()
+  @IsString()
+  publisher?: string;
+
+  @IsOptional()
+  @IsString()
+  publishedAt?: string;
+
+  @IsOptional()
+  @IsString()
+  thumbnail?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+}
 
 export class CreateReviewDto {
+  @IsOptional()
   @IsString()
-  @MinLength(1, { message: 'Book ID is required' })
-  bookId: string;
+  @MinLength(1, { message: 'Book ID must not be empty' })
+  bookId?: string;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => BookDataDto)
+  bookData?: BookDataDto;
 
   @IsString()
   @MinLength(1, { message: 'Title is required' })

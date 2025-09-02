@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { FeedQueryDto, FeedTab } from './dto/feed-query.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { LikeActionDto, LikeAction } from './dto/like-action.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -97,9 +98,61 @@ export class ReviewsService {
   }
 
   async createReview(createReviewDto: CreateReviewDto, userId: string) {
+    let bookId = createReviewDto.bookId;
+
+    // bookId가 없으면 도서 생성/조회
+    if (!bookId && createReviewDto.bookData) {
+      const {
+        isbn,
+        title,
+        author,
+        publisher,
+        publishedAt,
+        thumbnail,
+        description,
+      } = createReviewDto.bookData;
+
+      if (isbn) {
+        // ISBN으로 upsert (중복 방지)
+        const book = await this.prismaService.book.upsert({
+          where: { isbn },
+          update: {}, // 기존 데이터 유지
+          create: {
+            isbn,
+            title,
+            author,
+            publisher,
+            publishedAt,
+            thumbnail,
+            description,
+            source: 'KAKAO_API',
+          },
+        });
+        bookId = book.id;
+      } else {
+        // ISBN 없으면 새로 생성
+        const book = await this.prismaService.book.create({
+          data: {
+            title,
+            author,
+            publisher,
+            publishedAt,
+            thumbnail,
+            description,
+            source: 'MANUAL',
+          },
+        });
+        bookId = book.id;
+      }
+    }
+
+    if (!bookId) {
+      throw new Error('Either bookId or bookData must be provided');
+    }
+
     const review = await this.prismaService.review.create({
       data: {
-        bookId: createReviewDto.bookId,
+        bookId,
         title: createReviewDto.title,
         content: createReviewDto.content,
         isRecommended: createReviewDto.isRecommended,
@@ -193,6 +246,172 @@ export class ReviewsService {
       data: {
         action,
         likeCount,
+      },
+    };
+  }
+
+  async getReviewDetail(id: string, userId?: string) {
+    const review = await this.prismaService.review.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            userid: true,
+            nickname: true,
+            profileImage: true,
+            isVerified: true,
+          },
+        },
+        book: {
+          select: {
+            id: true,
+            title: true,
+            author: true,
+            isbn: true,
+            thumbnail: true,
+            publisher: true,
+            publishedAt: true,
+          },
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                userid: true,
+                nickname: true,
+                profileImage: true,
+                isVerified: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+    });
+
+    if (!review) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: '리뷰를 찾을 수 없습니다' },
+      };
+    }
+
+    // compute userHasLiked
+    let userHasLiked = false;
+    if (userId) {
+      const like = await this.prismaService.like.findFirst({
+        where: { userId, reviewId: id },
+        select: { id: true },
+      });
+      userHasLiked = Boolean(like);
+    }
+
+    return {
+      success: true,
+      data: {
+        review: {
+          ...review,
+          createdAt: review.createdAt.toISOString(),
+          updatedAt: review.updatedAt.toISOString(),
+          tags: review.tags ? (JSON.parse(review.tags) as string[]) : [],
+          comments: review.comments.map((c) => ({
+            ...c,
+            createdAt: c.createdAt.toISOString(),
+            updatedAt: c.updatedAt.toISOString(),
+          })),
+          userHasLiked,
+        },
+      },
+    };
+  }
+
+  async createComment(reviewId: string, userId: string, dto: CreateCommentDto) {
+    // Ensure review exists
+    await this.prismaService.review.findUniqueOrThrow({
+      where: { id: reviewId },
+      select: { id: true },
+    });
+
+    if (dto.parentId) {
+      // Ensure parent exists and belongs to same review
+      const parent = await this.prismaService.comment.findUnique({
+        where: { id: dto.parentId },
+      });
+      if (!parent || parent.reviewId !== reviewId) {
+        throw new Error('Invalid parent comment');
+      }
+    }
+
+    const comment = await this.prismaService.comment.create({
+      data: {
+        content: dto.content,
+        parentId: dto.parentId ?? null,
+        userId,
+        reviewId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            userid: true,
+            nickname: true,
+            profileImage: true,
+            isVerified: true,
+          },
+        },
+      },
+    });
+
+    const count = await this.prismaService.comment.count({
+      where: { reviewId },
+    });
+
+    return {
+      success: true,
+      data: {
+        comment: {
+          ...comment,
+          createdAt: comment.createdAt.toISOString(),
+          updatedAt: comment.updatedAt.toISOString(),
+        },
+        count,
+      },
+    };
+  }
+
+  async getComments(reviewId: string) {
+    const comments = await this.prismaService.comment.findMany({
+      where: { reviewId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            userid: true,
+            nickname: true,
+            profileImage: true,
+            isVerified: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return {
+      success: true,
+      data: {
+        comments: comments.map((c) => ({
+          ...c,
+          createdAt: c.createdAt.toISOString(),
+          updatedAt: c.updatedAt.toISOString(),
+        })),
       },
     };
   }

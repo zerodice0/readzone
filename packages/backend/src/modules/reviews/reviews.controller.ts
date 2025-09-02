@@ -13,6 +13,7 @@ import { FeedQueryDto } from './dto/feed-query.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { LikeActionDto } from './dto/like-action.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -40,5 +41,29 @@ export class ReviewsController {
     @Request() req: { user: { id: string } },
   ) {
     return this.reviewsService.likeReview(reviewId, likeActionDto, req.user.id);
+  }
+
+  @Get(':id')
+  async getReviewDetail(
+    @Param('id') id: string,
+    @Request() req: { user?: { id: string } },
+  ) {
+    const userId = req?.user?.id;
+    return this.reviewsService.getReviewDetail(id, userId);
+  }
+
+  @Post(':id/comments')
+  @UseGuards(JwtAuthGuard)
+  async createComment(
+    @Param('id') reviewId: string,
+    @Body() dto: CreateCommentDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.reviewsService.createComment(reviewId, req.user.id, dto);
+  }
+
+  @Get(':id/comments')
+  async getComments(@Param('id') reviewId: string) {
+    return this.reviewsService.getComments(reviewId);
   }
 }
