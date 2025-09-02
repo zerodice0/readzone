@@ -4,6 +4,7 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
+import jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -510,7 +511,14 @@ export class AuthService {
         // 쿠키 maxAge로 사용할 남은 수명(ms)
         refreshTokenMaxAgeMs: remainingSeconds * 1000,
       };
-    } catch {
+    } catch (error) {
+      // JWT 에러를 더 구체적으로 처리
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new UnauthorizedException('Refresh token expired');
+      }
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

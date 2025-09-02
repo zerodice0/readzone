@@ -111,26 +111,13 @@ export function generatePasswordResetToken(
  * JWT 토큰 검증
  */
 export function verifyToken(token: string): JWTPayload {
-  try {
-    const options: VerifyOptions = {
-      issuer: 'readzone-api',
-      audience: 'readzone-client',
-    };
-    const decoded = jwt.verify(token, getJwtSecret(), options) as JWTPayload;
+  const options: VerifyOptions = {
+    issuer: 'readzone-api',
+    audience: 'readzone-client',
+  };
+  const decoded = jwt.verify(token, getJwtSecret(), options) as JWTPayload;
 
-    return decoded;
-  } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      throw new Error('Invalid token');
-    }
-    if (error instanceof jwt.TokenExpiredError) {
-      throw new Error('Token expired');
-    }
-    if (error instanceof jwt.NotBeforeError) {
-      throw new Error('Token not active');
-    }
-    throw new Error('Token verification failed');
-  }
+  return decoded;
 }
 
 /**
