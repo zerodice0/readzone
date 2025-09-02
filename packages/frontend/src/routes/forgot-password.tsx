@@ -13,12 +13,6 @@ import { useAuthStore } from '@/store/authStore'
 
 type Mode = 'request' | 'reset' | 'success'
 
-interface RateLimitInfo {
-  remainingAttempts?: number
-  resetAt?: string
-  dailyLimitReached?: boolean
-}
-
 function EmailMaskHint({ email }: { email: string }) {
   return (
     <p className="text-sm text-muted-foreground">{email} 로 메일을 보냈어요. 스팸함도 확인해 주세요.</p>
@@ -56,8 +50,6 @@ function ForgotPasswordPage() {
   // request state
   const [email, setEmail] = useState('')
   const [sentTo, setSentTo] = useState<string | null>(null)
-  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo | null>(null)
-  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0)
 
   // reset state
   const [tokenStatus, setTokenStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid' | 'expired' | 'used'>('idle')
@@ -93,28 +85,7 @@ function ForgotPasswordPage() {
   }, [search.token])
 
 
-  // 쿨다운 카운트다운
-  useEffect(() => {
-    if (!rateLimitInfo?.resetAt) {
-      return
-    }
-
-    const end = new Date(rateLimitInfo.resetAt).getTime()
-
-    const tick = () => {
-      const remain = Math.max(0, Math.ceil((end - Date.now()) / 1000))
-
-      setCooldownSeconds(remain)
-    }
-
-
-    tick()
-    const id = window.setInterval(tick, 1000)
-    
-    return () => {
-      window.clearInterval(id)
-    }
-  }, [rateLimitInfo?.resetAt])
+  // 레이트리밋 정보/카운트다운은 보안상 노출하지 않음
 
 
   const handleRequest = async (e: FormEvent) => {
@@ -150,19 +121,6 @@ function ForgotPasswordPage() {
 
       if (res.success) {
         setSentTo(res.sentTo)
-        if (res.rateLimitInfo && typeof res.rateLimitInfo === 'object') {
-          const info = res.rateLimitInfo as Partial<RateLimitInfo>
-          
-          const constructed: RateLimitInfo = {
-            ...(typeof info.remainingAttempts === 'number' ? { remainingAttempts: info.remainingAttempts } : {}),
-            ...(typeof info.resetAt === 'string' ? { resetAt: info.resetAt } : {}),
-            ...(typeof info.dailyLimitReached === 'boolean' ? { dailyLimitReached: info.dailyLimitReached } : {}),
-          }
-
-          setRateLimitInfo(constructed)
-        } else {
-          setRateLimitInfo(null)
-        }
         setMode('success')
       } else {
         setError(res.message || '요청에 실패했습니다')
@@ -271,18 +229,13 @@ function ForgotPasswordPage() {
 
               {/* TODO: reCAPTCHA */}
 
-              <Button type="submit" className="w-full" disabled={loading || cooldownSeconds > 0}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 재설정 이메일 보내기
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">자동으로 로봇 여부를 확인합니다.</p>
 
-              {cooldownSeconds > 0 && (
-                <p className="text-center text-xs text-muted-foreground">
-                  다시 요청 가능: {Math.floor(cooldownSeconds / 60)}분 {cooldownSeconds % 60}초
-                </p>
-              )}
 
               <div className="text-center text-sm text-muted-foreground">
                 <button type="button" onClick={goLogin} className="hover:underline">로그인 페이지로 이동</button>
@@ -328,7 +281,7 @@ function ForgotPasswordPage() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading || cooldownSeconds > 0}>
+                  <Button type="submit" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     비밀번호 재설정
                   </Button>
@@ -347,16 +300,6 @@ function ForgotPasswordPage() {
 
           {mode === 'success' && (
             <div className="text-center py-10 space-y-3">
-              {rateLimitInfo && (
-                <div className="mx-auto max-w-sm text-xs text-muted-foreground space-y-1">
-                  {typeof rateLimitInfo.remainingAttempts === 'number' && (
-                    <p>남은 요청 가능 횟수: {rateLimitInfo.remainingAttempts}회</p>
-                  )}
-                  {rateLimitInfo.resetAt && (
-                    <p>다시 요청 가능 시간: {new Date(rateLimitInfo.resetAt).toLocaleString()}</p>
-                  )}
-                </div>
-              )}
               <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto" />
               <h3 className="text-lg font-semibold">완료되었습니다</h3>
               {sentTo ? (

@@ -106,8 +106,8 @@ interface VerifyEmailRequest {
 
 interface VerifyEmailResponse {
   message: string
-  user: User
-  tokens: TokenPair
+  user?: User
+  tokens?: TokenPair
 }
 
 interface ResendVerificationRequest {
@@ -192,17 +192,48 @@ export async function checkDuplicate(
 /**
  * 회원가입
  */
+// 백엔드 회원가입 응답(래핑 없이 반환됨)
+interface BackendRegisterResponse {
+  success: boolean
+  message?: string
+  user?: User
+  // tokens는 회원가입 단계에선 반환하지 않음
+}
+
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {
-  const response = await authFetch<RegisterResponse>('/register', {
+  const response = await authFetch<BackendRegisterResponse>('/register', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 
-  if (!response.success || !response.data) {
-    throw new Error(response.error?.message  ?? '회원가입 중 오류가 발생했습니다')
+  // 백엔드가 래핑 없이 { success, user, message } 형태로 반환하므로 이에 맞춰 변환
+  const payload = response as unknown as BackendRegisterResponse
+
+  if (payload?.success && payload.user) {
+    return {
+      user: payload.user,
+      // 회원가입 직후에는 이메일 인증이 필요하므로 true로 고정
+      emailVerificationRequired: true,
+      // tokens는 회원가입 응답에서 제공하지 않음(쿠키 기반 전환 이후 설계)
+      tokens: {
+        accessToken: '',
+        refreshToken: '',
+        expiresIn: '',
+        tokenType: 'Bearer',
+      },
+      message: payload.message ?? '회원가입이 완료되었습니다.',
+    }
   }
 
-  return response.data
+  // 에러 처리(래핑된 에러 구조가 올 수도 있으므로 함께 고려)
+  const respObj = response as { error?: { message?: string } } | unknown
+  const errMsg =
+    (typeof respObj === 'object' && respObj !== null && 'error' in respObj &&
+      typeof (respObj as { error?: { message?: string } }).error?.message === 'string'
+      ? (respObj as { error?: { message?: string } }).error?.message
+      : undefined) ?? payload?.message
+
+  throw new Error(errMsg ?? '회원가입 중 오류가 발생했습니다')
 }
 
 /**
@@ -357,9 +388,7 @@ export async function requestPasswordReset(email: string, recaptchaToken?: strin
   success: boolean
   message: string
   sentTo: string
-  rateLimitInfo?: unknown
-  suggestedActions?: unknown
-}> {
+  }> {
   const url = `${API_BASE_URL}/auth/forgot-password`
   const res = await fetch(url, {
     method: 'POST',

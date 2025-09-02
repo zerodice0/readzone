@@ -19,6 +19,20 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { getTokenExpirationTimeMs } from '../../common/utils/jwt';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+
+// DTOs for email verification flows
+class ResendVerificationDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+}
+
+class VerifyEmailDto {
+  @IsString()
+  @IsNotEmpty()
+  token!: string;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -133,7 +147,58 @@ export class AuthController {
 
   @Get('verify-email')
   async verifyEmail(@Query('token') token: string) {
-    return this.authService.verifyEmail(token);
+    return this.authService.verifyEmail((token || '').trim());
+  }
+
+  // Email verification via POST body (for client convenience)
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmailPost(@Body() body: VerifyEmailDto) {
+    const token = (body.token || '').trim();
+    const result = await this.authService.verifyEmail(token);
+
+    return {
+      success: true,
+      data: {
+        message: result.message,
+      },
+    } as const;
+  }
+
+  // Initial send of verification email
+  @Post('send-verification')
+  @HttpCode(HttpStatus.OK)
+  async sendVerification(
+    @Body() body: ResendVerificationDto,
+    @Request() req: { headers?: Record<string, string>; ip?: string },
+  ) {
+    const result = await this.authService.requestEmailVerification(body.email, {
+      ip: req.ip,
+      userAgent: req.headers?.['user-agent'],
+    });
+
+    return {
+      success: true,
+      data: result,
+    } as const;
+  }
+
+  // Resend verification email
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  async resendVerification(
+    @Body() body: ResendVerificationDto,
+    @Request() req: { headers?: Record<string, string>; ip?: string },
+  ) {
+    const result = await this.authService.requestEmailVerification(body.email, {
+      ip: req.ip,
+      userAgent: req.headers?.['user-agent'],
+    });
+
+    return {
+      success: true,
+      data: result,
+    } as const;
   }
 
   @Post('refresh')

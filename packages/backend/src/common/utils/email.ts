@@ -43,10 +43,14 @@ export async function sendEmail(
     // ConfigService에서 가져온 API 키로 Resend 클라이언트 생성
     const resend = new Resend(resendApiKey);
 
-    // ConfigService에서 발신 이메일 주소 가져오기
+    // 발신 이메일 주소 결정
+    // - 개발/테스트 환경: 도메인 인증 없이 사용 가능한 onboarding@resend.dev를 강제 사용
+    // - 운영 환경: 환경변수 RESEND_FROM_EMAIL 우선, 없으면 안전한 기본값(onboarding@resend.dev)
     const fromEmail =
-      configService.get<string>('RESEND_FROM_EMAIL') ||
-      `${fromName} <onboarding@resend.dev>`;
+      nodeEnv === 'production'
+        ? configService.get<string>('RESEND_FROM_EMAIL') ||
+          `${fromName} <onboarding@resend.dev>`
+        : `${fromName} <onboarding@resend.dev>`;
 
     const result = await resend.emails.send({
       from: fromEmail,
@@ -94,7 +98,8 @@ export async function sendEmailVerification(
       ? 'https://readzone.vercel.app'
       : 'http://localhost:3000';
 
-  const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+  const safeToken = encodeURIComponent(verificationToken.trim());
+  const verificationUrl = `${baseUrl}/verify-email?token=${safeToken}`;
   const template = createEmailVerificationTemplate(nickname, verificationUrl);
 
   return await sendEmail(email, template, configService);

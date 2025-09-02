@@ -25,6 +25,10 @@ import axios from 'axios';
 
 @Injectable()
 export class AuthService {
+  // 간단한 인메모리 쿨다운 (이메일별 60초)
+  private verificationCooldown = new Map<string, number>();
+  private ipWindow: Map<string, number[]> = new Map();
+
   constructor(
     private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
@@ -223,30 +227,174 @@ export class AuthService {
   }
 
   async verifyEmail(token: string) {
+    // 1) 토큰으로 직접 매칭
     const user = await this.prismaService.user.findFirst({
       where: { verificationToken: token },
+      select: { id: true, email: true, nickname: true, isVerified: true },
     });
 
-    if (!user) {
-      throw new BadRequestException('유효하지 않은 인증 토큰입니다.');
+    if (user) {
+      // 이미 인증된 상태인 경우에도 성공 응답(idempotent)
+      if (user.isVerified) {
+        return {
+          success: true,
+          message: '이미 인증된 계정입니다.',
+        } as const;
+      }
+
+      await this.prismaService.user.update({
+        where: { id: user.id },
+        data: {
+          isVerified: true,
+          verificationToken: null,
+        },
+      });
+
+      return {
+        success: true,
+        message: '이메일 인증이 완료되었습니다.',
+      } as const;
     }
 
-    if (user.isVerified) {
-      throw new BadRequestException('이미 인증된 계정입니다.');
+    // 2) 매칭된 토큰이 없는 경우: 토큰 복호화 후, 이미 인증된 사용자라면 성공 처리
+    try {
+      const decoded = verifyToken(token);
+      if (decoded.type !== 'email-verification') {
+        throw new Error('Invalid type');
+      }
+
+      const userByEmail = await this.prismaService.user.findFirst({
+        where: { email: decoded.email ?? undefined },
+        select: { id: true, isVerified: true },
+      });
+
+      if (userByEmail) {
+        if (userByEmail.isVerified) {
+          return {
+            success: true,
+            message: '이미 인증된 계정입니다.',
+          } as const;
+        }
+
+        // 토큰은 유효하나 저장된 verificationToken이 갱신된 경우에도 인증 허용
+        await this.prismaService.user.update({
+          where: { id: userByEmail.id },
+          data: { isVerified: true, verificationToken: null },
+        });
+
+        return {
+          success: true,
+          message: '이메일 인증이 완료되었습니다.',
+        } as const;
+      }
+    } catch {
+      // ignore and fallthrough to error
     }
+
+    throw new BadRequestException('유효하지 않은 인증 토큰입니다.');
+  }
+
+  /**
+   * Send or resend email verification link
+   */
+  async requestEmailVerification(
+    email: string,
+    meta?: { ip?: string; userAgent?: string },
+  ) {
+    const key = email.toLowerCase();
+    const now = Date.now();
+    const last = this.verificationCooldown.get(key) || 0;
+    const COOLDOWN_MS = 60 * 1000;
+
+    if (now - last < COOLDOWN_MS) {
+      const expiresIn =
+        this.configService.get<string>('EMAIL_TOKEN_EXPIRES_IN') || '24h';
+
+      return {
+        message: '요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.',
+        email: this.maskEmail(email),
+        expiresIn,
+      } as const;
+    }
+
+    // IP 기반 간단 레이트 리밋(분당 최대 5회)
+    const ip = meta?.ip || 'unknown';
+    const NOW_SEC = Math.floor(now / 1000);
+    const WINDOW_SEC = 60;
+    const MAX_PER_WINDOW = 5;
+    const arr = this.ipWindow.get(ip) || [];
+    // 최근 60초 이내만 보존
+    const pruned = arr.filter((ts) => NOW_SEC - ts < WINDOW_SEC);
+    pruned.push(NOW_SEC);
+    this.ipWindow.set(ip, pruned);
+    if (pruned.length > MAX_PER_WINDOW) {
+      const expiresIn =
+        this.configService.get<string>('EMAIL_TOKEN_EXPIRES_IN') || '24h';
+      return {
+        message: '요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.',
+        email: this.maskEmail(email),
+        expiresIn,
+      } as const;
+    }
+
+    // Normalize expiresIn from env (default 24h)
+    const expiresIn =
+      this.configService.get<string>('EMAIL_TOKEN_EXPIRES_IN') || '24h';
+
+    // Find user by email
+    const user = await this.prismaService.user.findFirst({
+      where: { email },
+      select: { id: true, email: true, nickname: true, isVerified: true },
+    });
+
+    // If user not found, avoid user enumeration: respond success generically
+    if (!user) {
+      return {
+        message:
+          '인증 이메일이 발송되었습니다. 메일함을 확인해주세요. (가입한 이메일이 아니라면 무시하셔도 됩니다)',
+        email,
+        expiresIn,
+      } as const;
+    }
+
+    // Already verified: do not send again
+    if (user.isVerified) {
+      return {
+        message: '이미 인증된 계정입니다.',
+        email: this.maskEmail(user.email!),
+        expiresIn,
+      } as const;
+    }
+
+    // Generate new token and store
+    const tokenPayload = {
+      userId: user.id,
+      email: user.email!,
+      nickname: user.nickname,
+    } as const;
+    const newToken = generateEmailVerificationToken(tokenPayload);
 
     await this.prismaService.user.update({
       where: { id: user.id },
-      data: {
-        isVerified: true,
-        verificationToken: null,
-      },
+      data: { verificationToken: newToken },
     });
 
+    // Send email
+    await sendEmailVerification(
+      user.email!,
+      user.nickname,
+      newToken,
+      this.configService,
+    );
+
+    // 쿨다운 시작
+    this.verificationCooldown.set(key, now);
+
     return {
-      success: true,
-      message: '이메일 인증이 완료되었습니다.',
-    };
+      message: '인증 이메일이 발송되었습니다. 메일함을 확인해주세요.',
+      email: this.maskEmail(user.email!),
+      expiresIn,
+    } as const;
   }
 
   async refresh(refreshToken: string) {
@@ -433,12 +581,6 @@ export class AuthService {
         message:
           '비밀번호 재설정 안내 이메일을 확인해주세요. 가입 여부와 관계없이 동일한 메시지를 표시합니다.',
         sentTo: this.maskEmail(email),
-        rateLimitInfo: {
-          remainingAttempts: 0,
-          resetAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-          dailyLimitReached: false,
-        },
-        suggestedActions: undefined,
       } as const;
     }
     const user = await this.prismaService.user.findFirst({
@@ -489,25 +631,13 @@ export class AuthService {
       void meta; // 현재는 미사용
     }
 
-    const suggestedActions = user
-      ? undefined
-      : {
-          signup: true,
-          message:
-            '해당 이메일로 가입 내역이 없습니다. 회원가입을 진행해 주세요.',
-        };
+    // 미가입자 안내 등 부가 정보는 응답에 포함하지 않음(정보 노출 최소화)
 
     return {
       success: true,
       message:
         '비밀번호 재설정 안내 이메일을 확인해주세요. 가입 여부와 관계없이 동일한 메시지를 표시합니다.',
       sentTo: this.maskEmail(email),
-      rateLimitInfo: {
-        remainingAttempts: 0,
-        resetAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-        dailyLimitReached: false,
-      },
-      suggestedActions,
     } as const;
   }
 

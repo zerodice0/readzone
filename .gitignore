@@ -11,7 +11,8 @@ node_modules/
 !.yarn/versions
 
 # Production builds
-/dist/
+packages/backend/dist/
+packages/frontend/dist/
 /build/
 /.next/
 /out/

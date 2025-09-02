@@ -22,6 +22,23 @@ const forgot_password_dto_1 = require("./dto/forgot-password.dto");
 const reset_password_dto_1 = require("./dto/reset-password.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const jwt_1 = require("../../common/utils/jwt");
+const class_validator_1 = require("class-validator");
+class ResendVerificationDto {
+    email;
+}
+__decorate([
+    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ResendVerificationDto.prototype, "email", void 0);
+class VerifyEmailDto {
+    token;
+}
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], VerifyEmailDto.prototype, "token", void 0);
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -84,7 +101,37 @@ let AuthController = class AuthController {
         };
     }
     async verifyEmail(token) {
-        return this.authService.verifyEmail(token);
+        return this.authService.verifyEmail((token || '').trim());
+    }
+    async verifyEmailPost(body) {
+        const token = (body.token || '').trim();
+        const result = await this.authService.verifyEmail(token);
+        return {
+            success: true,
+            data: {
+                message: result.message,
+            },
+        };
+    }
+    async sendVerification(body, req) {
+        const result = await this.authService.requestEmailVerification(body.email, {
+            ip: req.ip,
+            userAgent: req.headers?.['user-agent'],
+        });
+        return {
+            success: true,
+            data: result,
+        };
+    }
+    async resendVerification(body, req) {
+        const result = await this.authService.requestEmailVerification(body.email, {
+            ip: req.ip,
+            userAgent: req.headers?.['user-agent'],
+        });
+        return {
+            success: true,
+            data: result,
+        };
     }
     async refresh(req, res) {
         const refreshToken = req.cookies?.refreshToken;
@@ -204,6 +251,32 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyEmail", null);
+__decorate([
+    (0, common_1.Post)('verify-email'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [VerifyEmailDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verifyEmailPost", null);
+__decorate([
+    (0, common_1.Post)('send-verification'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [ResendVerificationDto, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "sendVerification", null);
+__decorate([
+    (0, common_1.Post)('resend-verification'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [ResendVerificationDto, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resendVerification", null);
 __decorate([
     (0, common_1.Post)('refresh'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

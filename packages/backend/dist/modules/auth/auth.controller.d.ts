@@ -5,6 +5,12 @@ import { LoginDto } from './dto/login.dto';
 import { CheckDuplicateDto } from './dto/check-duplicate.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+declare class ResendVerificationDto {
+    email: string;
+}
+declare class VerifyEmailDto {
+    token: string;
+}
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
@@ -56,15 +62,6 @@ export declare class AuthController {
         readonly success: true;
         readonly message: "비밀번호 재설정 안내 이메일을 확인해주세요. 가입 여부와 관계없이 동일한 메시지를 표시합니다.";
         readonly sentTo: string;
-        readonly rateLimitInfo: {
-            readonly remainingAttempts: 0;
-            readonly resetAt: string;
-            readonly dailyLimitReached: false;
-        };
-        readonly suggestedActions: {
-            signup: boolean;
-            message: string;
-        } | undefined;
     }>;
     validateResetToken(token: string): Promise<{
         readonly success: false;
@@ -109,8 +106,63 @@ export declare class AuthController {
         invalidatedSessions: number;
     }>;
     verifyEmail(token: string): Promise<{
-        success: boolean;
-        message: string;
+        readonly success: true;
+        readonly message: "이미 인증된 계정입니다.";
+    } | {
+        readonly success: true;
+        readonly message: "이메일 인증이 완료되었습니다.";
+    }>;
+    verifyEmailPost(body: VerifyEmailDto): Promise<{
+        readonly success: true;
+        readonly data: {
+            readonly message: "이미 인증된 계정입니다." | "이메일 인증이 완료되었습니다.";
+        };
+    }>;
+    sendVerification(body: ResendVerificationDto, req: {
+        headers?: Record<string, string>;
+        ip?: string;
+    }): Promise<{
+        readonly success: true;
+        readonly data: {
+            readonly message: "요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.";
+            readonly email: string;
+            readonly expiresIn: string;
+        } | {
+            readonly message: "인증 이메일이 발송되었습니다. 메일함을 확인해주세요. (가입한 이메일이 아니라면 무시하셔도 됩니다)";
+            readonly email: string;
+            readonly expiresIn: string;
+        } | {
+            readonly message: "이미 인증된 계정입니다.";
+            readonly email: string;
+            readonly expiresIn: string;
+        } | {
+            readonly message: "인증 이메일이 발송되었습니다. 메일함을 확인해주세요.";
+            readonly email: string;
+            readonly expiresIn: string;
+        };
+    }>;
+    resendVerification(body: ResendVerificationDto, req: {
+        headers?: Record<string, string>;
+        ip?: string;
+    }): Promise<{
+        readonly success: true;
+        readonly data: {
+            readonly message: "요청이 너무 잦습니다. 잠시 후 다시 시도해주세요.";
+            readonly email: string;
+            readonly expiresIn: string;
+        } | {
+            readonly message: "인증 이메일이 발송되었습니다. 메일함을 확인해주세요. (가입한 이메일이 아니라면 무시하셔도 됩니다)";
+            readonly email: string;
+            readonly expiresIn: string;
+        } | {
+            readonly message: "이미 인증된 계정입니다.";
+            readonly email: string;
+            readonly expiresIn: string;
+        } | {
+            readonly message: "인증 이메일이 발송되었습니다. 메일함을 확인해주세요.";
+            readonly email: string;
+            readonly expiresIn: string;
+        };
     }>;
     refresh(req: {
         cookies?: {
@@ -163,3 +215,4 @@ export declare class AuthController {
         user: unknown;
     };
 }
+export {};

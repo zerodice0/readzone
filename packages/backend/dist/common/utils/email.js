@@ -22,8 +22,10 @@ async function sendEmail(to, template, configService, fromName = 'ReadZone') {
             throw new Error('RESEND_API_KEY is not configured');
         }
         const resend = new resend_1.Resend(resendApiKey);
-        const fromEmail = configService.get('RESEND_FROM_EMAIL') ||
-            `${fromName} <onboarding@resend.dev>`;
+        const fromEmail = nodeEnv === 'production'
+            ? configService.get('RESEND_FROM_EMAIL') ||
+                `${fromName} <onboarding@resend.dev>`
+            : `${fromName} <onboarding@resend.dev>`;
         const result = await resend.emails.send({
             from: fromEmail,
             to: [to],
@@ -56,7 +58,8 @@ async function sendEmailVerification(email, nickname, verificationToken, configS
     const baseUrl = nodeEnv === 'production'
         ? 'https://readzone.vercel.app'
         : 'http://localhost:3000';
-    const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+    const safeToken = encodeURIComponent(verificationToken.trim());
+    const verificationUrl = `${baseUrl}/verify-email?token=${safeToken}`;
     const template = (0, template_loader_1.createEmailVerificationTemplate)(nickname, verificationUrl);
     return await sendEmail(email, template, configService);
 }
