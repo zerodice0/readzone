@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  Min,
+  Max,
+  IsIn,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class SearchBooksDto {
@@ -22,4 +29,8 @@ export class SearchBooksDto {
   @Min(1)
   @Max(50)
   size: number = 10;
+
+  @IsOptional()
+  @IsIn(['db', 'kakao'])
+  source?: 'db' | 'kakao';
 }
