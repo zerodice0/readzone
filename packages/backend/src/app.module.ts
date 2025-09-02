@@ -8,6 +8,8 @@ import { UsersModule } from './modules/users/users.module';
 import { BooksModule } from './modules/books/books.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { ContentModule } from './modules/content/content.module';
+import { UploadModule } from './modules/upload/upload.module';
+import { TagsModule } from './modules/tags/tags.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { ContentModule } from './modules/content/content.module';
     BooksModule,
     ReviewsModule,
     ContentModule,
+    UploadModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
