@@ -42,6 +42,8 @@ async function bootstrap() {
     credentials: true, // Allow cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   // Set global API prefix
