@@ -6,6 +6,7 @@ import LexicalEditor from '@/components/editor/LexicalEditor';
 import { useDebounced } from '@/hooks/useDebounced';
 import useWriteStore from '@/store/writeStore';
 import { TagInput } from './TagInput';
+import { BookInfoAccordion } from './BookInfoAccordion';
 
 export function WritingStep() {
   const navigate = useNavigate();
@@ -77,18 +78,16 @@ export function WritingStep() {
 
   return (
     <div className="space-y-6">
-      <div className="p-3 border rounded bg-muted/30">
-        <div className="font-medium">선택된 도서</div>
-        {selectedBook ? (
-          <div className="text-sm text-muted-foreground">
-            {selectedBook.title} · {selectedBook.author}
-          </div>
-        ) : (
+      {selectedBook ? (
+        <BookInfoAccordion book={selectedBook} />
+      ) : (
+        <div className="p-3 border rounded bg-muted/30">
+          <div className="font-medium">선택된 도서</div>
           <div className="text-sm text-muted-foreground">
             도서가 선택되지 않았습니다
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <label className="text-sm font-medium">제목</label>

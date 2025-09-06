@@ -9,14 +9,6 @@ interface Props {
 }
 
 export function BookResultCard({ book, onSelect, query }: Props) {
-  const badge = book.isExisting
-    ? 'DB'
-    : book.source === 'api'
-      ? 'API'
-      : book.source === 'manual'
-        ? '수동'
-        : undefined;
-
   return (
     <div
       role="option"
@@ -37,11 +29,6 @@ export function BookResultCard({ book, onSelect, query }: Props) {
           <h3 className="font-semibold text-slate-900 line-clamp-2">
             <Highlight text={book.title} query={query} />
           </h3>
-          {badge && (
-            <span className="shrink-0 px-1.5 py-0.5 text-[11px] rounded bg-slate-100 text-slate-600">
-              {badge}
-            </span>
-          )}
         </div>
         <p className="text-sm text-slate-600 mt-0.5 truncate">
           {book.author} {book.publisher ? `· ${book.publisher}` : ''}{' '}
