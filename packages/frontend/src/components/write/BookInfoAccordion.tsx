@@ -47,7 +47,7 @@ export function BookInfoAccordion({ book, className = '' }: Props) {
       {isExpanded && (
         <div className="border-t bg-white/50">
           <div className="p-4">
-          휴
+            <div className="flex gap-4">
               {/* 도서 표지 */}
               <div className="w-12 h-16 rounded-md bg-white border overflow-hidden shadow-sm shrink-0">
                 {book.thumbnail ? (
