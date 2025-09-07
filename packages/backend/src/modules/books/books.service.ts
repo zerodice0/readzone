@@ -2,6 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SearchBooksDto } from './dto/search-books.dto';
 import { GetBookDto } from './dto/get-book.dto';
+import { Prisma } from '@prisma/client';
+import {
+  parseKakaoIsbn,
+  cleanIsbn,
+  validateISBN10,
+  validateISBN13,
+  toLegacyIsbn,
+} from '../../common/utils/isbn.utils';
 import axios from 'axios';
 
 @Injectable()
@@ -12,14 +20,31 @@ export class BooksService {
     const { query, page, size, source } = searchBooksDto;
     const skip = (page - 1) * size;
 
+    // Build search conditions - enhance ISBN search with new fields
+    const cleanQuery = cleanIsbn(query);
+    const searchConditions: Prisma.BookWhereInput[] = [
+      { title: { contains: query, mode: Prisma.QueryMode.insensitive } },
+      { author: { contains: query, mode: Prisma.QueryMode.insensitive } },
+      { isbn: { contains: query, mode: Prisma.QueryMode.insensitive } }, // Legacy field
+    ];
+
+    // Add ISBN-specific search conditions if query looks like an ISBN
+    if (validateISBN10(cleanQuery)) {
+      searchConditions.push({ isbn10: cleanQuery });
+    }
+    if (validateISBN13(cleanQuery)) {
+      searchConditions.push({ isbn13: cleanQuery });
+    }
+    // Add partial ISBN search for both fields
+    if (cleanQuery.length >= 3 && /^\d+$/.test(cleanQuery)) {
+      searchConditions.push({ isbn10: { contains: cleanQuery } });
+      searchConditions.push({ isbn13: { contains: cleanQuery } });
+    }
+
+    const whereCondition: Prisma.BookWhereInput = { OR: searchConditions };
+
     const dbBooks = await this.prismaService.book.findMany({
-      where: {
-        OR: [
-          { title: { contains: query, mode: 'insensitive' } },
-          { author: { contains: query, mode: 'insensitive' } },
-          { isbn: { contains: query, mode: 'insensitive' } },
-        ],
-      },
+      where: whereCondition,
       include: {
         _count: {
           select: {
@@ -33,13 +58,7 @@ export class BooksService {
     });
 
     const total = await this.prismaService.book.count({
-      where: {
-        OR: [
-          { title: { contains: query, mode: 'insensitive' } },
-          { author: { contains: query, mode: 'insensitive' } },
-          { isbn: { contains: query, mode: 'insensitive' } },
-        ],
-      },
+      where: whereCondition,
     });
 
     // If source is forced to kakao or DB has no results, fetch from Kakao API
@@ -84,22 +103,31 @@ export class BooksService {
 
       const kakaoData = resp.data as KakaoResponse;
       const docs = kakaoData?.documents ?? [];
-      const kakaoBooks = docs.map((d) => ({
-        id: undefined,
-        isbn: Array.isArray(d.isbn)
-          ? d.isbn[0] || undefined
-          : d.isbn || undefined,
-        title: d.title,
-        author: Array.isArray(d.authors)
-          ? d.authors.join(', ')
-          : String(d.authors || ''),
-        publisher: d.publisher,
-        publishedAt: d.datetime ? String(d.datetime).slice(0, 10) : undefined,
-        description: d.contents,
-        thumbnail: d.thumbnail,
-        source: 'KAKAO_API',
-        isExisting: false,
-      }));
+      const kakaoBooks = docs.map((d) => {
+        // Parse Kakao ISBN response (can be string or array)
+        const isbnString = Array.isArray(d.isbn)
+          ? d.isbn.join(' ') // Join multiple ISBNs with space
+          : d.isbn || '';
+
+        const parsedIsbn = parseKakaoIsbn(isbnString);
+
+        return {
+          id: undefined,
+          isbn: parsedIsbn.primaryIsbn, // Legacy compatibility
+          isbn10: parsedIsbn.isbn10,
+          isbn13: parsedIsbn.isbn13,
+          title: d.title,
+          author: Array.isArray(d.authors)
+            ? d.authors.join(', ')
+            : String(d.authors || ''),
+          publisher: d.publisher,
+          publishedAt: d.datetime ? String(d.datetime).slice(0, 10) : undefined,
+          description: d.contents,
+          thumbnail: d.thumbnail,
+          source: 'KAKAO_API',
+          isExisting: false,
+        };
+      });
 
       return {
         success: true,
@@ -126,6 +154,13 @@ export class BooksService {
           createdAt: book.createdAt.toISOString(),
           updatedAt: book.updatedAt.toISOString(),
           isExisting: true,
+          // Ensure legacy compatibility for existing clients
+          isbn:
+            book.isbn ||
+            toLegacyIsbn(
+              book.isbn10 as string | undefined,
+              book.isbn13 as string | undefined,
+            ),
         })),
         pagination: {
           page,
@@ -181,6 +216,13 @@ export class BooksService {
           ...book,
           createdAt: book.createdAt.toISOString(),
           updatedAt: book.updatedAt.toISOString(),
+          // Ensure legacy compatibility for existing clients
+          isbn:
+            book.isbn ||
+            toLegacyIsbn(
+              book.isbn10 as string | undefined,
+              book.isbn13 as string | undefined,
+            ),
           reviews: book.reviews.map((review) => ({
             ...review,
             createdAt: review.createdAt.toISOString(),
@@ -215,6 +257,13 @@ export class BooksService {
           ...book,
           createdAt: book.createdAt.toISOString(),
           updatedAt: book.updatedAt.toISOString(),
+          // Ensure legacy compatibility for existing clients
+          isbn:
+            book.isbn ||
+            toLegacyIsbn(
+              book.isbn10 as string | undefined,
+              book.isbn13 as string | undefined,
+            ),
         })),
       },
     };

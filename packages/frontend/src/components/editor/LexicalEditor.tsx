@@ -28,6 +28,10 @@ import {
 } from 'lexical';
 
 import { $createImageNode, ImageNode } from './nodes/ImageNode';
+import MarkdownShortcutGuide from './MarkdownShortcutGuide';
+import FloatingToolbar from './FloatingToolbar';
+import SmartInputHelper from './SmartInputHelper';
+import { useEditorPreferences } from '../../hooks/useEditorPreferences';
 
 interface Props {
   initialJson?: string;
@@ -228,6 +232,7 @@ export default function LexicalEditor({
   onChange,
   onImageUpload,
 }: Props) {
+  const { preferences } = useEditorPreferences();
   const editorStateFromJson = useMemo(() => initialJson ?? '', [initialJson]);
 
   const initialConfig = useMemo(
@@ -308,13 +313,17 @@ export default function LexicalEditor({
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className="border rounded-md">
+      <div className="border rounded-md relative">
         <div className="px-3 py-2 border-b text-sm text-muted-foreground">
-          글을 자유롭게 작성하세요. 굵게/기울임/제목/목록/링크/코드와 Markdown
-          단축키를 지원합니다.
+          글을 자유롭게 작성하세요. **굵게**, *기울임*, # 제목 등 마크다운
+          문법을 지원합니다.
         </div>
+
+        <MarkdownShortcutGuide />
+
         {onImageUpload && <ImageUploadPlugin onUpload={onImageUpload} />}
         {onImageUpload && <PasteDropImagePlugin onUpload={onImageUpload} />}
+
         <div className="min-h-[240px] max-h-[60vh] overflow-y-auto">
           <RichTextPlugin
             contentEditable={
@@ -338,6 +347,9 @@ export default function LexicalEditor({
           <MarkdownShortcutPlugin />
           <OnChangePlugin onChange={handleChange} />
         </div>
+
+        {preferences.showSmartHelper && <SmartInputHelper />}
+        {preferences.showFloatingToolbar && <FloatingToolbar />}
       </div>
     </LexicalComposer>
   );

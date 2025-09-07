@@ -4,6 +4,10 @@ import { FeedQueryDto, FeedTab } from './dto/feed-query.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { LikeActionDto, LikeAction } from './dto/like-action.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import {
+  parseKakaoIsbn,
+  buildIsbnSearchQuery,
+} from '../../common/utils/isbn.utils';
 
 @Injectable()
 export class ReviewsService {
@@ -113,22 +117,55 @@ export class ReviewsService {
       } = createReviewDto.bookData;
 
       if (isbn) {
-        // ISBN으로 upsert (중복 방지)
-        const book = await this.prismaService.book.upsert({
-          where: { isbn },
-          update: {}, // 기존 데이터 유지
-          create: {
-            isbn,
-            title,
-            author,
-            publisher,
-            publishedAt,
-            thumbnail,
-            description,
-            source: 'KAKAO_API',
-          },
-        });
-        bookId = book.id;
+        // Parse ISBN from Kakao API (handles ISBN-10, ISBN-13, or both)
+        const parsedIsbn = parseKakaoIsbn(isbn);
+        const searchQuery = buildIsbnSearchQuery(parsedIsbn);
+
+        // Check if book already exists by either ISBN-10 or ISBN-13
+        if (searchQuery) {
+          const existingBook = await this.prismaService.book.findFirst({
+            where: searchQuery,
+          });
+
+          if (existingBook) {
+            // Book exists, use existing one
+            bookId = existingBook.id;
+          } else {
+            // Book doesn't exist, create new one
+            const newBook = await this.prismaService.book.create({
+              data: {
+                isbn: parsedIsbn.primaryIsbn, // Legacy compatibility
+                isbn10: parsedIsbn.isbn10,
+                isbn13: parsedIsbn.isbn13,
+                title,
+                author,
+                publisher,
+                publishedAt,
+                thumbnail,
+                description,
+                source: 'KAKAO_API',
+              },
+            });
+            bookId = newBook.id;
+          }
+        } else {
+          // No valid ISBN found, create book without ISBN search
+          const newBook = await this.prismaService.book.create({
+            data: {
+              isbn: parsedIsbn.primaryIsbn, // Legacy compatibility
+              isbn10: parsedIsbn.isbn10,
+              isbn13: parsedIsbn.isbn13,
+              title,
+              author,
+              publisher,
+              publishedAt,
+              thumbnail,
+              description,
+              source: 'KAKAO_API',
+            },
+          });
+          bookId = newBook.id;
+        }
       } else {
         // ISBN 없으면 새로 생성
         const book = await this.prismaService.book.create({

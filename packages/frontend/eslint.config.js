@@ -1,9 +1,9 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import tseslint from '@typescript-eslint/eslint-plugin'
-import tsParser from '@typescript-eslint/parser'
+import js from '@eslint/js';
+import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 
 export default [
   {
@@ -15,9 +15,9 @@ export default [
       '*.config.js',
       '*.config.ts',
       'src/**/*.test.ts',
-      'src/**/*.test.tsx', 
+      'src/**/*.test.tsx',
       'src/__tests__/**/*',
-      'tests/**/*'
+      'tests/**/*',
     ],
   },
   {
@@ -28,6 +28,7 @@ export default [
       parser: tsParser,
       parserOptions: {
         project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
         ecmaFeatures: {
           jsx: true,
         },
@@ -47,15 +48,15 @@ export default [
       ...tseslint.configs.strict.rules,
       ...tseslint.configs.stylistic.rules,
       ...reactHooks.configs.recommended.rules,
-      
+
       // TypeScript strict rules
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_'
-        }
+          caughtErrorsIgnorePattern: '^_',
+        },
       ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-non-null-assertion': 'error',
@@ -64,16 +65,16 @@ export default [
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
       '@typescript-eslint/consistent-type-imports': [
         'error',
-        { prefer: 'type-imports' }
+        { prefer: 'type-imports' },
       ],
-      
+
       // React strict rules
       'react-refresh/only-export-components': [
         'warn',
-        { allowConstantExport: true }
+        { allowConstantExport: true },
       ],
       'react-hooks/exhaustive-deps': 'error',
-      
+
       // General strict rules
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-debugger': 'error',
@@ -84,8 +85,8 @@ export default [
       'no-var': 'error',
       'object-shorthand': 'error',
       'prefer-template': 'error',
-      'eqeqeq': ['error', 'always'],
-      'curly': ['error', 'all'],
+      eqeqeq: ['error', 'always'],
+      curly: ['error', 'all'],
       'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 1 }],
       'padding-line-between-statements': [
         'error',
@@ -94,10 +95,10 @@ export default [
         {
           blankLine: 'any',
           prev: ['const', 'let', 'var'],
-          next: ['const', 'let', 'var']
-        }
+          next: ['const', 'let', 'var'],
+        },
       ],
-      
+
       // Import/Export rules
       'no-duplicate-imports': 'error',
       'sort-imports': [
@@ -105,8 +106,8 @@ export default [
         {
           ignoreCase: true,
           ignoreDeclarationSort: true,
-        }
-      ]
+        },
+      ],
     },
   },
-]
+];

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Heart, MessageCircle, MoreHorizontal, Share } from 'lucide-react';
 import type { ReviewCard as ReviewCardType } from '@/types/feed';
 import { formatTimeAgo } from '@/lib/utils';
+import SafeHtmlRenderer from '@/components/common/SafeHtmlRenderer';
 
 interface ReviewCardProps {
   review: ReviewCardType;
@@ -20,14 +21,14 @@ const ReviewCard = ({
   onShare,
   onProfileClick,
   onBookClick,
-  onReviewClick
+  onReviewClick,
 }: ReviewCardProps) => {
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
 
   const handleLike = () => {
     setIsLikeAnimating(true);
     onLike(review.id);
-    
+
     // 애니메이션 완료 후 상태 리셋
     setTimeout(() => setIsLikeAnimating(false), 300);
   };
@@ -64,13 +65,15 @@ const ReviewCard = ({
             )}
           </div>
           <div className="text-left">
-            <p className="font-medium text-foreground">{review.author.username}</p>
+            <p className="font-medium text-foreground">
+              {review.author.username}
+            </p>
             <p className="text-xs text-muted-foreground">
               {formatTimeAgo(review.createdAt)}
             </p>
           </div>
         </button>
-        
+
         <div className="ml-auto">
           <button className="p-1 rounded-full hover:bg-muted transition-colors">
             <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
@@ -100,7 +103,7 @@ const ReviewCard = ({
             )}
           </div>
         </button>
-        
+
         <div className="flex-grow min-w-0">
           <button
             onClick={() => onBookClick(review.book.id)}
@@ -122,9 +125,12 @@ const ReviewCard = ({
           onClick={() => onReviewClick(review.id)}
           className="text-left w-full hover:opacity-80 transition-opacity"
         >
-          <p className="text-foreground line-clamp-4 whitespace-pre-line">
-            {review.content}
-          </p>
+          <SafeHtmlRenderer
+            content={review.content}
+            className="text-foreground line-clamp-4"
+            maxLength={150}
+            showTruncated={true}
+          />
         </button>
       </div>
 
@@ -133,15 +139,15 @@ const ReviewCard = ({
         <button
           onClick={handleLike}
           className={`flex items-center space-x-2 group transition-colors ${
-            isLiked ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
+            isLiked
+              ? 'text-red-500'
+              : 'text-muted-foreground hover:text-red-500'
           }`}
         >
-          <Heart 
+          <Heart
             className={`h-5 w-5 transition-all duration-300 ${
               isLiked ? 'fill-current' : 'group-hover:scale-110'
-            } ${
-              isLikeAnimating ? 'scale-125' : ''
-            }`}
+            } ${isLikeAnimating ? 'scale-125' : ''}`}
           />
           <span className="text-sm font-medium">
             {review.stats.likes > 0 ? review.stats.likes : ''}

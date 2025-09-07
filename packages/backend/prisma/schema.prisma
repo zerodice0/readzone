@@ -65,7 +65,9 @@ model Account {
 
 model Book {
   id          String  @id @default(cuid())
-  isbn        String? @unique @db.VarChar(20)
+  isbn        String? @unique @db.VarChar(20) // Legacy field for backward compatibility
+  isbn10      String? @db.VarChar(10)
+  isbn13      String? @db.VarChar(13)
   title       String  @db.VarChar(500)
   author      String  @db.VarChar(200)
   publisher   String? @db.VarChar(200)
@@ -86,6 +88,9 @@ model Book {
   reviews      Review[]
   reviewDrafts ReviewDraft[]
 
+  // Indexes for ISBN fields
+  @@index([isbn10])
+  @@index([isbn13])
   @@map("books")
 }
 
@@ -223,7 +228,7 @@ model Notification {
 
 // PostgreSQL optimizations and indexes
 // BookSource: "KAKAO_API" | "DATABASE" | "MANUAL"
-// ReviewStatus: "DRAFT" | "PUBLISHED" | "ARCHIVED"  
+// ReviewStatus: "DRAFT" | "PUBLISHED" | "ARCHIVED"
 // NotificationType: "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
 
 // Additional indexes for better performance

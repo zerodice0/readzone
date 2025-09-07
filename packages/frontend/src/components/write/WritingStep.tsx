@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ErrorDialog } from '@/components/ui/error-dialog';
 import LexicalEditor from '@/components/editor/LexicalEditor';
 import { useDebounced } from '@/hooks/useDebounced';
 import useWriteStore from '@/store/writeStore';
@@ -10,6 +11,9 @@ import { BookInfoAccordion } from './BookInfoAccordion';
 
 export function WritingStep() {
   const navigate = useNavigate();
+  const [error, setError] = useState<unknown>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+
   const {
     selectedBook,
     title,
@@ -71,9 +75,14 @@ export function WritingStep() {
 
       navigate({ to: `/review/${id}` });
     } catch (e) {
-      // eslint-disable-next-line no-alert
-      alert(e instanceof Error ? e.message : '게시 중 오류가 발생했습니다');
+      setError(e);
+      setShowErrorDialog(true);
     }
+  };
+
+  const handleErrorDialogClose = () => {
+    setShowErrorDialog(false);
+    setError(null);
   };
 
   return (
@@ -173,6 +182,12 @@ export function WritingStep() {
           게시하기
         </Button>
       </div>
+
+      <ErrorDialog
+        error={error}
+        open={showErrorDialog}
+        onClose={handleErrorDialogClose}
+      />
     </div>
   );
 }
