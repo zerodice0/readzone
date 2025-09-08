@@ -25,20 +25,9 @@ async function bootstrap() {
 
   // Enable CORS with enhanced settings for cookie-based auth
   app.enableCors({
-    origin:
-      process.env.NODE_ENV === 'development'
-        ? (
-            origin: string | undefined,
-            callback: (err: Error | null, allow?: boolean) => void,
-          ) => {
-            // 개발 환경에서는 localhost의 모든 포트 허용
-            if (!origin || origin.includes('localhost')) {
-              callback(null, true);
-            } else {
-              callback(new Error('Not allowed by CORS'));
-            }
-          }
-        : process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.NODE_ENV === 'development'
+      ? ['http://localhost:3000', 'http://localhost:3001']
+      : process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true, // Allow cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],

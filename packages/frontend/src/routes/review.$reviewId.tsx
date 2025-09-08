@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import DOMPurify from 'dompurify'
-import { useAuthStore, authenticatedApiCall } from '@/store/authStore'
+import { authenticatedApiCall, useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
+import { BookInfoCard } from '@/components/common/BookInfoCard'
+import type { BookSummary } from '@/store/writeStore'
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001';
@@ -137,10 +139,20 @@ function ReviewDetailPage() {
         {new Date(review.createdAt).toLocaleString()}
       </div>
       {review.book && (
-        <div className="p-3 border rounded mb-6">
-          <div className="font-medium">{review.book.title}</div>
-          <div className="text-sm text-muted-foreground">{review.book.author} {review.book.publishedAt ? `· ${review.book.publishedAt}` : ''}</div>
-        </div>
+        <BookInfoCard
+          book={{
+            title: review.book.title,
+            author: review.book.author,
+            publisher: 'publisher' in review.book ? review.book.publisher : undefined,
+            publishedAt: review.book.publishedAt,
+            thumbnail: 'thumbnail' in review.book ? review.book.thumbnail : undefined,
+            description: 'description' in review.book ? review.book.description : undefined,
+            isbn: 'isbn' in review.book ? review.book.isbn : undefined,
+            isExisting: true,
+            source: 'db'
+          } as BookSummary}
+          className="mb-6"
+        />
       )}
       <div className="flex items-center gap-2 mb-4">
         <Button
