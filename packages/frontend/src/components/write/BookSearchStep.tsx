@@ -6,6 +6,7 @@ import useWriteStore, { type BookSummary } from '@/store/writeStore';
 import { BookResultCard } from './BookResultCard';
 import { ManualBookCard } from './ManualBookCard';
 import { BookDetailModal } from './BookDetailModal';
+import { DraftConfirmDialog } from '@/components/ui/draft-confirm-dialog';
 
 export function BookSearchStep() {
   const [q, setQ] = useState('');
@@ -21,12 +22,18 @@ export function BookSearchStep() {
   const [selectedForModal, setSelectedForModal] = useState<BookSummary | null>(
     null
   );
+  const [draftDialogOpen, setDraftDialogOpen] = useState(false);
+  const [pendingBook, setPendingBook] = useState<BookSummary | null>(null);
   const seenIsbn = useRef<Set<string>>(new Set());
   const seenId = useRef<Set<string>>(new Set());
 
   const searchBooks = useWriteStore((s) => s.searchBooks);
   const setSelectedBook = useWriteStore((s) => s.setSelectedBook);
   const setStep = useWriteStore((s) => s.setStep);
+  const hasDraft = useWriteStore((s) => s.hasDraft);
+  const getDraftInfo = useWriteStore((s) => s.getDraftInfo);
+  const loadDraft = useWriteStore((s) => s.loadDraft);
+  const clearDraft = useWriteStore((s) => s.clearDraft);
 
   const appendDedup = useCallback(
     (prev: BookSummary[], incoming: BookSummary[]) => {
@@ -105,11 +112,42 @@ export function BookSearchStep() {
 
   const onModalConfirm = () => {
     if (selectedForModal) {
-      setSelectedBook(selectedForModal);
+      // Check for existing draft before proceeding
+      const existingDraft = hasDraft();
+      if (existingDraft) {
+        setPendingBook(selectedForModal);
+        setDraftDialogOpen(true);
+        setModalOpen(false);
+        setSelectedForModal(null);
+      } else {
+        setSelectedBook(selectedForModal);
+        setStep('writing');
+        setModalOpen(false);
+        setSelectedForModal(null);
+      }
+    }
+  };
+
+  const onUseDraft = async () => {
+    if (pendingBook) {
+      // Load existing draft and proceed with new book
+      await loadDraft();
+      setSelectedBook(pendingBook);
       setStep('writing');
     }
-    setModalOpen(false);
-    setSelectedForModal(null);
+    setDraftDialogOpen(false);
+    setPendingBook(null);
+  };
+
+  const onStartNew = () => {
+    if (pendingBook) {
+      // Clear all drafts and start fresh
+      clearDraft();
+      setSelectedBook(pendingBook);
+      setStep('writing');
+    }
+    setDraftDialogOpen(false);
+    setPendingBook(null);
   };
 
   const onModalCancel = () => {
@@ -210,6 +248,16 @@ export function BookSearchStep() {
         book={selectedForModal}
         onConfirm={onModalConfirm}
         onCancel={onModalCancel}
+      />
+
+      <DraftConfirmDialog
+        open={draftDialogOpen}
+        onOpenChange={setDraftDialogOpen}
+        bookTitle={pendingBook?.title || ''}
+        draftBookTitle={getDraftInfo()?.bookTitle || undefined}
+        draftBookAuthor={getDraftInfo()?.bookAuthor || undefined}
+        onUseDraft={onUseDraft}
+        onStartNew={onStartNew}
       />
     </div>
   );

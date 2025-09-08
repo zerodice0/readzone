@@ -16,10 +16,12 @@ function WritePage() {
 
   const bookId = useQueryParam('bookId');
 
-  // Load draft and book by query
+  // Load draft only for current book
   useEffect(() => {
-    void loadDraft();
-  }, [loadDraft]);
+    if (selectedBook?.id) {
+      void loadDraft(selectedBook.id);
+    }
+  }, [selectedBook?.id, loadDraft]);
 
   useEffect(() => {
     const load = async () => {

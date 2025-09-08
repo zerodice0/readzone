@@ -471,19 +471,30 @@ export const setupApiInterceptors = () => {
   // 초기화 시 불필요한 localStorage 데이터 정리
   cleanupOldAuthData()
   
-  // 페이지 로드 시 토큰 갱신 시도
+  // 페이지 로드 시 토큰 갱신 시도 (조건부)
   const initAuth = async () => {
-    const refreshSuccess = await useAuthStore.getState().refreshTokens()
-    
-    // 갱신 성공 시 토큰 만료 체크 시작
-    if (refreshSuccess) {
-      useAuthStore.getState().startTokenExpirationCheck()
+    try {
+      // 브라우저에 refresh token 쿠키가 있는지 확인
+      const hasRefreshCookie = document.cookie.includes('refreshToken=')
+      
+      if (hasRefreshCookie) {
+        const refreshSuccess = await useAuthStore.getState().refreshTokens()
+        
+        // 갱신 성공 시 토큰 만료 체크 시작
+        if (refreshSuccess) {
+          useAuthStore.getState().startTokenExpirationCheck()
+        }
+      }
+    } catch (error) {
+      // 초기 인증 실패는 무시 (로그인하지 않은 상태이거나 서버 연결 실패)
+      if (import.meta.env.DEV) {
+        console.warn('[Auth] Initial auth check failed:', error)
+      }
     }
   }
   
-  initAuth().catch(() => {
-    // 초기 인증 실패는 무시 (로그인하지 않은 상태일 수 있음)
-  })
+  // 비동기로 실행하되 에러를 잡아서 앱 시작을 방해하지 않음
+  void initAuth()
 }
 
 export { authenticatedApiCall }

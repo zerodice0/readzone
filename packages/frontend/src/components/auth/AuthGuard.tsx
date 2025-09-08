@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/store/authStore'
 
@@ -19,12 +20,15 @@ export const AuthGuard = ({
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!isAuthenticated && fallback === 'redirect') {
+      const currentPath = window.location.pathname + window.location.search;
+      navigate({ to: `${redirectTo}?redirect=${encodeURIComponent(currentPath)}` });
+    }
+  }, [isAuthenticated, fallback, redirectTo, navigate]);
+
   if (!isAuthenticated) {
     if (fallback === 'redirect') {
-      const currentPath = window.location.pathname + window.location.search;
-
-      navigate({ to: `${redirectTo}?redirect=${encodeURIComponent(currentPath)}` });
-
       return null;
     }
   }

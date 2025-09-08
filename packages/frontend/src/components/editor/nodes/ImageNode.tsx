@@ -115,6 +115,41 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
 
     return { element: img }
   }
+
+  // Provide HTML import for copy & paste functionality
+  importDOM() {
+    return {
+      img: () => ({
+        conversion: (domNode: HTMLElement) => {
+          const src = domNode.getAttribute('src')
+          if (!src) return null
+
+          const alt = domNode.getAttribute('alt')
+          const width = domNode.getAttribute('width')
+          const height = domNode.getAttribute('height')
+
+          const payload: { src: string; alt?: string; width?: number; height?: number } = { src }
+          
+          if (alt) {
+            payload.alt = alt
+          }
+          
+          if (width) {
+            payload.width = parseInt(width, 10)
+          }
+          
+          if (height) {
+            payload.height = parseInt(height, 10)
+          }
+
+          return {
+            node: $createImageNode(payload),
+          }
+        },
+        priority: 0,
+      }),
+    }
+  }
 }
 
 export function $createImageNode({ src, alt, width, height }: { src: string; alt?: string; width?: number; height?: number }) {
