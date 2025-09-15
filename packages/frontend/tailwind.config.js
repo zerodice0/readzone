@@ -109,15 +109,18 @@ module.exports = {
       },
     },
   },
-  plugins: [require('tailwindcss/plugin')(({ addUtilities }) => {
-    addUtilities({
-      '.scrollbar-hide': {
-        '-ms-overflow-style': 'none',
-        'scrollbar-width': 'none',
-        '&::-webkit-scrollbar': {
-          display: 'none'
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('tailwindcss/plugin')(({ addUtilities }) => {
+      addUtilities({
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          }
         }
-      }
+      })
     })
-  })],
+  ],
 }
