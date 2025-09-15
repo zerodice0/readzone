@@ -18,7 +18,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:token-cleanup": "./test-token-cleanup.sh",
+    "monitor:scheduler": "./monitor-scheduler.sh",
+    "monitor:scheduler:stats": "./monitor-scheduler.sh -s",
+    "monitor:scheduler:follow": "./monitor-scheduler.sh -f"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -27,6 +31,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/schedule": "^6.0.0",
     "@prisma/client": "^6.14.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.9",

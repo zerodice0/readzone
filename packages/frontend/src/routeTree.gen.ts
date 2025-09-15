@@ -18,6 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewReviewIdRouteImport } from './routes/review.$reviewId'
+import { Route as ReviewEditReviewIdRouteImport } from './routes/review-edit.$reviewId'
 import { Route as ProfileUseridRouteImport } from './routes/profile.$userid'
 import { Route as BooksBookIdRouteImport } from './routes/books.$bookId'
 
@@ -66,6 +67,11 @@ const ReviewReviewIdRoute = ReviewReviewIdRouteImport.update({
   path: '/review/$reviewId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewEditReviewIdRoute = ReviewEditReviewIdRouteImport.update({
+  id: '/review-edit/$reviewId',
+  path: '/review-edit/$reviewId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileUseridRoute = ProfileUseridRouteImport.update({
   id: '/profile/$userid',
   path: '/profile/$userid',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
+  '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
+  '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
+  '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/write'
     | '/books/$bookId'
     | '/profile/$userid'
+    | '/review-edit/$reviewId'
     | '/review/$reviewId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/write'
     | '/books/$bookId'
     | '/profile/$userid'
+    | '/review-edit/$reviewId'
     | '/review/$reviewId'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/write'
     | '/books/$bookId'
     | '/profile/$userid'
+    | '/review-edit/$reviewId'
     | '/review/$reviewId'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   WriteRoute: typeof WriteRoute
   BooksBookIdRoute: typeof BooksBookIdRoute
   ProfileUseridRoute: typeof ProfileUseridRoute
+  ReviewEditReviewIdRoute: typeof ReviewEditReviewIdRoute
   ReviewReviewIdRoute: typeof ReviewReviewIdRoute
 }
 
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewReviewIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review-edit/$reviewId': {
+      id: '/review-edit/$reviewId'
+      path: '/review-edit/$reviewId'
+      fullPath: '/review-edit/$reviewId'
+      preLoaderRoute: typeof ReviewEditReviewIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/$userid': {
       id: '/profile/$userid'
       path: '/profile/$userid'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   WriteRoute: WriteRoute,
   BooksBookIdRoute: BooksBookIdRoute,
   ProfileUseridRoute: ProfileUseridRoute,
+  ReviewEditReviewIdRoute: ReviewEditReviewIdRoute,
   ReviewReviewIdRoute: ReviewReviewIdRoute,
 }
 export const routeTree = rootRouteImport

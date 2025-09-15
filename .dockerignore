@@ -133,6 +133,9 @@ public/uploads/
 # Backup files
 *.backup
 *.bak
+backups/
+*.sql
+*.dump
 
 # Development and CI/CD specific
 .vscode/

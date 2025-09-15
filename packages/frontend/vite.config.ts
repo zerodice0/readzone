@@ -1,14 +1,11 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { TanStackRouterVite } from '@tanstack/router-vite-plugin'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { TanStackRouterVite } from '@tanstack/router-vite-plugin';
+import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    TanStackRouterVite()
-  ],
+  plugins: [react(), TanStackRouterVite()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -54,10 +51,19 @@ export default defineConfig({
       },
     },
   },
+  // 개발 환경 sourcemap 설정 추가
+  esbuild: {
+    sourcemap: true,
+  },
   define: {
     __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', '@tanstack/react-router', '@tanstack/react-query'],
+    include: [
+      'react',
+      'react-dom',
+      '@tanstack/react-router',
+      '@tanstack/react-query',
+    ],
   },
-})
+});

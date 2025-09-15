@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Body,
   Query,
   Param,
@@ -11,6 +13,7 @@ import {
 import { ReviewsService } from './reviews.service';
 import { FeedQueryDto } from './dto/feed-query.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
 import { LikeActionDto } from './dto/like-action.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -65,5 +68,28 @@ export class ReviewsController {
   @Get(':id/comments')
   async getComments(@Param('id') reviewId: string) {
     return this.reviewsService.getComments(reviewId);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  async updateReview(
+    @Param('id') reviewId: string,
+    @Body() updateReviewDto: UpdateReviewDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.reviewsService.updateReview(
+      reviewId,
+      updateReviewDto,
+      req.user.id,
+    );
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async deleteReview(
+    @Param('id') reviewId: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.reviewsService.deleteReview(reviewId, req.user.id);
   }
 }
