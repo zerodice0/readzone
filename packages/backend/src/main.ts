@@ -25,9 +25,10 @@ async function bootstrap() {
 
   // Enable CORS with enhanced settings for cookie-based auth
   app.enableCors({
-    origin: process.env.NODE_ENV === 'development'
-      ? ['http://localhost:3000', 'http://localhost:3001']
-      : process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin:
+      process.env.NODE_ENV === 'development'
+        ? ['http://localhost:3000', 'http://localhost:3001']
+        : process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true, // Allow cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],

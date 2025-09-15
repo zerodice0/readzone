@@ -471,19 +471,16 @@ export const setupApiInterceptors = () => {
   // 초기화 시 불필요한 localStorage 데이터 정리
   cleanupOldAuthData()
   
-  // 페이지 로드 시 토큰 갱신 시도 (조건부)
+  // 페이지 로드 시 토큰 갱신 시도
   const initAuth = async () => {
     try {
-      // 브라우저에 refresh token 쿠키가 있는지 확인
-      const hasRefreshCookie = document.cookie.includes('refreshToken=')
-      
-      if (hasRefreshCookie) {
-        const refreshSuccess = await useAuthStore.getState().refreshTokens()
-        
-        // 갱신 성공 시 토큰 만료 체크 시작
-        if (refreshSuccess) {
-          useAuthStore.getState().startTokenExpirationCheck()
-        }
+      // httpOnly 쿠키는 JavaScript로 읽을 수 없으므로 무조건 갱신 시도
+      // refreshToken 쿠키가 없으면 refreshTokens()가 실패하고 자동으로 로그아웃됨
+      const refreshSuccess = await useAuthStore.getState().refreshTokens()
+
+      // 갱신 성공 시 토큰 만료 체크 시작
+      if (refreshSuccess) {
+        useAuthStore.getState().startTokenExpirationCheck()
       }
     } catch (error) {
       // 초기 인증 실패는 무시 (로그인하지 않은 상태이거나 서버 연결 실패)

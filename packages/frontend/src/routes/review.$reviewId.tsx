@@ -1,9 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import DOMPurify from 'dompurify'
+import { marked } from 'marked'
 import { authenticatedApiCall, useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { BookInfoCard } from '@/components/common/BookInfoCard'
+import { AlertDialog } from '@/components/ui/alert-dialog'
+import { NotificationDialog, type NotificationType } from '@/components/ui/notification-dialog'
 import type { BookSummary } from '@/store/writeStore'
 
 const API_BASE_URL =
@@ -11,6 +14,7 @@ const API_BASE_URL =
 
 function ReviewDetailPage() {
   const { reviewId } = Route.useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [review, setReview] = useState<{
@@ -18,13 +22,21 @@ function ReviewDetailPage() {
     userHasLiked?: boolean;
     content?: string;
     title: string;
-    user?: { nickname: string };
+    user?: { nickname: string; id?: string };
     createdAt: string;
     book?: { title: string; author: string; publishedAt?: string };
     tags?: string | string[];
     comments?: unknown[];
   } | null>(null);
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+  
+  // Helper function to show success notification
+  const showSuccessNotification = (message: string) => {
+    setNotificationMessage(message);
+    setNotificationType('success');
+    setShowNotification(true);
+  };
+  
   const [comments, setComments] = useState<
     {
       id: string;
@@ -36,6 +48,13 @@ function ReviewDetailPage() {
   >([]);
   const [newComment, setNewComment] = useState('');
   const [replyBoxes, setReplyBoxes] = useState<Record<string, string>>({});
+  const [safeHtml, setSafeHtml] = useState<string>('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  // Notification state
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState<NotificationType>('info');
 
   useEffect(() => {
     const run = async () => {
@@ -76,6 +95,27 @@ function ReviewDetailPage() {
     }
   }, [review]);
 
+  // 마크다운을 HTML로 변환하는 useEffect 추가
+  useEffect(() => {
+    const convertMarkdown = async () => {
+      if (review?.content) {
+        try {
+          const markdownHtml = await marked(review.content);
+          const sanitizedHtml = DOMPurify.sanitize(markdownHtml);
+
+          setSafeHtml(sanitizedHtml);
+        } catch (error) {
+          console.error('Markdown conversion error:', error);
+          setSafeHtml(DOMPurify.sanitize(review.content));
+        }
+      } else {
+        setSafeHtml('');
+      }
+    };
+
+    void convertMarkdown();
+  }, [review?.content]);
+
   if (loading) {
     return <div className="container mx-auto px-4 py-6">불러오는 중…</div>;
   }
@@ -87,13 +127,12 @@ function ReviewDetailPage() {
     );
   }
 
-  const safeHtml = DOMPurify.sanitize(review.content ?? '');
-
   const toggleLike = async () => {
     if (!isAuthenticated) {
-      // eslint-disable-next-line no-alert
-      alert('로그인 후 이용해 주세요');
-
+      setNotificationMessage('로그인 후 이용해 주세요');
+      setNotificationType('warning');
+      setShowNotification(true);
+      
       return;
     }
     const action = userHasLiked ? 'unlike' : 'like';
@@ -116,6 +155,34 @@ function ReviewDetailPage() {
     }
   };
 
+  const openDeleteDialog = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await authenticatedApiCall(`/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.success) {
+        setNotificationMessage('리뷰가 삭제되었습니다');
+        setNotificationType('success');
+        setShowNotification(true);
+        // Navigate after a short delay to show the notification
+        setTimeout(() => {
+          navigate({ to: '/' });
+        }, 1500);
+      }
+    } catch (error) {
+      setNotificationMessage(
+        error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다'
+      );
+      setNotificationType('error');
+      setShowNotification(true);
+    }
+  };
+
   const tags: string[] = Array.isArray(review.tags)
     ? review.tags
     : review.tags
@@ -130,6 +197,10 @@ function ReviewDetailPage() {
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = encodeURIComponent(`${review.title} - ReadZone`);
+
+  // 삭제/수정 권한 확인: 로그인한 사용자이고 자신이 작성한 글인 경우
+  const canDelete = isAuthenticated && user?.id === review.user?.id;
+  const canEdit = isAuthenticated && user?.id === review.user?.id;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl">
@@ -162,6 +233,24 @@ function ReviewDetailPage() {
         >
           {userHasLiked ? '좋아요 취소' : '좋아요'} ({likeCount})
         </Button>
+        {canEdit && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate({ to: `/review-edit/${reviewId}` })}
+          >
+            수정
+          </Button>
+        )}
+        {canDelete && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={openDeleteDialog}
+          >
+            삭제
+          </Button>
+        )}
         <div className="flex gap-2">
           {tags.map((t) => (
             <span key={t} className="px-2 py-1 text-xs border rounded-full">
@@ -187,8 +276,7 @@ function ReviewDetailPage() {
               } else {
                 try {
                   await navigator.clipboard.writeText(shareUrl);
-                  // eslint-disable-next-line no-alert
-                  alert('링크가 복사되었습니다');
+                  showSuccessNotification('링크가 복사되었습니다');
                 } catch {
                   // Handle clipboard failure silently
                 }
@@ -203,8 +291,7 @@ function ReviewDetailPage() {
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(shareUrl);
-                // eslint-disable-next-line no-alert
-                alert('링크가 복사되었습니다');
+                showSuccessNotification('링크가 복사되었습니다');
               } catch {
                 // Handle clipboard failure silently
               }
@@ -222,7 +309,7 @@ function ReviewDetailPage() {
           </a>
         </div>
       </div>
-      <article className="prose max-w-none">
+      <article className="prose prose-slate dark:prose-invert max-w-none">
         <div dangerouslySetInnerHTML={{ __html: safeHtml }} />
       </article>
       <section className="mt-8">
@@ -405,6 +492,24 @@ function ReviewDetailPage() {
           </div>
         )}
       </section>
+      
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="리뷰 삭제"
+        description="정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        onConfirm={handleDeleteConfirm}
+        confirmText="삭제"
+        cancelText="취소"
+        destructive={true}
+      />
+      
+      <NotificationDialog
+        open={showNotification}
+        onOpenChange={setShowNotification}
+        message={notificationMessage}
+        type={notificationType}
+      />
     </div>
   );
 }

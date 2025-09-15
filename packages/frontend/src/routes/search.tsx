@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import React, { Fragment, useCallback, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { NotificationDialog, type NotificationType } from '@/components/ui/notification-dialog';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 const API_BASE_URL =
@@ -44,6 +45,11 @@ function SearchPage() {
   const seenIsbn = useRef<Set<string>>(new Set());
   const seenId = useRef<Set<string>>(new Set());
   const navigate = useNavigate();
+  
+  // Notification state
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState<NotificationType>('info');
 
   const mode = useQueryParam('mode'); // 'select' | undefined
   const redirect = useQueryParam('redirect') ?? '/write';
@@ -533,8 +539,9 @@ function SearchPage() {
                       }
                     }
                   } catch {
-                    // eslint-disable-next-line no-alert
-                    alert('도서 생성에 실패했습니다');
+                    setNotificationMessage('도서 생성에 실패했습니다');
+                    setNotificationType('error');
+                    setShowNotification(true);
                   }
                 }}
               >
@@ -638,6 +645,13 @@ function SearchPage() {
         )}
         {results.length === 0 && !loading && q.trim() && <ManualBookCard />}
       </div>
+      
+      <NotificationDialog
+        open={showNotification}
+        onOpenChange={setShowNotification}
+        message={notificationMessage}
+        type={notificationType}
+      />
     </div>
   );
 }
