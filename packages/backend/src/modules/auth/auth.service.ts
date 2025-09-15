@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
@@ -26,6 +27,8 @@ import axios from 'axios';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   // 간단한 인메모리 쿨다운 (이메일별 60초)
   private verificationCooldown = new Map<string, number>();
   private ipWindow: Map<string, number[]> = new Map();
@@ -120,7 +123,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, meta?: { userAgent?: string; ip?: string }) {
     // Find user by userid
     const user = await this.prismaService.user.findFirst({
       where: { userid: loginDto.userid },
@@ -164,6 +167,8 @@ export class AuthService {
             userId: user.id,
             jtiHash,
             expiresAt,
+            userAgent: meta?.userAgent,
+            ip: meta?.ip,
           },
         });
       }
@@ -398,7 +403,10 @@ export class AuthService {
     } as const;
   }
 
-  async refresh(refreshToken: string) {
+  async refresh(
+    refreshToken: string,
+    meta?: { userAgent?: string; ip?: string },
+  ) {
     try {
       // RefreshToken 검증
       const decoded = verifyToken(refreshToken);
@@ -451,6 +459,17 @@ export class AuthService {
       });
 
       if (!rtRecord || rtRecord.isRevoked) {
+        // Revoked 토큰 재사용 시도에 대한 보안 로깅 (내부용)
+        if (rtRecord?.isRevoked) {
+          this.logger.warn('Revoked token reuse attempt detected', {
+            userId: decoded.userId,
+            jtiHash: incomingJtiHash,
+            userAgent: meta?.userAgent,
+            ip: meta?.ip,
+            timestamp: new Date().toISOString(),
+            tokenExpiry: rtRecord.expiresAt,
+          });
+        }
         throw new UnauthorizedException('Invalid refresh token');
       }
       if (rtRecord.expiresAt.getTime() <= Date.now()) {
@@ -489,6 +508,8 @@ export class AuthService {
             jtiHash: newJtiHash,
             // 절대 만료 유지: 기존 레코드의 expiresAt 사용
             expiresAt: rtRecord.expiresAt,
+            userAgent: meta?.userAgent,
+            ip: meta?.ip,
           },
         }),
       ]);
@@ -787,7 +808,13 @@ export class AuthService {
         const jtiHash = crypto.createHash('sha256').update(jti).digest('hex');
         const expiresAt = new Date(rtPayload.exp * 1000);
         await this.prismaService.refreshToken.create({
-          data: { userId: user.id, jtiHash, expiresAt },
+          data: {
+            userId: user.id,
+            jtiHash,
+            expiresAt,
+            userAgent: null, // resetPassword는 웹에서만 가능하므로 userAgent 없음
+            ip: null, // resetPassword는 웹에서만 가능하므로 ip 없음
+          },
         });
       }
     } catch {
@@ -800,6 +827,193 @@ export class AuthService {
       tokens,
       invalidatedSessions: revoke.count,
     } as const;
+  }
+
+  /**
+   * 로그아웃 처리 - RefreshToken DB에서 삭제
+   */
+  async logout(refreshToken: string): Promise<void> {
+    try {
+      const decoded = verifyToken(refreshToken);
+      if (!decoded.jti) {
+        return; // jti가 없으면 무시
+      }
+
+      const jtiHash = crypto
+        .createHash('sha256')
+        .update(decoded.jti)
+        .digest('hex');
+
+      // DB에서 토큰 삭제 (즉시 정리)
+      await this.prismaService.refreshToken.delete({
+        where: { jtiHash },
+      });
+    } catch {
+      // 토큰이 이미 삭제되었거나 유효하지 않은 경우 무시
+      // 로그아웃은 항상 성공으로 처리
+    }
+  }
+
+  /**
+   * 사용자의 모든 활성 세션 조회
+   */
+  async getUserSessions(userId: string) {
+    const sessions = await this.prismaService.refreshToken.findMany({
+      where: {
+        userId,
+        isRevoked: false,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      select: {
+        id: true,
+        userAgent: true,
+        ip: true,
+        issuedAt: true,
+        expiresAt: true,
+      },
+      orderBy: {
+        issuedAt: 'desc',
+      },
+    });
+
+    return sessions.map((session) => ({
+      id: session.id,
+      device: this.parseUserAgent(session.userAgent),
+      ip: session.ip,
+      issuedAt: session.issuedAt,
+      expiresAt: session.expiresAt,
+      isActive: true,
+    }));
+  }
+
+  /**
+   * 특정 세션 종료
+   */
+  async terminateSession(userId: string, sessionId: string): Promise<void> {
+    await this.prismaService.refreshToken.delete({
+      where: {
+        id: sessionId,
+        userId, // 보안: 본인 세션만 삭제 가능
+      },
+    });
+  }
+
+  /**
+   * 모든 세션 종료 (현재 세션 제외 옵션)
+   */
+  async terminateAllSessions(
+    userId: string,
+    currentRefreshToken?: string,
+  ): Promise<{ terminatedCount: number }> {
+    let excludeJtiHash: string | undefined;
+
+    if (currentRefreshToken) {
+      try {
+        const decoded = verifyToken(currentRefreshToken);
+        if (decoded.jti) {
+          excludeJtiHash = crypto
+            .createHash('sha256')
+            .update(decoded.jti)
+            .digest('hex');
+        }
+      } catch {
+        // 현재 토큰이 유효하지 않으면 모든 세션 종료
+      }
+    }
+
+    const result = await this.prismaService.refreshToken.deleteMany({
+      where: {
+        userId,
+        ...(excludeJtiHash && {
+          jtiHash: {
+            not: excludeJtiHash,
+          },
+        }),
+      },
+    });
+
+    return { terminatedCount: result.count };
+  }
+
+  /**
+   * 수동 토큰 정리 (관리자용)
+   */
+  async manualTokenCleanup(): Promise<{
+    expiredCleaned: number;
+    revokedCleaned: number;
+    totalBefore: number;
+    totalAfter: number;
+  }> {
+    // 정리 전 총 개수
+    const totalBefore = await this.prismaService.refreshToken.count();
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setHours(twoDaysAgo.getHours() - 48);
+
+    const [expiredResult, revokedResult] = await Promise.all([
+      this.prismaService.refreshToken.deleteMany({
+        where: {
+          expiresAt: {
+            lt: sevenDaysAgo,
+          },
+        },
+      }),
+      this.prismaService.refreshToken.deleteMany({
+        where: {
+          isRevoked: true,
+          issuedAt: {
+            lt: twoDaysAgo,
+          },
+        },
+      }),
+    ]);
+
+    // 정리 후 총 개수
+    const totalAfter = await this.prismaService.refreshToken.count();
+
+    this.logger.log(
+      `Manual cleanup completed - Total before: ${totalBefore}, Expired: ${expiredResult.count}, Revoked: ${revokedResult.count}, Total after: ${totalAfter}`,
+    );
+
+    return {
+      expiredCleaned: expiredResult.count,
+      revokedCleaned: revokedResult.count,
+      totalBefore,
+      totalAfter,
+    };
+  }
+
+  /**
+   * UserAgent 파싱 (간단한 디바이스 정보 추출)
+   */
+  private parseUserAgent(userAgent: string | null): string {
+    if (!userAgent) {
+      return 'Unknown Device';
+    }
+
+    // 간단한 파싱 로직
+    if (userAgent.includes('Mobile') || userAgent.includes('Android')) {
+      if (userAgent.includes('Chrome')) return 'Mobile Chrome';
+      if (userAgent.includes('Safari')) return 'Mobile Safari';
+      return 'Mobile Browser';
+    }
+
+    if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+      if (userAgent.includes('Safari')) return 'Safari on iOS';
+      return 'iOS Browser';
+    }
+
+    if (userAgent.includes('Chrome')) return 'Chrome';
+    if (userAgent.includes('Firefox')) return 'Firefox';
+    if (userAgent.includes('Safari')) return 'Safari';
+    if (userAgent.includes('Edge')) return 'Edge';
+
+    return 'Desktop Browser';
   }
 
   private validatePasswordStrength(pw: string): boolean {

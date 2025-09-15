@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
+  Param,
   Post,
   Query,
   Request,
@@ -13,6 +16,7 @@ import {
 } from '@nestjs/common';
 import type { Response as ExpressResponse } from 'express';
 import { AuthService } from './auth.service';
+import { TokenCleanupService } from './token-cleanup.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { CheckDuplicateDto } from './dto/check-duplicate.dto';
@@ -37,7 +41,12 @@ class VerifyEmailDto {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly logger = new Logger(AuthController.name);
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly tokenCleanupService: TokenCleanupService,
+  ) {}
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
@@ -48,9 +57,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
+    @Request() req: { headers?: Record<string, string>; ip?: string },
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
-    const result = await this.authService.login(loginDto);
+    const userAgent = req.headers?.['user-agent'];
+    const ip = req.ip;
+
+    const result = await this.authService.login(loginDto, {
+      userAgent,
+      ip,
+    });
 
     // RefreshToken을 HttpOnly Cookie로 설정 (환경변수 기반 만료시간)
     const refreshTokenMaxAge = getTokenExpirationTimeMs(
@@ -205,16 +221,26 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
-    @Request() req: { cookies?: { refreshToken?: string } },
+    @Request()
+    req: {
+      cookies?: { refreshToken?: string };
+      headers?: Record<string, string>;
+      ip?: string;
+    },
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
     const refreshToken = req.cookies?.refreshToken;
+    const userAgent = req.headers?.['user-agent'];
+    const ip = req.ip;
 
     if (!refreshToken) {
       throw new UnauthorizedException('No refresh token provided');
     }
 
-    const result = await this.authService.refresh(refreshToken);
+    const result = await this.authService.refresh(refreshToken, {
+      userAgent,
+      ip,
+    });
 
     // 새 RefreshToken 발급 (Token Rotation)
     // 절대 만료 유지: 서비스에서 계산한 남은 수명(ms) 사용
@@ -242,7 +268,17 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@Response({ passthrough: true }) res: ExpressResponse) {
+  async logout(
+    @Request() req: { cookies?: { refreshToken?: string } },
+    @Response({ passthrough: true }) res: ExpressResponse,
+  ) {
+    const refreshToken = req.cookies?.refreshToken;
+
+    // RefreshToken이 있으면 DB에서 삭제
+    if (refreshToken) {
+      await this.authService.logout(refreshToken);
+    }
+
     // Cookie 삭제
     res.clearCookie('refreshToken', {
       httpOnly: true,
@@ -288,5 +324,97 @@ export class AuthController {
       success: true,
       user: req.user,
     };
+  }
+
+  @Get('sessions')
+  @UseGuards(JwtAuthGuard)
+  async getSessions(@Request() req: { user: { userId: string } }) {
+    const sessions = await this.authService.getUserSessions(req.user.userId);
+    return {
+      success: true,
+      data: sessions,
+    };
+  }
+
+  @Delete('sessions/:id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async terminateSession(
+    @Request() req: { user: { userId: string } },
+    @Param('id') sessionId: string,
+  ) {
+    await this.authService.terminateSession(req.user.userId, sessionId);
+    return {
+      success: true,
+      message: 'Session terminated successfully',
+    };
+  }
+
+  @Delete('sessions')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async terminateAllSessions(
+    @Request()
+    req: {
+      user: { userId: string };
+      cookies?: { refreshToken?: string };
+    },
+  ) {
+    const currentToken = req.cookies?.refreshToken;
+    const result = await this.authService.terminateAllSessions(
+      req.user.userId,
+      currentToken,
+    );
+    return {
+      success: true,
+      message: 'All sessions terminated successfully',
+      terminatedCount: result.terminatedCount,
+    };
+  }
+
+  @Post('cleanup-tokens')
+  @HttpCode(HttpStatus.OK)
+  async manualTokenCleanup() {
+    const result = await this.authService.manualTokenCleanup();
+    return {
+      success: true,
+      message: 'Token cleanup completed',
+      data: result,
+    };
+  }
+
+  @Post('trigger-cleanup')
+  @HttpCode(HttpStatus.OK)
+  async triggerCleanup() {
+    try {
+      // 토큰 통계 로깅 (정리 전 상태 기록)
+      await this.tokenCleanupService.logTokenStatistics();
+
+      // 향상된 수동 정리 실행 (로그 파일 백업 포함)
+      const manualResult = await this.tokenCleanupService.manualCleanup();
+
+      return {
+        success: true,
+        message: 'Manual token cleanup triggered successfully',
+        data: {
+          ...manualResult,
+          timestamp: new Date().toISOString(),
+          summary: {
+            totalCleaned:
+              manualResult.expiredCleaned + manualResult.revokedCleaned,
+            expiredTokensDeleted: manualResult.expiredCleaned,
+            revokedTokensDeleted: manualResult.revokedCleaned,
+            hasLogFile: !!manualResult.logFile,
+            logFileName: manualResult.logFile
+              ? manualResult.logFile.split('/').pop()
+              : null,
+          },
+        },
+      };
+    } catch (error) {
+      // 에러 발생 시 로그 기록 후 재throw
+      this.logger.error('Manual token cleanup failed', error);
+      throw error;
+    }
   }
 }

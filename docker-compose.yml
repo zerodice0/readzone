@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: readzone_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: readzone
+      POSTGRES_PASSWORD: readzone_local_2024
+      POSTGRES_DB: readzone_db
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      # 데이터 영속성
+      - postgres_data:/var/lib/postgresql/data
+      # 백업 파일 마운트
+      - ./backups:/backups:ro
+      # PostgreSQL 설정 최적화
+      - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.max=10000
+      -c pg_stat_statements.track=all
+      -c max_connections=100
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U readzone -d readzone_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - readzone_network
+
+  # 개발용 pgAdmin (선택사항)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: readzone_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@readzone.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - readzone_network
+    profiles:
+      - tools  # 필요시에만 실행: docker compose --profile tools up
+
+volumes:
+  postgres_data:
+    name: readzone_postgres_data
+    driver: local
+
+networks:
+  readzone_network:
+    name: readzone_network
+    driver: bridge
