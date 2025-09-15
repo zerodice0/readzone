@@ -1,6 +1,6 @@
 import { type ChangeEvent, useEffect, useMemo, useRef } from 'react';
 
-import { $generateHtmlFromNodes } from '@lexical/html';
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import { CodeNode } from '@lexical/code';
 import { LinkNode } from '@lexical/link';
 import { ListItemNode, ListNode } from '@lexical/list';
@@ -24,6 +24,7 @@ import {
   COMMAND_PRIORITY_LOW,
   DROP_COMMAND,
   type EditorState,
+  type LexicalEditor as LexicalEditorType,
   PASTE_COMMAND,
 } from 'lexical';
 
@@ -34,9 +35,9 @@ import SmartInputHelper from './SmartInputHelper';
 import { useEditorPreferences } from '../../hooks/useEditorPreferences';
 
 interface Props {
-  initialJson?: string;
+  initialHtml?: string;
   placeholder?: string;
-  onChange: (html: string, json: string) => void;
+  onChange: (html: string) => void;
   onImageUpload?: (file: File) => Promise<string>;
 }
 
@@ -227,13 +228,13 @@ function PasteDropImagePlugin({
 }
 
 export default function LexicalEditor({
-  initialJson,
+  initialHtml,
   placeholder,
   onChange,
   onImageUpload,
 }: Props) {
   const { preferences } = useEditorPreferences();
-  const editorStateFromJson = useMemo(() => initialJson ?? '', [initialJson]);
+  const editorStateFromHtml = useMemo(() => initialHtml ?? '', [initialHtml]);
 
   const initialConfig = useMemo(
     () => ({
@@ -254,24 +255,38 @@ export default function LexicalEditor({
       ],
       editable: true,
       editorState: (editor: unknown) => {
-        const ed = editor as {
-          setEditorState: (state: unknown) => void;
-          parseEditorState: (json: unknown) => unknown;
-          update: (callback: () => void) => void;
-        };
+        const ed = editor as LexicalEditorType;
 
-        if (editorStateFromJson) {
-          try {
-            const parsed = JSON.parse(editorStateFromJson);
+        // HTML을 Lexical state로 변환
+        if (editorStateFromHtml?.trim()) {
+          ed.update(() => {
+            try {
+              const parser = new DOMParser();
+              const dom = parser.parseFromString(
+                editorStateFromHtml,
+                'text/html'
+              );
+              const nodes = $generateNodesFromDOM(ed, dom);
+              const root = $getRoot();
 
-            ed.setEditorState(ed.parseEditorState(parsed));
+              root.clear();
 
-            return;
-          } catch {
-            // fall through to empty
-          }
+              root.append(...nodes);
+            } catch (error) {
+              console.error('HTML to Lexical conversion failed:', error);
+              // HTML 변환 실패시 빈 paragraph로 fallback
+              const root = $getRoot();
+
+              if (root.getFirstChild() === null) {
+                root.append($createParagraphNode());
+              }
+            }
+          });
+
+          return;
         }
 
+        // 빈 paragraph 생성 (fallback)
         ed.update(() => {
           const root = $getRoot();
 
@@ -281,18 +296,11 @@ export default function LexicalEditor({
         });
       },
     }),
-    [editorStateFromJson]
+    [editorStateFromHtml]
   );
 
   const handleChange = (editorState: EditorState, editor: unknown) => {
-    let json = '{}';
     let html = '';
-
-    try {
-      json = JSON.stringify(editorState.toJSON());
-    } catch {
-      // Ignore JSON stringify errors
-    }
 
     editorState.read(() => {
       try {
@@ -304,12 +312,9 @@ export default function LexicalEditor({
       }
     });
 
-    onChange(html, json);
+    // HTML-only mode
+    onChange(html);
   };
-
-  useEffect(() => {
-    // no-op; placeholder for future plugins side-effects
-  }, []);
 
   return (
     <LexicalComposer initialConfig={initialConfig}>

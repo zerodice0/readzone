@@ -6,7 +6,6 @@ interface UpsertDraftInput {
   bookId?: string;
   title?: string;
   contentHtml: string;
-  contentJson: string;
   isRecommended?: boolean;
   visibility?: string;
   tags?: string[];
@@ -31,7 +30,6 @@ export class DraftsService {
             bookId: input.bookId,
             title: input.title,
             contentHtml: input.contentHtml,
-            contentJson: input.contentJson,
             isRecommended: input.isRecommended,
             visibility: input.visibility,
             tags: tagsJson,
@@ -43,7 +41,6 @@ export class DraftsService {
             bookId: input.bookId,
             title: input.title,
             contentHtml: input.contentHtml,
-            contentJson: input.contentJson,
             isRecommended: input.isRecommended,
             visibility: input.visibility,
             tags: tagsJson,

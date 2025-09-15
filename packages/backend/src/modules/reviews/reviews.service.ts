@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { FeedQueryDto, FeedTab } from './dto/feed-query.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
 import { LikeActionDto, LikeAction } from './dto/like-action.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import {
@@ -450,6 +455,136 @@ export class ReviewsService {
           updatedAt: c.updatedAt.toISOString(),
         })),
       },
+    };
+  }
+
+  async updateReview(
+    reviewId: string,
+    updateReviewDto: UpdateReviewDto,
+    userId: string,
+  ) {
+    // 1. 리뷰 조회 및 권한 확인
+    const review = await this.prismaService.review.findUnique({
+      where: { id: reviewId },
+      select: { userId: true },
+    });
+
+    if (!review) {
+      throw new NotFoundException('리뷰를 찾을 수 없습니다');
+    }
+
+    if (review.userId !== userId) {
+      throw new ForbiddenException('수정 권한이 없습니다');
+    }
+
+    // 2. 업데이트할 데이터 준비
+    const updateData: {
+      title?: string;
+      content?: string;
+      isRecommended?: boolean;
+      rating?: number;
+      tags?: string | null;
+      isPublic?: boolean;
+    } = {};
+
+    if (updateReviewDto.title !== undefined) {
+      updateData.title = updateReviewDto.title;
+    }
+
+    if (updateReviewDto.content !== undefined) {
+      updateData.content = updateReviewDto.content;
+    }
+
+    if (updateReviewDto.isRecommended !== undefined) {
+      updateData.isRecommended = updateReviewDto.isRecommended;
+    }
+
+    if (updateReviewDto.rating !== undefined) {
+      updateData.rating = updateReviewDto.rating;
+    }
+
+    if (updateReviewDto.tags !== undefined) {
+      updateData.tags = updateReviewDto.tags
+        ? JSON.stringify(updateReviewDto.tags)
+        : null;
+    }
+
+    if (updateReviewDto.isPublic !== undefined) {
+      updateData.isPublic = updateReviewDto.isPublic;
+    }
+
+    // 3. 리뷰 업데이트
+    const updatedReview = await this.prismaService.review.update({
+      where: { id: reviewId },
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            userid: true,
+            nickname: true,
+            profileImage: true,
+            isVerified: true,
+          },
+        },
+        book: {
+          select: {
+            id: true,
+            title: true,
+            author: true,
+            isbn: true,
+            thumbnail: true,
+            publisher: true,
+            publishedAt: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        review: {
+          ...updatedReview,
+          createdAt: updatedReview.createdAt.toISOString(),
+          updatedAt: updatedReview.updatedAt.toISOString(),
+          tags: updatedReview.tags
+            ? (JSON.parse(updatedReview.tags) as string[])
+            : [],
+        },
+      },
+    };
+  }
+
+  async deleteReview(reviewId: string, userId: string) {
+    // 1. 리뷰 조회 및 권한 확인
+    const review = await this.prismaService.review.findUnique({
+      where: { id: reviewId },
+      select: { userId: true },
+    });
+
+    if (!review) {
+      throw new NotFoundException('리뷰를 찾을 수 없습니다');
+    }
+
+    if (review.userId !== userId) {
+      throw new ForbiddenException('삭제 권한이 없습니다');
+    }
+
+    // 2. 리뷰 삭제 (관련 댓글은 CASCADE로 자동 삭제)
+    await this.prismaService.review.delete({
+      where: { id: reviewId },
+    });
+
+    return {
+      success: true,
+      message: '리뷰가 삭제되었습니다',
     };
   }
 }

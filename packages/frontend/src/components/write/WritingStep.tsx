@@ -20,10 +20,12 @@ export function WritingStep() {
     isRecommended,
     tags,
     visibility,
-    contentJson,
+    contentHtml,
     isSaving,
     lastSavedAt,
     hasUnsavedChanges,
+    isEditMode,
+    editingReviewId,
   } = useWriteStore();
 
   const setTitle = useWriteStore((s) => s.setTitle);
@@ -33,6 +35,7 @@ export function WritingStep() {
   const setContent = useWriteStore((s) => s.setContent);
   const saveDraft = useWriteStore((s) => s.saveDraft);
   const publish = useWriteStore((s) => s.publish);
+  const updateReview = useWriteStore((s) => s.updateReview);
 
   // Debounced save when content/title/tags/visibility change
   useDebounced(
@@ -42,7 +45,7 @@ export function WritingStep() {
       }
     },
     2000,
-    [title, isRecommended, tags.join(','), visibility, contentJson]
+    [title, isRecommended, tags.join(','), visibility, contentHtml]
   );
 
   // 30s periodic save
@@ -71,7 +74,13 @@ export function WritingStep() {
 
   const onPublish = async () => {
     try {
-      const id = await publish();
+      let id: string;
+
+      if (isEditMode) {
+        id = await updateReview();
+      } else {
+        id = await publish();
+      }
 
       navigate({ to: `/review/${id}` });
     } catch (e) {
@@ -110,8 +119,9 @@ export function WritingStep() {
       <div className="space-y-2">
         <label className="text-sm font-medium">내용</label>
         <LexicalEditor
-          initialJson={contentJson}
-          onChange={(html, json) => setContent(html, json)}
+          key={`${editingReviewId ?? 'new'}-${contentHtml.length}`}
+          initialHtml={contentHtml}
+          onChange={(html: string) => setContent(html)}
           onImageUpload={async (file) => {
             const url = await useWriteStore.getState().uploadImage(file);
 
@@ -175,11 +185,13 @@ export function WritingStep() {
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={() => void saveDraft()}>
-          임시저장
-        </Button>
+        {!isEditMode && (
+          <Button variant="secondary" onClick={() => void saveDraft()}>
+            임시저장
+          </Button>
+        )}
         <Button onClick={onPublish} disabled={!selectedBook}>
-          게시하기
+          {isEditMode ? '수정 완료' : '게시하기'}
         </Button>
       </div>
 

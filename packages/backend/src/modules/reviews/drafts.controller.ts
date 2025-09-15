@@ -23,7 +23,6 @@ export class DraftsController {
       bookId?: string;
       title?: string;
       contentHtml: string;
-      contentJson: string;
       isRecommended?: boolean;
       visibility?: 'public' | 'followers' | 'private';
       tags?: string[];
@@ -35,7 +34,6 @@ export class DraftsController {
       bookId: body.bookId,
       title: body.title,
       contentHtml: body.contentHtml,
-      contentJson: body.contentJson,
       isRecommended: body.isRecommended,
       visibility: body.visibility,
       tags: body.tags,

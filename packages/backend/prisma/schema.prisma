@@ -128,7 +128,6 @@ model ReviewDraft {
   bookId        String?
   title         String?  @db.VarChar(200)
   contentHtml   String   @db.Text
-  contentJson   String   @db.Text
   isRecommended Boolean?
   visibility    String?  @db.VarChar(20)
   tags          String?  @db.Text

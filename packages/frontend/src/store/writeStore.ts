@@ -29,7 +29,6 @@ interface DraftPayload {
   tags?: string[];
   visibility?: Visibility;
   contentHtml: string;
-  contentJson: string;
   title?: string;
 }
 
@@ -44,13 +43,16 @@ interface WriteState {
   tags: string[];
   visibility: Visibility;
   contentHtml: string;
-  contentJson: string;
 
   // Draft/Save
   draftId: string | null;
   lastSavedAt: string | null;
   isSaving: boolean;
   hasUnsavedChanges: boolean;
+
+  // Edit mode
+  isEditMode: boolean;
+  editingReviewId: string | null;
 
   // Actions
   setStep: (s: WriteState['currentStep']) => void;
@@ -59,7 +61,7 @@ interface WriteState {
   setRecommended: (v: boolean) => void;
   setTags: (tags: string[]) => void;
   setVisibility: (v: Visibility) => void;
-  setContent: (html: string, json: string) => void;
+  setContent: (html: string) => void;
 
   // API-like
   searchBooks: (
@@ -88,6 +90,12 @@ interface WriteState {
     savedAt?: string;
     hasContent: boolean;
   } | null;
+
+  // Edit mode
+  loadReviewForEdit: (reviewId: string) => Promise<void>;
+  updateReview: () => Promise<string>;
+  enterEditMode: (reviewId: string) => void;
+  exitEditMode: () => void;
 }
 
 const API_BASE_URL =
@@ -133,11 +141,12 @@ export const useWriteStore = create<WriteState>((set, get) => ({
   tags: [],
   visibility: 'public',
   contentHtml: '',
-  contentJson: '',
   draftId: null,
   lastSavedAt: null,
   isSaving: false,
   hasUnsavedChanges: false,
+  isEditMode: false,
+  editingReviewId: null,
 
   setStep: (s) => set({ currentStep: s }),
   setSelectedBook: (b) => set({ selectedBook: b, hasUnsavedChanges: true }),
@@ -145,12 +154,12 @@ export const useWriteStore = create<WriteState>((set, get) => ({
   setRecommended: (v) => set({ isRecommended: v, hasUnsavedChanges: true }),
   setTags: (tags) => set({ tags, hasUnsavedChanges: true }),
   setVisibility: (v) => set({ visibility: v, hasUnsavedChanges: true }),
-  setContent: (html, json) =>
+  setContent: (html: string) => {
     set({
       contentHtml: sanitize(html),
-      contentJson: json,
       hasUnsavedChanges: true,
-    }),
+    });
+  },
 
   searchBooks: async (
     query: string,
@@ -327,13 +336,13 @@ export const useWriteStore = create<WriteState>((set, get) => ({
       tags: s.tags,
       visibility: s.visibility,
       contentHtml: s.contentHtml,
-      contentJson: s.contentJson,
       title: s.title,
       ...(s.selectedBook?.id ? { bookId: s.selectedBook.id } : {}),
     };
 
     // Save to localStorage immediately with book-specific key
     const storageKey = getStorageKey(s.selectedBook?.id);
+
     localStorage.setItem(
       storageKey,
       JSON.stringify({
@@ -411,7 +420,6 @@ export const useWriteStore = create<WriteState>((set, get) => ({
           : [],
         visibility: latest.visibility ?? 'public',
         contentHtml: latest.contentHtml ?? '',
-        contentJson: latest.contentJson ?? '',
       });
     } catch {
       // ignore parse errors
@@ -465,6 +473,7 @@ export const useWriteStore = create<WriteState>((set, get) => ({
     }
     // Clear local draft on publish
     const storageKey = getStorageKey(s.selectedBook?.id);
+
     localStorage.removeItem(storageKey);
 
     return reviewId as string;
@@ -496,12 +505,14 @@ export const useWriteStore = create<WriteState>((set, get) => ({
 
   clearDraft: (bookId?: string) => {
     const storageKey = getStorageKey(bookId);
+
     localStorage.removeItem(storageKey);
   },
 
   hasDraft: (bookId?: string) => {
     const storageKey = getStorageKey(bookId);
     const draft = localStorage.getItem(storageKey);
+
     return Boolean(draft);
   },
 
@@ -509,9 +520,13 @@ export const useWriteStore = create<WriteState>((set, get) => ({
     try {
       const storageKey = getStorageKey(bookId);
       const draftRaw = localStorage.getItem(storageKey);
-      if (!draftRaw) return null;
+
+      if (!draftRaw) {
+        return null;
+      }
 
       const draft = JSON.parse(draftRaw);
+
       return {
         bookId: draft.bookId,
         bookTitle: draft.bookTitle,
@@ -523,6 +538,129 @@ export const useWriteStore = create<WriteState>((set, get) => ({
     } catch {
       return null;
     }
+  },
+
+  // Edit mode methods
+  enterEditMode: (reviewId: string) => {
+    set({
+      isEditMode: true,
+      editingReviewId: reviewId,
+      currentStep: 'writing',
+    });
+  },
+
+  exitEditMode: () => {
+    set({
+      isEditMode: false,
+      editingReviewId: null,
+      currentStep: 'book-search',
+      selectedBook: null,
+      title: '',
+      isRecommended: true,
+      tags: [],
+      visibility: 'public',
+      contentHtml: '',
+      hasUnsavedChanges: false,
+    });
+  },
+
+  loadReviewForEdit: async (reviewId: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reviews/${reviewId}`, {
+        credentials: 'include',
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data?.error?.message ?? '리뷰 로드 실패');
+      }
+
+      const review = data.data.review;
+      const book = review.book;
+
+      // Parse tags
+      let tags: string[] = [];
+
+      try {
+        if (review.tags) {
+          tags = Array.isArray(review.tags)
+            ? review.tags
+            : JSON.parse(review.tags);
+        }
+      } catch {
+        tags = [];
+      }
+
+      // Set review data to store
+      set({
+        isEditMode: true,
+        editingReviewId: reviewId,
+        currentStep: 'writing',
+        selectedBook: book
+          ? {
+              id: book.id,
+              title: book.title,
+              author: book.author,
+              publisher: book.publisher,
+              publishedAt: book.publishedAt,
+              isbn: book.isbn,
+              thumbnail: book.thumbnail,
+              description: book.description,
+              isExisting: true,
+              source: 'db',
+            }
+          : null,
+        title: review.title ?? '',
+        contentHtml: review.content ?? '',
+        isRecommended: review.isRecommended ?? true,
+        tags,
+        visibility: review.isPublic ? 'public' : 'private',
+        hasUnsavedChanges: false,
+      });
+    } catch (error) {
+      console.error('Failed to load review for edit:', error);
+      throw error;
+    }
+  },
+
+  updateReview: async () => {
+    const s = get();
+
+    if (!s.editingReviewId) {
+      throw new Error('REVIEW_ID_REQUIRED');
+    }
+    if (!s.title.trim()) {
+      throw new Error('TITLE_REQUIRED');
+    }
+    if (!s.contentHtml.trim()) {
+      throw new Error('CONTENT_REQUIRED');
+    }
+
+    const body = {
+      title: s.title,
+      content: s.contentHtml,
+      isRecommended: s.isRecommended,
+      tags: s.tags,
+      isPublic: s.visibility === 'public',
+    };
+
+    const result = await authenticatedApiCall(
+      `/api/reviews/${s.editingReviewId}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!result.success) {
+      throw new Error(result?.error?.message ?? 'UPDATE_FAILED');
+    }
+
+    // Clear unsaved changes
+    set({ hasUnsavedChanges: false });
+
+    return s.editingReviewId;
   },
 }));
 
