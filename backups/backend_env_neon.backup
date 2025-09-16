@@ -1,0 +1,30 @@
+# Database (Neon PostgreSQL)
+# Connection pooling이 활성화된 경우 동일한 연결 문자열 사용
+DATABASE_URL="postgresql://neondb_owner:npg_kwXI7vWLO3nJ@ep-summer-surf-a1uy261e-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DIRECT_URL="postgresql://neondb_owner:npg_kwXI7vWLO3nJ@ep-summer-surf-a1uy261e-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+# Cookie 기반 인증 설정
+CORS_ORIGIN="http://localhost:3000"
+
+# JWT Authentication
+JWT_SECRET="0ReIO5rm386wXn7KZJxJbYquigO8yfNXialk//FjnHw"
+JWT_EXPIRES_IN="15m"
+JWT_REFRESH_EXPIRES_IN="7d"
+EMAIL_TOKEN_EXPIRES_IN="24h"
+
+# Resend Email API
+RESEND_API_KEY="re_F9VTDa75_JBh5JWqv7oqiSpk9iDJuxhRh"
+RESEND_FROM_EMAIL="ReadZone <onboarding@resend.dev>"
+ENABLE_DEV_EMAIL="true"
+
+# Kakao API
+KAKAO_API_KEY="7cc25299402baec4a9bb51f937464a60"
+
+# reCaptcha API
+#RECAPTCHA_SECRET=6Lf-67krAAAAAHt1Ktel9G8YaJlM4IxxeO0nzIpZ
+RECAPTCHA_SECRET=6LdwAborAAAAAJtZF7IdYcI5kH4rwmfBBlfvdfor
+
+#Cloudinary API
+CLOUDINARY_CLOUD_NAME="readzone dev"
+CLOUDINARY_API_KEY="925869899161692"
+CLOUDINARY_API_SECRET="orDx5RKaxTuxA5kPtTEOj0xGulk"
