@@ -184,3 +184,177 @@ export interface KakaoBook {
   thumbnail: string
   status: string
 }
+
+// Unified Search Types
+export type SearchType = 'all' | 'books' | 'reviews' | 'users'
+
+export interface SearchFilters {
+  // Book filters
+  publishYear?: {
+    from?: number
+    to?: number
+  }
+  genre?: string[]
+  publisher?: string[]
+
+  // Review filters
+  rating?: 'recommend' | 'not_recommend'
+  dateRange?: {
+    from?: string
+    to?: string
+  }
+  minLikes?: number
+
+  // User filters
+  hasAvatar?: boolean
+  minFollowers?: number
+}
+
+export interface SearchPagination {
+  nextCursor?: string
+  hasMore: boolean
+  total: number
+}
+
+export interface BookSearchResult {
+  id?: string
+  title: string
+  author: string
+  publisher?: string
+  publishedDate?: string
+  isbn?: string
+  coverImage?: string
+  description?: string
+  genre?: string[]
+
+  // Statistics (for existing books)
+  stats?: {
+    reviewCount: number
+    averageRating?: number
+    recentReviews: number
+  }
+
+  source: 'db' | 'api'
+  isExisting: boolean
+}
+
+export interface ReviewSearchResult {
+  id: string
+  content: string // Highlighted summary (150 chars)
+  rating: 'recommend' | 'not_recommend'
+  tags: string[]
+  createdAt: string
+
+  author: {
+    id: string
+    username: string
+    profileImage?: string
+  }
+
+  book: {
+    id: string
+    title: string
+    author: string
+    coverImage?: string
+  }
+
+  stats: {
+    likes: number
+    comments: number
+  }
+
+  highlights?: {
+    content?: string[]
+    tags?: string[]
+  }
+}
+
+export interface UserSearchResult {
+  id: string
+  username: string
+  bio?: string
+  profileImage?: string
+
+  stats: {
+    reviewCount: number
+    followerCount: number
+    followingCount: number
+    likesReceived: number
+  }
+
+  recentActivity: {
+    lastReviewAt?: string
+    lastActiveAt: string
+  }
+
+  isFollowing?: boolean
+
+  highlights?: {
+    username?: string
+    bio?: string
+  }
+}
+
+export interface UnifiedSearchResponse {
+  results: {
+    books: BookSearchResult[]
+    reviews: ReviewSearchResult[]
+    users: UserSearchResult[]
+  }
+  pagination: SearchPagination
+  suggestions?: string[]
+}
+
+export interface SearchSuggestion {
+  text: string
+  type: 'book' | 'review' | 'user' | 'tag'
+  count?: number
+}
+
+export interface SearchSuggestionsResponse {
+  suggestions: SearchSuggestion[]
+  popular: string[]
+  recent: string[]
+}
+
+export interface ManualBookRequest {
+  title: string
+  author: string
+  publisher?: string
+  publishedDate?: string
+  isbn?: string
+  coverImage?: string
+  description?: string
+  genre?: string[]
+}
+
+export interface SearchState {
+  // Search parameters
+  query: string
+  type: SearchType
+  filters: SearchFilters
+  sort: string
+
+  // Results
+  results: {
+    books: BookSearchResult[]
+    reviews: ReviewSearchResult[]
+    users: UserSearchResult[]
+  }
+
+  // Pagination
+  pagination: {
+    hasMore: boolean
+    isLoading: boolean
+    nextCursor?: string
+  }
+
+  // Metadata
+  suggestions: string[]
+  recentSearches: string[]
+  facets?: {
+    ratings: { recommend: number; not_recommend: number }
+    authors: { username: string; count: number }[]
+    books: { title: string; count: number }[]
+  }
+}

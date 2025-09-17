@@ -122,7 +122,8 @@ export class ImageNode extends DecoratorNode<JSX.Element> {
       img: () => ({
         conversion: (domNode: HTMLElement) => {
           const src = domNode.getAttribute('src')
-          if (!src) return null
+
+          if (!src) {return null}
 
           const alt = domNode.getAttribute('alt')
           const width = domNode.getAttribute('width')
