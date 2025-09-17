@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SearchBooksDto } from './dto/search-books.dto';
 import { GetBookDto } from './dto/get-book.dto';
+import { CreateManualBookDto } from './dto/create-manual-book.dto';
 import { Prisma } from '@prisma/client';
 import {
   parseKakaoIsbn,
@@ -265,6 +266,75 @@ export class BooksService {
               book.isbn13 as string | undefined,
             ),
         })),
+      },
+    };
+  }
+
+  async createManualBook(createManualBookDto: CreateManualBookDto) {
+    const {
+      title,
+      author,
+      publisher,
+      publishedDate,
+      isbn,
+      coverImage,
+      description,
+      genre,
+    } = createManualBookDto;
+
+    // Clean and validate ISBN if provided
+    const cleanedIsbn = isbn ? cleanIsbn(isbn) : undefined;
+    let isbn10: string | undefined;
+    let isbn13: string | undefined;
+
+    if (cleanedIsbn) {
+      if (validateISBN10(cleanedIsbn)) {
+        isbn10 = cleanedIsbn;
+      } else if (validateISBN13(cleanedIsbn)) {
+        isbn13 = cleanedIsbn;
+      }
+    }
+
+    // Create the book in the database
+    const book = await this.prismaService.book.create({
+      data: {
+        title,
+        author,
+        publisher,
+        publishedAt: publishedDate || undefined,
+        isbn: cleanedIsbn, // Legacy field
+        isbn10,
+        isbn13,
+        thumbnail: coverImage,
+        description,
+        category: genre ? genre.join(', ') : undefined,
+        source: 'MANUAL',
+      },
+      include: {
+        _count: {
+          select: {
+            reviews: true,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        book: {
+          ...book,
+          createdAt: book.createdAt.toISOString(),
+          updatedAt: book.updatedAt.toISOString(),
+          isExisting: true,
+          // Ensure legacy compatibility
+          isbn:
+            book.isbn ||
+            toLegacyIsbn(
+              book.isbn10 as string | undefined,
+              book.isbn13 as string | undefined,
+            ),
+        },
       },
     };
   }

@@ -114,6 +114,7 @@ export function BookSearchStep() {
     if (selectedForModal) {
       // Check for existing draft before proceeding
       const existingDraft = hasDraft();
+
       if (existingDraft) {
         setPendingBook(selectedForModal);
         setDraftDialogOpen(true);
@@ -253,9 +254,9 @@ export function BookSearchStep() {
       <DraftConfirmDialog
         open={draftDialogOpen}
         onOpenChange={setDraftDialogOpen}
-        bookTitle={pendingBook?.title || ''}
-        draftBookTitle={getDraftInfo()?.bookTitle || undefined}
-        draftBookAuthor={getDraftInfo()?.bookAuthor || undefined}
+        bookTitle={pendingBook?.title ?? ''}
+        draftBookTitle={getDraftInfo()?.bookTitle}
+        draftBookAuthor={getDraftInfo()?.bookAuthor}
         onUseDraft={onUseDraft}
         onStartNew={onStartNew}
       />

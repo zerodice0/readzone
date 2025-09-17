@@ -19,7 +19,9 @@ export const SafeHtmlRenderer = ({
   showTruncated = true,
 }: SafeHtmlRendererProps) => {
   const sanitizedHtml = useMemo(() => {
-    if (!content) return '';
+    if (!content) {
+      return '';
+    }
 
     // DOMPurify 설정: 안전한 HTML 태그만 허용
     const config = {
@@ -54,9 +56,10 @@ export const SafeHtmlRenderer = ({
     if (maxLength && showTruncated) {
       // HTML 태그를 제거하고 순수 텍스트 길이 계산
       const textContent = cleanContent.replace(/<[^>]*>/g, '');
+
       if (textContent.length > maxLength) {
         // HTML을 유지하면서 텍스트 길이 기준으로 자르기
-        cleanContent = truncateHtml(cleanContent, maxLength) + '...';
+        cleanContent = `${truncateHtml(cleanContent, maxLength)}...`;
       }
     }
 
@@ -80,16 +83,19 @@ export const SafeHtmlRenderer = ({
  */
 function truncateHtml(html: string, maxLength: number): string {
   const tempDiv = document.createElement('div');
+
   tempDiv.innerHTML = html;
 
   let currentLength = 0;
   const result: string[] = [];
 
   function processNode(node: Node): boolean {
-    if (currentLength >= maxLength) return false;
+    if (currentLength >= maxLength) {
+      return false;
+    }
 
     if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent || '';
+      const text = node.textContent ?? '';
       const remainingLength = maxLength - currentLength;
 
       if (text.length <= remainingLength) {
@@ -98,6 +104,7 @@ function truncateHtml(html: string, maxLength: number): string {
       } else {
         result.push(text.substring(0, remainingLength));
         currentLength = maxLength;
+
         return false;
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -107,7 +114,9 @@ function truncateHtml(html: string, maxLength: number): string {
       result.push(`<${tagName}>`);
 
       for (const child of Array.from(element.childNodes)) {
-        if (!processNode(child)) break;
+        if (!processNode(child)) {
+          break;
+        }
       }
 
       result.push(`</${tagName}>`);
@@ -117,7 +126,9 @@ function truncateHtml(html: string, maxLength: number): string {
   }
 
   for (const child of Array.from(tempDiv.childNodes)) {
-    if (!processNode(child)) break;
+    if (!processNode(child)) {
+      break;
+    }
   }
 
   return result.join('');
