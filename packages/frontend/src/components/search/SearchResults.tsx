@@ -154,7 +154,7 @@ const ReviewResultCard: FC<{ review: ReviewSearchResult; query: string }> = ({ r
     >
       <div className="flex items-start gap-3 mb-3">
         <Avatar className="w-8 h-8" onClick={handleUserClick}>
-          <AvatarImage src={review.author.profileImage} />
+          {review.author.profileImage && <AvatarImage src={review.author.profileImage} />}
           <AvatarFallback>
             <User className="w-4 h-4" />
           </AvatarFallback>
@@ -247,7 +247,7 @@ const UserResultCard: FC<{ user: UserSearchResult; query: string }> = ({ user, q
     >
       <div className="flex items-start gap-3">
         <Avatar className="w-12 h-12">
-          <AvatarImage src={user.profileImage} />
+          {user.profileImage && <AvatarImage src={user.profileImage} />}
           <AvatarFallback>
             <User className="w-6 h-6" />
           </AvatarFallback>

@@ -52,10 +52,119 @@ ReadZone 프로젝트 개발 가이드 - 독서 후 의견을 공유하는 **독
 - **ESLint 에러 0개, 경고 0개** 유지
 - **TypeScript 타입 체크 에러 0개** 유지
 - **any 타입 사용 금지**
+- **eslint-disable 주석 사용 금지** - 린트 규칙 회피 불가, 근본 원인 해결 필수
+- **모든 타입은 명시적으로 정의** - Prisma 쿼리 결과도 정확한 타입 사용
 - **이미지 최적화** 고려 (Vite 환경)
 - **React Hooks 규칙** 완전 준수
 - **사용하지 않는 변수/import 금지**
 - **모든 undefined 가능성 명시적 처리**
+
+### 📝 Lint & TypeScript 규칙 가이드
+
+#### Backend (NestJS) 코드 작성 시 주의사항
+```typescript
+// ✅ GOOD - Prettier 규칙 준수
+import { Injectable } from '@nestjs/common';  // 싱글 쿼트
+const data = {
+  name: 'test',
+  items: [1, 2, 3],  // 트레일링 컴마
+};
+
+// ❌ BAD
+import { Injectable } from "@nestjs/common";  // 더블 쿼트 사용 금지
+const data = {
+  items: [1, 2, 3]  // 트레일링 컴마 누락
+}
+
+// ✅ GOOD - 미사용 파라미터 처리
+handleRequest(_err: any, user: any, _info: any) {
+  return user;  // 언더스코어로 미사용 표시
+}
+
+// ❌ BAD
+handleRequest(err: any, user: any, info: any) {  // 미사용 변수 에러
+  return user;
+}
+
+// ✅ GOOD - Prisma 타입 정의
+type UserWithRelations = Prisma.UserGetPayload<{
+  include: { reviews: true; }
+}>;
+
+// ❌ BAD - spread로 타입 추론 실패
+const includeConfig = { reviews: true };
+const user = await prisma.user.findFirst({
+  include: { ...includeConfig }  // 타입 추론 실패
+});
+
+// ✅ GOOD - Prisma mode 사용
+where: {
+  name: {
+    contains: query,
+    mode: 'insensitive',  // 문자열 직접 사용
+  }
+}
+
+// ❌ BAD
+mode: Prisma.QueryMode.insensitive  // import 필요
+```
+
+#### Frontend (React) 코드 작성 시 주의사항
+```typescript
+// ✅ GOOD - 타입 import
+import type { FC, ReactNode } from 'react';
+import { useState, useEffect } from 'react';
+
+// ✅ GOOD - Props interface 정의
+interface ComponentProps {
+  title: string;
+  count?: number;  // optional 명시
+}
+
+// ✅ GOOD - undefined 처리
+const value = data?.property ?? defaultValue;
+if (user?.name) {
+  // null/undefined 체크
+}
+
+// ❌ BAD - noUncheckedIndexedAccess 위반
+const item = array[index];  // 에러: undefined 가능
+// ✅ GOOD
+const item = array[index];
+if (item) {
+  // 사용 전 체크
+}
+
+// ✅ GOOD - Hooks deps
+useEffect(() => {
+  fetchData(id);
+}, [id, fetchData]);  // 모든 의존성 명시
+
+// ❌ BAD
+useEffect(() => {
+  fetchData(id);
+}, []);  // exhaustive-deps 에러
+```
+
+#### 공통 주의사항
+```typescript
+// ✅ GOOD - 타입 안전성
+const processData = (input: string): number => {
+  return parseInt(input, 10);
+};
+
+// ❌ BAD - any 사용
+const processData = (input: any): any => {
+  return input;
+};
+
+// ✅ GOOD - 파일 끝 개행
+export default MyComponent;
+// (빈 줄)
+
+// ❌ BAD - 개행 없음
+export default MyComponent;  // EOF
+```
 
 ### 필수 검증 명령어
 ```bash

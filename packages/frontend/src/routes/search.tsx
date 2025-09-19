@@ -1,13 +1,23 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import { SearchHeader } from '@/components/search/SearchHeader';
+import { z } from 'zod';
+import { SearchTypeSelector } from '@/components/search/SearchTypeSelector';
 import { SearchFilters } from '@/components/search/SearchFilters';
 import { SearchResults } from '@/components/search/SearchResults';
 import { ManualBookForm } from '@/components/search/ManualBookForm';
 import useSearchStore from '@/store/searchStore';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
+// Define search params schema
+const searchParamsSchema = z.object({
+  q: z.string().optional().default(''),
+  type: z.enum(['all', 'books', 'reviews', 'users']).optional().default('all'),
+  mode: z.enum(['select', 'view']).optional().default('view'),
+  redirect: z.string().optional().default('/write'),
+});
+
 function SearchPage() {
+  const searchParams = Route.useSearch();
   const {
     query,
     type,
@@ -20,55 +30,31 @@ function SearchPage() {
     addRecentSearch,
   } = useSearchStore();
 
-  // Get search params from URL
-  const searchParams = new URLSearchParams(window.location.search);
-  const urlQuery = searchParams.get('q') ?? '';
-  const urlType = (searchParams.get('type') as 'all' | 'books' | 'reviews' | 'users' | null) ?? 'all';
-  const mode = (searchParams.get('mode') as 'select' | 'view' | null) ?? 'view';
-  const redirectTo = searchParams.get('redirect') ?? '/write';
+  // Get validated search params
+  const { q: urlQuery, type: urlType, mode, redirect: redirectTo } = searchParams;
 
   // Debounce search to avoid too many API calls
   const debouncedQuery = useDebouncedValue(query, 500);
 
-  // Initialize from URL params
+  // Initialize from URL params when they change
   useEffect(() => {
-    if (urlQuery && urlQuery !== query) {
+    if (urlQuery !== query) {
       setQuery(urlQuery);
     }
-    if (urlType && urlType !== type) {
+    if (urlType !== type) {
       setType(urlType);
     }
   }, [urlQuery, urlType, query, type, setQuery, setType]);
 
   // Perform search when debounced query changes
   useEffect(() => {
-    if (debouncedQuery && debouncedQuery !== urlQuery) {
-      // Update URL
-      const newParams = new URLSearchParams(window.location.search);
-
-      newParams.set('q', debouncedQuery);
-      if (type !== 'all') {
-        newParams.set('type', type);
-      } else {
-        newParams.delete('type');
-      }
-
-      const newUrl = `${window.location.pathname}?${newParams.toString()}`;
-
-      window.history.replaceState(null, '', newUrl);
-
-      // Perform search
+    if (debouncedQuery) {
       search();
       addRecentSearch(debouncedQuery);
     }
-  }, [debouncedQuery, type, search, addRecentSearch, urlQuery]);
+  }, [debouncedQuery, search, addRecentSearch]);
 
-  // Perform initial search if query exists
-  useEffect(() => {
-    if (urlQuery && (!query || query === urlQuery)) {
-      search();
-    }
-  }, [urlQuery, query, search]);
+  // Note: Initial search is now handled by the debounced query effect above
 
   const totalResults = results.books.length + results.reviews.length + results.users.length;
   const showManualForm = type === 'books' && query && totalResults === 0 && !pagination.isLoading && !error;
@@ -88,8 +74,8 @@ function SearchPage() {
           )}
         </div>
 
-        {/* Search Header */}
-        <SearchHeader className="mb-6" />
+        {/* Search Type Selector */}
+        <SearchTypeSelector className="mb-6" />
 
         {/* Search Filters */}
         {query && (
@@ -204,4 +190,5 @@ function SearchPage() {
 
 export const Route = createFileRoute('/search')({
   component: SearchPage,
+  validateSearch: searchParamsSchema,
 });

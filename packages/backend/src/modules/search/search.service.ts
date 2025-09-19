@@ -117,17 +117,21 @@ export class SearchService {
       id: book.id,
       title: book.title,
       author: book.author,
-      publisher: book.publisher,
-      publishedAt: book.publishedAt,
+      publisher: book.publisher || undefined,
+      publishedDate: book.publishedAt || undefined,
       isbn:
         book.isbn ||
-        toLegacyIsbn(book.isbn10 || undefined, book.isbn13 || undefined),
-      thumbnail: book.thumbnail,
-      description: book.description,
-      genre: book.category,
-      reviewCount: book._count.reviews,
-      source: book.source,
-      createdAt: book.createdAt.toISOString(),
+        toLegacyIsbn(book.isbn10 || undefined, book.isbn13 || undefined) ||
+        undefined,
+      coverImage: book.thumbnail || undefined,
+      description: book.description || undefined,
+      genre: book.category ? [book.category] : undefined,
+      stats: {
+        reviewCount: book._count.reviews,
+        recentReviews: 0, // TODO: Implement recent reviews count
+      },
+      source: book.source || 'db',
+      isExisting: true,
     }));
   }
 
@@ -214,14 +218,26 @@ export class SearchService {
 
     return reviews.map((review) => ({
       id: review.id,
-      title: review.title,
-      content: review.content,
-      isRecommend: review.isRecommended,
+      content:
+        review.content.substring(0, 150) +
+        (review.content.length > 150 ? '...' : ''),
+      rating: review.isRecommended ? 'recommend' : 'not_recommend',
       tags: this.parseTags(review.tags),
-      user: review.user,
-      book: review.book,
-      likesCount: review._count.likes,
-      commentsCount: review._count.comments,
+      author: {
+        id: review.user.id,
+        username: review.user.nickname || review.user.userid,
+        profileImage: review.user.profileImage || undefined,
+      },
+      book: {
+        id: review.book.id,
+        title: review.book.title,
+        author: review.book.author,
+        coverImage: review.book.thumbnail || undefined,
+      },
+      stats: {
+        likes: review._count.likes,
+        comments: review._count.comments,
+      },
       createdAt: review.createdAt.toISOString(),
     }));
   }
@@ -286,15 +302,18 @@ export class SearchService {
 
     return users.map((user) => ({
       id: user.id,
-      userid: user.userid,
-      nickname: user.nickname,
+      username: user.nickname || user.userid,
       bio: user.bio,
-      profileImage: user.profileImage,
-      isVerified: user.isVerified,
-      reviewsCount: user._count.reviews,
-      followersCount: user._count.followers,
-      followingCount: user._count.following,
-      createdAt: user.createdAt.toISOString(),
+      profileImage: user.profileImage || undefined,
+      stats: {
+        reviewCount: user._count.reviews,
+        followerCount: user._count.followers,
+        followingCount: user._count.following,
+        likesReceived: 0, // TODO: Implement likes received count
+      },
+      recentActivity: {
+        lastActiveAt: user.createdAt.toISOString(),
+      },
     }));
   }
 
