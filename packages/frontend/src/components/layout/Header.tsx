@@ -1,12 +1,12 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Bell, Edit, LogOut, Menu, Search, Settings, User } from 'lucide-react';
@@ -16,6 +16,7 @@ export function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLoginClick = () => {
     navigate({ to: '/login', search: { redirect: undefined } });
@@ -31,6 +32,23 @@ export function Header() {
 
   const handleSearchClick = () => {
     navigate({ to: '/search' });
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      const searchParams = {
+        q: searchQuery.trim(),
+        type: 'all' as const,
+        mode: 'view' as const,
+        redirect: '/write'
+      };
+
+      navigate({
+        to: '/search',
+        search: searchParams
+      });
+      // 검색창을 유지하여 사용자가 검색어를 수정하거나 재검색할 수 있도록 함
+    }
   };
 
   const handleProfileClick = () => {
@@ -55,12 +73,41 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* 로고 */}
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="text-2xl font-bold text-primary hover:text-primary/90 transition-colors"
             >
               ReadZone
             </Link>
+          </div>
+
+          {/* 데스크톱 검색창 */}
+          <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="도서, 독후감, 사용자 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 데스크톱 네비게이션 */}
@@ -80,6 +127,17 @@ export function Header() {
 
           {/* 사용자 메뉴 */}
           <div className="flex items-center space-x-4">
+            {/* 모바일 검색 버튼 */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSearchClick}
+              className="md:hidden"
+            >
+              <Search className="w-4 h-4" />
+              <span className="sr-only">검색</span>
+            </Button>
+
             {isAuthenticated ? (
               <>
                 {/* 알림 버튼 (데스크톱) */}

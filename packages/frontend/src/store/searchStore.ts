@@ -180,7 +180,9 @@ const useSearchStore = create<SearchState>()(
           const url = new URL(`${API_BASE_URL}/api/search`);
 
           url.searchParams.set('query', query);
-          url.searchParams.set('type', type);
+          if (type && type !== 'all') {
+            url.searchParams.set('type', type);
+          }
           url.searchParams.set('sort', sort);
 
           if (Object.keys(filters).length > 0) {
@@ -243,7 +245,9 @@ const useSearchStore = create<SearchState>()(
           const url = new URL(`${API_BASE_URL}/api/search`);
 
           url.searchParams.set('query', query);
-          url.searchParams.set('type', type);
+          if (type && type !== 'all') {
+            url.searchParams.set('type', type);
+          }
           url.searchParams.set('sort', sort);
           url.searchParams.set('cursor', pagination.nextCursor);
 
@@ -288,13 +292,36 @@ const useSearchStore = create<SearchState>()(
       },
 
       getSuggestions: async (query: string) => {
-        if (!query.trim() || query.length < 2) {
-          set({ suggestions: [] }, false, 'getSuggestions:empty');
+        // For empty or short queries, we'll use the trending API instead
+        if (!query || query.trim().length < 2) {
+          try {
+            const url = new URL(`${API_BASE_URL}/api/trending/suggestions`);
+
+            url.searchParams.set('limit', '5');
+
+            const response = await fetch(url.toString(), {
+              credentials: 'include',
+              cache: 'no-store',
+            });
+
+            if (!response.ok) {
+              set({ suggestions: [] }, false, 'getSuggestions:empty');
+
+              return;
+            }
+
+            const data: { success: boolean; data: string[] } = await response.json();
+
+            set({ suggestions: data.data || [] }, false, 'getSuggestions:trending');
+          } catch (error) {
+            console.warn('Failed to get trending suggestions:', error);
+            set({ suggestions: [] }, false, 'getSuggestions:error');
+          }
 
           return;
         }
 
-        // Check cache
+        // Check cache for query-based suggestions
         const cached = get().suggestionsCache.get(query);
 
         if (cached) {
@@ -304,7 +331,7 @@ const useSearchStore = create<SearchState>()(
         }
 
         try {
-          const url = new URL(`${API_BASE_URL}/api/search/suggestions`);
+          const url = new URL(`${API_BASE_URL}/api/trending/suggestions`);
 
           url.searchParams.set('query', query);
           url.searchParams.set('limit', '10');
@@ -315,15 +342,33 @@ const useSearchStore = create<SearchState>()(
           });
 
           if (!response.ok) {
-            return; // Fail silently for suggestions
+            // Fallback to the original search suggestions endpoint if trending fails
+            const searchUrl = new URL(`${API_BASE_URL}/api/search/suggestions`);
+
+            searchUrl.searchParams.set('query', query);
+            searchUrl.searchParams.set('limit', '10');
+
+            const searchResponse = await fetch(searchUrl.toString(), {
+              credentials: 'include',
+              cache: 'no-store',
+            });
+
+            if (searchResponse.ok) {
+              const searchData: { data: SearchSuggestionsResponse } = await searchResponse.json();
+              const suggestions = searchData.data.suggestions.map(s => s.text);
+
+              get().suggestionsCache.set(query, suggestions);
+              set({ suggestions }, false, 'getSuggestions:search');
+            }
+
+            return;
           }
 
-          const data: { data: SearchSuggestionsResponse } = await response.json();
-          const suggestions = data.data.suggestions.map(s => s.text);
+          const data: { success: boolean; data: string[] } = await response.json();
+          const suggestions = data.data || [];
 
           // Cache suggestions
           get().suggestionsCache.set(query, suggestions);
-
           set({ suggestions }, false, 'getSuggestions:success');
 
         } catch (error) {

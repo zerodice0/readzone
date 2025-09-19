@@ -41,6 +41,10 @@ model User {
   // Refresh token records
   refreshTokens RefreshToken[]
 
+  // Search optimization indexes
+  @@index([userid])
+  @@index([nickname])
+  @@index([createdAt(sort: Desc)])
   @@map("users")
 }
 
@@ -91,6 +95,10 @@ model Book {
   // Indexes for ISBN fields
   @@index([isbn10])
   @@index([isbn13])
+  // Additional search optimization indexes
+  @@index([title])
+  @@index([author])
+  @@index([createdAt(sort: Desc)])
   @@map("books")
 }
 
@@ -119,6 +127,11 @@ model Review {
   likes    Like[]
   comments Comment[]
 
+  // Search optimization indexes
+  @@index([userId])
+  @@index([bookId])
+  @@index([createdAt(sort: Desc)])
+  @@index([isPublic, createdAt(sort: Desc)])
   @@map("reviews")
 }
 
