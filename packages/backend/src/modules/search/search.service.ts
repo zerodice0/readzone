@@ -4,6 +4,7 @@ import { SearchFiltersDto, UnifiedSearchDto } from './dto/unified-search.dto';
 import { SearchSuggestionsDto } from './dto/search-suggestions.dto';
 import { Prisma } from '@prisma/client';
 import { toLegacyIsbn } from '../../common/utils/isbn.utils';
+import { stripAndTruncate } from '../../common/utils/html.utils';
 
 @Injectable()
 export class SearchService {
@@ -218,9 +219,7 @@ export class SearchService {
 
     return reviews.map((review) => ({
       id: review.id,
-      content:
-        review.content.substring(0, 150) +
-        (review.content.length > 150 ? '...' : ''),
+      content: stripAndTruncate(review.content, 150),
       rating: review.isRecommended ? 'recommend' : 'not_recommend',
       tags: this.parseTags(review.tags),
       author: {
