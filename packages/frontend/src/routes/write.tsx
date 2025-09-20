@@ -13,15 +13,28 @@ function WritePage() {
   const selectedBook = useWriteStore((s) => s.selectedBook);
   const getBookById = useWriteStore((s) => s.getBookById);
   const currentStep = useWriteStore((s) => s.currentStep);
+  const setTitle = useWriteStore((s) => s.setTitle);
+  const setContent = useWriteStore((s) => s.setContent);
+  const setRecommended = useWriteStore((s) => s.setRecommended);
+  const setTags = useWriteStore((s) => s.setTags);
+  const setVisibility = useWriteStore((s) => s.setVisibility);
 
   const bookId = useQueryParam('bookId');
 
-  // Load draft only for current book
+  // Clear state and load draft only for current book
   useEffect(() => {
     if (selectedBook?.id) {
+      // Clear previous draft state
+      setTitle('');
+      setContent('');
+      setRecommended(true);
+      setTags([]);
+      setVisibility('public');
+
+      // Load draft for the selected book
       void loadDraft(selectedBook.id);
     }
-  }, [selectedBook?.id, loadDraft]);
+  }, [selectedBook?.id, loadDraft, setTitle, setContent, setRecommended, setTags, setVisibility]);
 
   useEffect(() => {
     const load = async () => {
