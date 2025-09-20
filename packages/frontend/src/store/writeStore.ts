@@ -393,34 +393,70 @@ export const useWriteStore = create<WriteState>((set, get) => ({
       const storageKey = getStorageKey(bookId);
       const localRaw = localStorage.getItem(storageKey);
       const localData = localRaw ? JSON.parse(localRaw) : null;
-      let latest = localData;
 
-      // Try server draft
-      try {
-        const data = await authenticatedApiCall('/api/reviews/drafts/latest');
-        const serverDraft = data?.data?.draft ?? data?.draft;
-
-        if (serverDraft) {
-          latest = serverDraft;
-        }
-      } catch {
-        // ignore server errors
-      }
-
-      if (!latest) {
+      // If bookId is specified, only use local draft for that specific book
+      if (bookId && localData && localData.bookId === bookId) {
+        set({
+          title: localData.title ?? '',
+          isRecommended: localData.isRecommended ?? true,
+          tags: localData.tags
+            ? Array.isArray(localData.tags)
+              ? localData.tags
+              : JSON.parse(localData.tags)
+            : [],
+          visibility: localData.visibility ?? 'public',
+          contentHtml: localData.contentHtml ?? '',
+          draftId: localData.draftId ?? null,
+        });
         return;
       }
-      set({
-        title: latest.title ?? '',
-        isRecommended: latest.isRecommended ?? true,
-        tags: latest.tags
-          ? Array.isArray(latest.tags)
-            ? latest.tags
-            : JSON.parse(latest.tags)
-          : [],
-        visibility: latest.visibility ?? 'public',
-        contentHtml: latest.contentHtml ?? '',
-      });
+
+      // If bookId is specified but no matching local draft, don't load server draft
+      if (bookId && (!localData || localData.bookId !== bookId)) {
+        return;
+      }
+
+      // Only try server draft when no specific bookId is requested
+      if (!bookId) {
+        try {
+          const data = await authenticatedApiCall('/api/reviews/drafts/latest');
+          const serverDraft = data?.data?.draft ?? data?.draft;
+
+          if (serverDraft) {
+            set({
+              title: serverDraft.title ?? '',
+              isRecommended: serverDraft.isRecommended ?? true,
+              tags: serverDraft.tags
+                ? Array.isArray(serverDraft.tags)
+                  ? serverDraft.tags
+                  : JSON.parse(serverDraft.tags)
+                : [],
+              visibility: serverDraft.visibility ?? 'public',
+              contentHtml: serverDraft.contentHtml ?? '',
+              draftId: serverDraft.id ?? null,
+            });
+            return;
+          }
+        } catch {
+          // ignore server errors
+        }
+
+        // Fallback to local data if no server draft
+        if (localData) {
+          set({
+            title: localData.title ?? '',
+            isRecommended: localData.isRecommended ?? true,
+            tags: localData.tags
+              ? Array.isArray(localData.tags)
+                ? localData.tags
+                : JSON.parse(localData.tags)
+              : [],
+            visibility: localData.visibility ?? 'public',
+            contentHtml: localData.contentHtml ?? '',
+            draftId: localData.draftId ?? null,
+          });
+        }
+      }
     } catch {
       // ignore parse errors
     }
@@ -475,6 +511,17 @@ export const useWriteStore = create<WriteState>((set, get) => ({
     const storageKey = getStorageKey(s.selectedBook?.id);
 
     localStorage.removeItem(storageKey);
+
+    // Clear server draft on publish
+    if (s.draftId) {
+      try {
+        await authenticatedApiCall(`/api/reviews/drafts/${s.draftId}`, {
+          method: 'DELETE',
+        });
+      } catch {
+        // ignore server draft deletion errors
+      }
+    }
 
     return reviewId as string;
   },

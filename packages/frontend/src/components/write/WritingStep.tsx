@@ -119,7 +119,7 @@ export function WritingStep() {
       <div className="space-y-2">
         <label className="text-sm font-medium">내용</label>
         <LexicalEditor
-          key={`${editingReviewId ?? 'new'}-${contentHtml.length}`}
+          key={`${editingReviewId ?? 'new'}`}
           initialHtml={contentHtml}
           onChange={(html: string) => setContent(html)}
           onImageUpload={async (file) => {
