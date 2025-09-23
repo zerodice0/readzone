@@ -408,6 +408,7 @@ export const useWriteStore = create<WriteState>((set, get) => ({
           contentHtml: localData.contentHtml ?? '',
           draftId: localData.draftId ?? null,
         });
+
         return;
       }
 
@@ -435,6 +436,7 @@ export const useWriteStore = create<WriteState>((set, get) => ({
               contentHtml: serverDraft.contentHtml ?? '',
               draftId: serverDraft.id ?? null,
             });
+
             return;
           }
         } catch {

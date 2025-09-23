@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,36 +9,34 @@ datasource db {
 }
 
 model User {
-  id                String    @id @default(cuid())
-  userid            String    @unique @db.VarChar(30) // 사용자 아이디 (로그인, 프로필 URL 등)
-  email             String?   @db.VarChar(320) // nullable, unique 제거 (향후 OAuth 대비)
-  primaryEmail      String?   @db.VarChar(320) // 실제 연락용 이메일 (알림, 비밀번호 재설정 등)
-  nickname          String    @db.VarChar(50) // unique 제거 (변경 가능한 표시명)
-  password          String?   @db.VarChar(255) // nullable (향후 OAuth 대비)
-  bio               String?   @db.VarChar(500)
-  profileImage      String?   @db.VarChar(255)
-  isVerified        Boolean   @default(false)
-  verificationToken String?   @db.Text
-  resetToken        String?   @db.Text
+  id                String         @id @default(cuid())
+  userid            String         @unique @db.VarChar(30)
+  email             String?        @db.VarChar(320)
+  primaryEmail      String?        @db.VarChar(320)
+  nickname          String         @db.VarChar(50)
+  password          String?        @db.VarChar(255)
+  bio               String?        @db.VarChar(500)
+  profileImage      String?        @db.VarChar(255)
+  isVerified        Boolean        @default(false)
+  verificationToken String?
+  resetToken        String?
   resetTokenExpires DateTime?
-  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
-
-  // Relations
-  accounts          Account[] // 연결된 로그인 계정들
-  reviews           Review[]
-  reviewDrafts      ReviewDraft[]
-  likes             Like[]
+  socialLinks       Json?
+  privacy           Json?
+  createdAt         DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime       @updatedAt @db.Timestamptz(6)
+  accounts          Account[]
   comments          Comment[]
   following         Follow[]       @relation("UserFollowing")
   followers         Follow[]       @relation("UserFollowers")
-  notifications     Notification[] @relation("NotificationReceiver")
+  likes             Like[]
   sentNotifications Notification[] @relation("NotificationSender")
+  notifications     Notification[] @relation("NotificationReceiver")
+  refreshTokens     RefreshToken[]
+  reviewDrafts      ReviewDraft[]
+  reviews           Review[]
+  userBadges        UserBadge[]
 
-  // Refresh token records
-  refreshTokens RefreshToken[]
-
-  // Search optimization indexes
   @@index([userid])
   @@index([nickname])
   @@index([createdAt(sort: Desc)])
@@ -49,53 +44,43 @@ model User {
 }
 
 model Account {
-  id                String  @id @default(cuid())
+  id                String   @id @default(cuid())
   userId            String
-  type              String  @default("email") @db.VarChar(20) // "email" | "oauth"
-  provider          String  @default("email") @db.VarChar(20) // "email" | "apple" | "google" | "kakao"
-  providerAccountId String  @db.VarChar(100) // OAuth provider's user ID, email 타입의 경우 userId와 동일
-  email             String? @db.VarChar(320) // 로그인에 사용되는 이메일
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @db.Timestamptz(6)
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String   @default("email") @db.VarChar(20)
+  provider          String   @default("email") @db.VarChar(20)
+  providerAccountId String   @db.VarChar(100)
+  email             String?  @db.VarChar(320)
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(6)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@index([email]) // 이메일 검색 성능 향상
+  @@index([email])
   @@map("accounts")
 }
 
 model Book {
-  id          String  @id @default(cuid())
-  isbn        String? @unique @db.VarChar(20) // Legacy field for backward compatibility
-  isbn10      String? @db.VarChar(10)
-  isbn13      String? @db.VarChar(13)
-  title       String  @db.VarChar(500)
-  author      String  @db.VarChar(200)
-  publisher   String? @db.VarChar(200)
-  publishedAt String? @db.VarChar(20) // Store as string for flexibility
-  description String? @db.Text
-  thumbnail   String? @db.VarChar(500)
-  category    String? @db.VarChar(100)
-  pages       Int?
-
-  // Book source tracking
-  source     String  @default("MANUAL") @db.VarChar(20) // "KAKAO_API" | "DATABASE" | "MANUAL"
-  externalId String? @db.VarChar(100) // Kakao book ID or other external ID
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @db.Timestamptz(6)
-
-  // Relations
-  reviews      Review[]
+  id           String        @id @default(cuid())
+  isbn         String?       @unique @db.VarChar(20)
+  isbn10       String?       @db.VarChar(10)
+  isbn13       String?       @db.VarChar(13)
+  title        String        @db.VarChar(500)
+  author       String        @db.VarChar(200)
+  publisher    String?       @db.VarChar(200)
+  publishedAt  String?       @db.VarChar(20)
+  description  String?
+  thumbnail    String?       @db.VarChar(500)
+  category     String?       @db.VarChar(100)
+  pages        Int?
+  source       String        @default("MANUAL") @db.VarChar(20)
+  externalId   String?       @db.VarChar(100)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(6)
   reviewDrafts ReviewDraft[]
+  reviews      Review[]
 
-  // Indexes for ISBN fields
   @@index([isbn10])
   @@index([isbn13])
-  // Additional search optimization indexes
   @@index([title])
   @@index([author])
   @@index([createdAt(sort: Desc)])
@@ -103,31 +88,23 @@ model Book {
 }
 
 model Review {
-  id            String  @id @default(cuid())
-  title         String  @db.VarChar(200)
-  content       String  @db.Text
-  isRecommended Boolean @default(true)
-  rating        Int?    @default(5) // 1-5 stars, nullable for flexibility
-  tags          String? @db.Text // JSON array of strings
+  id            String    @id @default(cuid())
+  title         String    @db.VarChar(200)
+  content       String
+  isRecommended Boolean   @default(true)
+  rating        Int?      @default(5)
+  tags          String?
+  isPublic      Boolean   @default(true)
+  status        String    @default("PUBLISHED") @db.VarChar(20)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+  userId        String
+  bookId        String
+  comments      Comment[]
+  likes         Like[]
+  book          Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Privacy and status
-  isPublic Boolean @default(true)
-  status   String  @default("PUBLISHED") @db.VarChar(20) // "DRAFT" | "PUBLISHED" | "ARCHIVED"
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @db.Timestamptz(6)
-
-  // Foreign keys
-  userId String
-  bookId String
-
-  // Relations
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book     Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  likes    Like[]
-  comments Comment[]
-
-  // Search optimization indexes
   @@index([userId])
   @@index([bookId])
   @@index([createdAt(sort: Desc)])
@@ -140,127 +117,189 @@ model ReviewDraft {
   userId        String
   bookId        String?
   title         String?  @db.VarChar(200)
-  contentHtml   String   @db.Text
+  contentHtml   String
   isRecommended Boolean?
   visibility    String?  @db.VarChar(20)
-  tags          String?  @db.Text
+  tags          String?
   createdAt     DateTime @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime @updatedAt @db.Timestamptz(6)
-
-  // Relations
-  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book Book? @relation(fields: [bookId], references: [id])
+  book          Book?    @relation(fields: [bookId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("review_drafts")
 }
 
 model Like {
-  id String @id @default(cuid())
-
-  // Foreign keys
-  userId   String
-  reviewId String
-
+  id        String   @id @default(cuid())
+  userId    String
+  reviewId  String
   createdAt DateTime @default(now()) @db.Timestamptz(6)
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-
-  // Prevent duplicate likes
   @@unique([userId, reviewId])
   @@map("likes")
 }
 
 model Comment {
-  id      String @id @default(cuid())
-  content String @db.Text
-
-  // Optional parent for replies
-  parentId String?
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @db.Timestamptz(6)
-
-  // Foreign keys
-  userId   String
-  reviewId String
-
-  // Relations
-  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  review  Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies Comment[] @relation("CommentReplies")
+  id        String    @id @default(cuid())
+  content   String
+  parentId  String?
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+  userId    String
+  reviewId  String
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("comments")
 }
 
 model Follow {
-  id String @id @default(cuid())
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
 
-  // Foreign keys
-  followerId  String // User who follows
-  followingId String // User being followed
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-
-  // Relations
-  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
-  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
-
-  // Prevent self-follow and duplicate follows
   @@unique([followerId, followingId])
   @@map("follows")
 }
 
 model Notification {
-  id      String  @id @default(cuid())
-  type    String  @db.VarChar(20) // "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
-  message String  @db.VarChar(500)
-  isRead  Boolean @default(false)
-
-  // Optional data for different notification types
-  data String? @db.Text // JSON data for additional context
-
+  id        String   @id @default(cuid())
+  type      String   @db.VarChar(20)
+  message   String   @db.VarChar(500)
+  isRead    Boolean  @default(false)
+  data      String?
   createdAt DateTime @default(now()) @db.Timestamptz(6)
-
-  // Foreign keys
-  userId    String // Recipient
-  senderId  String? // Who triggered the notification
-  reviewId  String? // Related review (optional)
-  commentId String? // Related comment (optional)
-
-  // Relations
-  user   User  @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
-  sender User? @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+  userId    String
+  senderId  String?
+  reviewId  String?
+  commentId String?
+  sender    User?    @relation("NotificationSender", fields: [senderId], references: [id])
+  user      User     @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
 
-// PostgreSQL optimizations and indexes
-// BookSource: "KAKAO_API" | "DATABASE" | "MANUAL"
-// ReviewStatus: "DRAFT" | "PUBLISHED" | "ARCHIVED"
-// NotificationType: "LIKE" | "COMMENT" | "REPLY" | "FOLLOW" | "SYSTEM"
-
-// Additional indexes for better performance
-// These will be created via migrations for better control
-
 model RefreshToken {
   id        String   @id @default(cuid())
   userId    String
-  // DB 유출 시 피해를 줄이기 위해 jti는 해시로 저장
   jtiHash   String   @unique @db.VarChar(128)
   isRevoked Boolean  @default(false)
   issuedAt  DateTime @default(now()) @db.Timestamptz(6)
   expiresAt DateTime @db.Timestamptz(6)
   userAgent String?  @db.VarChar(255)
   ip        String?  @db.VarChar(64)
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String
+  icon        String
+  tier        BadgeTier
+  condition   Json
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now()) @db.Timestamptz(6)
+  userBadges  UserBadge[]
+
+  @@index([tier])
+  @@index([isActive])
+  @@map("badges")
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now()) @db.Timestamptz(6)
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([earnedAt(sort: Desc)])
+  @@map("user_badges")
+}
+
+model SearchAnalytics {
+  id           Int      @id @default(autoincrement())
+  query        String
+  queryType    String?  @map("query_type") @db.VarChar(20)
+  searchType   String?  @map("search_type") @db.VarChar(20)
+  resultCount  Int?     @map("result_count")
+  durationMs   Int?     @map("duration_ms")
+  searchMethod String?  @map("search_method") @db.VarChar(20)
+  userId       String?  @map("user_id") @db.VarChar(255)
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([query])
+  @@index([createdAt])
+  @@index([queryType])
+  @@index([searchMethod])
+  @@index([userId])
+  @@map("search_analytics")
+}
+
+model SearchSuggestions {
+  id        Int      @id @default(autoincrement())
+  text      String   @unique
+  category  String?  @db.VarChar(20)
+  frequency Int      @default(1)
+  lastUsed  DateTime @default(now()) @map("last_used") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([text])
+  @@index([frequency(sort: Desc)])
+  @@index([category])
+  @@map("search_suggestions")
+}
+
+model SearchTrends {
+  id          Int      @id @default(autoincrement())
+  query       String
+  searchCount Int      @default(1) @map("search_count")
+  date        DateTime @default(now()) @db.Date
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([query, date])
+  @@index([date])
+  @@index([searchCount(sort: Desc)])
+  @@index([query])
+  @@map("search_trends")
+}
+
+model SearchMetrics {
+  id           Int      @id @default(autoincrement())
+  metricName   String   @map("metric_name") @db.VarChar(50)
+  metricValue  Decimal? @map("metric_value") @db.Decimal(10, 3)
+  searchMethod String?  @map("search_method") @db.VarChar(20)
+  searchType   String?  @map("search_type") @db.VarChar(20)
+  measuredAt   DateTime @default(now()) @map("measured_at") @db.Timestamptz(6)
+
+  @@index([metricName])
+  @@index([measuredAt])
+  @@index([searchMethod])
+  @@map("search_metrics")
+}
+
+enum BadgeTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
 }

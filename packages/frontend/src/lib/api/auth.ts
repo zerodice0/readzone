@@ -36,6 +36,49 @@ interface User {
   }
 }
 
+interface SocialLinks {
+  blog?: string
+  twitter?: string
+  instagram?: string
+}
+
+interface UserStats {
+  reviewCount: number
+  likesReceived: number
+  followerCount: number
+  followingCount: number
+  booksRead: number
+}
+
+interface UserRelationship {
+  isFollowing: boolean
+  isFollowedBy: boolean
+  isMutualFollow: boolean
+}
+
+interface RecentActivity {
+  lastReviewAt?: string
+  lastActiveAt: string
+  streakDays: number
+}
+
+interface UserProfileData {
+  user: {
+    id: string
+    userid: string
+    nickname: string
+    bio?: string
+    profileImage?: string
+    socialLinks?: SocialLinks
+    joinedAt: string
+    stats: UserStats
+    recentActivity: RecentActivity
+    isVerified: boolean
+  }
+  relationship?: UserRelationship
+  isOwner: boolean
+}
+
 interface TokenPair {
   accessToken: string
   refreshToken: string
@@ -299,17 +342,27 @@ export async function getCurrentUser(): Promise<User> {
 }
 
 /**
- * userid로 사용자 프로필 조회
+ * userid로 사용자 프로필 조회 (토큰 포함해서 로그인 상태 확인)
  */
-export async function getUserProfile(userid: string): Promise<User> {
-  const API_BASE_URL = import.meta.env.MODE === 'development' 
+export async function getUserProfile(userid: string): Promise<UserProfileData> {
+  const API_BASE_URL = import.meta.env.MODE === 'development'
     ? 'http://localhost:3001/api'
     : '/api'
 
+  // 로컬 스토리지에서 토큰 가져오기
+  const token = localStorage.getItem('accessToken')
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  // 토큰이 있으면 Authorization 헤더 추가
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
   const response = await fetch(`${API_BASE_URL}/users/${userid}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
   })
 
   if (!response.ok) {
@@ -322,7 +375,7 @@ export async function getUserProfile(userid: string): Promise<User> {
     throw new Error(result.error?.message ?? '사용자 프로필 조회 중 오류가 발생했습니다')
   }
 
-  return result.data.user
+  return result.data
 }
 
 /**
@@ -460,6 +513,11 @@ export type {
   CheckDuplicateRequest,
   CheckDuplicateResponse,
   User,
+  SocialLinks,
+  UserStats,
+  UserRelationship,
+  RecentActivity,
+  UserProfileData,
   TokenPair,
   RegisterRequest,
   RegisterResponse,
