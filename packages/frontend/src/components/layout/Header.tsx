@@ -68,58 +68,83 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header
+      className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      role="banner"
+      aria-label="사이트 헤더"
+    >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* 로고 */}
           <div className="flex items-center space-x-4">
             <Link
               to="/"
-              className="text-2xl font-bold text-primary hover:text-primary/90 transition-colors"
+              className="text-2xl font-bold text-primary hover:text-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+              aria-label="ReadZone 홈페이지로 이동"
             >
               ReadZone
             </Link>
           </div>
 
           {/* 데스크톱 검색창 */}
-          <div className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
+          <div id="search" className="hidden md:flex flex-1 max-w-md mx-4">
+            <form
+              role="search"
+              aria-label="사이트 검색"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSearch();
+              }}
+              className="relative w-full"
+            >
+              <label htmlFor="search-input" className="sr-only">
+                도서, 독후감, 사용자 검색
+              </label>
               <input
-                type="text"
+                id="search-input"
+                type="search"
                 placeholder="도서, 독후감, 사용자 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSearch();
-                  }
-                }}
+                aria-describedby="search-description"
                 className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
+                aria-hidden="true"
+              />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="검색어 지우기"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded"
                 >
                   ×
                 </button>
               )}
-            </div>
+              <div id="search-description" className="sr-only">
+                엔터키를 누르거나 검색 버튼을 클릭하여 검색할 수 있습니다
+              </div>
+            </form>
           </div>
 
           {/* 데스크톱 네비게이션 */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav
+            id="navigation"
+            className="hidden md:flex items-center space-x-6"
+            role="navigation"
+            aria-label="주요 네비게이션"
+          >
             {isAuthenticated && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleWriteClick}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-label="새 독후감 작성하기"
               >
-                <Edit className="w-4 h-4 mr-2" />
+                <Edit className="w-4 h-4 mr-2" aria-hidden="true" />
                 독후감 작성
               </Button>
             )}
@@ -132,9 +157,10 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={handleSearchClick}
-              className="md:hidden"
+              className="md:hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              aria-label="검색 페이지로 이동"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-4 h-4" aria-hidden="true" />
               <span className="sr-only">검색</span>
             </Button>
 
@@ -144,9 +170,11 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden md:flex relative"
+                  className="hidden md:flex relative focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  aria-label="알림 (준비 중)"
+                  disabled
                 >
-                  <Bell className="w-4 h-4" />
+                  <Bell className="w-4 h-4" aria-hidden="true" />
                   <span className="sr-only">알림</span>
                   {/* 알림 뱃지 - 추후 구현 */}
                 </Button>
@@ -154,7 +182,11 @@ export function Header() {
                 {/* 사용자 드롭다운 */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Button
+                      variant="ghost"
+                      className="relative h-8 w-8 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      aria-label={`사용자 메뉴 (${user?.nickname ?? '사용자'})`}
+                    >
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="text-sm">
                           {user?.nickname?.charAt(0).toUpperCase() ?? 'U'}
@@ -174,24 +206,33 @@ export function Header() {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleProfileClick}>
-                      <User className="mr-2 h-4 w-4" />
+                    <DropdownMenuItem
+                      onClick={handleProfileClick}
+                      className="focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <User className="mr-2 h-4 w-4" aria-hidden="true" />
                       프로필
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={handleWriteClick}
-                      className="md:hidden"
+                      className="md:hidden focus:bg-accent focus:text-accent-foreground"
                     >
-                      <Edit className="mr-2 h-4 w-4" />
+                      <Edit className="mr-2 h-4 w-4" aria-hidden="true" />
                       독후감 작성
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleSettingsClick}>
-                      <Settings className="mr-2 h-4 w-4" />
+                    <DropdownMenuItem
+                      onClick={handleSettingsClick}
+                      className="focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
                       설정
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
                       로그아웃
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -205,12 +246,16 @@ export function Header() {
                     variant="ghost"
                     size="sm"
                     onClick={handleLoginClick}
+                    className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    aria-label="로그인 페이지로 이동"
                   >
                     로그인
                   </Button>
                   <Button
                     size="sm"
                     onClick={handleRegisterClick}
+                    className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    aria-label="회원가입 페이지로 이동"
                   >
                     회원가입
                   </Button>
@@ -220,21 +265,35 @@ export function Header() {
                 <div className="md:hidden">
                   <DropdownMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <Menu className="w-4 h-4" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                        aria-label="모바일 메뉴 열기"
+                      >
+                        <Menu className="w-4 h-4" aria-hidden="true" />
                         <span className="sr-only">메뉴</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-48" align="end">
-                      <DropdownMenuItem onClick={handleSearchClick}>
-                        <Search className="mr-2 h-4 w-4" />
+                      <DropdownMenuItem
+                        onClick={handleSearchClick}
+                        className="focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <Search className="mr-2 h-4 w-4" aria-hidden="true" />
                         도서 검색
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLoginClick}>
+                      <DropdownMenuItem
+                        onClick={handleLoginClick}
+                        className="focus:bg-accent focus:text-accent-foreground"
+                      >
                         로그인
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleRegisterClick}>
+                      <DropdownMenuItem
+                        onClick={handleRegisterClick}
+                        className="focus:bg-accent focus:text-accent-foreground"
+                      >
                         회원가입
                       </DropdownMenuItem>
                     </DropdownMenuContent>

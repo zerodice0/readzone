@@ -12,6 +12,7 @@ import { ContentModule } from './modules/content/content.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { TagsModule } from './modules/tags/tags.module';
 import { SearchModule } from './modules/search/search.module';
+import { BadgeModule } from './modules/badges/badge.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { SearchModule } from './modules/search/search.module';
     UploadModule,
     TagsModule,
     SearchModule,
+    BadgeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
