@@ -81,21 +81,36 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFor
       return
     }
 
-    const setState = type === 'email' ? setEmailCheck : 
+    const setState = type === 'email' ? setEmailCheck :
                    type === 'nickname' ? setNicknameCheck : setUseridCheck
+
+    // 이메일인 경우 형식 검증 먼저 수행
+    if (type === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+      if (!emailRegex.test(value)) {
+        setState({
+          isChecking: false,
+          isAvailable: null,
+          message: '올바른 이메일 형식을 입력해주세요.'
+        })
+
+        return
+      }
+    }
 
     setState(prev => ({ ...prev, isChecking: true }))
 
     try {
       const result = await checkDuplicate(type, value)
 
-      const fieldName = type === 'email' ? '이메일' : 
+      const fieldName = type === 'email' ? '이메일' :
                        type === 'nickname' ? '닉네임' : '아이디'
 
       setState({
         isChecking: false,
         isAvailable: !result.isDuplicate,
-        message: result.isDuplicate 
+        message: result.isDuplicate
           ? `이미 사용중인 ${fieldName}입니다.`
           : `사용 가능한 ${fieldName}입니다.`
       })
