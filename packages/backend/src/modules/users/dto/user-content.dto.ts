@@ -1,5 +1,12 @@
-import { IsOptional, IsEnum, IsString, IsNumber, Min, Max } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import {
+  IsOptional,
+  IsEnum,
+  IsString,
+  IsNumber,
+  Min,
+  Max,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UserReviewsQueryDto {
   @IsOptional()
