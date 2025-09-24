@@ -29,15 +29,15 @@ interface ApiResponse<T> {
   error?: string
 }
 
-const API_BASE_URL = import.meta.env.MODE === 'development' 
-  ? 'http://localhost:3001/api'
-  : '/api'
+const API_BASE_URL = import.meta.env.MODE === 'development'
+  ? 'http://localhost:3001'
+  : ''
 
 /**
  * 서비스 이용약관 조회
  */
 export async function getTermsContent(version?: string): Promise<ContentResponse | undefined> {
-  const url = new URL(`${API_BASE_URL}/content/terms`)
+  const url = new URL(`${API_BASE_URL}/api/content/terms`)
   
   if (version) {
     url.searchParams.set('version', version)
@@ -62,7 +62,7 @@ export async function getTermsContent(version?: string): Promise<ContentResponse
  * 개인정보 처리방침 조회
  */
 export async function getPrivacyContent(version?: string): Promise<ContentResponse | undefined> {
-  const url = new URL(`${API_BASE_URL}/content/privacy`)
+  const url = new URL(`${API_BASE_URL}/api/content/privacy`)
 
   if (version) {
     url.searchParams.set('version', version)
@@ -96,7 +96,7 @@ export async function getContent(type: 'terms' | 'privacy', version?: string): P
  * 특정 타입의 최신 버전 조회
  */
 export async function getLatestVersion(type: 'terms' | 'privacy'): Promise<string | undefined> {
-  const response = await fetch(`${API_BASE_URL}/content/${type}/version`)
+  const response = await fetch(`${API_BASE_URL}/api/content/${type}/version`)
   
   if (!response.ok) {
     throw new Error(`Failed to fetch ${type} version`)
@@ -115,7 +115,7 @@ export async function getLatestVersion(type: 'terms' | 'privacy'): Promise<strin
  * 버전 히스토리 조회
  */
 export async function getVersionHistory(type: 'terms' | 'privacy'): Promise<ContentMetadata['changeLog'] | undefined> {
-  const response = await fetch(`${API_BASE_URL}/content/${type}/history`)
+  const response = await fetch(`${API_BASE_URL}/api/content/${type}/history`)
   
   if (!response.ok) {
     throw new Error(`Failed to fetch ${type} history`)
