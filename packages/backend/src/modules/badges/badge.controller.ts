@@ -8,9 +8,19 @@ import {
   Req,
   HttpStatus,
   HttpCode,
-  NotFoundException
+  NotFoundException,
 } from '@nestjs/common';
-import { BadgeService } from './badge.service';
+import {
+  BadgeService,
+  PublicBadgeResponse,
+  BadgeResponse,
+  BadgeDetailsResponse,
+  BadgeLeaderboardResponse,
+  BadgeStatsResponse,
+  PopularBadgesResponse,
+  RecentBadgesResponse,
+  UserEarnedBadgesResponse,
+} from './badge.service';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -47,7 +57,7 @@ export class BadgeController {
   async getAllBadges(
     @Query() query: BadgeQueryDto,
     @Req() req: AuthRequest,
-  ) {
+  ): Promise<PublicBadgeResponse | BadgeResponse> {
     // 로그인하지 않은 사용자는 배지 목록만 볼 수 있음
     if (!req.user) {
       // 공개 배지 목록만 반환 (진행률 없이)
@@ -67,9 +77,9 @@ export class BadgeController {
   async getUserBadges(
     @Param('userid') userid: string,
     @Req() req: AuthRequest,
-  ) {
+  ): Promise<BadgeResponse | UserEarnedBadgesResponse> {
     // userid로 실제 사용자 ID 조회
-    const targetUser = await this.getUserByUserid(userid);
+    const targetUser = this.getUserByUserid(userid);
 
     if (!targetUser) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
@@ -92,7 +102,7 @@ export class BadgeController {
   async getBadgeDetails(
     @Param('badgeId') badgeId: string,
     @Req() req: AuthRequest,
-  ) {
+  ): Promise<BadgeDetailsResponse> {
     return this.badgeService.getBadgeDetails(badgeId, req.user?.id);
   }
 
@@ -104,7 +114,7 @@ export class BadgeController {
   async getBadgeLeaderboard(
     @Param('badgeId') badgeId: string,
     @Query() query: LeaderboardQueryDto,
-  ) {
+  ): Promise<BadgeLeaderboardResponse> {
     const limit = Math.min(query.limit || 50, 100); // 최대 100명
     return this.badgeService.getBadgeLeaderboard(badgeId, limit);
   }
@@ -124,9 +134,10 @@ export class BadgeController {
       data: {
         newBadges: result.newBadges,
         totalBadges: result.totalBadges,
-        message: result.newBadges.length > 0
-          ? `${result.newBadges.length}개의 새로운 배지를 획득했습니다!`
-          : '현재 획득 가능한 새로운 배지가 없습니다.',
+        message:
+          result.newBadges.length > 0
+            ? `${result.newBadges.length}개의 새로운 배지를 획득했습니다!`
+            : '현재 획득 가능한 새로운 배지가 없습니다.',
       },
     };
   }
@@ -138,7 +149,7 @@ export class BadgeController {
   @Post('initialize')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async initializeBadges(@Req() req: AuthRequest) {
+  async initializeBadges() {
     // TODO: 관리자 권한 확인 로직 추가
     await this.badgeService.initializeBadges();
 
@@ -156,9 +167,8 @@ export class BadgeController {
   @UseGuards(OptionalAuthGuard)
   async getUserBadgeStats(
     @Param('userid') userid: string,
-    @Req() req: AuthRequest,
-  ) {
-    const targetUser = await this.getUserByUserid(userid);
+  ): Promise<BadgeStatsResponse> {
+    const targetUser = this.getUserByUserid(userid);
 
     if (!targetUser) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
@@ -172,7 +182,9 @@ export class BadgeController {
    * GET /badges/popular
    */
   @Get('popular')
-  async getPopularBadges(@Query('limit') limit?: number) {
+  async getPopularBadges(
+    @Query('limit') limit?: number,
+  ): Promise<PopularBadgesResponse> {
     const parsedLimit = Math.min(limit || 10, 20); // 최대 20개
     return this.badgeService.getPopularBadges(parsedLimit);
   }
@@ -182,7 +194,9 @@ export class BadgeController {
    * GET /badges/recent
    */
   @Get('recent')
-  async getRecentBadges(@Query('limit') limit?: number) {
+  async getRecentBadges(
+    @Query('limit') limit?: number,
+  ): Promise<RecentBadgesResponse> {
     const parsedLimit = Math.min(limit || 10, 50); // 최대 50개
     return this.badgeService.getRecentBadges(parsedLimit);
   }
@@ -190,7 +204,7 @@ export class BadgeController {
   /**
    * userid로 사용자 정보 조회 (헬퍼 메서드)
    */
-  private async getUserByUserid(userid: string) {
+  private getUserByUserid(userid: string) {
     // 이 로직은 실제로는 UsersService를 통해 처리해야 하지만,
     // 순환 의존성을 피하기 위해 여기서 직접 구현
     // TODO: 더 나은 아키텍처 패턴 적용 검토

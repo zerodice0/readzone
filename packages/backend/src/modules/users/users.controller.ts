@@ -195,6 +195,6 @@ export class UsersController {
       throw new BadRequestException('이미지 파일이 필요합니다.');
     }
 
-    return this.avatarService.uploadAvatar(targetUserId, file, cropData);
+    return this.avatarService.uploadAvatar(targetUserId, file);
   }
 }

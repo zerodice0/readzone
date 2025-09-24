@@ -1,7 +1,16 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
-import { AvatarCropDto, UpdateAvatarResponse } from './dto/update-profile.dto';
+import { UpdateAvatarResponse } from './dto/update-profile.dto';
+
+interface CloudinaryUploadResult {
+  secure_url: string;
+  public_id: string;
+}
 
 @Injectable()
 export class AvatarService {
@@ -12,12 +21,20 @@ export class AvatarService {
   private ensureConfigured() {
     if (this.configured) return;
 
-    const cloudName = this.configService.get('CLOUDINARY_CLOUD_NAME');
-    const apiKey = this.configService.get('CLOUDINARY_API_KEY');
-    const apiSecret = this.configService.get('CLOUDINARY_API_SECRET');
+    const cloudName = this.configService.get<string | undefined>(
+      'CLOUDINARY_CLOUD_NAME',
+    );
+    const apiKey = this.configService.get<string | undefined>(
+      'CLOUDINARY_API_KEY',
+    );
+    const apiSecret = this.configService.get<string | undefined>(
+      'CLOUDINARY_API_SECRET',
+    );
 
     if (!cloudName || !apiKey || !apiSecret) {
-      throw new InternalServerErrorException('Cloudinary environment variables are not configured');
+      throw new InternalServerErrorException(
+        'Cloudinary environment variables are not configured',
+      );
     }
 
     cloudinary.config({
@@ -32,7 +49,6 @@ export class AvatarService {
   async uploadAvatar(
     userId: string,
     file: Express.Multer.File,
-    cropData?: AvatarCropDto
   ): Promise<UpdateAvatarResponse> {
     this.ensureConfigured();
 
@@ -43,7 +59,9 @@ export class AvatarService {
       }
 
       if (!file.mimetype.match(/^image\/(jpeg|jpg|png|webp)$/)) {
-        throw new BadRequestException('JPG, PNG, WebP 형식의 이미지만 업로드 가능합니다.');
+        throw new BadRequestException(
+          'JPG, PNG, WebP 형식의 이미지만 업로드 가능합니다.',
+        );
       }
 
       if (file.size > 5 * 1024 * 1024) {
@@ -51,21 +69,26 @@ export class AvatarService {
       }
 
       // Generate multiple sizes with cropping if provided
-      const sizes = await this.generateMultipleSizes(file.buffer, cropData);
+      const sizes = this.generateMultipleSizes(file.buffer);
 
       // Upload all sizes to Cloudinary
       const uploadPromises = Object.entries(sizes).map(([sizeName, buffer]) =>
-        this.uploadToCloudinary(buffer, `avatar_${userId}_${sizeName}`)
+        this.uploadToCloudinary(buffer, `avatar_${userId}_${sizeName}`),
       );
 
       const uploadResults = await Promise.all(uploadPromises);
 
       // Map results to size URLs
-      const avatarUrls = {
+      const avatarUrls: {
+        thumbnail: string;
+        small: string;
+        medium: string;
+        large: string;
+      } = {
         thumbnail: uploadResults[0].secure_url, // 50x50
-        small: uploadResults[1].secure_url,     // 100x100
-        medium: uploadResults[2].secure_url,    // 200x200
-        large: uploadResults[3].secure_url,     // 400x400
+        small: uploadResults[1].secure_url, // 100x100
+        medium: uploadResults[2].secure_url, // 200x200
+        large: uploadResults[3].secure_url, // 400x400
       };
 
       return {
@@ -78,14 +101,13 @@ export class AvatarService {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new InternalServerErrorException('프로필 사진 업로드 중 오류가 발생했습니다.');
+      throw new InternalServerErrorException(
+        '프로필 사진 업로드 중 오류가 발생했습니다.',
+      );
     }
   }
 
-  private async generateMultipleSizes(
-    buffer: Buffer,
-    cropData?: AvatarCropDto
-  ): Promise<{ [key: string]: Buffer }> {
+  private generateMultipleSizes(buffer: Buffer): { [key: string]: Buffer } {
     // For now, return the original buffer for all sizes
     // In a full implementation, you would use sharp library to process images
     const sizes = ['thumbnail', 'small', 'medium', 'large'];
@@ -98,24 +120,36 @@ export class AvatarService {
     return results;
   }
 
-  private async uploadToCloudinary(buffer: Buffer, publicId: string): Promise<any> {
+  private async uploadToCloudinary(
+    buffer: Buffer,
+    publicId: string,
+  ): Promise<CloudinaryUploadResult> {
     return new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          public_id: publicId,
-          folder: 'readzone/avatars',
-          resource_type: 'image',
-          format: 'jpg',
-          transformation: [
-            { width: 400, height: 400, crop: 'fill', gravity: 'center' },
-            { quality: 'auto:good' }
-          ]
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      ).end(buffer);
+      cloudinary.uploader
+        .upload_stream(
+          {
+            public_id: publicId,
+            folder: 'readzone/avatars',
+            resource_type: 'image',
+            format: 'jpg',
+            transformation: [
+              { width: 400, height: 400, crop: 'fill', gravity: 'center' },
+              { quality: 'auto:good' },
+            ],
+          },
+          (error, result) => {
+            if (error) {
+              reject(new Error(`Cloudinary upload failed: ${error.message}`));
+            } else if (result) {
+              resolve(result);
+            } else {
+              reject(
+                new Error('Upload failed: no result returned from Cloudinary'),
+              );
+            }
+          },
+        )
+        .end(buffer);
     });
   }
 }

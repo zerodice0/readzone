@@ -1,10 +1,18 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Badge, UserBadge, BadgeTier, Prisma } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 export interface BadgeCondition {
-  type: 'review_count' | 'likes_received' | 'streak_days' | 'books_read' | 'followers_count' | 'early_bird' | 'social_butterfly' | 'consistent_reader';
+  type:
+    | 'review_count'
+    | 'likes_received'
+    | 'streak_days'
+    | 'books_read'
+    | 'followers_count'
+    | 'early_bird'
+    | 'social_butterfly'
+    | 'consistent_reader';
   threshold?: number;
   operator?: 'gte' | 'eq' | 'lte';
   timeframe?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all_time';
@@ -29,6 +37,118 @@ export interface BadgeResponse {
     earnedBadges: number;
     nextMilestone?: BadgeWithProgress;
   };
+}
+
+export interface PublicBadgeResponse {
+  success: boolean;
+  data: {
+    badges: Array<{
+      id: string;
+      name: string;
+      description: string;
+      icon: string;
+      tier: BadgeTier;
+      holdersCount: number;
+    }>;
+    totalBadges: number;
+  };
+}
+
+export interface BadgeDetailsResponse {
+  success: boolean;
+  data: {
+    badge: Badge & {
+      holdersCount: number;
+      isEarned: boolean;
+      earnedAt?: string;
+    };
+  };
+}
+
+export interface BadgeLeaderboardResponse {
+  success: boolean;
+  data: {
+    badge: Badge;
+    holders: Array<{
+      rank: number;
+      user: {
+        id: string;
+        userid: string;
+        nickname: string;
+        profileImage: string | null;
+        isVerified: boolean;
+      };
+      earnedAt: string;
+    }>;
+    totalHolders: number;
+  };
+}
+
+export interface UserEarnedBadgesResponse {
+  success: boolean;
+  data: {
+    badges: Array<
+      Badge & {
+        isEarned: boolean;
+        earnedAt: string;
+      }
+    >;
+    stats: {
+      totalBadges: number;
+      earnedBadges: number;
+      completionRate: number;
+      tierCounts: Record<string, number>;
+    };
+  };
+}
+
+export interface BadgeStatsResponse {
+  success: boolean;
+  data: {
+    totalBadges: number;
+    earnedBadges: number;
+    completionRate: number;
+    tierBreakdown: Record<string, number>;
+  };
+}
+
+export interface PopularBadgesResponse {
+  success: boolean;
+  data: {
+    badges: Array<
+      Badge & {
+        holdersCount: number;
+      }
+    >;
+  };
+}
+
+export interface RecentBadgesResponse {
+  success: boolean;
+  data: {
+    awards: Array<{
+      id: string;
+      earnedAt: string;
+      user: {
+        id: string;
+        userid: string;
+        nickname: string;
+        profileImage: string | null;
+        isVerified: boolean;
+      };
+      badge: Badge;
+    }>;
+  };
+}
+
+export interface UserStats {
+  reviewCount: number;
+  likesReceived: number;
+  followerCount: number;
+  followingCount: number;
+  streakDays: number;
+  booksRead: number;
+  accountAge: number;
 }
 
 @Injectable()
@@ -80,10 +200,7 @@ export class BadgeService {
     // 2. 모든 활성 배지 조회
     const allBadges = await this.prismaService.badge.findMany({
       where: { isActive: true },
-      orderBy: [
-        { tier: 'asc' },
-        { createdAt: 'asc' },
-      ],
+      orderBy: [{ tier: 'asc' }, { createdAt: 'asc' }],
     });
 
     // 3. 사용자가 획득한 배지 조회
@@ -92,19 +209,19 @@ export class BadgeService {
       include: { badge: true },
     });
 
-    const earnedBadgeIds = new Set(userBadges.map(ub => ub.badgeId));
+    const earnedBadgeIds = new Set(userBadges.map((ub) => ub.badgeId));
 
     // 4. 사용자 통계 조회 (진행률 계산용)
     const userStats = await this.getUserStats(userId);
 
     // 5. 배지별 진행률 계산
-    const badgesWithProgress: BadgeWithProgress[] = allBadges.map(badge => {
-      const userBadge = userBadges.find(ub => ub.badgeId === badge.id);
+    const badgesWithProgress: BadgeWithProgress[] = allBadges.map((badge) => {
+      const userBadge = userBadges.find((ub) => ub.badgeId === badge.id);
       const isEarned = earnedBadgeIds.has(badge.id);
 
-      const progress = isEarned ?
-        { current: 1, required: 1, percentage: 100 } :
-        this.calculateBadgeProgress(badge, userStats);
+      const progress = isEarned
+        ? { current: 1, required: 1, percentage: 100 }
+        : this.calculateBadgeProgress(badge, userStats);
 
       return {
         ...badge,
@@ -116,8 +233,10 @@ export class BadgeService {
 
     // 6. 다음 획득 가능한 배지 찾기
     const unearnedBadges = badgesWithProgress
-      .filter(b => !b.isEarned)
-      .sort((a, b) => (b.progress?.percentage || 0) - (a.progress?.percentage || 0));
+      .filter((b) => !b.isEarned)
+      .sort(
+        (a, b) => (b.progress?.percentage || 0) - (a.progress?.percentage || 0),
+      );
 
     const nextMilestone = unearnedBadges[0];
 
@@ -135,7 +254,9 @@ export class BadgeService {
   /**
    * 사용자의 배지 획득 자격 확인 및 자동 수여
    */
-  async checkAndAwardBadges(userId: string): Promise<{ newBadges: Badge[]; totalBadges: number }> {
+  async checkAndAwardBadges(
+    userId: string,
+  ): Promise<{ newBadges: Badge[]; totalBadges: number }> {
     // 1. 사용자 통계 조회
     const userStats = await this.getUserStats(userId);
 
@@ -170,7 +291,10 @@ export class BadgeService {
           // 알림 생성 (Phase 5에서 구현)
           // await this.notificationService.createBadgeNotification(userId, badge);
         } catch (error) {
-          console.error(`Failed to award badge ${badge.name} to user ${userId}:`, error);
+          console.error(
+            `Failed to award badge ${badge.name} to user ${userId}:`,
+            error,
+          );
         }
       }
     }
@@ -186,7 +310,10 @@ export class BadgeService {
   /**
    * 특정 배지 상세 정보 조회
    */
-  async getBadgeDetails(badgeId: string, userId?: string): Promise<any> {
+  async getBadgeDetails(
+    badgeId: string,
+    userId?: string,
+  ): Promise<BadgeDetailsResponse> {
     const badge = await this.prismaService.badge.findUnique({
       where: { id: badgeId },
       include: {
@@ -230,7 +357,10 @@ export class BadgeService {
   /**
    * 배지 리더보드 조회
    */
-  async getBadgeLeaderboard(badgeId: string, limit = 50): Promise<any> {
+  async getBadgeLeaderboard(
+    badgeId: string,
+    limit = 50,
+  ): Promise<BadgeLeaderboardResponse> {
     const badge = await this.prismaService.badge.findUnique({
       where: { id: badgeId },
     });
@@ -304,7 +434,9 @@ export class BadgeService {
         }
       }
 
-      console.log(`Daily badge check completed. ${totalNewBadges} new badges awarded to ${activeUsers.length} users.`);
+      console.log(
+        `Daily badge check completed. ${totalNewBadges} new badges awarded to ${activeUsers.length} users.`,
+      );
     } catch (error) {
       console.error('Failed to complete daily badge check:', error);
     }
@@ -313,7 +445,7 @@ export class BadgeService {
   /**
    * 사용자 통계 조회 (배지 조건 계산용)
    */
-  private async getUserStats(userId: string) {
+  private async getUserStats(userId: string): Promise<UserStats> {
     const [
       reviewCount,
       likesReceived,
@@ -360,7 +492,9 @@ export class BadgeService {
       followingCount,
       streakDays,
       booksRead,
-      accountAge: Math.floor((Date.now() - joinDate!.createdAt.getTime()) / (1000 * 60 * 60 * 24)),
+      accountAge: Math.floor(
+        (Date.now() - joinDate!.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+      ),
     };
   }
 
@@ -410,7 +544,7 @@ export class BadgeService {
   /**
    * 배지 획득 조건 확인
    */
-  private checkBadgeCondition(badge: Badge, userStats: any): boolean {
+  private checkBadgeCondition(badge: Badge, userStats: UserStats): boolean {
     const condition = badge.condition as unknown as BadgeCondition;
 
     switch (condition.type) {
@@ -457,7 +591,10 @@ export class BadgeService {
   /**
    * 배지 진행률 계산
    */
-  private calculateBadgeProgress(badge: Badge, userStats: any): { current: number; required: number; percentage: number } {
+  private calculateBadgeProgress(
+    badge: Badge,
+    userStats: UserStats,
+  ): { current: number; required: number; percentage: number } {
     const condition = badge.condition as unknown as BadgeCondition;
     let current = 0;
     let required = condition.threshold || 1;
@@ -479,15 +616,22 @@ export class BadgeService {
         current = userStats.followerCount;
         break;
       case 'early_bird':
-        current = Math.max(0, (condition.threshold || 7) - userStats.accountAge);
+        current = Math.max(
+          0,
+          (condition.threshold || 7) - userStats.accountAge,
+        );
         required = condition.threshold || 7;
         break;
       case 'social_butterfly':
-        current = Math.min(userStats.followerCount, 10) + Math.min(userStats.followingCount, 10);
+        current =
+          Math.min(userStats.followerCount, 10) +
+          Math.min(userStats.followingCount, 10);
         required = 20;
         break;
       case 'consistent_reader':
-        current = Math.min(userStats.streakDays, 7) + Math.min(userStats.reviewCount, 10);
+        current =
+          Math.min(userStats.streakDays, 7) +
+          Math.min(userStats.reviewCount, 10);
         required = 17;
         break;
     }
@@ -500,7 +644,7 @@ export class BadgeService {
   /**
    * 공개 배지 목록 조회 (로그인하지 않은 사용자용)
    */
-  async getPublicBadges(): Promise<any> {
+  async getPublicBadges(): Promise<PublicBadgeResponse> {
     const badges = await this.prismaService.badge.findMany({
       where: { isActive: true },
       select: {
@@ -515,16 +659,13 @@ export class BadgeService {
           },
         },
       },
-      orderBy: [
-        { tier: 'asc' },
-        { createdAt: 'asc' },
-      ],
+      orderBy: [{ tier: 'asc' }, { createdAt: 'asc' }],
     });
 
     return {
       success: true,
       data: {
-        badges: badges.map(badge => ({
+        badges: badges.map((badge) => ({
           ...badge,
           holdersCount: badge._count.userBadges,
         })),
@@ -536,7 +677,7 @@ export class BadgeService {
   /**
    * 사용자가 획득한 배지만 조회 (타인의 프로필용)
    */
-  async getUserEarnedBadges(userId: string): Promise<any> {
+  async getUserEarnedBadges(userId: string): Promise<UserEarnedBadgesResponse> {
     const userBadges = await this.prismaService.userBadge.findMany({
       where: { userId },
       include: { badge: true },
@@ -550,7 +691,7 @@ export class BadgeService {
     return {
       success: true,
       data: {
-        badges: userBadges.map(ub => ({
+        badges: userBadges.map((ub) => ({
           ...ub.badge,
           isEarned: true,
           earnedAt: ub.earnedAt.toISOString(),
@@ -558,11 +699,15 @@ export class BadgeService {
         stats: {
           totalBadges,
           earnedBadges: userBadges.length,
-          completionRate: totalBadges > 0 ? (userBadges.length / totalBadges) * 100 : 0,
-          tierCounts: userBadges.reduce((acc, ub) => {
-            acc[ub.badge.tier] = (acc[ub.badge.tier] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>),
+          completionRate:
+            totalBadges > 0 ? (userBadges.length / totalBadges) * 100 : 0,
+          tierCounts: userBadges.reduce(
+            (acc, ub) => {
+              acc[ub.badge.tier] = (acc[ub.badge.tier] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
         },
       },
     };
@@ -571,15 +716,10 @@ export class BadgeService {
   /**
    * 사용자 배지 통계 조회
    */
-  async getUserBadgeStats(userId: string): Promise<any> {
-    const [totalBadges, earnedBadges, tierStats] = await Promise.all([
+  async getUserBadgeStats(userId: string): Promise<BadgeStatsResponse> {
+    const [totalBadges, earnedBadges] = await Promise.all([
       this.prismaService.badge.count({ where: { isActive: true } }),
       this.prismaService.userBadge.count({ where: { userId } }),
-      this.prismaService.userBadge.groupBy({
-        by: ['badgeId'],
-        where: { userId },
-        _count: true,
-      }),
     ]);
 
     // 티어별 통계 계산
@@ -588,10 +728,13 @@ export class BadgeService {
       include: { badge: { select: { tier: true } } },
     });
 
-    const tierCounts = badges.reduce((acc, ub) => {
-      acc[ub.badge.tier] = (acc[ub.badge.tier] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const tierCounts = badges.reduce(
+      (acc, ub) => {
+        acc[ub.badge.tier] = (acc[ub.badge.tier] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       success: true,
@@ -607,7 +750,7 @@ export class BadgeService {
   /**
    * 인기 배지 목록 조회 (많은 사용자가 획득한 순)
    */
-  async getPopularBadges(limit: number): Promise<any> {
+  async getPopularBadges(limit: number): Promise<PopularBadgesResponse> {
     const badges = await this.prismaService.badge.findMany({
       where: { isActive: true },
       include: {
@@ -628,7 +771,7 @@ export class BadgeService {
     return {
       success: true,
       data: {
-        badges: badges.map(badge => ({
+        badges: badges.map((badge) => ({
           ...badge,
           holdersCount: badge._count.userBadges,
         })),
@@ -639,7 +782,7 @@ export class BadgeService {
   /**
    * 최근 획득된 배지 목록 조회
    */
-  async getRecentBadges(limit: number): Promise<any> {
+  async getRecentBadges(limit: number): Promise<RecentBadgesResponse> {
     const recentAwards = await this.prismaService.userBadge.findMany({
       include: {
         badge: true,
@@ -660,7 +803,7 @@ export class BadgeService {
     return {
       success: true,
       data: {
-        awards: recentAwards.map(award => ({
+        awards: recentAwards.map((award) => ({
           id: award.id,
           earnedAt: award.earnedAt.toISOString(),
           user: award.user,
@@ -673,7 +816,9 @@ export class BadgeService {
   /**
    * 기본 배지 정의
    */
-  private getDefaultBadges(): Omit<Badge, 'id' | 'createdAt'>[] {
+  private getDefaultBadges(): Array<
+    Omit<Badge, 'id' | 'createdAt'> & { condition: BadgeCondition }
+  > {
     return [
       // 독후감 작성 배지
       {
@@ -681,7 +826,11 @@ export class BadgeService {
         description: '첫 번째 독후감을 작성했습니다',
         icon: '👶',
         tier: BadgeTier.BRONZE,
-        condition: { type: 'review_count', threshold: 1, operator: 'gte' } as any,
+        condition: {
+          type: 'review_count',
+          threshold: 1,
+          operator: 'gte',
+        },
         isActive: true,
       },
       {
@@ -689,7 +838,11 @@ export class BadgeService {
         description: '10개의 독후감을 작성했습니다',
         icon: '📚',
         tier: BadgeTier.BRONZE,
-        condition: { type: 'review_count', threshold: 10, operator: 'gte' } as any,
+        condition: {
+          type: 'review_count',
+          threshold: 10,
+          operator: 'gte',
+        },
         isActive: true,
       },
       {
@@ -697,7 +850,11 @@ export class BadgeService {
         description: '50개의 독후감을 작성했습니다',
         icon: '✍️',
         tier: BadgeTier.SILVER,
-        condition: { type: 'review_count', threshold: 50, operator: 'gte' } as any,
+        condition: {
+          type: 'review_count',
+          threshold: 50,
+          operator: 'gte',
+        },
         isActive: true,
       },
       {
@@ -705,7 +862,11 @@ export class BadgeService {
         description: '100개의 독후감을 작성했습니다',
         icon: '🏆',
         tier: BadgeTier.GOLD,
-        condition: { type: 'review_count', threshold: 100, operator: 'gte' } as any,
+        condition: {
+          type: 'review_count',
+          threshold: 100,
+          operator: 'gte',
+        },
         isActive: true,
       },
 
@@ -715,7 +876,11 @@ export class BadgeService {
         description: '첫 번째 좋아요를 받았습니다',
         icon: '❤️',
         tier: BadgeTier.BRONZE,
-        condition: { type: 'likes_received', threshold: 1, operator: 'gte' } as any,
+        condition: {
+          type: 'likes_received',
+          threshold: 1,
+          operator: 'gte',
+        },
         isActive: true,
       },
       {
@@ -723,7 +888,11 @@ export class BadgeService {
         description: '100개의 좋아요를 받았습니다',
         icon: '⭐',
         tier: BadgeTier.SILVER,
-        condition: { type: 'likes_received', threshold: 100, operator: 'gte' } as any,
+        condition: {
+          type: 'likes_received',
+          threshold: 100,
+          operator: 'gte',
+        },
         isActive: true,
       },
       {
@@ -731,7 +900,11 @@ export class BadgeService {
         description: '500개의 좋아요를 받았습니다',
         icon: '🌟',
         tier: BadgeTier.GOLD,
-        condition: { type: 'likes_received', threshold: 500, operator: 'gte' } as any,
+        condition: {
+          type: 'likes_received',
+          threshold: 500,
+          operator: 'gte',
+        },
         isActive: true,
       },
 
@@ -741,7 +914,11 @@ export class BadgeService {
         description: '7일 연속 독후감을 작성했습니다',
         icon: '🔥',
         tier: BadgeTier.SILVER,
-        condition: { type: 'streak_days', threshold: 7, operator: 'gte' } as any,
+        condition: {
+          type: 'streak_days',
+          threshold: 7,
+          operator: 'gte',
+        },
         isActive: true,
       },
       {
@@ -749,7 +926,11 @@ export class BadgeService {
         description: '30일 연속 독후감을 작성했습니다',
         icon: '🏃',
         tier: BadgeTier.GOLD,
-        condition: { type: 'streak_days', threshold: 30, operator: 'gte' } as any,
+        condition: {
+          type: 'streak_days',
+          threshold: 30,
+          operator: 'gte',
+        },
         isActive: true,
       },
 
@@ -759,7 +940,11 @@ export class BadgeService {
         description: '50권의 책을 읽었습니다',
         icon: '🐛',
         tier: BadgeTier.SILVER,
-        condition: { type: 'books_read', threshold: 50, operator: 'gte' } as any,
+        condition: {
+          type: 'books_read',
+          threshold: 50,
+          operator: 'gte',
+        },
         isActive: true,
       },
       {
@@ -767,7 +952,11 @@ export class BadgeService {
         description: '200권의 책을 읽었습니다',
         icon: '📖',
         tier: BadgeTier.GOLD,
-        condition: { type: 'books_read', threshold: 200, operator: 'gte' } as any,
+        condition: {
+          type: 'books_read',
+          threshold: 200,
+          operator: 'gte',
+        },
         isActive: true,
       },
 
@@ -777,7 +966,11 @@ export class BadgeService {
         description: '100명의 팔로워를 보유했습니다',
         icon: '👥',
         tier: BadgeTier.GOLD,
-        condition: { type: 'followers_count', threshold: 100, operator: 'gte' } as any,
+        condition: {
+          type: 'followers_count',
+          threshold: 100,
+          operator: 'gte',
+        },
         isActive: true,
       },
 
@@ -787,7 +980,7 @@ export class BadgeService {
         description: '서비스 초기 가입자입니다',
         icon: '🐦',
         tier: BadgeTier.PLATINUM,
-        condition: { type: 'early_bird', threshold: 7, operator: 'lte' } as any,
+        condition: { type: 'early_bird', threshold: 7, operator: 'lte' },
         isActive: true,
       },
       {
@@ -795,7 +988,7 @@ export class BadgeService {
         description: '활발한 소셜 활동을 하고 있습니다',
         icon: '🦋',
         tier: BadgeTier.SILVER,
-        condition: { type: 'social_butterfly' } as any,
+        condition: { type: 'social_butterfly' },
         isActive: true,
       },
       {
@@ -803,7 +996,7 @@ export class BadgeService {
         description: '지속적이고 활발한 독서 활동을 하고 있습니다',
         icon: '👑',
         tier: BadgeTier.DIAMOND,
-        condition: { type: 'consistent_reader' } as any,
+        condition: { type: 'consistent_reader' },
         isActive: true,
       },
     ];
