@@ -137,7 +137,7 @@ export const getUserReviewsQueryOptions = (
         searchParams.set('cursor', pageParam);
       }
 
-      const response = await api.get(`/users/${userid}/reviews?${searchParams}`);
+      const response = await api.get(`/api/users/${userid}/reviews?${searchParams}`);
 
       return response.data.data as UserReviewsResponse;
     },
@@ -167,7 +167,7 @@ export const getUserLikesQueryOptions = (
         searchParams.set('cursor', pageParam);
       }
 
-      const response = await api.get(`/users/${userid}/likes?${searchParams}`);
+      const response = await api.get(`/api/users/${userid}/likes?${searchParams}`);
 
       return response.data.data as UserLikesResponse;
     },
@@ -205,7 +205,7 @@ export const getUserBooksQueryOptions = (
         searchParams.set('cursor', pageParam);
       }
 
-      const response = await api.get(`/users/${userid}/books?${searchParams}`);
+      const response = await api.get(`/api/users/${userid}/books?${searchParams}`);
 
       return response.data.data as UserBooksResponse;
     },
@@ -237,7 +237,7 @@ export const getUserFollowsQueryOptions = (
         searchParams.set('cursor', pageParam);
       }
 
-      const response = await api.get(`/users/${userid}/follows?${searchParams}`);
+      const response = await api.get(`/api/users/${userid}/follows?${searchParams}`);
 
       return response.data.data as UserFollowsResponse;
     },
@@ -253,7 +253,7 @@ export const followUser = async (
   userid: string,
   action: 'follow' | 'unfollow'
 ): Promise<FollowUserResponse> => {
-  const response = await api.post(`/users/${userid}/follow`, { action });
+  const response = await api.post(`/api/users/${userid}/follow`, { action });
 
   return response.data;
 };

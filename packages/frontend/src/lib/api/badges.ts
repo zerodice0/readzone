@@ -37,8 +37,8 @@ interface UserBadgesResponse {
 }
 
 const API_BASE_URL = import.meta.env.MODE === 'development'
-  ? 'http://localhost:3001/api'
-  : '/api'
+  ? 'http://localhost:3001'
+  : ''
 
 /**
  * 배지 API 요청을 위한 fetch 래퍼
@@ -47,7 +47,7 @@ async function badgeFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const url = `${API_BASE_URL}/badges${endpoint}`
+  const url = `${API_BASE_URL}/api/badges${endpoint}`
 
   // 로컬 스토리지에서 토큰 가져오기
   const token = localStorage.getItem('accessToken')

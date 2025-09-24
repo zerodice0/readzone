@@ -163,9 +163,9 @@ interface ResendVerificationResponse {
   expiresIn: string
 }
 
-const API_BASE_URL = import.meta.env.MODE === 'development' 
-  ? 'http://localhost:3001/api'
-  : '/api'
+const API_BASE_URL = import.meta.env.MODE === 'development'
+  ? 'http://localhost:3001'
+  : ''
 
 /**
  * 백엔드 로그인 응답 타입 정의
@@ -188,7 +188,7 @@ async function authFetch<T>(
   endpoint: string, 
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const url = `${API_BASE_URL}/auth${endpoint}`
+  const url = `${API_BASE_URL}/api/auth${endpoint}`
   
   const response = await fetch(url, {
     headers: {
@@ -346,8 +346,8 @@ export async function getCurrentUser(): Promise<User> {
  */
 export async function getUserProfile(userid: string): Promise<UserProfileData> {
   const API_BASE_URL = import.meta.env.MODE === 'development'
-    ? 'http://localhost:3001/api'
-    : '/api'
+    ? 'http://localhost:3001'
+    : ''
 
   // 로컬 스토리지에서 토큰 가져오기
   const token = localStorage.getItem('accessToken')
@@ -361,7 +361,7 @@ export async function getUserProfile(userid: string): Promise<UserProfileData> {
     headers.Authorization = `Bearer ${token}`
   }
 
-  const response = await fetch(`${API_BASE_URL}/users/${userid}`, {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userid}`, {
     headers,
   })
 
@@ -468,7 +468,7 @@ export async function checkResetToken(token: string): Promise<{
   tokenInfo?: { email: string; expiresAt: string; createdAt: string }
   canRequestNew: boolean
 }> {
-  const url = `${API_BASE_URL}/auth/reset-password?token=${encodeURIComponent(token)}`
+  const url = `${API_BASE_URL}/api/auth/reset-password?token=${encodeURIComponent(token)}`
   const res = await fetch(url, {
     method: 'GET',
     credentials: 'include',

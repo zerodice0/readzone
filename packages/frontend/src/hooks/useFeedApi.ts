@@ -49,7 +49,7 @@ interface BackendFeedResponse {
   };
 }
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:3001';
 
 // 백엔드 응답을 프론트엔드 타입으로 변환하는 함수
 const transformReviewData = (
@@ -103,7 +103,7 @@ const fetchFeed = async (params: FeedRequest): Promise<FeedResponse> => {
     searchParams.append('cursor', params.cursor);
   }
 
-  const response = await fetch(`${API_BASE_URL}/reviews/feed?${searchParams}`, {
+  const response = await fetch(`${API_BASE_URL}/api/reviews/feed?${searchParams}`, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -140,7 +140,7 @@ const likeReview = async ({
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}/like`, {
+  const response = await fetch(`${API_BASE_URL}/api/reviews/${reviewId}/like`, {
     method: 'POST',
     headers,
     credentials: 'include', // Cookie 기반 인증
