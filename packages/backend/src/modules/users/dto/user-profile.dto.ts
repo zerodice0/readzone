@@ -9,7 +9,6 @@ export interface UserStats {
   likesReceived: number;
   followerCount: number;
   followingCount: number;
-  booksRead: number;
 }
 
 export interface UserRelationship {

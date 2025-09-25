@@ -47,7 +47,6 @@ interface UserStats {
   likesReceived: number
   followerCount: number
   followingCount: number
-  booksRead: number
 }
 
 interface UserRelationship {

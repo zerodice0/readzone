@@ -35,16 +35,10 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({
       color: 'text-orange-600 dark:text-orange-400',
       bg: 'bg-orange-50 dark:bg-orange-900/20'
     },
-    {
-      label: '읽은 책',
-      value: stats.booksRead,
-      color: 'text-red-600 dark:text-red-400',
-      bg: 'bg-red-50 dark:bg-red-900/20'
-    },
   ]
 
   return (
-    <div className={`grid grid-cols-2 md:grid-cols-5 gap-4 ${className}`}>
+    <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${className}`}>
       {statItems.map((item) => (
         <div key={item.label} className={`text-center p-4 rounded-lg ${item.bg} transition-colors`}>
           <div className={`text-2xl font-bold ${item.color}`}>
