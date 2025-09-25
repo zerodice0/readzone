@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { getUserProfile } from '@/lib/api/auth'
-import { getUserBadges } from '@/lib/api/badges'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileTabs } from '@/components/profile/ProfileTabs'
@@ -19,12 +18,6 @@ function ProfilePage() {
   const { data: profileData, isLoading, error, refetch } = useQuery({
     queryKey: ['user-profile', userid],
     queryFn: () => getUserProfile(userid),
-    retry: false,
-  })
-
-  const { data: badgeData } = useQuery({
-    queryKey: ['user-badges', userid],
-    queryFn: () => getUserBadges(userid),
     retry: false,
   })
 
@@ -114,13 +107,9 @@ function ProfilePage() {
             onTabChange={setActiveTab}
             counts={{
               reviews: profileData.user.stats.reviewCount,
-              likes: 0, // TODO: Add likes count when available
-              books: profileData.user.stats.booksRead,
-              badges: badgeData?.stats?.earnedBadges ?? 0,
               followers: profileData.user.stats.followerCount,
               following: profileData.user.stats.followingCount,
             }}
-            isOwner={profileData.isOwner}
           />
           <div className={`p-6 ${activeTab === 'reviews' ? 'pb-6 pt-4' : ''}`}>
             <ProfileContent

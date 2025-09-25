@@ -7,20 +7,15 @@ interface ProfileTabsProps {
   onTabChange: (tab: string) => void;
   counts: {
     reviews: number;
-    likes: number;
-    books: number;
     followers: number;
     following: number;
-    badges?: number;
   };
-  isOwner: boolean;
 }
 
 export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   activeTab,
   onTabChange,
-  counts,
-  isOwner
+  counts
 }) => {
   const tabListRef = useRef<HTMLDivElement>(null);
   const { elementRef } = useAccessibility({
@@ -29,9 +24,6 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
 
   const tabs = [
     { id: 'reviews', label: '독후감', count: counts.reviews, visible: true },
-    { id: 'likes', label: '좋아요', count: counts.likes, visible: isOwner },
-    { id: 'books', label: '서재', count: counts.books, visible: true },
-    { id: 'badges', label: '배지', count: counts.badges ?? 0, visible: true },
     { id: 'followers', label: '팔로워', count: counts.followers, visible: true },
     { id: 'following', label: '팔로잉', count: counts.following, visible: true },
   ].filter(tab => tab.visible);
