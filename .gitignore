@@ -93,6 +93,9 @@ yarn.lock
 .claude/settings.local.json
 .serena/
 
+# MCP servers
+.playwright-mcp/
+
 # Temporary files
 *.tmp
 *.temp
