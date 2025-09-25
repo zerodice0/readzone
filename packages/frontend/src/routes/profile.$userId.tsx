@@ -122,7 +122,7 @@ function ProfilePage() {
             }}
             isOwner={profileData.isOwner}
           />
-          <div className="p-6">
+          <div className={`p-6 ${activeTab === 'reviews' ? 'pb-6 pt-4' : ''}`}>
             <ProfileContent
               activeTab={activeTab}
               userid={userid}

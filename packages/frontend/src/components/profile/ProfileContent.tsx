@@ -40,7 +40,6 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
       role="tabpanel"
       id={`${activeTab}-panel`}
       aria-labelledby={`${activeTab}-tab`}
-      className="mt-6"
     >
       {renderContent()}
     </div>

@@ -109,13 +109,20 @@ export class UsersService {
         }
       }
 
+      // 사용자가 리뷰를 작성한 고유 도서 수 계산
+      const booksWithReviews = await this.prismaService.review.findMany({
+        where: { userId: user.id },
+        select: { bookId: true },
+        distinct: ['bookId'],
+      });
+
       // 통계 정보
       const stats: UserStats = {
         reviewCount: user._count.reviews,
         likesReceived: user._count.likes,
         followerCount: user._count.followers,
         followingCount: user._count.following,
-        booksRead: 0, // TODO: 실제 읽은 책 수 계산 로직 필요
+        booksRead: booksWithReviews.length, // 실제 읽은 책 수 (리뷰를 작성한 고유 도서 수)
       };
 
       // 관계 정보 (로그인한 사용자가 있는 경우)

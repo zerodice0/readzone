@@ -81,6 +81,16 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: rgb(107 114 128);
   }
+
+  /* Hide scrollbar completely */
+  .scrollbar-hide {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* WebKit */
+  }
 }
 
 /* Markdown editor styles */
