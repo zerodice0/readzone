@@ -81,6 +81,12 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
 
       if (targetTab) {
         targetTab.focus();
+        // 활성 탭이 뷰포트에 보이도록 스크롤
+        targetTab.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
       }
     }
   };
@@ -92,24 +98,41 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
     }
   }, [elementRef]);
 
+  // 활성 탭 변경 시 스크롤 처리
+  useEffect(() => {
+    const activeTabButton = tabListRef.current?.querySelector(`#${activeTab}-tab`) as HTMLButtonElement;
+
+    if (activeTabButton) {
+      // 활성 탭이 뷰포트에 보이도록 스크롤
+      activeTabButton.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [activeTab]);
+
   return (
     <div className="border-b border-gray-200 dark:border-gray-700">
-      <nav
-        ref={tabListRef}
-        className="-mb-px flex space-x-8"
-        role="tablist"
-        aria-label="프로필 섹션 탭"
-      >
+      {/* 좌우 패딩 추가로 여유로운 느낌 제공 */}
+      <div className="px-4 sm:px-6 lg:px-8">
+        <nav
+          ref={tabListRef}
+          className="-mb-px flex gap-2 sm:gap-4 md:gap-6 lg:gap-8 overflow-x-auto scrollbar-hide"
+          role="tablist"
+          aria-label="프로필 섹션 탭"
+        >
         {tabs.map((tab, index) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={cn(
-              'flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-t',
+              'flex items-center gap-2 py-3 px-3 sm:py-4 sm:px-4 border-b-2 font-medium text-sm sm:text-base transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset whitespace-nowrap',
+              'hover:text-gray-700 dark:hover:text-gray-300',
               activeTab === tab.id
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                : 'border-transparent text-gray-500 hover:border-gray-300 dark:text-gray-400'
             )}
             role="tab"
             aria-selected={activeTab === tab.id}
@@ -118,13 +141,14 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
             tabIndex={activeTab === tab.id ? 0 : -1}
             aria-label={`${tab.label} ${tab.count}개`}
           >
-            <span>{tab.label}</span>
+            <span className="font-medium">{tab.label}</span>
             <span
               className={cn(
-                'rounded-full px-2 py-1 text-xs',
+                'inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs sm:text-sm font-medium transition-colors',
+                'min-w-[1.5rem] h-6',
                 activeTab === tab.id
-                  ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
-                  : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200'
+                  : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
               )}
               aria-label={`${tab.count}개`}
               role="status"
@@ -133,7 +157,8 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
             </span>
           </button>
         ))}
-      </nav>
+        </nav>
+      </div>
     </div>
   );
 };
