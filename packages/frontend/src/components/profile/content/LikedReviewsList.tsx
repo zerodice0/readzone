@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getUserLikesQueryOptions } from '@/lib/api/user';
 import ReviewCard from '@/components/feed/ReviewCard';
@@ -8,7 +8,7 @@ interface LikedReviewsListProps {
   userid: string;
 }
 
-export const LikedReviewsList: React.FC<LikedReviewsListProps> = ({ userid }) => {
+export const LikedReviewsList: FC<LikedReviewsListProps> = ({ userid }) => {
   const {
     data,
     fetchNextPage,
@@ -29,7 +29,7 @@ export const LikedReviewsList: React.FC<LikedReviewsListProps> = ({ userid }) =>
     },
   });
 
-  const allLikes = data?.pages.flatMap(page => page.reviews) ?? [];
+  const allLikes = data?.pages.flatMap((page) => page.reviews) ?? [];
 
   if (isLoading) {
     return (
@@ -86,17 +86,31 @@ export const LikedReviewsList: React.FC<LikedReviewsListProps> = ({ userid }) =>
                   id: like.review.book.id,
                   title: like.review.book.title,
                   author: like.review.book.author,
-                  ...(like.review.book.thumbnail && { cover: like.review.book.thumbnail }),
+                  ...(like.review.book.thumbnail && {
+                    cover: like.review.book.thumbnail,
+                  }),
                 },
                 stats: like.review.stats,
                 userInteraction: { isLiked: true, isBookmarked: false },
               }}
-              onLike={() => { /* No-op for profile view */ }}
-              onComment={() => { /* No-op for profile view */ }}
-              onShare={() => { /* No-op for profile view */ }}
-              onProfileClick={() => { /* No-op for profile view */ }}
-              onBookClick={() => { /* No-op for profile view */ }}
-              onReviewClick={() => { /* No-op for profile view */ }}
+              onLike={() => {
+                /* No-op for profile view */
+              }}
+              onComment={() => {
+                /* No-op for profile view */
+              }}
+              onShare={() => {
+                /* No-op for profile view */
+              }}
+              onProfileClick={() => {
+                /* No-op for profile view */
+              }}
+              onBookClick={() => {
+                /* No-op for profile view */
+              }}
+              onReviewClick={() => {
+                /* No-op for profile view */
+              }}
             />
           </div>
         ))}

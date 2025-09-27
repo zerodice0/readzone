@@ -37,6 +37,12 @@ model User {
   reviews           Review[]
   userBadges        UserBadge[]
 
+  // Settings relationships
+  settings            UserSettings?
+  notificationSettings NotificationSettings?
+  connectedAccounts   ConnectedAccount[]
+  accountDeletion     AccountDeletion?
+
   @@index([userid])
   @@index([nickname])
   @@index([createdAt(sort: Desc)])
@@ -302,4 +308,127 @@ enum BadgeTier {
   GOLD
   PLATINUM
   DIAMOND
+}
+
+enum VisibilityLevel {
+  PUBLIC
+  FOLLOWERS
+  PRIVATE
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  AUTO
+}
+
+enum Language {
+  KO
+  EN
+}
+
+enum FeedTab {
+  RECOMMENDED
+  LATEST
+  FOLLOWING
+}
+
+enum ImageQuality {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum SocialProvider {
+  GOOGLE
+  KAKAO
+  NAVER
+}
+
+model UserSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 개인정보 보호 설정
+  profileVisibility     VisibilityLevel @default(PUBLIC)
+  activityVisibility    VisibilityLevel @default(PUBLIC)
+  searchable            Boolean         @default(true)
+  showEmail             Boolean         @default(false)
+  showFollowers         Boolean         @default(true)
+  showFollowing         Boolean         @default(true)
+
+  // 서비스 설정
+  theme                 Theme           @default(AUTO)
+  language              Language        @default(KO)
+  defaultFeedTab        FeedTab         @default(RECOMMENDED)
+  hideNSFW              Boolean         @default(true)
+  hideSpoilers          Boolean         @default(false)
+  hideNegativeReviews   Boolean         @default(false)
+  imageQuality          ImageQuality    @default(MEDIUM)
+  autoplayVideos        Boolean         @default(false)
+  preloadImages         Boolean         @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+model NotificationSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 기본 알림 설정
+  likesEnabled     Boolean @default(true)
+  likesEmail       Boolean @default(false)
+  likesPush        Boolean @default(true)
+
+  commentsEnabled  Boolean @default(true)
+  commentsEmail    Boolean @default(false)
+  commentsPush     Boolean @default(true)
+
+  followsEnabled   Boolean @default(true)
+  followsEmail     Boolean @default(false)
+  followsPush      Boolean @default(true)
+
+  // 방해금지 설정
+  quietHoursEnabled Boolean @default(false)
+  quietStartTime    String  @default("22:00")
+  quietEndTime      String  @default("08:00")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_settings")
+}
+
+model ConnectedAccount {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider    SocialProvider
+  email       String
+  providerId  String
+  connectedAt DateTime  @default(now())
+
+  @@unique([userId, provider])
+  @@map("connected_accounts")
+}
+
+model AccountDeletion {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  scheduledAt     DateTime
+  reason          String?
+  feedback        String?
+  cancellationToken String @unique
+
+  createdAt       DateTime @default(now())
+
+  @@map("account_deletions")
 }

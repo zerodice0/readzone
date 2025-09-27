@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { ReviewsList } from './content/ReviewsList';
 import { FollowsList } from './content/FollowsList';
 
@@ -8,10 +8,10 @@ interface ProfileContentProps {
   isOwner: boolean;
 }
 
-export const ProfileContent: React.FC<ProfileContentProps> = ({
+export const ProfileContent: FC<ProfileContentProps> = ({
   activeTab,
   userid,
-  isOwner
+  isOwner,
 }) => {
   const renderContent = () => {
     switch (activeTab) {

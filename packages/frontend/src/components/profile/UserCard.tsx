@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { FollowButton } from './FollowButton';
@@ -32,14 +32,14 @@ interface UserCardProps {
   showFollowedDate?: boolean;
 }
 
-export const UserCard: React.FC<UserCardProps> = ({
+export const UserCard: FC<UserCardProps> = ({
   user,
   followedAt,
   stats,
   relationship,
   showFollowButton = true,
   showStats = true,
-  showFollowedDate = true
+  showFollowedDate = true,
 }) => {
   const { user: currentUser } = useAuthStore();
 
@@ -82,16 +82,32 @@ export const UserCard: React.FC<UserCardProps> = ({
 
               {user.isVerified && (
                 <span className="text-blue-500 flex-shrink-0">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </span>
               )}
 
               {relationship?.isMutualFollow && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 flex-shrink-0">
-                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-3 h-3 mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   서로 팔로우
                 </span>
@@ -120,18 +136,21 @@ export const UserCard: React.FC<UserCardProps> = ({
           </div>
         </div>
 
-        {showFollowButton && relationship && currentUser && currentUser.userid !== user.userid && (
-          <div className="ml-4 flex-shrink-0">
-            <FollowButton
-              userid={user.userid}
-              isFollowing={relationship.isFollowing}
-              followerCount={stats?.followerCount ?? 0}
-              isMutualFollow={relationship.isMutualFollow}
-              size="sm"
-              showFollowerCount={false}
-            />
-          </div>
-        )}
+        {showFollowButton &&
+          relationship &&
+          currentUser &&
+          currentUser.userid !== user.userid && (
+            <div className="ml-4 flex-shrink-0">
+              <FollowButton
+                userid={user.userid}
+                isFollowing={relationship.isFollowing}
+                followerCount={stats?.followerCount ?? 0}
+                isMutualFollow={relationship.isMutualFollow}
+                size="sm"
+                showFollowerCount={false}
+              />
+            </div>
+          )}
       </div>
     </div>
   );

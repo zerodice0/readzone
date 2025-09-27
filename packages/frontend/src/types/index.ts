@@ -358,3 +358,6 @@ export interface SearchState {
     books: { title: string; count: number }[]
   }
 }
+
+// Export settings types
+export * from './settings'

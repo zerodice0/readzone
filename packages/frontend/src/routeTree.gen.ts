@@ -17,6 +17,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsTabRouteImport } from './routes/settings.$tab'
 import { Route as ReviewReviewIdRouteImport } from './routes/review.$reviewId'
 import { Route as ReviewEditReviewIdRouteImport } from './routes/review-edit.$reviewId'
 import { Route as ProfileUseridRouteImport } from './routes/profile.$userid'
@@ -62,6 +63,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsTabRoute = SettingsTabRouteImport.update({
+  id: '/$tab',
+  path: '/$tab',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const ReviewReviewIdRoute = ReviewReviewIdRouteImport.update({
   id: '/review/$reviewId',
   path: '/review/$reviewId',
@@ -89,13 +95,14 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
   '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
+  '/settings/$tab': typeof SettingsTabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -103,13 +110,14 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
   '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
+  '/settings/$tab': typeof SettingsTabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,13 +126,14 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
   '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
+  '/settings/$tab': typeof SettingsTabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/profile/$userid'
     | '/review-edit/$reviewId'
     | '/review/$reviewId'
+    | '/settings/$tab'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/profile/$userid'
     | '/review-edit/$reviewId'
     | '/review/$reviewId'
+    | '/settings/$tab'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/profile/$userid'
     | '/review-edit/$reviewId'
     | '/review/$reviewId'
+    | '/settings/$tab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -177,7 +189,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   SearchRoute: typeof SearchRoute
-  SettingsRoute: typeof SettingsRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   VerifyEmailRoute: typeof VerifyEmailRoute
   WriteRoute: typeof WriteRoute
   BooksBookIdRoute: typeof BooksBookIdRoute
@@ -244,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/$tab': {
+      id: '/settings/$tab'
+      path: '/$tab'
+      fullPath: '/settings/$tab'
+      preLoaderRoute: typeof SettingsTabRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/review/$reviewId': {
       id: '/review/$reviewId'
       path: '/review/$reviewId'
@@ -275,13 +294,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SettingsRouteChildren {
+  SettingsTabRoute: typeof SettingsTabRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsTabRoute: SettingsTabRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   SearchRoute: SearchRoute,
-  SettingsRoute: SettingsRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   VerifyEmailRoute: VerifyEmailRoute,
   WriteRoute: WriteRoute,
   BooksBookIdRoute: BooksBookIdRoute,
