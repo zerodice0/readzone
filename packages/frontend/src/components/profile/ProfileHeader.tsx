@@ -1,24 +1,24 @@
-import React from 'react'
-import { formatDistanceToNow } from 'date-fns'
-import { ko } from 'date-fns/locale'
-import type { UserProfileData } from '@/lib/api/auth'
-import { FollowButton } from './FollowButton'
+import type { FC } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import type { UserProfileData } from '@/lib/api/auth';
+import { FollowButton } from './FollowButton';
 
 interface ProfileHeaderProps {
-  profile: UserProfileData
-  onProfileUpdate?: (profile: UserProfileData) => void
+  profile: UserProfileData;
+  onProfileUpdate?: (profile: UserProfileData) => void;
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
+export const ProfileHeader: FC<ProfileHeaderProps> = ({
   profile,
-  onProfileUpdate: _onProfileUpdate
+  onProfileUpdate: _onProfileUpdate,
 }) => {
-  const { user, isOwner } = profile
+  const { user, isOwner } = profile;
 
   const joinedDate = formatDistanceToNow(new Date(user.joinedAt), {
     addSuffix: true,
     locale: ko,
-  })
+  });
 
   return (
     <section
@@ -32,7 +32,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <div
             className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden"
             role="img"
-            aria-label={user.profileImage ? `${user.nickname}의 프로필 사진` : `${user.nickname}의 기본 프로필 아이콘`}
+            aria-label={
+              user.profileImage
+                ? `${user.nickname}의 프로필 사진`
+                : `${user.nickname}의 기본 프로필 아이콘`
+            }
           >
             {user.profileImage ? (
               <img
@@ -94,9 +98,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 className="text-gray-600 dark:text-gray-300 text-sm"
                 aria-label={`가입일: ${joinedDate}`}
               >
-                <time dateTime={user.joinedAt}>
-                  {joinedDate} 가입
-                </time>
+                <time dateTime={user.joinedAt}>{joinedDate} 가입</time>
               </p>
 
               {user.bio && (
@@ -169,5 +171,5 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         </div>
       </div>
     </section>
-  )
-}
+  );
+};

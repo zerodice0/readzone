@@ -1,30 +1,50 @@
-import React from 'react'
-import type { BadgeData } from './BadgeItem'
+import type { FC } from 'react';
+import type { BadgeData } from './BadgeItem';
 
 interface BadgeProgressModalProps {
-  badge: BadgeData | null
-  isOpen: boolean
-  onClose: () => void
+  badge: BadgeData | null;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const tierInfo = {
-  BRONZE: { name: '브론즈', color: 'text-orange-600 dark:text-orange-400', emoji: '🥉' },
-  SILVER: { name: '실버', color: 'text-gray-600 dark:text-gray-400', emoji: '🥈' },
-  GOLD: { name: '골드', color: 'text-yellow-600 dark:text-yellow-400', emoji: '🥇' },
-  PLATINUM: { name: '플래티넘', color: 'text-slate-600 dark:text-slate-400', emoji: '💎' },
-  DIAMOND: { name: '다이아몬드', color: 'text-cyan-600 dark:text-cyan-400', emoji: '💍' }
-}
+  BRONZE: {
+    name: '브론즈',
+    color: 'text-orange-600 dark:text-orange-400',
+    emoji: '🥉',
+  },
+  SILVER: {
+    name: '실버',
+    color: 'text-gray-600 dark:text-gray-400',
+    emoji: '🥈',
+  },
+  GOLD: {
+    name: '골드',
+    color: 'text-yellow-600 dark:text-yellow-400',
+    emoji: '🥇',
+  },
+  PLATINUM: {
+    name: '플래티넘',
+    color: 'text-slate-600 dark:text-slate-400',
+    emoji: '💎',
+  },
+  DIAMOND: {
+    name: '다이아몬드',
+    color: 'text-cyan-600 dark:text-cyan-400',
+    emoji: '💍',
+  },
+};
 
-export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
+export const BadgeProgressModal: FC<BadgeProgressModalProps> = ({
   badge,
   isOpen,
-  onClose
+  onClose,
 }) => {
   if (!badge) {
-    return null
+    return null;
   }
 
-  const tierData = tierInfo[badge.tier]
+  const tierData = tierInfo[badge.tier];
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -32,9 +52,9 @@ export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+      minute: '2-digit',
+    });
+  };
 
   return (
     <>
@@ -63,8 +83,18 @@ export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     aria-label="닫기"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -77,9 +107,10 @@ export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
                   <div
                     className={`
                       text-6xl mb-4 inline-block p-4 rounded-2xl
-                      ${badge.isEarned
-                        ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20'
-                        : 'bg-gray-100 dark:bg-gray-700 opacity-60 grayscale'
+                      ${
+                        badge.isEarned
+                          ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20'
+                          : 'bg-gray-100 dark:bg-gray-700 opacity-60 grayscale'
                       }
                     `}
                   >
@@ -105,15 +136,33 @@ export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
                   {/* 획득 상태 */}
                   {badge.isEarned ? (
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-full">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       <span className="font-medium">획득 완료</span>
                     </div>
                   ) : (
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       <span className="font-medium">획득 전</span>
                     </div>
@@ -149,7 +198,9 @@ export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
                       <div className="space-y-3">
                         <div className="flex justify-between text-sm text-purple-800 dark:text-purple-200">
                           <span>현재 진행</span>
-                          <span>{badge.progress.current} / {badge.progress.required}</span>
+                          <span>
+                            {badge.progress.current} / {badge.progress.required}
+                          </span>
                         </div>
 
                         <div className="w-full bg-purple-200 dark:bg-purple-800 rounded-full h-3">
@@ -170,7 +221,8 @@ export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
 
                         {/* 남은 요구사항 */}
                         <div className="text-center text-sm text-purple-700 dark:text-purple-300">
-                          {badge.progress.required - badge.progress.current}개 더 필요
+                          {badge.progress.required - badge.progress.current}개
+                          더 필요
                         </div>
                       </div>
                     </div>
@@ -186,7 +238,8 @@ export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
                       <p className="text-gray-700 dark:text-gray-300">
                         <span className="font-bold text-lg">
                           {badge.holdersCount.toLocaleString()}명
-                        </span>이 이 배지를 보유하고 있습니다
+                        </span>
+                        이 이 배지를 보유하고 있습니다
                       </p>
 
                       {/* 희귀도 표시 */}
@@ -215,5 +268,5 @@ export const BadgeProgressModal: React.FC<BadgeProgressModalProps> = ({
         </>
       )}
     </>
-  )
-}
+  );
+};

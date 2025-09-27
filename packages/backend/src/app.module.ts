@@ -13,6 +13,7 @@ import { UploadModule } from './modules/upload/upload.module';
 import { TagsModule } from './modules/tags/tags.module';
 import { SearchModule } from './modules/search/search.module';
 import { BadgeModule } from './modules/badges/badge.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { BadgeModule } from './modules/badges/badge.module';
     TagsModule,
     SearchModule,
     BadgeModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
