@@ -7,7 +7,6 @@ interface NavigationItem {
   label: string;
   description: string;
   icon: ReactNode;
-  badge?: string | number;
 }
 
 interface SettingsNavigationProps {
@@ -87,12 +86,11 @@ export function SettingsNavigation({
           />
         </svg>
       ),
-      badge: 3, // 새 알림 수 (예시)
     },
     {
       id: 'preferences',
       label: '환경 설정',
-      description: '테마, 언어, 피드 설정',
+      description: '테마, 언어',
       icon: (
         <svg
           className="h-5 w-5"
@@ -118,7 +116,7 @@ export function SettingsNavigation({
     {
       id: 'account',
       label: '계정 관리',
-      description: '보안, 연결된 계정, 계정 삭제',
+      description: '보안, 계정 삭제',
       icon: (
         <svg
           className="h-5 w-5"
@@ -150,9 +148,6 @@ export function SettingsNavigation({
       <ul className="space-y-1">
         {navigationItems.map((item) => {
           const isActive = activeTab === item.id;
-          const showBadge =
-            item.badge &&
-            (typeof item.badge === 'number' ? item.badge > 0 : true);
 
           return (
             <li key={item.id}>
@@ -192,26 +187,13 @@ export function SettingsNavigation({
                       {item.label}
                     </p>
 
-                    {/* 저장되지 않은 변경사항 또는 배지 */}
-                    <div className="flex items-center space-x-2">
+                    {/* 저장되지 않은 변경사항 표시 */}
+                    <div className="flex items-center">
                       {hasUnsavedChanges && isActive && (
                         <div className="flex h-2 w-2">
                           <div className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-orange-400 opacity-75"></div>
                           <div className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></div>
                         </div>
-                      )}
-
-                      {showBadge && (
-                        <span
-                          className={clsx(
-                            'inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full',
-                            isActive
-                              ? 'bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200'
-                              : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                          )}
-                        >
-                          {item.badge}
-                        </span>
                       )}
                     </div>
                   </div>
@@ -228,12 +210,6 @@ export function SettingsNavigation({
                   </p>
                 </div>
 
-                {/* 활성 표시 */}
-                {isActive && (
-                  <div className="flex-shrink-0">
-                    <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full"></div>
-                  </div>
-                )}
               </button>
             </li>
           );

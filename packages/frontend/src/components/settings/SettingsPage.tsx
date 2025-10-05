@@ -4,6 +4,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { useSettings } from '@/hooks/useSettings';
 import { useUnsavedChangesConfirmation } from '@/hooks/useConfirmation';
 import { SettingsNavigation } from './SettingsNavigation';
+import { FullPageAuthError } from './FullPageAuthError';
+import { FullPageLoading } from './FullPageLoading';
 
 // 임시로 섹션 컴포넌트들을 placeholder로 정의
 // 실제 구현은 다음 단계에서 진행
@@ -34,8 +36,17 @@ export function SettingsPage({ className }: SettingsPageProps) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
-  const { settings, isLoading, error, hasUnsavedChanges, refresh } =
-    useSettings();
+  const {
+    settings,
+    isLoading,
+    error,
+    hasUnsavedChanges,
+    isAuthError,
+    refresh,
+    updateProfile,
+    updatePreferences,
+    markAsChanged
+  } = useSettings();
 
   const {
     confirmUnsavedChanges,
@@ -50,10 +61,15 @@ export function SettingsPage({ className }: SettingsPageProps) {
     return cleanup;
   }, [hasUnsavedChanges, setupBeforeUnloadProtection]);
 
-  // 설정 초기 로드
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  // 전체 화면 인증 에러 표시 - store의 isAuthError 플래그 사용
+  if (isAuthError) {
+    return <FullPageAuthError />
+  }
+
+  // 전체 화면 로딩 표시
+  if (isLoading) {
+    return <FullPageLoading />
+  }
 
   // 탭 변경 핸들러
   const handleTabChange = async (newTab: SettingsTab) => {
@@ -70,19 +86,6 @@ export function SettingsPage({ className }: SettingsPageProps) {
 
   // 설정 섹션 컴포넌트 렌더링
   const renderSettingsSection = () => {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-12">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="text-gray-600 dark:text-gray-400">
-              설정을 불러오는 중...
-            </span>
-          </div>
-        </div>
-      );
-    }
-
     if (error) {
       return (
         <div className="flex items-center justify-center py-12">
@@ -106,13 +109,25 @@ export function SettingsPage({ className }: SettingsPageProps) {
               설정을 불러올 수 없습니다
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-            <button
-              type="button"
-              onClick={refresh}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              다시 시도
-            </button>
+            <div className="flex gap-2 justify-center">
+              {error?.includes('인증') ? (
+                <button
+                  type="button"
+                  onClick={() => window.location.href = '/login'}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  로그인하기
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={refresh}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  다시 시도
+                </button>
+              )}
+            </div>
           </div>
         </div>
       );
@@ -137,13 +152,25 @@ export function SettingsPage({ className }: SettingsPageProps) {
           </div>
         }
       >
-        {activeTab === 'profile' && <ProfileSettings settings={settings} />}
+        {activeTab === 'profile' && (
+          <ProfileSettings
+            settings={settings}
+            updateProfile={updateProfile}
+            markAsChanged={markAsChanged}
+            hasUnsavedChanges={hasUnsavedChanges}
+          />
+        )}
         {activeTab === 'privacy' && <PrivacySettings settings={settings} />}
         {activeTab === 'notifications' && (
           <NotificationSettings settings={settings} />
         )}
         {activeTab === 'preferences' && (
-          <PreferenceSettings settings={settings} />
+          <PreferenceSettings
+            settings={settings}
+            updatePreferences={updatePreferences}
+            markAsChanged={markAsChanged}
+            hasUnsavedChanges={hasUnsavedChanges}
+          />
         )}
         {activeTab === 'account' && <AccountManagement settings={settings} />}
       </Suspense>
