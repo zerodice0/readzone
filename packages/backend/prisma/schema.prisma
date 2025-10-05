@@ -21,8 +21,13 @@ model User {
   verificationToken String?
   resetToken        String?
   resetTokenExpires DateTime?
-  socialLinks       Json?
   privacy           Json?
+
+  // Moderation fields
+  role              UserRole       @default(USER)
+  isSuspended       Boolean        @default(false)
+  suspendedUntil    DateTime?      @db.Timestamptz(6)
+
   createdAt         DateTime       @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime       @updatedAt @db.Timestamptz(6)
   accounts          Account[]
@@ -35,13 +40,18 @@ model User {
   refreshTokens     RefreshToken[]
   reviewDrafts      ReviewDraft[]
   reviews           Review[]
-  userBadges        UserBadge[]
 
   // Settings relationships
   settings            UserSettings?
   notificationSettings NotificationSettings?
-  connectedAccounts   ConnectedAccount[]
-  accountDeletion     AccountDeletion?
+
+  // Moderation relationships
+  adminActions        AuditLog[]      @relation("AdminActions")
+  reportsMade         Report[]        @relation("ReportsMade")
+  reportsReceived     Report[]        @relation("ReportsReceived")
+  blocksInitiated     Block[]         @relation("BlocksInitiated")
+  blocksReceived      Block[]         @relation("BlocksReceived")
+  violations          Violation[]
 
   @@index([userid])
   @@index([nickname])
@@ -209,36 +219,6 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-model Badge {
-  id          String      @id @default(cuid())
-  name        String      @unique
-  description String
-  icon        String
-  tier        BadgeTier
-  condition   Json
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now()) @db.Timestamptz(6)
-  userBadges  UserBadge[]
-
-  @@index([tier])
-  @@index([isActive])
-  @@map("badges")
-}
-
-model UserBadge {
-  id       String   @id @default(cuid())
-  userId   String
-  badgeId  String
-  earnedAt DateTime @default(now()) @db.Timestamptz(6)
-  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, badgeId])
-  @@index([userId])
-  @@index([earnedAt(sort: Desc)])
-  @@map("user_badges")
-}
-
 model SearchAnalytics {
   id           Int      @id @default(autoincrement())
   query        String
@@ -302,14 +282,6 @@ model SearchMetrics {
   @@map("search_metrics")
 }
 
-enum BadgeTier {
-  BRONZE
-  SILVER
-  GOLD
-  PLATINUM
-  DIAMOND
-}
-
 enum VisibilityLevel {
   PUBLIC
   FOLLOWERS
@@ -327,22 +299,54 @@ enum Language {
   EN
 }
 
-enum FeedTab {
-  RECOMMENDED
-  LATEST
-  FOLLOWING
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
 }
 
-enum ImageQuality {
+enum ReportType {
+  SPAM
+  HARASSMENT
+  HATE_SPEECH
+  SEXUAL_CONTENT
+  VIOLENCE
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportTargetType {
+  REVIEW
+  COMMENT
+  USER
+}
+
+enum ViolationType {
+  SPAM
+  HARASSMENT
+  HATE_SPEECH
+  INAPPROPRIATE_CONTENT
+  COPYRIGHT
+  OTHER
+}
+
+enum ViolationSeverity {
   LOW
   MEDIUM
   HIGH
+  CRITICAL
 }
 
-enum SocialProvider {
-  GOOGLE
-  KAKAO
-  NAVER
+enum ViolationStatus {
+  ACTIVE
+  RESOLVED
+  APPEALED
+  EXPIRED
 }
 
 model UserSettings {
@@ -361,13 +365,6 @@ model UserSettings {
   // 서비스 설정
   theme                 Theme           @default(AUTO)
   language              Language        @default(KO)
-  defaultFeedTab        FeedTab         @default(RECOMMENDED)
-  hideNSFW              Boolean         @default(true)
-  hideSpoilers          Boolean         @default(false)
-  hideNegativeReviews   Boolean         @default(false)
-  imageQuality          ImageQuality    @default(MEDIUM)
-  autoplayVideos        Boolean         @default(false)
-  preloadImages         Boolean         @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -404,31 +401,81 @@ model NotificationSettings {
   @@map("notification_settings")
 }
 
-model ConnectedAccount {
-  id          String   @id @default(cuid())
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation("AdminActions", fields: [adminId], references: [id])
+  action     String   @db.VarChar(50)
+  targetType String   @db.VarChar(20)
+  targetId   String   @db.VarChar(100)
+  reason     String?  @db.VarChar(500)
+  metadata   Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+  @@index([createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
+
+model Report {
+  id              String           @id @default(cuid())
+  reporterId      String
+  reporter        User             @relation("ReportsMade", fields: [reporterId], references: [id])
+  reportedUserId  String
+  reportedUser    User             @relation("ReportsReceived", fields: [reportedUserId], references: [id])
+  targetType      ReportTargetType
+  targetId        String           @db.VarChar(100)
+  type            ReportType
+  reason          String           @db.VarChar(1000)
+  status          ReportStatus     @default(PENDING)
+  reviewedById    String?
+  reviewedAt      DateTime?        @db.Timestamptz(6)
+  adminNotes      String?          @db.VarChar(1000)
+  createdAt       DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(6)
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([status])
+  @@index([targetType, targetId])
+  @@index([createdAt(sort: Desc)])
+  @@map("reports")
+}
+
+model Block {
+  id           String   @id @default(cuid())
+  blockerId    String
+  blocker      User     @relation("BlocksInitiated", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId    String
+  blocked      User     @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+  reason       String?  @db.VarChar(500)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+  @@map("blocks")
+}
+
+model Violation {
+  id          String             @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        ViolationType
+  severity    ViolationSeverity  @default(MEDIUM)
+  status      ViolationStatus    @default(ACTIVE)
+  description String             @db.VarChar(1000)
+  reportId    String?
+  expiresAt   DateTime?          @db.Timestamptz(6)
+  resolvedAt  DateTime?          @db.Timestamptz(6)
+  createdAt   DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime           @updatedAt @db.Timestamptz(6)
 
-  provider    SocialProvider
-  email       String
-  providerId  String
-  connectedAt DateTime  @default(now())
-
-  @@unique([userId, provider])
-  @@map("connected_accounts")
+  @@index([userId])
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt(sort: Desc)])
+  @@map("violations")
 }
 
-model AccountDeletion {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  scheduledAt     DateTime
-  reason          String?
-  feedback        String?
-  cancellationToken String @unique
-
-  createdAt       DateTime @default(now())
-
-  @@map("account_deletions")
-}
