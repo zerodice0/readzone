@@ -21,6 +21,8 @@ export function BookResultCard({ book, onSelect, query }: Props) {
             src={book.thumbnail}
             alt=""
             className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
           />
         ) : null}
       </div>

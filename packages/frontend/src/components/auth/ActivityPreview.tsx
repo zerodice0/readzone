@@ -47,7 +47,7 @@ export function ActivityPreview({ hideHeader = false }: ActivityPreviewProps) {
               <div className="flex items-center space-x-2 mt-1">
                 <div className="flex items-center space-x-1">
                   <Users className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">{popularReview.author.username}</span>
+                  <span className="text-xs text-muted-foreground">{popularReview.author.nickname}</span>
                 </div>
               </div>
             </div>

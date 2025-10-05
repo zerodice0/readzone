@@ -80,7 +80,7 @@ export const LikedReviewsList: FC<LikedReviewsListProps> = ({ userid }) => {
                 author: {
                   id: userid,
                   userid,
-                  username: userid,
+                  nickname: userid,
                 },
                 book: {
                   id: like.review.book.id,

@@ -93,6 +93,8 @@ export const FollowsList: FC<FollowsListProps> = ({ userid, type }) => {
                     src={follow.user.profileImage}
                     alt={follow.user.nickname}
                     className="w-12 h-12 rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">

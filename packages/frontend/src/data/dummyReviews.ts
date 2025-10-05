@@ -12,7 +12,7 @@ export const dummyReviews: ReviewCard[] = [
     author: {
       id: 'user-1',
       userid: 'bookworm_kim',
-      username: '책벌레김독서',
+      nickname: '책벌레김독서',
       profileImage: '/avatars/user-1.jpg'
     },
     book: {
@@ -35,7 +35,7 @@ export const dummyReviews: ReviewCard[] = [
     author: {
       id: 'user-2',
       userid: 'social_critic',
-      username: '사회비평가',
+      nickname: '사회비평가',
       profileImage: '/avatars/user-2.jpg'
     },
     book: {
@@ -58,7 +58,7 @@ export const dummyReviews: ReviewCard[] = [
     author: {
       id: 'user-3',
       userid: 'fantasy_newbie',
-      username: '판타지초보',
+      nickname: '판타지초보',
       profileImage: '/avatars/user-3.jpg'
     },
     book: {

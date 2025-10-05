@@ -1,11 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { getUserProfile } from '@/lib/api/auth'
+import { useEffect, useState } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileTabs } from '@/components/profile/ProfileTabs'
 import { ProfileContent } from '@/components/profile/ProfileContent'
-import { useState } from 'react'
+import { SettingsNavigationModal } from '@/components/profile/SettingsNavigationModal'
+import { getUserProfile, type UserProfileData } from '@/lib/api/auth'
+import { useProfileStore } from '@/store/profileStore'
+import { useAuthStore } from '@/store/authStore'
 
 export const Route = createFileRoute('/profile/$userid')({
   component: ProfilePage,
@@ -13,15 +16,35 @@ export const Route = createFileRoute('/profile/$userid')({
 
 function ProfilePage() {
   const { userid } = Route.useParams()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('reviews')
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const setCurrentProfile = useProfileStore((state) => state.setCurrentProfile)
+  const clearCurrentProfile = useProfileStore((state) => state.clearCurrentProfile)
+  const isAuthReady = useAuthStore((state) => state.isAuthReady)
 
   const { data: profileData, isLoading, error, refetch } = useQuery({
     queryKey: ['user-profile', userid],
     queryFn: () => getUserProfile(userid),
+    enabled: isAuthReady,  // 인증 초기화가 완료된 후에만 프로필 조회
     retry: false,
   })
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!profileData) {
+      return
+    }
+
+    setCurrentProfile(profileData)
+
+    return () => {
+      clearCurrentProfile()
+    }
+  }, [profileData, setCurrentProfile, clearCurrentProfile])
+
+  // 인증 초기화 중이거나 프로필 로딩 중
+  if (!isAuthReady || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -87,15 +110,43 @@ function ProfilePage() {
     )
   }
 
+  const handleProfileUpdate = (updatedProfile: UserProfileData) => {
+    const nextProfile = queryClient.setQueryData<UserProfileData | undefined>(
+      ['user-profile', userid],
+      () => updatedProfile,
+    )
+
+    if (nextProfile) {
+      setCurrentProfile(nextProfile)
+    }
+  }
+
+  const handleNavigateToSettings = () => {
+    navigate({ to: '/settings' })
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <ProfileHeader
           profile={profileData}
-          onProfileUpdate={(_updatedProfile) => {
-            // 프로필 업데이트 처리 (Phase 4에서 구현)
+          onProfileUpdate={handleProfileUpdate}
+          onEditProfile={() => {
+            if (!profileData.isOwner) {
+              return
+            }
+
+            setIsSettingsModalOpen(true)
           }}
         />
+
+        {profileData.isOwner && (
+          <SettingsNavigationModal
+            open={isSettingsModalOpen}
+            onOpenChange={setIsSettingsModalOpen}
+            onNavigateToSettings={handleNavigateToSettings}
+          />
+        )}
 
         {/* 활동 통계 */}
         <ProfileStats stats={profileData.user.stats} className="mt-6" />

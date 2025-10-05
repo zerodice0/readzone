@@ -20,9 +20,9 @@ export function ReviewSearchResultCard({ review }: ReviewSearchResultCardProps) 
           {/* Author Info */}
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={review.author.profileImage} alt={review.author.username} />
+              <AvatarImage src={review.author.profileImage} alt={review.author.nickname} />
               <AvatarFallback>
-                {review.author.username.slice(0, 2).toUpperCase()}
+                {review.author.nickname.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -31,7 +31,7 @@ export function ReviewSearchResultCard({ review }: ReviewSearchResultCardProps) 
                 params={{ userid: review.author.id }}
                 className="text-sm font-medium hover:underline"
               >
-                {review.author.username}
+                {review.author.nickname}
               </Link>
               <p className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(review.createdAt), {
@@ -70,6 +70,8 @@ export function ReviewSearchResultCard({ review }: ReviewSearchResultCardProps) 
               src={review.book.coverImage}
               alt={review.book.title}
               className="w-12 h-16 object-cover rounded"
+              loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className="w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
