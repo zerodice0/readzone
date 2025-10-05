@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import type { AuthActions, AuthError, AuthState, LoginRequest, User } from '@/types/auth'
 import { getTokenTimeUntilExpiration, isTokenExpired, logTokenInfo } from '@/lib/jwt'
+import { useSettingsStore } from '@/store/settingsStore'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4001'
 
 // Cookie 기반 API 호출 헬퍼
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
@@ -90,13 +91,20 @@ interface LoginRequiredModalState {
   redirectTo?: string | undefined;
 }
 
+// Refresh Token Mutex - 동시성 제어를 위한 Promise 캐시
+let refreshPromise: Promise<boolean> | null = null;
+
 type AuthStore = Omit<AuthState, 'refreshToken'> & AuthActions & {
   loginRequiredModal: LoginRequiredModalState;
   setLoginRequiredModal: (modal: LoginRequiredModalState) => void;
+  setAuthReady: (ready: boolean) => void;
   // 토큰 만료 체크 관련
   tokenExpirationCheckId: number | null;
   startTokenExpirationCheck: () => void;
   stopTokenExpirationCheck: () => void;
+  // Role-based access
+  isAdmin: () => boolean;
+  isModerator: () => boolean;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -104,6 +112,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       user: null,
       accessToken: null, // 메모리에만 저장
       isAuthenticated: false,
+      isAuthReady: false,
       isLoading: false,
       error: null,
       rememberMe: false,
@@ -139,6 +148,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
               isLoading: false,
               error: authError,
               isAuthenticated: false,
+              isAuthReady: true,
             })
 
             return false // 성공 여부 반환
@@ -155,6 +165,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
               isLoading: false,
               error: authError,
               isAuthenticated: false,
+              isAuthReady: true,
             })
 
             return false
@@ -170,6 +181,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             isLoading: false,
             error: null,
             rememberMe: false,
+            isAuthReady: true,
           })
           
           // 개발 모드에서 토큰 정보 로그
@@ -192,6 +204,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             isLoading: false,
             error: authError,
             isAuthenticated: false,
+            isAuthReady: true,
           })
 
           return false // 로그인 실패
@@ -215,6 +228,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         try {
           localStorage.removeItem('auth-storage')
           localStorage.removeItem('readzone-auth-store')
+          localStorage.removeItem('settings-store')
           // Zustand persist 미들웨어가 생성했을 수 있는 모든 auth 관련 키 정리
           Object.keys(localStorage).forEach(key => {
             if (key.includes('auth') || key.includes('readzone')) {
@@ -226,6 +240,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           console.warn('Failed to clear localStorage:', error)
         }
         
+        useSettingsStore.getState().requireAuthentication()
+
         set({
           user: null,
           accessToken: null,
@@ -233,6 +249,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isLoading: false,
           error: null,
           rememberMe: false,
+          isAuthReady: true,
         })
       },
 
@@ -256,41 +273,73 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       },
 
       refreshTokens: async () => {
-        try {
-          const response = await apiCall('/api/auth/refresh', {
-            method: 'POST',
-            // RefreshToken은 Cookie에서 자동으로 전송됨
-          })
-          
-          // 백엔드 응답 형식 확인
-          if (!response.success || !response.data) {
-            throw new Error(response.error?.message ?? '토큰 갱신에 실패했습니다.')
-          }
-          
-          const { tokens, user } = response.data
-          const { accessToken } = tokens
-          
-          set({
-            user,
-            accessToken, // 메모리에만 저장
-            isAuthenticated: true,
-          })
-          
-          // 개발 모드에서 토큰 정보 로그
+        // ✅ Refresh Token Mutex: 이미 refresh 진행 중이면 기존 Promise 반환
+        if (refreshPromise) {
           if (import.meta.env.DEV) {
-            logTokenInfo(accessToken, 'Refreshed Access Token')
+            // eslint-disable-next-line no-console
+            console.log('[Auth] Refresh already in progress, returning existing promise')
           }
-          
-          // 토큰 만료 체크 시작 (기존 체크가 있다면 재시작)
-          get().stopTokenExpirationCheck()
-          get().startTokenExpirationCheck()
-          
-          return true
-        } catch (_error) {
-          await get().logout()
 
-          return false
+          return refreshPromise
         }
+
+        // 새로운 refresh Promise 생성 및 캐시
+        refreshPromise = (async () => {
+          if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.log('[Auth] Starting refresh token request', {
+              timestamp: new Date().toISOString(),
+            })
+          }
+
+          try {
+            const response = await apiCall('/api/auth/refresh', {
+              method: 'POST',
+              // RefreshToken은 Cookie에서 자동으로 전송됨
+            })
+
+            // 백엔드 응답 형식 확인
+            if (!response.success || !response.data) {
+              throw new Error(response.error?.message ?? '토큰 갱신에 실패했습니다.')
+            }
+
+            const { tokens, user } = response.data
+            const { accessToken } = tokens
+
+            set({
+              user,
+              accessToken, // 메모리에만 저장
+              isAuthenticated: true,
+              isAuthReady: true,
+            })
+
+            // 개발 모드에서 토큰 정보 로그
+            if (import.meta.env.DEV) {
+              logTokenInfo(accessToken, 'Refreshed Access Token')
+              // eslint-disable-next-line no-console
+              console.log('[Auth] Refresh successful')
+            }
+
+            // 토큰 만료 체크 시작 (기존 체크가 있다면 재시작)
+            get().stopTokenExpirationCheck()
+            get().startTokenExpirationCheck()
+
+            return true
+          } catch (_error) {
+            if (import.meta.env.DEV) {
+              console.error('[Auth] Refresh failed:', _error)
+            }
+
+            await get().logout()
+
+            return false
+          } finally {
+            // ✅ Promise 캐시 초기화 - 다음 refresh 허용
+            refreshPromise = null
+          }
+        })()
+
+        return refreshPromise
       },
 
       getCurrentUser: async () => {
@@ -393,6 +442,23 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         }
       },
 
+      setAuthReady: (ready: boolean) => {
+        set({ isAuthReady: ready })
+      },
+
+      // Role-based access helpers
+      isAdmin: () => {
+        const { user } = get()
+
+        return user?.role === 'ADMIN'
+      },
+
+      isModerator: () => {
+        const { user } = get()
+
+        return user?.role === 'MODERATOR' || user?.role === 'ADMIN'
+      },
+
 }))
 
 // localStorage 정리 헬퍼
@@ -487,6 +553,8 @@ export const setupApiInterceptors = () => {
       if (import.meta.env.DEV) {
         console.warn('[Auth] Initial auth check failed:', error)
       }
+    } finally {
+      useAuthStore.getState().setAuthReady(true)
     }
   }
   

@@ -8,6 +8,7 @@ interface JwtPayload {
   userId: string;
   email: string;
   nickname: string;
+  role?: string;
   type: 'access' | 'refresh';
 }
 
@@ -41,6 +42,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         bio: true,
         profileImage: true,
         isVerified: true,
+        role: true,
+        isSuspended: true,
+        suspendedUntil: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -48,6 +52,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user) {
       throw new UnauthorizedException('User not found');
+    }
+
+    // Check if user is suspended
+    if (user.isSuspended) {
+      if (user.suspendedUntil && user.suspendedUntil > new Date()) {
+        throw new UnauthorizedException(
+          `Account is suspended until ${user.suspendedUntil.toISOString()}`,
+        );
+      } else if (!user.suspendedUntil) {
+        throw new UnauthorizedException('Account is permanently suspended');
+      }
     }
 
     return user;

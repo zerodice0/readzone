@@ -1,3 +1,5 @@
+export type UserRole = 'USER' | 'MODERATOR' | 'ADMIN'
+
 export interface User {
   id: string
   userid: string
@@ -6,6 +8,7 @@ export interface User {
   bio?: string
   profileImage?: string
   isVerified: boolean
+  role: UserRole
   createdAt: string
   updatedAt: string
 }
@@ -37,6 +40,7 @@ export interface AuthState {
   accessToken: string | null
   // refreshToken 제거 - Cookie로 관리
   isAuthenticated: boolean
+  isAuthReady: boolean
   isLoading: boolean
   error: AuthError | null
   rememberMe: boolean
