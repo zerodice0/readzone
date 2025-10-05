@@ -8,7 +8,8 @@ import type { ComponentType, ReactNode } from 'react'
 export interface UserSettings {
   user: {
     id: string;
-    username: string;
+    userid: string;
+    nickname: string;
     email: string;
     bio?: string;
     profileImage?: string;
@@ -50,24 +51,7 @@ export interface UserSettings {
   preferences: {
     theme: 'LIGHT' | 'DARK' | 'AUTO';
     language: 'KO' | 'EN';
-    defaultFeedTab: 'RECOMMENDED' | 'LATEST' | 'FOLLOWING';
-    contentFilter: {
-      hideNSFW: boolean;
-      hideSpoilers: boolean;
-      hideNegativeReviews: boolean;
-    };
-    dataUsage: {
-      imageQuality: 'LOW' | 'MEDIUM' | 'HIGH';
-      autoplayVideos: boolean;
-      preloadImages: boolean;
-    };
   };
-
-  connectedAccounts: {
-    provider: 'GOOGLE' | 'KAKAO' | 'NAVER';
-    email: string;
-    connectedAt: string;
-  }[];
 }
 
 // Settings Store State Interface (Phase 3)
@@ -85,6 +69,7 @@ export interface SettingsState {
   // 에러 상태
   error: string | null;
   fieldErrors: Record<string, string>;
+  isAuthError: boolean; // 인증 에러 여부 추적
 
   // 액션
   loadSettings: () => Promise<void>;
@@ -96,15 +81,13 @@ export interface SettingsState {
   updatePreferences: (data: Partial<UserSettings['preferences']>) => Promise<void>;
 
   // 계정 관리
-  connectAccount: (provider: SocialProvider, authCode: string) => Promise<void>;
-  disconnectAccount: (provider: SocialProvider) => Promise<void>;
-  exportData: () => Promise<string>;
-  deleteAccount: (data: { password: string; reason?: string; feedback?: string }) => Promise<void>;
-  cancelDeletion: (token: string) => Promise<void>;
+  deleteAccount: (data: { password: string }) => Promise<void>;
 
   // 유틸리티
   setActiveTab: (tab: string) => void;
+  markAsChanged: () => void;
   clearError: () => void;
+  requireAuthentication: () => void;
   reset: () => void;
 }
 
@@ -112,7 +95,8 @@ export interface SettingsState {
 export interface UserSettingsResponse {
   user: {
     id: string
-    username: string
+    userid: string
+    nickname: string
     email: string
     bio?: string
     profileImage?: string
@@ -154,29 +138,13 @@ export interface UserSettingsResponse {
   preferences: {
     theme: Theme
     language: Language
-    defaultFeedTab: FeedTab
-    contentFilter: {
-      hideNSFW: boolean
-      hideSpoilers: boolean
-      hideNegativeReviews: boolean
-    }
-    dataUsage: {
-      imageQuality: ImageQuality
-      autoplayVideos: boolean
-      preloadImages: boolean
-    }
   }
-
-  connectedAccounts: ConnectedAccount[]
 }
 
 // Enum Types
 export type VisibilityLevel = 'PUBLIC' | 'FOLLOWERS' | 'PRIVATE'
 export type Theme = 'LIGHT' | 'DARK' | 'AUTO'
 export type Language = 'KO' | 'EN'
-export type FeedTab = 'RECOMMENDED' | 'LATEST' | 'FOLLOWING'
-export type ImageQuality = 'LOW' | 'MEDIUM' | 'HIGH'
-export type SocialProvider = 'GOOGLE' | 'KAKAO' | 'NAVER'
 
 // Individual Setting Categories
 export interface PrivacySettings {
@@ -214,28 +182,11 @@ export interface NotificationSettings {
 export interface UserPreferences {
   theme: Theme
   language: Language
-  defaultFeedTab: FeedTab
-  contentFilter: {
-    hideNSFW: boolean
-    hideSpoilers: boolean
-    hideNegativeReviews: boolean
-  }
-  dataUsage: {
-    imageQuality: ImageQuality
-    autoplayVideos: boolean
-    preloadImages: boolean
-  }
-}
-
-export interface ConnectedAccount {
-  provider: SocialProvider
-  email: string
-  connectedAt: string
 }
 
 // API Request Types
 export interface UpdateProfileRequest {
-  username?: string
+  nickname?: string
   bio?: string
   profileImage?: string
 }
@@ -286,43 +237,17 @@ export interface UpdateNotificationsRequest {
 export interface UpdatePreferencesRequest {
   theme?: Theme
   language?: Language
-  defaultFeedTab?: FeedTab
-  contentFilter?: {
-    hideNSFW?: boolean
-    hideSpoilers?: boolean
-    hideNegativeReviews?: boolean
-  }
-  dataUsage?: {
-    imageQuality?: ImageQuality
-    autoplayVideos?: boolean
-    preloadImages?: boolean
-  }
-}
-
-export interface ConnectAccountRequest {
-  provider: SocialProvider
-  authCode: string
-}
-
-export interface DisconnectAccountRequest {
-  provider: SocialProvider
 }
 
 export interface DeleteAccountRequest {
   password: string
-  reason?: string
-  feedback?: string
-}
-
-export interface CancelDeletionRequest {
-  cancellationToken: string
 }
 
 // API Response Types
 export interface UpdateProfileResponse {
   success: boolean
   user: {
-    username: string
+    nickname: string
     bio?: string
     profileImage?: string
   }
@@ -346,39 +271,6 @@ export interface UpdatePasswordResponse {
     field: string
     message: string
   }[]
-}
-
-export interface ConnectAccountResponse {
-  success: boolean
-  connectedAccount: {
-    provider: string
-    email: string
-    connectedAt: string
-  }
-}
-
-export interface DisconnectAccountResponse {
-  success: boolean
-  remainingMethods: string[]
-  warning?: string // 마지막 로그인 방법인 경우 경고
-}
-
-export interface DataExportResponse {
-  downloadUrl: string
-  expiresAt: string
-  fileSize: number
-  format: 'json' | 'csv'
-}
-
-export interface DeleteAccountResponse {
-  success: boolean
-  deletionDate: string // 30일 후 실제 삭제일
-  cancellationToken: string // 삭제 취소용 토큰
-}
-
-export interface CancelDeletionResponse {
-  success: boolean
-  message: string
 }
 
 // Component Props Types
@@ -417,10 +309,8 @@ export interface PreferenceSettingsProps {
 }
 
 export interface AccountManagementProps {
-  connectedAccounts: ConnectedAccount[]
-  onConnect: (provider: SocialProvider) => Promise<void>
-  onDisconnect: (provider: SocialProvider) => Promise<void>
   onPasswordChange: (data: UpdatePasswordRequest) => Promise<void>
+  onEmailChange: (data: UpdateEmailRequest) => Promise<void>
   onDeleteAccount: () => void
 }
 
@@ -452,14 +342,6 @@ export interface DeleteAccountModalProps {
   isOpen: boolean
   onClose: () => void
   onConfirm: (data: DeleteAccountRequest) => Promise<void>
-  isLoading: boolean
-}
-
-export interface ImageCropperModalProps {
-  image: string
-  isOpen: boolean
-  onClose: () => void
-  onCropComplete: (croppedImage: Blob) => Promise<void>
   isLoading: boolean
 }
 
@@ -518,11 +400,7 @@ export interface UseSettingsReturn {
   updatePreferences: (data: UpdatePreferencesRequest) => Promise<void>
 
   // Account management
-  connectAccount: (provider: SocialProvider) => Promise<void>
-  disconnectAccount: (provider: SocialProvider) => Promise<void>
-  exportData: () => Promise<string>
   deleteAccount: (data: DeleteAccountRequest) => Promise<void>
-  cancelDeletion: (token: string) => Promise<void>
 
   // Utility
   markAsChanged: () => void
@@ -531,7 +409,15 @@ export interface UseSettingsReturn {
 }
 
 export interface UseImageUploadReturn {
-  uploadImage: (file: Blob) => Promise<string>
+  uploadImage: (
+    file: Blob | File,
+    options?: {
+      endpoint?: string
+      fieldName?: string
+      filename?: string
+      extraFields?: Record<string, string>
+    }
+  ) => Promise<string>
   isUploading: boolean
   error: string | null
   progress: number | undefined
@@ -566,13 +452,4 @@ export interface NavigationItem {
   label: string
   icon: ComponentType<{ className?: string }>
   description: string
-}
-
-// Data Export Types
-export interface DataExportOptions {
-  format: 'json' | 'csv'
-  includeReviews: boolean
-  includeComments: boolean
-  includeLikes: boolean
-  includeFollows: boolean
 }

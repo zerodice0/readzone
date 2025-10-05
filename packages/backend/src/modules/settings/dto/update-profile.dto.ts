@@ -9,9 +9,9 @@ import {
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()
-  @MinLength(2)
-  @MaxLength(50)
-  username?: string;
+  @MinLength(2, { message: '닉네임은 최소 2자 이상이어야 합니다.' })
+  @MaxLength(50, { message: '닉네임은 최대 50자까지 입력할 수 있습니다.' })
+  nickname?: string;
 
   @IsOptional()
   @IsString()
@@ -19,14 +19,14 @@ export class UpdateProfileDto {
   bio?: string;
 
   @IsOptional()
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   profileImage?: string;
 }
 
 export class UpdateProfileResponseDto {
   success: boolean;
   user: {
-    username: string;
+    nickname: string;
     bio?: string;
     profileImage?: string;
   };

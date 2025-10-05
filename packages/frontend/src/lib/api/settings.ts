@@ -1,14 +1,6 @@
 import { api } from './client'
 import type {
-  CancelDeletionRequest,
-  CancelDeletionResponse,
-  ConnectAccountRequest,
-  ConnectAccountResponse,
-  DataExportResponse,
   DeleteAccountRequest,
-  DeleteAccountResponse,
-  DisconnectAccountRequest,
-  DisconnectAccountResponse,
   UpdateEmailRequest,
   UpdateEmailResponse,
   UpdateNotificationsRequest,
@@ -30,7 +22,7 @@ export const settingsApi = {
    * 전체 설정 조회
    */
   async getSettings(): Promise<UserSettings> {
-    const response = await api.get<UserSettings>('/settings')
+    const response = await api.get<UserSettings>('/api/settings')
 
     return response.data
   },
@@ -39,7 +31,7 @@ export const settingsApi = {
    * 프로필 업데이트
    */
   async updateProfile(data: UpdateProfileRequest): Promise<UpdateProfileResponse> {
-    const response = await api.put<UpdateProfileResponse>('/settings/profile', data)
+    const response = await api.put<UpdateProfileResponse>('/api/settings/profile', data)
 
     return response.data
   },
@@ -48,7 +40,7 @@ export const settingsApi = {
    * 이메일 변경
    */
   async updateEmail(data: UpdateEmailRequest): Promise<UpdateEmailResponse> {
-    const response = await api.put<UpdateEmailResponse>('/settings/email', data)
+    const response = await api.put<UpdateEmailResponse>('/api/settings/email', data)
 
     return response.data
   },
@@ -57,7 +49,7 @@ export const settingsApi = {
    * 비밀번호 변경
    */
   async updatePassword(data: UpdatePasswordRequest): Promise<UpdatePasswordResponse> {
-    const response = await api.put<UpdatePasswordResponse>('/settings/password', data)
+    const response = await api.put<UpdatePasswordResponse>('/api/settings/password', data)
 
     return response.data
   },
@@ -66,7 +58,7 @@ export const settingsApi = {
    * 개인정보 보호 설정 업데이트
    */
   async updatePrivacy(data: UpdatePrivacyRequest): Promise<{ success: boolean; privacy: UserSettings['privacy'] }> {
-    const response = await api.put<{ success: boolean; privacy: UserSettings['privacy'] }>('/settings/privacy', data)
+    const response = await api.put<{ success: boolean; privacy: UserSettings['privacy'] }>('/api/settings/privacy', data)
 
     return response.data
   },
@@ -75,7 +67,7 @@ export const settingsApi = {
    * 알림 설정 업데이트
    */
   async updateNotifications(data: UpdateNotificationsRequest): Promise<{ success: boolean; notifications: UserSettings['notifications'] }> {
-    const response = await api.put<{ success: boolean; notifications: UserSettings['notifications'] }>('/settings/notifications', data)
+    const response = await api.put<{ success: boolean; notifications: UserSettings['notifications'] }>('/api/settings/notifications', data)
 
     return response.data
   },
@@ -84,52 +76,16 @@ export const settingsApi = {
    * 서비스 설정 업데이트
    */
   async updatePreferences(data: UpdatePreferencesRequest): Promise<{ success: boolean; preferences: UserSettings['preferences'] }> {
-    const response = await api.put<{ success: boolean; preferences: UserSettings['preferences'] }>('/settings/preferences', data)
+    const response = await api.put<{ success: boolean; preferences: UserSettings['preferences'] }>('/api/settings/preferences', data)
 
     return response.data
   },
 
   /**
-   * 소셜 계정 연결
+   * 계정 삭제 (즉시 삭제)
    */
-  async connectAccount(data: ConnectAccountRequest): Promise<ConnectAccountResponse> {
-    const response = await api.post<ConnectAccountResponse>('/settings/account/connect', data)
-
-    return response.data
-  },
-
-  /**
-   * 소셜 계정 해제
-   */
-  async disconnectAccount(data: DisconnectAccountRequest): Promise<DisconnectAccountResponse> {
-    const response = await api.delete<DisconnectAccountResponse>('/settings/account/disconnect', { data })
-
-    return response.data
-  },
-
-  /**
-   * 데이터 내보내기
-   */
-  async exportData(): Promise<DataExportResponse> {
-    const response = await api.get<DataExportResponse>('/settings/data-export')
-
-    return response.data
-  },
-
-  /**
-   * 계정 삭제
-   */
-  async deleteAccount(data: DeleteAccountRequest): Promise<DeleteAccountResponse> {
-    const response = await api.post<DeleteAccountResponse>('/settings/account/delete', data)
-
-    return response.data
-  },
-
-  /**
-   * 계정 삭제 취소
-   */
-  async cancelDeletion(data: CancelDeletionRequest): Promise<CancelDeletionResponse> {
-    const response = await api.post<CancelDeletionResponse>('/settings/account/cancel-deletion', data)
+  async deleteAccount(data: DeleteAccountRequest): Promise<{ success: boolean }> {
+    const response = await api.post<{ success: boolean }>('/api/settings/account/delete', data)
 
     return response.data
   },

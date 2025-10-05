@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { clsx } from 'clsx'
-import { useSettings } from '@/hooks/useSettings'
 import { SettingsActions, SettingsCard, SettingsSection } from '../common/SettingsCard'
 import { SimpleSelect } from '../common/SettingsSelect'
 import { SettingsToggle } from '../common/SettingsToggle'
@@ -16,11 +15,10 @@ interface PrivacySettingsProps {
  * 프로필 공개 설정, 활동 표시 등 개인정보 관리
  */
 function PrivacySettings({ settings, className }: PrivacySettingsProps) {
-  const {
-    updatePrivacy,
-    hasUnsavedChanges,
-    markAsChanged
-  } = useSettings()
+  // TODO: 추후 실제 개인정보 업데이트 기능 구현 시 부모 컴포넌트에서 props로 전달받을 예정
+  const markAsChanged = () => { /* TODO: 구현 예정 */ }
+  const hasUnsavedChanges = false
+  const updatePrivacy = async (_data: unknown) => { /* TODO: 구현 예정 */ }
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<UpdatePrivacyRequest>({

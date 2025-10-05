@@ -1,13 +1,15 @@
 import React, { useState } from 'react'
 import { clsx } from 'clsx'
-import { useSettings } from '@/hooks/useSettings'
 import { SettingsActions, SettingsCard, SettingsSection } from '../common/SettingsCard'
 import { SettingsSelect, SimpleSelect } from '../common/SettingsSelect'
-import { SettingsToggle } from '../common/SettingsToggle'
-import type { FeedTab, Language, Theme, UpdatePreferencesRequest, UserSettingsResponse } from '@/types'
+import type { Language, Theme, UpdatePreferencesRequest, UserSettingsResponse } from '@/types'
+import { useTheme } from '@/contexts/useTheme'
 
 interface PreferenceSettingsProps {
   settings: UserSettingsResponse
+  updatePreferences: (data: UpdatePreferencesRequest) => Promise<void>
+  markAsChanged: () => void
+  hasUnsavedChanges: boolean
   className?: string
 }
 
@@ -15,20 +17,18 @@ interface PreferenceSettingsProps {
  * 환경 설정 섹션
  * 테마, 언어, 피드 설정 등 사용자 선호도 관리
  */
-function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
-  const {
-    updatePreferences,
-    hasUnsavedChanges,
-    markAsChanged
-  } = useSettings()
+function PreferenceSettings({
+  settings,
+  updatePreferences,
+  markAsChanged,
+  hasUnsavedChanges,
+  className
+}: PreferenceSettingsProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<UpdatePreferencesRequest>({
     theme: settings.preferences.theme,
-    language: settings.preferences.language,
-    defaultFeedTab: settings.preferences.defaultFeedTab,
-    contentFilter: settings.preferences.contentFilter,
-    dataUsage: settings.preferences.dataUsage
+    language: settings.preferences.language
   })
 
   // 기본 설정 변경
@@ -40,27 +40,11 @@ function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
     markAsChanged()
   }
 
-  // 콘텐츠 필터 변경
-  const handleContentFilterChange = (field: string, value: boolean | string) => {
-    setFormData(prev => ({
-      ...prev,
-      contentFilter: {
-        ...(prev.contentFilter ?? { hideNSFW: true, hideSpoilers: false, hideNegativeReviews: false }),
-        [field]: value
-      }
-    }))
-    markAsChanged()
-  }
+  const { setTheme: applyThemePreview } = useTheme()
 
-  // 데이터 사용 설정 변경
-  const handleDataUsageChange = (field: string, value: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      dataUsage: {
-        ...(prev.dataUsage ?? { imageQuality: 'MEDIUM', autoplayVideos: false, preloadImages: true }),
-        [field]: value
-      }
-    }))
+  const handleThemeChange = (value: Theme) => {
+    setFormData(prev => ({ ...prev, theme: value }))
+    applyThemePreview(value)
     markAsChanged()
   }
 
@@ -83,7 +67,7 @@ function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
   // 테마 옵션
   const themeOptions = [
     {
-      value: 'light' as Theme,
+      value: 'LIGHT' as Theme,
       label: '라이트 모드',
       description: '밝은 배경으로 표시',
       icon: (
@@ -93,7 +77,7 @@ function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
       )
     },
     {
-      value: 'dark' as Theme,
+      value: 'DARK' as Theme,
       label: '다크 모드',
       description: '어두운 배경으로 표시',
       icon: (
@@ -103,7 +87,7 @@ function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
       )
     },
     {
-      value: 'system' as Theme,
+      value: 'AUTO' as Theme,
       label: '시스템 설정',
       description: '기기 설정을 따름',
       icon: (
@@ -128,25 +112,6 @@ function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
     }
   ]
 
-  // 피드 탭 옵션
-  const feedTabOptions = [
-    {
-      value: 'following' as FeedTab,
-      label: '팔로잉',
-      description: '팔로우한 사용자의 독후감만 표시'
-    },
-    {
-      value: 'discover' as FeedTab,
-      label: '발견',
-      description: '모든 공개 독후감을 시간순으로 표시'
-    },
-    {
-      value: 'trending' as FeedTab,
-      label: '인기',
-      description: '인기 있는 독후감을 우선 표시'
-    }
-  ]
-
   return (
     <div className={className}>
       <SettingsSection
@@ -163,7 +128,7 @@ function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
               label="테마"
               value={formData.theme ?? 'AUTO'}
               options={themeOptions}
-              onChange={(value) => handleBasicChange('theme', value as Theme)}
+              onChange={(value) => handleThemeChange(value as Theme)}
               searchable={false}
             />
 
@@ -176,7 +141,7 @@ function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
                   <button
                     key={theme.value}
                     type="button"
-                    onClick={() => handleBasicChange('theme', theme.value as Theme)}
+                    onClick={() => handleThemeChange(theme.value as Theme)}
                     className={clsx(
                       'p-3 border-2 rounded-lg transition-all cursor-pointer',
                       formData.theme === theme.value
@@ -214,73 +179,6 @@ function PreferenceSettings({ settings, className }: PreferenceSettingsProps) {
               options={languageOptions}
               onChange={(value) => handleBasicChange('language', value as Language)}
             />
-          </SettingsCard>
-
-          {/* 피드 설정 */}
-          <SettingsCard
-            title="피드 설정"
-            description="메인 피드의 기본 탭과 표시 방식을 설정하세요"
-          >
-            <SimpleSelect
-              label="기본 피드 탭"
-              description="메인 페이지에 처음 방문했을 때 표시될 탭"
-              value={formData.defaultFeedTab ?? 'RECOMMENDED'}
-              options={feedTabOptions}
-              onChange={(value) => handleBasicChange('defaultFeedTab', value as FeedTab)}
-            />
-          </SettingsCard>
-
-          {/* 콘텐츠 필터 */}
-          <SettingsCard
-            title="콘텐츠 필터"
-            description="표시되는 콘텐츠를 필터링하는 옵션을 설정하세요"
-          >
-            <div className="space-y-4">
-              <SettingsToggle
-                label="성인 콘텐츠 필터링"
-                description="성인 콘텐츠로 분류된 독후감을 숨깁니다"
-                checked={formData.contentFilter?.hideNSFW ?? false}
-                onChange={(checked) => handleContentFilterChange('hideNSFW', checked)}
-              />
-
-              <SettingsToggle
-                label="스포일러 콘텐츠 블러"
-                description="스포일러가 포함된 독후감 내용을 흐리게 표시합니다"
-                checked={formData.contentFilter?.hideSpoilers ?? false}
-                onChange={(checked) => handleContentFilterChange('hideSpoilers', checked)}
-              />
-
-              <SettingsToggle
-                label="낮은 평점 콘텐츠 숨기기"
-                description="평점이 낮은 독후감을 피드에서 숨깁니다"
-                checked={formData.contentFilter?.hideNegativeReviews ?? false}
-                onChange={(checked) => handleContentFilterChange('hideNegativeReviews', checked)}
-              />
-            </div>
-          </SettingsCard>
-
-          {/* 데이터 사용 설정 */}
-          <SettingsCard
-            title="데이터 사용 설정"
-            description="모바일 데이터 사용량을 줄이기 위한 설정"
-          >
-            <div className="space-y-4">
-              <SettingsToggle
-                label="이미지 사전 로드"
-                description="이미지를 사전에 로드하여 빠른 로딩을 제공합니다"
-                checked={formData.dataUsage?.preloadImages !== false}
-                onChange={(checked) => handleDataUsageChange('preloadImages', checked)}
-              />
-
-              <SettingsToggle
-                label="비디오 자동 재생"
-                description="비디오 콘텐츠를 자동으로 재생합니다"
-                checked={formData.dataUsage?.autoplayVideos !== false}
-                onChange={(checked) => handleDataUsageChange('autoplayVideos', checked)}
-              />
-
-
-            </div>
           </SettingsCard>
 
           {/* 접근성 설정 */}

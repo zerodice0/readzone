@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { clsx } from 'clsx'
-import { useSettings } from '@/hooks/useSettings'
 import { SettingsActions, SettingsCard, SettingsSection } from '../common/SettingsCard'
 import { SettingsToggle } from '../common/SettingsToggle'
 import { SimpleSelect } from '../common/SettingsSelect'
@@ -16,11 +15,10 @@ interface NotificationSettingsProps {
  * 좋아요, 댓글, 팔로우 알림 등 설정
  */
 function NotificationSettings({ settings, className }: NotificationSettingsProps) {
-  const {
-    updateNotifications,
-    hasUnsavedChanges,
-    markAsChanged
-  } = useSettings()
+  // TODO: 추후 실제 알림 업데이트 기능 구현 시 부모 컴포넌트에서 props로 전달받을 예정
+  const markAsChanged = () => { /* TODO: 구현 예정 */ }
+  const hasUnsavedChanges = false
+  const updateNotifications = async (_data: unknown) => { /* TODO: 구현 예정 */ }
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<UpdateNotificationsRequest>({

@@ -1,13 +1,17 @@
 import React, { useRef, useState } from 'react'
 import { clsx } from 'clsx'
-import { useSettings } from '@/hooks/useSettings'
 import { useImageValidation, useProfileImageUpload } from '@/hooks/useImageUpload'
 import { useConfirmation } from '@/hooks/useConfirmation'
 import { SettingsActions, SettingsCard, SettingsField, SettingsSection } from '../common/SettingsCard'
-import type { UserSettingsResponse } from '@/types'
+import type { UpdateProfileRequest, UserSettingsResponse } from '@/types'
+import { useSettingsStore } from '@/store/settingsStore'
+import { useAuthStore } from '@/store/authStore'
 
 interface ProfileSettingsProps {
   settings: UserSettingsResponse
+  updateProfile: (data: UpdateProfileRequest) => Promise<void>
+  markAsChanged: () => void
+  hasUnsavedChanges: boolean
   className?: string
 }
 
@@ -15,14 +19,14 @@ interface ProfileSettingsProps {
  * 프로필 설정 섹션
  * 프로필 이미지, 사용자명, 자기소개 편집
  */
-function ProfileSettings({ settings, className }: ProfileSettingsProps) {
+function ProfileSettings({
+  settings,
+  updateProfile,
+  markAsChanged,
+  hasUnsavedChanges,
+  className
+}: ProfileSettingsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const {
-    updateProfile,
-    markAsChanged,
-    hasUnsavedChanges
-  } = useSettings()
 
   const {
     uploadProfileImage,
@@ -37,7 +41,8 @@ function ProfileSettings({ settings, className }: ProfileSettingsProps) {
 
   // 폼 상태
   const [formData, setFormData] = useState({
-    username: settings.user.username ?? '',
+    userid: settings.user.userid ?? '',  // 읽기 전용
+    nickname: settings.user.nickname ?? '',
     bio: settings.user.bio ?? '',
     profileImage: settings.user.profileImage ?? null
   })
@@ -65,14 +70,58 @@ function ProfileSettings({ settings, className }: ProfileSettingsProps) {
       return
     }
 
+    // 업로드 실패 시 복원할 이전 이미지 URL 저장
+    const previousImageUrl = formData.profileImage
+
     try {
       setValidationErrors({})
+
+      // 이미지 선택 즉시 변경사항으로 표시
+      markAsChanged()
+
       const imageUrl = await uploadProfileImage(file)
 
+      // URL 유효성 검증
+      if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+        throw new Error('업로드된 이미지 URL이 유효하지 않습니다.')
+      }
+
+      // ✅ 로컬 상태 업데이트
       setFormData(prev => ({ ...prev, profileImage: imageUrl }))
-      markAsChanged()
+
+      // ✅ settingsStore 동기화 (낙관적 업데이트)
+      const settingsState = useSettingsStore.getState()
+
+      if (settingsState.settings) {
+        useSettingsStore.setState({
+          settings: {
+            ...settingsState.settings,
+            user: {
+              ...settingsState.settings.user,
+              profileImage: imageUrl
+            }
+          }
+        })
+      }
+
+      // ✅ authStore 동기화 (헤더 등에 즉시 반영)
+      const authState = useAuthStore.getState()
+
+      if (authState.user) {
+        useAuthStore.setState({
+          user: {
+            ...authState.user,
+            profileImage: imageUrl
+          }
+        })
+      }
     } catch (error) {
       console.error('Profile image upload failed:', error)
+      const errorMessage = error instanceof Error ? error.message : '프로필 이미지 업로드에 실패했습니다.'
+
+      // 에러 발생 시 이전 이미지로 복원
+      setFormData(prev => ({ ...prev, profileImage: previousImageUrl }))
+      setValidationErrors({ profileImage: errorMessage })
     } finally {
       // 파일 입력 초기화
       if (fileInputRef.current) {
@@ -113,20 +162,36 @@ function ProfileSettings({ settings, className }: ProfileSettingsProps) {
   const validateForm = () => {
     const errors: Record<string, string> = {}
 
-    // 사용자명 검사
-    if (!formData.username.trim()) {
-      errors.username = '사용자명은 필수입니다.'
-    } else if (formData.username.length < 2) {
-      errors.username = '사용자명은 2자 이상이어야 합니다.'
-    } else if (formData.username.length > 20) {
-      errors.username = '사용자명은 20자 이하여야 합니다.'
-    } else if (!/^[a-zA-Z0-9_가-힣]+$/.test(formData.username)) {
-      errors.username = '사용자명은 영문, 숫자, 한글, 언더스코어만 사용 가능합니다.'
+    // 닉네임 검사
+    if (!formData.nickname.trim()) {
+      errors.nickname = '닉네임은 필수입니다.'
+    } else if (formData.nickname.length < 2) {
+      errors.nickname = '닉네임은 2자 이상이어야 합니다.'
+    } else if (formData.nickname.length > 50) {
+      errors.nickname = '닉네임은 50자 이하여야 합니다.'
     }
 
     // 자기소개 검사
     if (formData.bio && formData.bio.length > 200) {
       errors.bio = '자기소개는 200자 이하여야 합니다.'
+    }
+
+    // URL 유효성 검사 헬퍼
+    const isValidUrl = (url: string): boolean => {
+      if (!url.trim()) {return true} // 빈 값은 허용
+
+      try {
+        new URL(url)
+
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    // 프로필 이미지 URL 검사
+    if (formData.profileImage && !isValidUrl(formData.profileImage)) {
+      errors.profileImage = '프로필 이미지 URL이 유효하지 않습니다.'
     }
 
     setValidationErrors(errors)
@@ -146,7 +211,7 @@ function ProfileSettings({ settings, className }: ProfileSettingsProps) {
 
     try {
       await updateProfile({
-        username: formData.username,
+        nickname: formData.nickname,
         ...(formData.bio && { bio: formData.bio }),
         ...(formData.profileImage && { profileImage: formData.profileImage })
       })
@@ -176,7 +241,8 @@ function ProfileSettings({ settings, className }: ProfileSettingsProps) {
 
     if (confirmed) {
       setFormData({
-        username: settings.user.username ?? '',
+        userid: settings.user.userid ?? '',
+        nickname: settings.user.nickname ?? '',
         bio: settings.user.bio ?? '',
         profileImage: settings.user.profileImage ?? null
       })
@@ -280,24 +346,39 @@ function ProfileSettings({ settings, className }: ProfileSettingsProps) {
           {/* 기본 정보 설정 */}
           <SettingsCard
             title="기본 정보"
-            description="사용자명과 자기소개를 설정하세요"
+            description="사용자 ID, 닉네임, 자기소개를 확인하고 수정하세요"
           >
             <div className="space-y-4">
-              {/* 사용자명 */}
+              {/* 사용자 ID (읽기 전용) */}
               <SettingsField
-                label="사용자명"
+                label="사용자 ID"
+                description="로그인에 사용되는 고유 ID입니다 (변경 불가)"
+              >
+                <div className="flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {formData.userid}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    읽기 전용
+                  </span>
+                </div>
+              </SettingsField>
+
+              {/* 닉네임 */}
+              <SettingsField
+                label="닉네임"
                 description="다른 사용자에게 표시되는 이름입니다"
-                {...(validationErrors.username && { error: validationErrors.username })}
+                {...(validationErrors.nickname && { error: validationErrors.nickname })}
                 required
               >
                 <input
                   type="text"
-                  value={formData.username}
-                  onChange={(e) => handleFieldChange('username', e.target.value)}
-                  placeholder="사용자명을 입력하세요"
+                  value={formData.nickname}
+                  onChange={(e) => handleFieldChange('nickname', e.target.value)}
+                  placeholder="닉네임을 입력하세요"
                   className={clsx(
                     'block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
-                    validationErrors.username && 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    validationErrors.nickname && 'border-red-500 focus:border-red-500 focus:ring-red-500'
                   )}
                 />
               </SettingsField>

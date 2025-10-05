@@ -22,24 +22,6 @@ import {
 import { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import { UpdateNotificationsDto } from './dto/update-notifications.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
-import {
-  ConnectAccountDto,
-  ConnectAccountResponseDto,
-} from './dto/connect-account.dto';
-import {
-  DisconnectAccountDto,
-  DisconnectAccountResponseDto,
-} from './dto/disconnect-account.dto';
-import { DataExportResponseDto } from './dto/data-export.dto';
-import {
-  DeleteAccountDto,
-  DeleteAccountResponseDto,
-} from './dto/delete-account.dto';
-import {
-  CancelDeletionDto,
-  CancelDeletionResponseDto,
-} from './dto/cancel-deletion.dto';
-import crypto from 'crypto';
 
 @Injectable()
 export class SettingsService {
@@ -56,7 +38,6 @@ export class SettingsService {
       include: {
         settings: true,
         notificationSettings: true,
-        connectedAccounts: true,
       },
     });
 
@@ -74,13 +55,6 @@ export class SettingsService {
       showFollowing: true,
       theme: 'AUTO',
       language: 'KO',
-      defaultFeedTab: 'RECOMMENDED',
-      hideNSFW: true,
-      hideSpoilers: false,
-      hideNegativeReviews: false,
-      imageQuality: 'MEDIUM',
-      autoplayVideos: false,
-      preloadImages: true,
     };
 
     const notificationSettings = user.notificationSettings || {
@@ -101,7 +75,8 @@ export class SettingsService {
     return {
       user: {
         id: user.id,
-        username: user.userid,
+        userid: user.userid,
+        nickname: user.nickname,
         email: user.email || '',
         bio: user.bio ?? undefined,
         profileImage: user.profileImage ?? undefined,
@@ -140,23 +115,7 @@ export class SettingsService {
       preferences: {
         theme: settings.theme,
         language: settings.language,
-        defaultFeedTab: settings.defaultFeedTab,
-        contentFilter: {
-          hideNSFW: settings.hideNSFW,
-          hideSpoilers: settings.hideSpoilers,
-          hideNegativeReviews: settings.hideNegativeReviews,
-        },
-        dataUsage: {
-          imageQuality: settings.imageQuality,
-          autoplayVideos: settings.autoplayVideos,
-          preloadImages: settings.preloadImages,
-        },
       },
-      connectedAccounts: user.connectedAccounts.map((account) => ({
-        provider: account.provider,
-        email: account.email,
-        connectedAt: account.connectedAt.toISOString(),
-      })),
     };
   }
 
@@ -167,19 +126,19 @@ export class SettingsService {
     const errors: Array<{ field: string; message: string }> = [];
 
     try {
-      // Check username uniqueness if provided
-      if (dto.username) {
+      // Check nickname uniqueness if provided
+      if (dto.nickname) {
         const existingUser = await this.prisma.user.findFirst({
           where: {
-            userid: dto.username,
+            nickname: dto.nickname,
             NOT: { id: userId },
           },
         });
 
         if (existingUser) {
           errors.push({
-            field: 'username',
-            message: '이미 사용 중인 사용자명입니다.',
+            field: 'nickname',
+            message: '이미 사용 중인 닉네임입니다.',
           });
         }
       }
@@ -188,7 +147,7 @@ export class SettingsService {
         return {
           success: false,
           user: {
-            username: dto.username || '',
+            nickname: dto.nickname || '',
             bio: undefined,
             profileImage: undefined,
           },
@@ -199,14 +158,14 @@ export class SettingsService {
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
         data: {
-          ...(dto.username && { userid: dto.username }),
+          ...(dto.nickname && { nickname: dto.nickname }),
           ...(dto.bio !== undefined && { bio: dto.bio }),
           ...(dto.profileImage !== undefined && {
             profileImage: dto.profileImage,
           }),
         },
         select: {
-          userid: true,
+          nickname: true,
           bio: true,
           profileImage: true,
         },
@@ -215,7 +174,7 @@ export class SettingsService {
       return {
         success: true,
         user: {
-          username: updatedUser.userid,
+          nickname: updatedUser.nickname,
           bio: updatedUser.bio ?? undefined,
           profileImage: updatedUser.profileImage ?? undefined,
         },
@@ -394,26 +353,6 @@ export class SettingsService {
 
     if (dto.theme !== undefined) updateData.theme = dto.theme;
     if (dto.language !== undefined) updateData.language = dto.language;
-    if (dto.defaultFeedTab !== undefined)
-      updateData.defaultFeedTab = dto.defaultFeedTab;
-
-    if (dto.contentFilter) {
-      if (dto.contentFilter.hideNSFW !== undefined)
-        updateData.hideNSFW = dto.contentFilter.hideNSFW;
-      if (dto.contentFilter.hideSpoilers !== undefined)
-        updateData.hideSpoilers = dto.contentFilter.hideSpoilers;
-      if (dto.contentFilter.hideNegativeReviews !== undefined)
-        updateData.hideNegativeReviews = dto.contentFilter.hideNegativeReviews;
-    }
-
-    if (dto.dataUsage) {
-      if (dto.dataUsage.imageQuality !== undefined)
-        updateData.imageQuality = dto.dataUsage.imageQuality;
-      if (dto.dataUsage.autoplayVideos !== undefined)
-        updateData.autoplayVideos = dto.dataUsage.autoplayVideos;
-      if (dto.dataUsage.preloadImages !== undefined)
-        updateData.preloadImages = dto.dataUsage.preloadImages;
-    }
 
     await this.prisma.userSettings.upsert({
       where: { userId },
@@ -423,160 +362,5 @@ export class SettingsService {
       },
       update: updateData,
     });
-  }
-
-  async connectAccount(
-    userId: string,
-    dto: ConnectAccountDto,
-  ): Promise<ConnectAccountResponseDto> {
-    // In a real implementation, you'd validate the OAuth token here
-    // For now, we'll create a mock connected account
-    const mockEmail = `user@${dto.provider.toLowerCase()}.com`;
-
-    const connectedAccount = await this.prisma.connectedAccount.create({
-      data: {
-        userId,
-        provider: dto.provider,
-        email: mockEmail,
-        providerId: crypto.randomUUID(),
-      },
-    });
-
-    return {
-      success: true,
-      connectedAccount: {
-        provider: connectedAccount.provider,
-        email: connectedAccount.email,
-        connectedAt: connectedAccount.connectedAt.toISOString(),
-      },
-    };
-  }
-
-  async disconnectAccount(
-    userId: string,
-    dto: DisconnectAccountDto,
-  ): Promise<DisconnectAccountResponseDto> {
-    // Check if this is the last login method
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        connectedAccounts: true,
-      },
-    });
-
-    if (!user) {
-      throw new BadRequestException('사용자를 찾을 수 없습니다.');
-    }
-
-    const hasPassword = !!user.password;
-    const connectedAccountsCount = user.connectedAccounts.length;
-    const remainingMethods: string[] = [];
-
-    if (hasPassword) remainingMethods.push('password');
-    user.connectedAccounts.forEach((account) => {
-      if (account.provider !== dto.provider) {
-        remainingMethods.push(account.provider.toLowerCase());
-      }
-    });
-
-    // Prevent disconnecting if it's the only login method
-    if (!hasPassword && connectedAccountsCount <= 1) {
-      throw new BadRequestException(
-        '마지막 로그인 방법은 해제할 수 없습니다. 다른 로그인 방법을 먼저 추가해주세요.',
-      );
-    }
-
-    await this.prisma.connectedAccount.deleteMany({
-      where: {
-        userId,
-        provider: dto.provider,
-      },
-    });
-
-    const warning =
-      remainingMethods.length <= 1
-        ? '로그인 방법이 하나만 남았습니다.'
-        : undefined;
-
-    return {
-      success: true,
-      remainingMethods,
-      warning,
-    };
-  }
-
-  exportData(userId: string): DataExportResponseDto {
-    // In a real implementation, you'd generate and upload the file
-    // For now, return a mock response
-    const mockUrl = `https://api.readzone.com/exports/user-${userId}-${Date.now()}.json`;
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    return {
-      downloadUrl: mockUrl,
-      expiresAt: expiresAt.toISOString(),
-      fileSize: 1024 * 50, // 50KB mock
-      format: 'json',
-    };
-  }
-
-  async deleteAccount(
-    userId: string,
-    dto: DeleteAccountDto,
-  ): Promise<DeleteAccountResponseDto> {
-    // Verify password
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, password: true },
-    });
-
-    if (!user || !user.password) {
-      throw new BadRequestException('사용자를 찾을 수 없습니다.');
-    }
-
-    const isPasswordValid = await verifyPassword(dto.password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
-    }
-
-    // Schedule deletion 30 days from now
-    const scheduledAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    const cancellationToken = crypto.randomBytes(32).toString('hex');
-
-    await this.prisma.accountDeletion.create({
-      data: {
-        userId,
-        scheduledAt,
-        reason: dto.reason,
-        feedback: dto.feedback,
-        cancellationToken,
-      },
-    });
-
-    return {
-      success: true,
-      deletionDate: scheduledAt.toISOString(),
-      cancellationToken,
-    };
-  }
-
-  async cancelDeletion(
-    dto: CancelDeletionDto,
-  ): Promise<CancelDeletionResponseDto> {
-    const deletion = await this.prisma.accountDeletion.findUnique({
-      where: { cancellationToken: dto.cancellationToken },
-    });
-
-    if (!deletion) {
-      throw new BadRequestException('유효하지 않은 취소 토큰입니다.');
-    }
-
-    await this.prisma.accountDeletion.delete({
-      where: { id: deletion.id },
-    });
-
-    return {
-      success: true,
-      message: '계정 삭제가 성공적으로 취소되었습니다.',
-    };
   }
 }

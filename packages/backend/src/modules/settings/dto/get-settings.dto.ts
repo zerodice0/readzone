@@ -1,7 +1,8 @@
 export class UserSettingsResponseDto {
   user: {
     id: string;
-    username: string;
+    userid: string;
+    nickname: string;
     email: string;
     bio?: string;
     profileImage?: string;
@@ -43,22 +44,5 @@ export class UserSettingsResponseDto {
   preferences: {
     theme: 'LIGHT' | 'DARK' | 'AUTO';
     language: 'KO' | 'EN';
-    defaultFeedTab: 'RECOMMENDED' | 'LATEST' | 'FOLLOWING';
-    contentFilter: {
-      hideNSFW: boolean;
-      hideSpoilers: boolean;
-      hideNegativeReviews: boolean;
-    };
-    dataUsage: {
-      imageQuality: 'LOW' | 'MEDIUM' | 'HIGH';
-      autoplayVideos: boolean;
-      preloadImages: boolean;
-    };
   };
-
-  connectedAccounts: Array<{
-    provider: 'GOOGLE' | 'KAKAO' | 'NAVER';
-    email: string;
-    connectedAt: string;
-  }>;
 }

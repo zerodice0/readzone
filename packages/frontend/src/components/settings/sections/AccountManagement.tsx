@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useSettings } from '@/hooks/useSettings'
-import { useAccountDeletionConfirmation, useConfirmation, useDangerConfirmation } from '@/hooks/useConfirmation'
+import { useAccountDeletionConfirmation } from '@/hooks/useConfirmation'
 import { SettingsCard, SettingsField, SettingsSection } from '../common/SettingsCard'
-import type { SocialProvider, UserSettingsResponse } from '@/types'
+import type { UserSettingsResponse } from '@/types'
 
 interface AccountManagementProps {
   settings: UserSettingsResponse
@@ -17,15 +17,9 @@ function AccountManagement({ settings, className }: AccountManagementProps) {
   const {
     updateEmail,
     updatePassword,
-    connectAccount,
-    disconnectAccount,
-    exportData,
-    deleteAccount,
-    // hasUnsavedChanges
+    deleteAccount
   } = useSettings()
 
-  const { showConfirmation, ConfirmationModal } = useConfirmation()
-  const { showDangerConfirmation } = useDangerConfirmation()
   const { showAccountDeletionConfirmation } = useAccountDeletionConfirmation()
 
   // 이메일 변경 상태
@@ -142,67 +136,14 @@ function AccountManagement({ settings, className }: AccountManagementProps) {
     }
   }
 
-  // 소셜 계정 연결
-  const handleConnectAccount = async (provider: SocialProvider) => {
-    try {
-      // TODO: 실제 OAuth 흐름에서는 authCode를 받아와야 함
-      await connectAccount(provider, 'mock-auth-code')
-      // TODO: 성공 토스트 메시지
-    } catch (_error: unknown) {
-      // TODO: 에러 토스트 메시지
-    }
-  }
-
-  // 소셜 계정 연결 해제
-  const handleDisconnectAccount = async (provider: SocialProvider) => {
-    const confirmed = await showDangerConfirmation({
-      title: '계정 연결 해제',
-      message: `${provider === 'GOOGLE' ? 'Google' : provider === 'KAKAO' ? 'Kakao' : 'Naver'} 계정 연결을 해제하시겠습니까?`,
-      confirmText: '연결 해제',
-      cancelText: '취소'
-    })
-
-    if (confirmed) {
-      try {
-        await disconnectAccount(provider)
-        // TODO: 성공 토스트 메시지
-      } catch (_error: unknown) {
-        // TODO: 에러 토스트 메시지
-      }
-    }
-  }
-
-  // 데이터 내보내기
-  const handleExportData = async () => {
-    const confirmed = await showConfirmation({
-      title: '데이터 내보내기',
-      message: '계정의 모든 데이터를 ZIP 파일로 다운로드하시겠습니까?',
-      confirmText: '다운로드',
-      cancelText: '취소'
-    })
-
-    if (confirmed) {
-      try {
-        const downloadUrl = await exportData()
-
-        window.open(downloadUrl, '_blank')
-        // TODO: 성공 토스트 메시지
-      } catch (_error: unknown) {
-        // TODO: 에러 토스트 메시지
-      }
-    }
-  }
-
-  // 계정 삭제
+  // 계정 삭제 (즉시 삭제)
   const handleDeleteAccount = async () => {
     const confirmed = await showAccountDeletionConfirmation()
 
     if (confirmed) {
       try {
         await deleteAccount({
-          password: 'temp-password', // TODO: 실제 비밀번호 확인 구현 필요
-          reason: '사용자 요청',
-          feedback: ''
+          password: 'temp-password' // TODO: 실제 비밀번호 확인 구현 필요
         })
         // TODO: 로그아웃 후 홈페이지로 이동
       } catch (_error: unknown) {
@@ -211,33 +152,11 @@ function AccountManagement({ settings, className }: AccountManagementProps) {
     }
   }
 
-  // 소셜 프로바이더 정보
-  const socialProviders = [
-    {
-      id: 'google' as SocialProvider,
-      name: 'Google',
-      icon: '🔗',
-      description: 'Google 계정으로 간편 로그인'
-    },
-    {
-      id: 'facebook' as SocialProvider,
-      name: 'Facebook',
-      icon: '🔗',
-      description: 'Facebook 계정으로 간편 로그인'
-    },
-    {
-      id: 'github' as SocialProvider,
-      name: 'GitHub',
-      icon: '🔗',
-      description: 'GitHub 계정으로 간편 로그인'
-    }
-  ]
-
   return (
     <div className={className}>
       <SettingsSection
         title="계정 관리"
-        description="보안 설정, 연결된 계정, 계정 삭제 등을 관리하세요"
+        description="보안 설정과 계정 삭제를 관리하세요"
       >
         <div className="space-y-6">
           {/* 보안 설정 */}
@@ -419,90 +338,12 @@ function AccountManagement({ settings, className }: AccountManagementProps) {
             </div>
           </SettingsCard>
 
-          {/* 연결된 계정 */}
+          {/* 계정 삭제 */}
           <SettingsCard
-            title="연결된 계정"
-            description="소셜 계정을 연결하여 간편하게 로그인하세요"
-          >
-            <div className="space-y-3">
-              {socialProviders.map((provider) => {
-                const isConnected = settings.connectedAccounts.some(
-                  account => account.provider === provider.id
-                )
-                const connectedAccount = settings.connectedAccounts.find(
-                  account => account.provider === provider.id
-                )
-
-                return (
-                  <div
-                    key={provider.id}
-                    className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="text-2xl">{provider.icon}</div>
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {provider.name}
-                        </h4>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                          {isConnected ? (
-                            <>연결됨 ({connectedAccount?.email})</>
-                          ) : (
-                            provider.description
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    {isConnected ? (
-                      <button
-                        type="button"
-                        onClick={() => handleDisconnectAccount(provider.id)}
-                        className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
-                      >
-                        연결 해제
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleConnectAccount(provider.id)}
-                        className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        연결
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </SettingsCard>
-
-          {/* 데이터 관리 */}
-          <SettingsCard
-            title="데이터 관리"
-            description="개인 데이터를 내보내거나 계정을 삭제할 수 있습니다"
+            title="계정 삭제"
+            description="계정을 영구적으로 삭제할 수 있습니다"
           >
             <div className="space-y-4">
-              {/* 데이터 내보내기 */}
-              <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    데이터 내보내기
-                  </h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    독후감, 댓글, 프로필 정보 등 모든 데이터를 ZIP 파일로 다운로드
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleExportData}
-                  className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  내보내기
-                </button>
-              </div>
-
-              {/* 계정 삭제 */}
               <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 <div className="flex items-start space-x-3">
                   <svg className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -513,8 +354,8 @@ function AccountManagement({ settings, className }: AccountManagementProps) {
                       계정 영구 삭제
                     </h4>
                     <p className="text-xs text-red-700 dark:text-red-300 mb-3">
-                      계정을 삭제하면 모든 독후감, 댓글, 좋아요가 영구적으로 삭제됩니다.
-                      삭제된 데이터는 복구할 수 없으며, 30일 후 완전히 삭제됩니다.
+                      계정을 삭제하면 모든 독후감, 댓글, 좋아요가 즉시 영구적으로 삭제됩니다.
+                      삭제된 데이터는 복구할 수 없습니다.
                     </p>
                     <div className="flex items-center space-x-3">
                       <button
@@ -534,56 +375,8 @@ function AccountManagement({ settings, className }: AccountManagementProps) {
             </div>
           </SettingsCard>
 
-          {/* 세션 관리 */}
-          <SettingsCard
-            title="세션 관리"
-            description="로그인된 기기와 세션을 관리합니다"
-          >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    현재 세션
-                  </h4>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    이 기기 • 마지막 활동: 방금 전
-                  </p>
-                </div>
-                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 text-xs rounded-full">
-                  활성
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  다른 모든 세션에서 로그아웃
-                </span>
-                <button
-                  type="button"
-                  className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                  onClick={async () => {
-                    const confirmed = await showConfirmation({
-                      title: '모든 세션 종료',
-                      message: '다른 모든 기기에서 로그아웃됩니다. 계속하시겠습니까?',
-                      confirmText: '로그아웃',
-                      cancelText: '취소'
-                    })
-
-                    if (confirmed) {
-                      // TODO: 모든 세션 종료 API 호출
-                    }
-                  }}
-                >
-                  모든 세션 종료
-                </button>
-              </div>
-            </div>
-          </SettingsCard>
         </div>
       </SettingsSection>
-
-      {/* 확인 모달 */}
-      <ConfirmationModal />
     </div>
   )
 }

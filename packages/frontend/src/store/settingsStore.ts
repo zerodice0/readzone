@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { handleApiError, settingsApi } from '@/lib/api/settings'
-import type { ConnectedAccount, SettingsState, SocialProvider } from '@/types/settings'
+import type { SettingsState } from '@/types/settings'
+import { useAuthStore } from '@/store/authStore'
 
 // API 에러 타입 정의
 interface ApiError {
@@ -30,6 +31,9 @@ const deepMerge = <T extends DeepMergeable>(target: T, source: Partial<T>): T =>
   return result
 }
 
+// API 호출 중복 방지를 위한 참조
+let loadingPromise: Promise<void> | null = null
+
 export const useSettingsStore = create<SettingsState>()(
   devtools(
     persist(
@@ -43,29 +47,63 @@ export const useSettingsStore = create<SettingsState>()(
         hasUnsavedChanges: false,
         error: null,
         fieldErrors: {},
+        isAuthError: false,
 
         // 설정 로드
         loadSettings: async () => {
+          const { isLoading, requireAuthentication } = get()
+          const { isAuthenticated, isAuthReady } = useAuthStore.getState()
+
+          if (!isAuthReady) {
+            return Promise.resolve()
+          }
+
+          // 이미 로딩 중이거나 설정이 이미 있으면 기존 Promise 반환
+          if (isLoading || loadingPromise) {
+            return loadingPromise ?? Promise.resolve()
+          }
+
+          if (!isAuthenticated) {
+            requireAuthentication()
+
+            return Promise.resolve()
+          }
+
           set((state) => {
             state.isLoading = true
             state.error = null
+            state.isAuthError = false
           })
 
-          try {
-            const settings = await settingsApi.getSettings()
+          loadingPromise = (async () => {
+            try {
+              const settings = await settingsApi.getSettings()
 
-            set((state) => {
-              state.settings = settings
-              state.originalSettings = structuredClone(settings)
-              state.isLoading = false
-              state.hasUnsavedChanges = false
-            })
-          } catch (error: unknown) {
-            set((state) => {
-              state.isLoading = false
-              state.error = handleApiError(error)
-            })
-          }
+              set((state) => {
+                state.settings = settings
+                state.originalSettings = structuredClone(settings)
+                state.isLoading = false
+                state.hasUnsavedChanges = false
+              })
+            } catch (error: unknown) {
+              const errorObj = error as { response?: { status?: number } }
+
+              // 401 에러인 경우 인증 에러 플래그 설정
+              if (errorObj.response?.status === 401) {
+                requireAuthentication()
+              } else {
+                set((state) => {
+                  state.isLoading = false
+                  state.error = handleApiError(error)
+                  state.isAuthError = false
+                })
+              }
+            } finally {
+              loadingPromise = null
+            }
+          })()
+
+          return loadingPromise
         },
 
         // 프로필 업데이트
@@ -330,10 +368,6 @@ export const useSettingsStore = create<SettingsState>()(
               }
             })
 
-            // 테마 변경 시 즉시 적용
-            if (data.theme) {
-              document.documentElement.setAttribute('data-theme', data.theme.toLowerCase())
-            }
           } catch (error: unknown) {
             // 롤백
             set((state) => {
@@ -348,108 +382,7 @@ export const useSettingsStore = create<SettingsState>()(
           }
         },
 
-        // 소셜 계정 연결
-        connectAccount: async (provider: SocialProvider, authCode: string) => {
-          set((state) => {
-            state.isSaving = true
-            state.error = null
-          })
-
-          try {
-            const result = await settingsApi.connectAccount({ provider, authCode })
-
-            set((state) => {
-              if (state.settings && result.success) {
-                state.settings.connectedAccounts.push(result.connectedAccount)
-                if (state.originalSettings) {
-                  state.originalSettings.connectedAccounts.push(result.connectedAccount)
-                }
-              }
-              state.isSaving = false
-            })
-          } catch (error: unknown) {
-            set((state) => {
-              state.isSaving = false
-              state.error = handleApiError(error)
-            })
-          }
-        },
-
-        // 소셜 계정 해제
-        disconnectAccount: async (provider: SocialProvider) => {
-          const { settings } = get()
-
-          if (!settings) {return}
-
-          set((state) => {
-            state.isSaving = true
-            state.error = null
-          })
-
-          try {
-            const result = await settingsApi.disconnectAccount({ provider })
-
-            if (result.success) {
-              set((state) => {
-                if (state.settings) {
-                  state.settings.connectedAccounts = state.settings.connectedAccounts
-                    .filter((account: ConnectedAccount) => account.provider !== provider)
-                  if (state.originalSettings) {
-                    state.originalSettings.connectedAccounts = state.originalSettings.connectedAccounts
-                      .filter((account: ConnectedAccount) => account.provider !== provider)
-                  }
-                }
-                state.isSaving = false
-              })
-
-              if (result.warning) {
-                console.warn(result.warning)
-              }
-            } else {
-              throw new Error('계정 연결 해제에 실패했습니다.')
-            }
-          } catch (error: unknown) {
-            set((state) => {
-              state.isSaving = false
-              state.error = handleApiError(error)
-            })
-          }
-        },
-
-        // 데이터 내보내기
-        exportData: async () => {
-          set((state) => {
-            state.isSaving = true
-            state.error = null
-          })
-
-          try {
-            const result = await settingsApi.exportData()
-
-            set((state) => {
-              state.isSaving = false
-            })
-
-            // 자동 다운로드 시작
-            const link = document.createElement('a')
-
-            link.href = result.downloadUrl
-            link.download = `readzone-data-${new Date().toISOString().split('T')[0]}.json`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-
-            return result.downloadUrl
-          } catch (error: unknown) {
-            set((state) => {
-              state.isSaving = false
-              state.error = handleApiError(error)
-            })
-            throw error
-          }
-        },
-
-        // 계정 삭제
+        // 계정 삭제 (즉시 삭제)
         deleteAccount: async (data) => {
           set((state) => {
             state.isSaving = true
@@ -460,36 +393,8 @@ export const useSettingsStore = create<SettingsState>()(
             const result = await settingsApi.deleteAccount(data)
 
             if (result.success) {
-              // 계정 삭제 예약 알림 - UI에서 알림 처리
-              // TODO: toast 또는 알림 시스템으로 교체 (`계정 삭제가 예약되었습니다. ${result.deletionDate}에 영구 삭제됩니다.`)
-              // 로그아웃 처리
+              // 계정 삭제 완료 - 즉시 로그아웃
               window.location.href = '/login'
-            }
-          } catch (error: unknown) {
-            set((state) => {
-              state.isSaving = false
-              state.error = handleApiError(error)
-            })
-          }
-        },
-
-        // 삭제 취소
-        cancelDeletion: async (token) => {
-          set((state) => {
-            state.isSaving = true
-            state.error = null
-          })
-
-          try {
-            const result = await settingsApi.cancelDeletion({ cancellationToken: token })
-
-            set((state) => {
-              state.isSaving = false
-            })
-
-            if (result.success) {
-              // 계정 삭제 취소 성공 - UI에서 알림 처리
-              // TODO: toast 또는 알림 시스템으로 교체
             }
           } catch (error: unknown) {
             set((state) => {
@@ -502,37 +407,61 @@ export const useSettingsStore = create<SettingsState>()(
         // 유틸리티 함수들
         setActiveTab: (tab) => set((state) => { state.activeTab = tab }),
 
+        markAsChanged: () => set((state) => {
+          state.hasUnsavedChanges = true
+        }),
+
         clearError: () => set((state) => {
           state.error = null
           state.fieldErrors = {}
+          state.isAuthError = false
         }),
 
-        reset: () => set(() => ({
-          settings: null,
-          originalSettings: null,
-          activeTab: 'profile',
-          isLoading: false,
-          isSaving: false,
-          hasUnsavedChanges: false,
-          error: null,
-          fieldErrors: {},
-        })),
+        requireAuthentication: () => {
+          loadingPromise = null
+
+          set((state) => {
+            state.settings = null
+            state.originalSettings = null
+            state.isLoading = false
+            state.isSaving = false
+            state.hasUnsavedChanges = false
+            state.error = '인증이 만료되었습니다. 다시 로그인해주세요.'
+            state.fieldErrors = {}
+            state.isAuthError = true
+          })
+        },
+
+        reset: () => {
+          loadingPromise = null
+
+          set(() => ({
+            settings: null,
+            originalSettings: null,
+            activeTab: 'profile',
+            isLoading: false,
+            isSaving: false,
+            hasUnsavedChanges: false,
+            error: null,
+            fieldErrors: {},
+            isAuthError: false,
+          }))
+        },
       })),
       {
         name: 'settings-store',
         partialize: (state) => ({
           activeTab: state.activeTab,
-          settings: state.settings,
         }),
-        version: 1,
+        version: 2,
         migrate: (persistedState: unknown, version: number) => {
           // 스키마 마이그레이션 로직
-          if (version < 1) {
+          if (version < 2) {
             const state = persistedState as Record<string, unknown>
 
             return {
               ...state,
-              // 필요한 마이그레이션 로직
+              settings: null,
             }
           }
 

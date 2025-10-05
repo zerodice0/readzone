@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useSettingsStore } from '@/store/settingsStore'
+import { useAuthStore } from '@/store/authStore'
 import type {
   DeleteAccountRequest,
-  SocialProvider,
   UpdateEmailRequest,
   UpdateNotificationsRequest,
   UpdatePasswordRequest,
@@ -18,13 +18,25 @@ import type {
  */
 export function useSettings() {
   const store = useSettingsStore()
+  const isAuthReady = useAuthStore(state => state.isAuthReady)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
 
-  // 컴포넌트 마운트 시 설정 로드
+  // 인증 상태 초기화 이후에만 설정 로드 시도
   useEffect(() => {
-    if (!store.settings) {
-      store.loadSettings()
+    if (!isAuthReady) {
+      return
     }
-  }, [store, store.loadSettings, store.settings])
+
+    const settingsState = useSettingsStore.getState()
+
+    if (isAuthenticated) {
+      if (!settingsState.settings && !settingsState.isLoading) {
+        void settingsState.loadSettings()
+      }
+    } else {
+      settingsState.requireAuthentication()
+    }
+  }, [isAuthReady, isAuthenticated])
 
   return {
     // 데이터
@@ -37,6 +49,7 @@ export function useSettings() {
     hasUnsavedChanges: store.hasUnsavedChanges,
     error: store.error,
     fieldErrors: store.fieldErrors,
+    isAuthError: store.isAuthError,
 
     // 액션
     loadSettings: store.loadSettings,
@@ -50,19 +63,13 @@ export function useSettings() {
       store.updatePreferences(data as Partial<UserSettingsResponse['preferences']>),
 
     // 계정 관리
-    connectAccount: (provider: SocialProvider, authCode: string) =>
-      store.connectAccount(provider, authCode),
-    disconnectAccount: (provider: SocialProvider) =>
-      store.disconnectAccount(provider),
-    exportData: store.exportData,
     deleteAccount: (data: DeleteAccountRequest) => store.deleteAccount(data),
-    cancelDeletion: (token: string) => store.cancelDeletion(token),
 
     // 유틸리티
     setActiveTab: store.setActiveTab,
     clearError: store.clearError,
     reset: store.reset,
-    markAsChanged: () => store.setActiveTab(store.activeTab), // Trigger change detection
+    markAsChanged: store.markAsChanged,
     refresh: store.loadSettings,
   }
 }
