@@ -1,59 +1,53 @@
 import {
   Injectable,
-  InternalServerErrorException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { v2 as cloudinary } from 'cloudinary';
+import * as path from 'node:path';
+import { promises as fs } from 'node:fs';
+import sharp from 'sharp';
 import { UpdateAvatarResponse } from './dto/update-profile.dto';
 
-interface CloudinaryUploadResult {
-  secure_url: string;
-  public_id: string;
+interface AvatarVariantConfig {
+  key: 'thumbnail' | 'small' | 'medium' | 'large';
+  width: number;
+  height: number;
+  quality: number;
+}
+
+interface SavedAvatarVariant {
+  key: AvatarVariantConfig['key'];
+  publicUrl: string;
 }
 
 @Injectable()
 export class AvatarService {
-  private configured = false;
+  private readonly storageRoot: string;
+  private readonly avatarDirectory: string;
+  private readonly publicBaseUrl: string;
 
-  constructor(private configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) {
+    const configuredRoot = this.configService.get<string>('FILE_STORAGE_ROOT');
+    this.storageRoot = configuredRoot
+      ? path.resolve(configuredRoot)
+      : path.resolve(process.cwd(), 'packages/backend/storage');
 
-  private ensureConfigured() {
-    if (this.configured) return;
+    this.avatarDirectory = path.join(this.storageRoot, 'uploads', 'avatars');
 
-    const cloudName = this.configService.get<string | undefined>(
-      'CLOUDINARY_CLOUD_NAME',
-    );
-    const apiKey = this.configService.get<string | undefined>(
-      'CLOUDINARY_API_KEY',
-    );
-    const apiSecret = this.configService.get<string | undefined>(
-      'CLOUDINARY_API_SECRET',
-    );
-
-    if (!cloudName || !apiKey || !apiSecret) {
-      throw new InternalServerErrorException(
-        'Cloudinary environment variables are not configured',
-      );
-    }
-
-    cloudinary.config({
-      cloud_name: cloudName,
-      api_key: apiKey,
-      api_secret: apiSecret,
-    });
-
-    this.configured = true;
+    const configuredPublicUrl =
+      this.configService.get<string>('BACKEND_PUBLIC_URL');
+    const defaultPort = this.configService.get<string>('PORT') ?? '3001';
+    this.publicBaseUrl = (
+      configuredPublicUrl ?? `http://localhost:${defaultPort}`
+    ).replace(/\/$/, '');
   }
 
   async uploadAvatar(
     userId: string,
     file: Express.Multer.File,
   ): Promise<UpdateAvatarResponse> {
-    this.ensureConfigured();
-
     try {
-      // Validate file
       if (!file) {
         throw new BadRequestException('이미지 파일이 필요합니다.');
       }
@@ -68,88 +62,94 @@ export class AvatarService {
         throw new BadRequestException('파일 크기는 5MB 이하여야 합니다.');
       }
 
-      // Generate multiple sizes with cropping if provided
-      const sizes = this.generateMultipleSizes(file.buffer);
+      await this.ensureStorageDirectory();
 
-      // Upload all sizes to Cloudinary
-      const uploadPromises = Object.entries(sizes).map(([sizeName, buffer]) =>
-        this.uploadToCloudinary(buffer, `avatar_${userId}_${sizeName}`),
+      const baseName = this.buildBaseFileName(userId);
+      const savedVariants = await Promise.all(
+        this.getVariantConfig().map((variant) =>
+          this.generateVariant(file.buffer, baseName, variant),
+        ),
       );
 
-      const uploadResults = await Promise.all(uploadPromises);
-
-      // Map results to size URLs
-      const avatarUrls: {
-        thumbnail: string;
-        small: string;
-        medium: string;
-        large: string;
-      } = {
-        thumbnail: uploadResults[0].secure_url, // 50x50
-        small: uploadResults[1].secure_url, // 100x100
-        medium: uploadResults[2].secure_url, // 200x200
-        large: uploadResults[3].secure_url, // 400x400
-      };
+      const urls = savedVariants.reduce(
+        (acc, variant) => {
+          acc[variant.key] = variant.publicUrl;
+          return acc;
+        },
+        {
+          thumbnail: '',
+          small: '',
+          medium: '',
+          large: '',
+        } as { [key in AvatarVariantConfig['key']]: string },
+      );
 
       return {
         success: true,
-        profileImage: avatarUrls.medium, // 기본 프로필 이미지
-        sizes: avatarUrls,
+        profileImage: urls.medium,
+        sizes: urls,
       };
     } catch (error) {
       console.error('Avatar upload error:', error);
       if (error instanceof BadRequestException) {
         throw error;
       }
+
       throw new InternalServerErrorException(
         '프로필 사진 업로드 중 오류가 발생했습니다.',
       );
     }
   }
 
-  private generateMultipleSizes(buffer: Buffer): { [key: string]: Buffer } {
-    // For now, return the original buffer for all sizes
-    // In a full implementation, you would use sharp library to process images
-    const sizes = ['thumbnail', 'small', 'medium', 'large'];
-    const results: { [key: string]: Buffer } = {};
-
-    for (const size of sizes) {
-      results[size] = buffer; // Placeholder - in real implementation use sharp
-    }
-
-    return results;
+  private getVariantConfig(): AvatarVariantConfig[] {
+    return [
+      { key: 'thumbnail', width: 64, height: 64, quality: 80 },
+      { key: 'small', width: 128, height: 128, quality: 82 },
+      { key: 'medium', width: 256, height: 256, quality: 85 },
+      { key: 'large', width: 512, height: 512, quality: 90 },
+    ];
   }
 
-  private async uploadToCloudinary(
+  private buildBaseFileName(userId: string): string {
+    const sanitizedUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '') || 'user';
+    const timestamp = Date.now();
+
+    return `${sanitizedUserId}_${timestamp}`;
+  }
+
+  private async ensureStorageDirectory(): Promise<void> {
+    await fs.mkdir(this.avatarDirectory, { recursive: true });
+  }
+
+  private async generateVariant(
     buffer: Buffer,
-    publicId: string,
-  ): Promise<CloudinaryUploadResult> {
-    return new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          {
-            public_id: publicId,
-            folder: 'readzone/avatars',
-            resource_type: 'image',
-            format: 'jpg',
-            transformation: [
-              { width: 400, height: 400, crop: 'fill', gravity: 'center' },
-              { quality: 'auto:good' },
-            ],
-          },
-          (error, result) => {
-            if (error) {
-              reject(new Error(`Cloudinary upload failed: ${error.message}`));
-            } else if (result) {
-              resolve(result);
-            } else {
-              reject(
-                new Error('Upload failed: no result returned from Cloudinary'),
-              );
-            }
-          },
-        )
-        .end(buffer);
-    });
+    baseName: string,
+    variant: AvatarVariantConfig,
+  ): Promise<SavedAvatarVariant> {
+    const fileName = `${baseName}_${variant.key}.webp`;
+    const destination = path.join(this.avatarDirectory, fileName);
+
+    await sharp(buffer)
+      .resize(variant.width, variant.height, {
+        fit: 'cover',
+        position: 'center',
+      })
+      .toFormat('webp', { quality: variant.quality })
+      .toFile(destination);
+
+    const relativePath = path
+      .join('uploads', 'avatars', fileName)
+      .replace(/\\/g, '/');
+
+    return {
+      key: variant.key,
+      publicUrl: this.buildPublicUrl(relativePath),
+    };
+  }
+
+  private buildPublicUrl(relativePath: string): string {
+    const sanitized = relativePath.replace(/^\/+/, '');
+
+    return `${this.publicBaseUrl}/${sanitized}`;
   }
 }
