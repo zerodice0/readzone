@@ -23,7 +23,7 @@ ReadZone 프로젝트 개발 가이드 - 독서 후 의견을 공유하는 **독
 - **Authentication**: JWT + Passport 기반
 - **Validation**: class-validator + class-transformer
 - **API**: 카카오 도서 검색 API
-- **개발 서버**: nest start --watch (포트 3001)
+- **개발 서버**: nest start --watch (포트 4001)
 - **테스팅**: Jest + Supertest (E2E 테스트)
 
 ### 개발 환경
@@ -228,7 +228,7 @@ npm run dev
 
 # 개별 실행
 npm run dev:frontend  # 포트 3000
-npm run dev:backend   # 포트 3001
+npm run dev:backend   # 포트 4001
 
 # 데이터베이스 설정
 npm run db:generate   # Prisma 클라이언트 생성

@@ -29,3 +29,6 @@ Adopt Conventional Commit prefixes (`feat`, `fix`, `chore`, optional scope) as s
 
 ## Security & Configuration Tips
 Environment variables belong in `.env.local` and must mirror the keys described in README security notes (JWT, Neon, Cloudinary, Resend, Kakao). Never commit secrets or generated Prisma clients. When adding external integrations, document required keys in `docs/prd/` and update onboarding steps in `docs/user-flows/onboarding.md`.
+
+## Communication Preference
+모든 답변은 한글로 작성해야 한다.
