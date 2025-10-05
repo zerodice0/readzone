@@ -7,6 +7,7 @@ export interface JWTPayload {
   userId: string;
   email: string | null;
   nickname: string;
+  role?: string;
   type: 'access' | 'refresh' | 'email-verification' | 'password-reset';
   iat?: number;
   exp?: number;

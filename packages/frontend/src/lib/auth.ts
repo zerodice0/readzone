@@ -46,7 +46,7 @@ export function setupSecurityHeaders() {
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: https:;
-    connect-src 'self' ${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001'};
+    connect-src 'self' ${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4001'};
     font-src 'self';
     object-src 'none';
     base-uri 'self';

@@ -9,8 +9,15 @@ interface RequestWithUser {
 }
 
 export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
+  (data: string | undefined, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest<RequestWithUser>();
-    return request.user || null;
+    const user = request.user || null;
+
+    // data 파라미터가 있으면 해당 필드만 반환
+    if (data && user) {
+      return user[data] as string | null;
+    }
+
+    return user;
   },
 );

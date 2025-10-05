@@ -1,3 +1,6 @@
+import { useAuthStore } from '@/store/authStore'
+import type { User } from '@/types/auth'
+
 interface ApiResponse<T> {
   success: boolean
   data?: T
@@ -16,24 +19,6 @@ interface CheckDuplicateResponse {
   field: 'email' | 'nickname' | 'userid'
   value: string
   isDuplicate: boolean
-}
-
-interface User {
-  id: string
-  userid: string
-  email: string
-  nickname: string
-  bio?: string
-  profileImage?: string
-  isVerified: boolean
-  createdAt: string
-  updatedAt?: string
-  _count?: {
-    reviews: number
-    followers: number
-    following: number
-    likes: number
-  }
 }
 
 interface SocialLinks {
@@ -163,7 +148,7 @@ interface ResendVerificationResponse {
 }
 
 const API_BASE_URL = import.meta.env.MODE === 'development'
-  ? 'http://localhost:3001'
+  ? 'http://localhost:4001'
   : ''
 
 /**
@@ -344,34 +329,49 @@ export async function getCurrentUser(): Promise<User> {
  * userid로 사용자 프로필 조회 (토큰 포함해서 로그인 상태 확인)
  */
 export async function getUserProfile(userid: string): Promise<UserProfileData> {
-  const API_BASE_URL = import.meta.env.MODE === 'development'
-    ? 'http://localhost:3001'
-    : ''
+  const performRequest = async (accessToken?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
 
-  // 로컬 스토리지에서 토큰 가져오기
-  const token = localStorage.getItem('accessToken')
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+    }
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    return await fetch(`${API_BASE_URL}/api/users/${userid}`, {
+      headers,
+      credentials: 'include',
+    })
   }
 
-  // 토큰이 있으면 Authorization 헤더 추가
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
+  let accessToken = useAuthStore.getState().accessToken ?? undefined
+  let response = await performRequest(accessToken)
+
+  if ((response.status === 401 || response.status === 403) && accessToken) {
+    const refreshed = await useAuthStore.getState().refreshTokens()
+
+    if (refreshed) {
+      accessToken = useAuthStore.getState().accessToken ?? undefined
+      response = await performRequest(accessToken)
+    }
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/users/${userid}`, {
-    headers,
-  })
+  let result: ApiResponse<UserProfileData> | null = null
+
+  try {
+    result = await response.json() as ApiResponse<UserProfileData>
+  } catch (_error) {
+    result = null
+  }
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
+    const message = result?.error?.message ?? `HTTP error! status: ${response.status}`
+
+    throw new Error(message)
   }
 
-  const result = await response.json()
-
-  if (!result.success || !result.data) {
-    throw new Error(result.error?.message ?? '사용자 프로필 조회 중 오류가 발생했습니다')
+  if (!result?.success || !result.data) {
+    throw new Error(result?.error?.message ?? '사용자 프로필 조회 중 오류가 발생했습니다')
   }
 
   return result.data
@@ -511,7 +511,6 @@ export async function resetPasswordWithToken(payload: { token: string; newPasswo
 export type {
   CheckDuplicateRequest,
   CheckDuplicateResponse,
-  User,
   SocialLinks,
   UserStats,
   UserRelationship,

@@ -151,6 +151,7 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       nickname: user.nickname,
+      role: user.role,
     };
     const tokens = generateTokenPair(tokenPayload);
 
@@ -187,6 +188,7 @@ export class AuthService {
         bio: user.bio,
         profileImage: user.profileImage,
         isVerified: user.isVerified,
+        role: user.role,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
