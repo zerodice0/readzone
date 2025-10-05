@@ -22,7 +22,11 @@
     "test:token-cleanup": "./test-token-cleanup.sh",
     "monitor:scheduler": "./monitor-scheduler.sh",
     "monitor:scheduler:stats": "./monitor-scheduler.sh -s",
-    "monitor:scheduler:follow": "./monitor-scheduler.sh -f"
+    "monitor:scheduler:follow": "./monitor-scheduler.sh -f",
+    "db:seed": "ts-node prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -31,6 +35,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/serve-static": "^5.0.3",
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.2.0",
     "@prisma/client": "^6.14.0",
@@ -43,7 +48,7 @@
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
-    "cloudinary": "^2.5.1",
+    "sharp": "^0.33.5",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
