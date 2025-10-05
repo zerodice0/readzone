@@ -517,23 +517,21 @@ const ProfileImageUpload: React.FC<{
   const handleCropComplete = async (croppedImage: Blob) => {
     setIsUploading(true);
     try {
-      // Cloudinary 업로드
+      // 백엔드 아바타 업로드 API 호출 (로컬 파일 스토리지 사용)
       const formData = new FormData();
-      formData.append('file', croppedImage);
-      formData.append('upload_preset', 'profile_images');
-      
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
-      
+      formData.append('image', croppedImage, 'avatar.webp');
+      formData.append('width', '400');
+      formData.append('height', '400');
+
+      const response = await fetch(`/api/users/${user.userid}/avatar`, {
+        method: 'POST',
+        body: formData,
+      });
+
       const data = await response.json();
-      
-      if (data.secure_url) {
-        await onUpdate(data.secure_url);
+
+      if (data.profileImage) {
+        await onUpdate(data.profileImage);
         toast.success('프로필 사진이 변경되었습니다');
       }
     } catch (error) {

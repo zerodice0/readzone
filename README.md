@@ -52,7 +52,7 @@ cp .env.example .env.local
 pnpm db:generate
 pnpm db:migrate
 
-# 개발 서버 실행 (frontend: 3000, backend: 3001)
+# 개발 서버 실행 (frontend: 3000, backend: 4001)
 pnpm dev
 ```
 
