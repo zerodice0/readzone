@@ -12,7 +12,6 @@ import {
   UserStats,
   UserRelationship,
   RecentActivity,
-  SocialLinks,
 } from './dto/user-profile.dto';
 import {
   UserReviewsQueryDto,
@@ -59,7 +58,6 @@ export class UsersService {
           bio: true,
           isVerified: true,
           privacy: true,
-          socialLinks: true,
           createdAt: true,
           updatedAt: true,
           _count: {
@@ -166,16 +164,6 @@ export class UsersService {
         };
       }
 
-      // 소셜 링크 파싱
-      let socialLinks: SocialLinks | undefined;
-      if (user.socialLinks) {
-        try {
-          socialLinks = JSON.parse(user.socialLinks as string) as SocialLinks;
-        } catch {
-          socialLinks = undefined;
-        }
-      }
-
       return {
         success: true,
         data: {
@@ -185,7 +173,6 @@ export class UsersService {
             nickname: user.nickname,
             bio: user.bio || undefined,
             profileImage: user.profileImage || undefined,
-            socialLinks,
             joinedAt: user.createdAt.toISOString(),
             stats,
             recentActivity: recentActivity || {
@@ -339,6 +326,13 @@ export class UsersService {
         tags: review.tags,
         createdAt: review.createdAt.toISOString(),
         isPublic: review.isPublic,
+        author: {
+          id: review.user.id,
+          userid: review.user.userid,
+          nickname: review.user.nickname,
+          profileImage: review.user.profileImage,
+          isVerified: review.user.isVerified,
+        },
         book: {
           id: review.book?.id || '',
           title: review.book?.title || '',
@@ -514,6 +508,13 @@ export class UsersService {
           tags: like.review.tags,
           createdAt: like.review.createdAt.toISOString(),
           isPublic: like.review.isPublic,
+          author: {
+            id: like.review.user.id,
+            userid: like.review.user.userid,
+            nickname: like.review.user.nickname,
+            profileImage: like.review.user.profileImage,
+            isVerified: like.review.user.isVerified,
+          },
           book: {
             id: like.review.book?.id || '',
             title: like.review.book?.title || '',
@@ -1072,7 +1073,6 @@ export class UsersService {
           profileImage: true,
           bio: true,
           privacy: true,
-          socialLinks: true,
         },
       });
 
@@ -1109,11 +1109,6 @@ export class UsersService {
       if (dto.nickname !== undefined) updateData.nickname = dto.nickname;
       if (dto.bio !== undefined) updateData.bio = dto.bio;
 
-      // 소셜 링크 처리
-      updateData.socialLinks = dto.socialLinks
-        ? (dto.socialLinks as Prisma.InputJsonValue)
-        : Prisma.JsonNull;
-
       // 개인정보 설정 처리
       updateData.privacy = dto.privacy
         ? (dto.privacy as Prisma.InputJsonValue)
@@ -1132,23 +1127,10 @@ export class UsersService {
           bio: true,
           isVerified: true,
           privacy: true,
-          socialLinks: true,
           createdAt: true,
           updatedAt: true,
         },
       });
-
-      // 소셜 링크 파싱
-      let socialLinks: SocialLinks | undefined;
-      if (updatedUser.socialLinks) {
-        try {
-          socialLinks = JSON.parse(
-            updatedUser.socialLinks as string,
-          ) as SocialLinks;
-        } catch {
-          socialLinks = undefined;
-        }
-      }
 
       // 개인정보 설정 파싱
       let privacySettings: PrivacySettingsDto | undefined;
@@ -1169,7 +1151,6 @@ export class UsersService {
           userid: updatedUser.userid,
           nickname: updatedUser.nickname,
           bio: updatedUser.bio || undefined,
-          socialLinks,
           privacy: privacySettings,
         },
       };

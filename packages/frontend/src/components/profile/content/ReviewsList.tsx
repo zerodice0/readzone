@@ -130,11 +130,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ userid, isOwner }) => 
                 id: review.id,
                 content: review.content,
                 createdAt: review.createdAt,
-                author: {
-                  id: userid,
-                  userid,
-                  username: userid,
-                },
+                author: review.author,
                 book: {
                   id: review.book.id,
                   title: review.book.title,

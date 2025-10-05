@@ -5,8 +5,9 @@ export interface ReviewCard {
   author: {
     id: string;
     userid: string;
-    username: string;
-    profileImage?: string;
+    nickname: string;
+    profileImage?: string | null;
+    isVerified?: boolean;
   };
   book: {
     id: string;
