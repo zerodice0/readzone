@@ -166,7 +166,7 @@ const ReviewResultCard: FC<{ review: ReviewSearchResult; query: string }> = ({ r
               onClick={handleUserClick}
               className="font-medium text-sm text-slate-900 hover:underline"
             >
-              <Highlight text={review.author.username} query={query} />
+              <Highlight text={review.author.nickname} query={query} />
             </button>
             <Badge variant={review.rating === 'recommend' ? 'default' : 'secondary'} className="text-xs">
               {review.rating === 'recommend' ? '👍 추천' : '👎 비추천'}
@@ -256,7 +256,7 @@ const UserResultCard: FC<{ user: UserSearchResult; query: string }> = ({ user, q
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-slate-900">
-              <Highlight text={user.username} query={query} />
+              <Highlight text={user.nickname} query={query} />
             </h3>
             {user.isFollowing && (
               <Badge variant="secondary" className="text-xs">

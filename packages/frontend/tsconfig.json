@@ -8,7 +8,7 @@
     "skipLibCheck": true,
     
     /* Module Resolution */
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -45,7 +45,6 @@
     
     /* Module */
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": [

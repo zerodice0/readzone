@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Heart, MessageCircle, MoreHorizontal, Share } from 'lucide-react';
+import { Flag, Heart, MessageCircle, MoreHorizontal, Share } from 'lucide-react';
 import type { ReviewCard as ReviewCardType } from '@/types/feed';
 import { formatTimeAgo } from '@/lib/utils';
 import SafeHtmlRenderer from '@/components/common/SafeHtmlRenderer';
+import { ReportModal } from '@/components/moderation';
 
 interface ReviewCardProps {
   review: ReviewCardType;
@@ -24,6 +25,8 @@ const ReviewCard = ({
   onReviewClick,
 }: ReviewCardProps) => {
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const handleLike = () => {
     setIsLikeAnimating(true);
@@ -55,18 +58,20 @@ const ReviewCard = ({
             {review.author.profileImage ? (
               <img
                 src={review.author.profileImage}
-                alt={`${review.author.username}의 프로필`}
+                alt={`${review.author.nickname}의 프로필`}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <span className="text-sm font-medium text-muted-foreground">
-                {review.author.username.charAt(0).toUpperCase()}
+                {review.author.nickname.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
           <div className="text-left">
             <p className="font-medium text-foreground">
-              {review.author.username}
+              {review.author.nickname}
             </p>
             <p className="text-xs text-muted-foreground">
               {formatTimeAgo(review.createdAt)}
@@ -74,10 +79,36 @@ const ReviewCard = ({
           </div>
         </button>
 
-        <div className="ml-auto">
-          <button className="p-1 rounded-full hover:bg-muted transition-colors">
+        <div className="ml-auto relative">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-1 rounded-full hover:bg-muted transition-colors"
+            aria-label="더보기 메뉴"
+          >
             <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
           </button>
+
+          {isMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setIsMenuOpen(false)}
+                aria-hidden="true"
+              />
+              <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-border z-20">
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsReportModalOpen(true);
+                  }}
+                  className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-muted transition-colors"
+                >
+                  <Flag className="w-4 h-4 mr-2" />
+                  독후감 신고
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -93,6 +124,8 @@ const ReviewCard = ({
                 src={review.book.cover}
                 alt={`${review.book.title} 표지`}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -174,6 +207,16 @@ const ReviewCard = ({
           </span>
         </button>
       </div>
+
+      {/* 신고 모달 */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        targetType="REVIEW"
+        targetId={review.id}
+        reportedUserId={review.author.id}
+        targetContent={review.content}
+      />
     </article>
   );
 };

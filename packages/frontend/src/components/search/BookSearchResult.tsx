@@ -28,6 +28,8 @@ export function BookSearchResultCard({ book, onWriteReview }: BookSearchResultCa
                 src={book.coverImage}
                 alt={book.title}
                 className="w-20 h-28 object-cover rounded-md shadow-sm"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="w-20 h-28 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">

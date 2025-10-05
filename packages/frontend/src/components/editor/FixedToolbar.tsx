@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Bold,
   Code,
@@ -57,79 +57,38 @@ function ToolbarButton({
   );
 }
 
-interface Position {
-  x: number;
-  y: number;
-}
-
-export default function FloatingToolbar() {
+export default function FixedToolbar() {
   const [editor] = useLexicalComposerContext();
-  const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [formatStates, setFormatStates] = useState({
     bold: false,
     italic: false,
     strikethrough: false,
     code: false,
   });
-  const toolbarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const updateToolbar = () => {
+    const updateFormatStates = () => {
       const selection = $getSelection();
 
-      if ($isRangeSelection(selection) && !selection.isCollapsed()) {
-        const anchorNode = selection.anchor.getNode();
-        const element = editor.getElementByKey(anchorNode.getKey());
-
-        if (element) {
-          const domSelection = window.getSelection();
-
-          if (domSelection && domSelection.rangeCount > 0) {
-            const range = domSelection.getRangeAt(0);
-            const rect = range.getBoundingClientRect();
-            const toolbarHeight = 40;
-            const toolbarWidth = 320;
-
-            let x = rect.left + rect.width / 2 - toolbarWidth / 2;
-            let y = rect.top - toolbarHeight - 10;
-
-            // 화면 경계 확인 및 조정
-            if (x < 10) {
-              x = 10;
-            }
-            if (x + toolbarWidth > window.innerWidth - 10) {
-              x = window.innerWidth - toolbarWidth - 10;
-            }
-            if (y < 10) {
-              y = rect.bottom + 10;
-            }
-
-            setPosition({ x, y });
-            setIsVisible(true);
-
-            // 포맷 상태 업데이트
-            setFormatStates({
-              bold: selection.hasFormat('bold'),
-              italic: selection.hasFormat('italic'),
-              strikethrough: selection.hasFormat('strikethrough'),
-              code: selection.hasFormat('code'),
-            });
-          }
-        }
-      } else {
-        setIsVisible(false);
+      if ($isRangeSelection(selection)) {
+        // 포맷 상태만 업데이트
+        setFormatStates({
+          bold: selection.hasFormat('bold'),
+          italic: selection.hasFormat('italic'),
+          strikethrough: selection.hasFormat('strikethrough'),
+          code: selection.hasFormat('code'),
+        });
       }
     };
 
     const removeUpdateListener = editor.registerUpdateListener(() => {
-      editor.getEditorState().read(updateToolbar);
+      editor.getEditorState().read(updateFormatStates);
     });
 
     const removeSelectionListener = editor.registerCommand(
       SELECTION_CHANGE_COMMAND,
       () => {
-        editor.getEditorState().read(updateToolbar);
+        editor.getEditorState().read(updateFormatStates);
 
         return false;
       },
@@ -141,35 +100,6 @@ export default function FloatingToolbar() {
       removeSelectionListener();
     };
   }, [editor]);
-
-  // 클릭 외부 영역 처리
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        toolbarRef.current &&
-        !toolbarRef.current.contains(event.target as Node)
-      ) {
-        const selection = window.getSelection();
-
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-
-          if (range.collapsed) {
-            setIsVisible(false);
-          }
-        }
-      }
-    };
-
-    if (isVisible) {
-      document.addEventListener('mousedown', handleClickOutside);
-
-      return () =>
-        document.removeEventListener('mousedown', handleClickOutside);
-    }
-
-    return undefined;
-  }, [isVisible]);
 
   const formatText = (format: 'bold' | 'italic' | 'strikethrough' | 'code') => {
     editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
@@ -210,19 +140,8 @@ export default function FloatingToolbar() {
     });
   };
 
-  if (!isVisible) {
-    return null;
-  }
-
   return (
-    <div
-      ref={toolbarRef}
-      className="fixed z-50 bg-background border shadow-lg rounded-md p-1 flex items-center gap-0.5"
-      style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-      }}
-    >
+    <div className="sticky top-0 z-10 bg-background border-b px-2 py-1.5 flex items-center gap-0.5 flex-wrap">
       <ToolbarButton
         icon={Bold}
         title="굵게 (Ctrl+B)"

@@ -49,7 +49,7 @@ interface BackendFeedResponse {
   };
 }
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4001';
 
 // 백엔드 응답을 프론트엔드 타입으로 변환하는 함수
 const transformReviewData = (
@@ -58,7 +58,7 @@ const transformReviewData = (
   const author: ReviewCard['author'] = {
     id: backendReview.user.id,
     userid: backendReview.user.userid,
-    username: backendReview.user.nickname, // nickname → username 매핑
+    nickname: backendReview.user.nickname,
   };
 
   // profileImage가 있을 때만 추가 (exactOptionalPropertyTypes 준수)

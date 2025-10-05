@@ -1,16 +1,18 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
-import DOMPurify from 'dompurify'
-import { marked } from 'marked'
-import { authenticatedApiCall, useAuthStore } from '@/store/authStore'
-import { Button } from '@/components/ui/button'
-import { BookInfoCard } from '@/components/common/BookInfoCard'
-import { AlertDialog } from '@/components/ui/alert-dialog'
-import { NotificationDialog, type NotificationType } from '@/components/ui/notification-dialog'
-import type { BookSummary } from '@/store/writeStore'
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
+import { marked } from 'marked';
+import { Flag } from 'lucide-react';
+import { authenticatedApiCall, useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/ui/button';
+import { BookInfoCard } from '@/components/common/BookInfoCard';
+import { AlertDialog } from '@/components/ui/alert-dialog';
+import { NotificationDialog, type NotificationType } from '@/components/ui/notification-dialog';
+import { ReportModal } from '@/components/moderation';
+import type { BookSummary } from '@/store/writeStore';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001';
+  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4001';
 
 function ReviewDetailPage() {
   const { reviewId } = Route.useParams();
@@ -50,7 +52,8 @@ function ReviewDetailPage() {
   const [replyBoxes, setReplyBoxes] = useState<Record<string, string>>({});
   const [safeHtml, setSafeHtml] = useState<string>('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
   // Notification state
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
@@ -249,6 +252,17 @@ function ReviewDetailPage() {
             onClick={openDeleteDialog}
           >
             삭제
+          </Button>
+        )}
+        {!canDelete && isAuthenticated && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsReportModalOpen(true)}
+            className="text-red-600 hover:text-red-700"
+          >
+            <Flag className="w-4 h-4 mr-1" />
+            신고
           </Button>
         )}
         <div className="flex gap-2">
@@ -510,6 +524,17 @@ function ReviewDetailPage() {
         message={notificationMessage}
         type={notificationType}
       />
+
+      {review.user?.id && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          targetType="REVIEW"
+          targetId={reviewId}
+          reportedUserId={review.user.id}
+          targetContent={review.content ?? ''}
+        />
+      )}
     </div>
   );
 }

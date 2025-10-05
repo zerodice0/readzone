@@ -53,9 +53,9 @@ export function UserSearchResultCard({
         <div className="flex gap-4">
           {/* User Avatar */}
           <Avatar className="h-16 w-16">
-            <AvatarImage src={user.profileImage} alt={user.username} />
+            <AvatarImage src={user.profileImage} alt={user.nickname} />
             <AvatarFallback>
-              {user.username.slice(0, 2).toUpperCase()}
+              {user.nickname.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
@@ -67,14 +67,14 @@ export function UserSearchResultCard({
                 params={{ userid: user.id }}
                 className="text-lg font-semibold hover:underline"
               >
-                {user.highlights?.username ? (
+                {user.highlights?.nickname ? (
                   <span
                     dangerouslySetInnerHTML={{
-                      __html: user.highlights.username,
+                      __html: user.highlights.nickname,
                     }}
                   />
                 ) : (
-                  user.username
+                  user.nickname
                 )}
               </Link>
               {user.bio && (

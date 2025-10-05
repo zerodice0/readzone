@@ -1,24 +1,28 @@
 import type { FC } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { Settings } from 'lucide-react';
 import type { UserProfileData } from '@/lib/api/auth';
 import { FollowButton } from './FollowButton';
+import { BlockButton } from '@/components/moderation';
 
 interface ProfileHeaderProps {
-  profile: UserProfileData;
-  onProfileUpdate?: (profile: UserProfileData) => void;
+  profile: UserProfileData
+  onProfileUpdate?: (profile: UserProfileData) => void
+  onEditProfile?: () => void
 }
 
 export const ProfileHeader: FC<ProfileHeaderProps> = ({
   profile,
   onProfileUpdate: _onProfileUpdate,
+  onEditProfile,
 }) => {
-  const { user, isOwner } = profile;
+  const { user, isOwner } = profile
 
   const joinedDate = formatDistanceToNow(new Date(user.joinedAt), {
     addSuffix: true,
     locale: ko,
-  });
+  })
 
   return (
     <section
@@ -27,7 +31,7 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({
       aria-label={`${user.nickname}의 프로필 정보`}
     >
       <div className="flex flex-col md:flex-row gap-6">
-        {/* 프로필 이미지 및 기본 정보 */}
+        {/* 프로필 이미지 */}
         <div className="flex flex-col items-center md:items-start">
           <div
             className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden"
@@ -44,6 +48,7 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({
                 alt={`${user.nickname}의 프로필 사진`}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
             ) : (
               <span
@@ -54,18 +59,6 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({
               </span>
             )}
           </div>
-
-          {isOwner && (
-            <button
-              className="mt-3 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              onClick={() => {
-                // 프로필 편집 - Phase 4에서 구현
-              }}
-              aria-label="프로필 정보 편집"
-            >
-              프로필 편집
-            </button>
-          )}
         </div>
 
         {/* 사용자 정보 */}
@@ -84,6 +77,21 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({
                   >
                     ✓ 인증
                   </span>
+                )}
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onEditProfile) {
+                        onEditProfile()
+                      }
+                    }}
+                    className="p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                    aria-label="프로필 설정"
+                    title="프로필 설정"
+                  >
+                    <Settings className="h-5 w-5" />
+                  </button>
                 )}
               </div>
 
@@ -111,9 +119,13 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({
               )}
             </div>
 
-            {/* 팔로우 버튼 */}
+            {/* 팔로우 버튼 & 차단 버튼 */}
             {!isOwner && profile.relationship && (
-              <div role="group" aria-label="팔로우 관련 기능">
+              <div
+                className="flex flex-col sm:flex-row gap-2"
+                role="group"
+                aria-label="팔로우 및 차단 관련 기능"
+              >
                 <FollowButton
                   userid={user.userid}
                   isFollowing={profile.relationship.isFollowing}
@@ -122,54 +134,17 @@ export const ProfileHeader: FC<ProfileHeaderProps> = ({
                   size="default"
                   showFollowerCount={true}
                 />
+                <BlockButton
+                  userId={user.id}
+                  username={user.nickname}
+                  variant="outline"
+                  size="default"
+                />
               </div>
             )}
           </div>
-
-          {/* 소셜 링크 */}
-          {user.socialLinks && (
-            <nav
-              className="flex gap-4 mt-4"
-              role="navigation"
-              aria-label="소셜 미디어 링크"
-            >
-              {user.socialLinks.blog && (
-                <a
-                  href={user.socialLinks.blog}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                  aria-label={`${user.nickname}의 블로그 방문 (새 창에서 열림)`}
-                >
-                  <span aria-hidden="true">🌐</span> 블로그
-                </a>
-              )}
-              {user.socialLinks.twitter && (
-                <a
-                  href={user.socialLinks.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                  aria-label={`${user.nickname}의 Twitter 방문 (새 창에서 열림)`}
-                >
-                  <span aria-hidden="true">🐦</span> Twitter
-                </a>
-              )}
-              {user.socialLinks.instagram && (
-                <a
-                  href={user.socialLinks.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                  aria-label={`${user.nickname}의 Instagram 방문 (새 창에서 열림)`}
-                >
-                  <span aria-hidden="true">📷</span> Instagram
-                </a>
-              )}
-            </nav>
-          )}
         </div>
       </div>
     </section>
-  );
-};
+  )
+}

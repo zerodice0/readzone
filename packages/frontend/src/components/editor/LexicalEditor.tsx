@@ -30,7 +30,7 @@ import {
 
 import { $createImageNode, ImageNode } from './nodes/ImageNode';
 import MarkdownShortcutGuide from './MarkdownShortcutGuide';
-import FloatingToolbar from './FloatingToolbar';
+import FixedToolbar from './FixedToolbar';
 import SmartInputHelper from './SmartInputHelper';
 import { useEditorPreferences } from '../../hooks/useEditorPreferences';
 
@@ -318,7 +318,9 @@ export default function LexicalEditor({
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className="border rounded-md relative">
+      <div className="border rounded-md overflow-hidden">
+        {preferences.showFloatingToolbar && <FixedToolbar />}
+
         <div className="px-3 py-2 border-b text-sm text-muted-foreground">
           글을 자유롭게 작성하세요. **굵게**, *기울임*, # 제목 등 마크다운
           문법을 지원합니다.
@@ -354,7 +356,6 @@ export default function LexicalEditor({
         </div>
 
         {preferences.showSmartHelper && <SmartInputHelper />}
-        {preferences.showFloatingToolbar && <FloatingToolbar />}
       </div>
     </LexicalComposer>
   );

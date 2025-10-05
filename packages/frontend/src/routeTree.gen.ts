@@ -14,10 +14,12 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as GuidelinesRouteImport } from './routes/guidelines'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsTabRouteImport } from './routes/settings.$tab'
 import { Route as ReviewReviewIdRouteImport } from './routes/review.$reviewId'
 import { Route as ReviewEditReviewIdRouteImport } from './routes/review-edit.$reviewId'
 import { Route as ProfileUseridRouteImport } from './routes/profile.$userid'
@@ -48,9 +50,19 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidelinesRoute = GuidelinesRouteImport.update({
+  id: '/guidelines',
+  path: '/guidelines',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -58,15 +70,15 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsTabRoute = SettingsTabRouteImport.update({
-  id: '/$tab',
-  path: '/$tab',
-  getParentRoute: () => SettingsRoute,
 } as any)
 const ReviewReviewIdRoute = ReviewReviewIdRouteImport.update({
   id: '/review/$reviewId',
@@ -91,56 +103,65 @@ const BooksBookIdRoute = BooksBookIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/guidelines': typeof GuidelinesRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
   '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
-  '/settings/$tab': typeof SettingsTabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/guidelines': typeof GuidelinesRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
   '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
-  '/settings/$tab': typeof SettingsTabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/guidelines': typeof GuidelinesRoute
   '/login': typeof LoginRoute
+  '/notifications': typeof NotificationsRoute
   '/register': typeof RegisterRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/write': typeof WriteRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/profile/$userid': typeof ProfileUseridRoute
   '/review-edit/$reviewId': typeof ReviewEditReviewIdRoute
   '/review/$reviewId': typeof ReviewReviewIdRoute
-  '/settings/$tab': typeof SettingsTabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/forgot-password'
+    | '/guidelines'
     | '/login'
+    | '/notifications'
     | '/register'
     | '/search'
     | '/settings'
@@ -150,12 +171,14 @@ export interface FileRouteTypes {
     | '/profile/$userid'
     | '/review-edit/$reviewId'
     | '/review/$reviewId'
-    | '/settings/$tab'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/forgot-password'
+    | '/guidelines'
     | '/login'
+    | '/notifications'
     | '/register'
     | '/search'
     | '/settings'
@@ -165,12 +188,14 @@ export interface FileRouteTypes {
     | '/profile/$userid'
     | '/review-edit/$reviewId'
     | '/review/$reviewId'
-    | '/settings/$tab'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/forgot-password'
+    | '/guidelines'
     | '/login'
+    | '/notifications'
     | '/register'
     | '/search'
     | '/settings'
@@ -180,16 +205,18 @@ export interface FileRouteTypes {
     | '/profile/$userid'
     | '/review-edit/$reviewId'
     | '/review/$reviewId'
-    | '/settings/$tab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  GuidelinesRoute: typeof GuidelinesRoute
   LoginRoute: typeof LoginRoute
+  NotificationsRoute: typeof NotificationsRoute
   RegisterRoute: typeof RegisterRoute
   SearchRoute: typeof SearchRoute
-  SettingsRoute: typeof SettingsRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   WriteRoute: typeof WriteRoute
   BooksBookIdRoute: typeof BooksBookIdRoute
@@ -235,11 +262,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guidelines': {
+      id: '/guidelines'
+      path: '/guidelines'
+      fullPath: '/guidelines'
+      preLoaderRoute: typeof GuidelinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -249,19 +290,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/settings/$tab': {
-      id: '/settings/$tab'
-      path: '/$tab'
-      fullPath: '/settings/$tab'
-      preLoaderRoute: typeof SettingsTabRouteImport
-      parentRoute: typeof SettingsRoute
     }
     '/review/$reviewId': {
       id: '/review/$reviewId'
@@ -294,25 +335,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface SettingsRouteChildren {
-  SettingsTabRoute: typeof SettingsTabRoute
-}
-
-const SettingsRouteChildren: SettingsRouteChildren = {
-  SettingsTabRoute: SettingsTabRoute,
-}
-
-const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
-  SettingsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  GuidelinesRoute: GuidelinesRoute,
   LoginRoute: LoginRoute,
+  NotificationsRoute: NotificationsRoute,
   RegisterRoute: RegisterRoute,
   SearchRoute: SearchRoute,
-  SettingsRoute: SettingsRouteWithChildren,
+  SettingsRoute: SettingsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   WriteRoute: WriteRoute,
   BooksBookIdRoute: BooksBookIdRoute,

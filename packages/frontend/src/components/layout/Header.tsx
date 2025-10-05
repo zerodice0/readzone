@@ -1,5 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useAuthStore } from '@/store/authStore';
+import { useNotificationsStore } from '@/store/notificationsStore';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,15 +9,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bell, Edit, LogOut, Menu, Search, Settings, User } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function Header() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { summary, refreshUnreadCount } = useNotificationsStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // 미읽음 알림 수 주기적 갱신
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return
+    }
+
+    refreshUnreadCount()
+
+    const interval = setInterval(() => {
+      refreshUnreadCount()
+    }, 60000) // 1분마다 갱신
+
+    return () => clearInterval(interval)
+  }, [isAuthenticated, refreshUnreadCount]);
 
   const handleLoginClick = () => {
     navigate({ to: '/login', search: { redirect: undefined } });
@@ -59,6 +76,10 @@ export function Header() {
 
   const handleSettingsClick = () => {
     navigate({ to: '/settings' });
+  };
+
+  const handleNotificationsClick = () => {
+    navigate({ to: '/notifications' });
   };
 
   const handleLogout = () => {
@@ -170,13 +191,18 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={handleNotificationsClick}
                   className="hidden md:flex relative focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                  aria-label="알림 (준비 중)"
-                  disabled
+                  aria-label={`알림${summary && summary.unreadCount > 0 ? ` (${summary.unreadCount}개)` : ''}`}
                 >
                   <Bell className="w-4 h-4" aria-hidden="true" />
                   <span className="sr-only">알림</span>
-                  {/* 알림 뱃지 - 추후 구현 */}
+                  {/* 알림 뱃지 */}
+                  {summary && summary.unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                      {summary.unreadCount > 99 ? '99+' : summary.unreadCount}
+                    </span>
+                  )}
                 </Button>
 
                 {/* 사용자 드롭다운 */}
@@ -188,6 +214,7 @@ export function Header() {
                       aria-label={`사용자 메뉴 (${user?.nickname ?? '사용자'})`}
                     >
                       <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.profileImage} alt={user?.nickname ?? '사용자'} />
                         <AvatarFallback className="text-sm">
                           {user?.nickname?.charAt(0).toUpperCase() ?? 'U'}
                         </AvatarFallback>
@@ -196,6 +223,12 @@ export function Header() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <div className="flex items-center justify-start gap-2 p-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.profileImage} alt={user?.nickname ?? '사용자'} />
+                        <AvatarFallback className="text-sm">
+                          {user?.nickname?.charAt(0).toUpperCase() ?? 'U'}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
                           {user?.nickname ?? '사용자'}
@@ -212,6 +245,20 @@ export function Header() {
                     >
                       <User className="mr-2 h-4 w-4" aria-hidden="true" />
                       프로필
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleNotificationsClick}
+                      className="md:hidden focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <div className="flex items-center w-full">
+                        <Bell className="mr-2 h-4 w-4" aria-hidden="true" />
+                        <span>알림</span>
+                        {summary && summary.unreadCount > 0 && (
+                          <span className="ml-auto inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                            {summary.unreadCount > 99 ? '99+' : summary.unreadCount}
+                          </span>
+                        )}
+                      </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleWriteClick}

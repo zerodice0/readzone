@@ -156,6 +156,7 @@ function ForgotPasswordPage() {
           interface ApiUser {
             id: string; userid: string; email: string; nickname: string;
             bio?: string; profileImage?: string; isVerified: boolean;
+            role: 'USER' | 'MODERATOR' | 'ADMIN';
             createdAt: string; updatedAt?: string;
           }
           const u = user as ApiUser
@@ -165,6 +166,7 @@ function ForgotPasswordPage() {
             email: u.email,
             nickname: u.nickname,
             isVerified: u.isVerified,
+            role: u.role,
             createdAt: u.createdAt,
             updatedAt: u.updatedAt ?? u.createdAt,
             ...(u.bio !== undefined ? { bio: u.bio } : {}),

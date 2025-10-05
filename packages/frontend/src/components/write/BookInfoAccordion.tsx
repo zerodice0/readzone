@@ -55,6 +55,8 @@ export function BookInfoAccordion({ book, className = '' }: Props) {
                     src={book.thumbnail}
                     alt=""
                     className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">

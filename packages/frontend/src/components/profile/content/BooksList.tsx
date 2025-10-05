@@ -137,6 +137,8 @@ export const BooksList: React.FC<BooksListProps> = ({ userid }) => {
                     src={book.book.thumbnail}
                     alt={book.book.title}
                     className="w-16 h-20 object-cover rounded"
+                    loading="lazy"
+                    decoding="async"
                   />
                 )}
                 <div className="flex-1 min-w-0">

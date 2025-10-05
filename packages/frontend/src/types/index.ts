@@ -247,7 +247,7 @@ export interface ReviewSearchResult {
 
   author: {
     id: string
-    username: string
+    nickname: string
     profileImage?: string
   }
 
@@ -271,7 +271,7 @@ export interface ReviewSearchResult {
 
 export interface UserSearchResult {
   id: string
-  username: string
+  nickname: string
   bio?: string
   profileImage?: string
 
@@ -290,7 +290,7 @@ export interface UserSearchResult {
   isFollowing?: boolean
 
   highlights?: {
-    username?: string
+    nickname?: string
     bio?: string
   }
 }
@@ -354,10 +354,13 @@ export interface SearchState {
   recentSearches: string[]
   facets?: {
     ratings: { recommend: number; not_recommend: number }
-    authors: { username: string; count: number }[]
+    authors: { nickname: string; count: number }[]
     books: { title: string; count: number }[]
   }
 }
 
 // Export settings types
 export * from './settings'
+
+// Export notifications types
+export * from './notifications'
