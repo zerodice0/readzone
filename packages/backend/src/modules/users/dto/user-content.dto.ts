@@ -88,6 +88,13 @@ export interface UserReviewSummary {
   tags: string | null;
   createdAt: string;
   isPublic: boolean;
+  author: {
+    id: string;
+    userid: string;
+    nickname: string;
+    profileImage: string | null;
+    isVerified: boolean;
+  };
   book: {
     id: string;
     title: string;
