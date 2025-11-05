@@ -25,7 +25,10 @@ packages/frontend/dist/
 .env.test.local
 .env.test
 packages/backend/.env.test
+.env.production
 .env.production.local
+packages/backend/.env.production
+packages/frontend/.env.production
 
 # Logs
 npm-debug.log*
@@ -63,6 +66,7 @@ packages/backend/prisma/migrations/
 # IDE
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 
@@ -76,9 +80,11 @@ ehthumbs.db
 Thumbs.db
 *.pem
 
-# Uploads
+# Uploads & Storage
 /public/uploads/
 uploads/
+storage/
+packages/backend/storage/
 
 # Local development
 .vercel
@@ -90,7 +96,8 @@ package-lock.json
 yarn.lock
 
 # Claude settings (contains local configurations)
-.claude/settings.local.json
+.claude/
+.kittify/
 .serena/
 
 # MCP servers
@@ -143,3 +150,9 @@ pids
 /packages/backend/.turbo
 .env.example.draft-system
 .env.cron.example
+
+# Docker & Deployment
+docker-compose.override.yml
+*.log
+logs/
+backups/
