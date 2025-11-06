@@ -110,25 +110,26 @@
 
 ---
 
-## Work Package WP03: Backend Core Infrastructure (Priority: P0)
+## Work Package WP03: Backend Core Infrastructure (Priority: P0) ✅ DONE
 
-**Goal**: Establish Fastify app structure, config management, error handling, logging, and middleware.
-**Independent Test**: Fastify server starts, health endpoint returns 200, structured logging works, errors return standard format.
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP03-backend-core-infrastructure.md`
+**Goal**: Establish NestJS app structure, config management, error handling, logging, and middleware.
+**Independent Test**: NestJS server starts, health endpoint returns 200, structured logging works, errors return standard format.
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP03-backend-core-infrastructure.md`
+**Status**: Approved 2025-11-06 - All verification passed, framework change from Fastify to NestJS justified
 
 ### Included Subtasks
 
-- [ ] T024 Create packages/backend/src/server.ts (Fastify server entry point)
-- [ ] T025 Create packages/backend/src/app.ts (Fastify app initialization with plugins)
-- [ ] T026 Implement config/index.ts (Zod-validated environment variables per research.md)
-- [ ] T027 [P] Setup Pino structured logging (packages/backend/src/common/utils/logger.ts)
-- [ ] T028 [P] Implement standard error handler (packages/backend/src/common/middleware/error-handler.ts)
-- [ ] T029 [P] Create standard response format helpers (packages/backend/src/common/utils/response.ts)
-- [ ] T030 Register @fastify/cors plugin with secure defaults
-- [ ] T031 Register @fastify/helmet plugin for security headers
-- [ ] T032 Create health endpoint (GET /api/v1/health) with database/redis checks
-- [ ] T033 Configure Prisma client (packages/backend/src/common/utils/prisma.ts) with connection pooling
-- [ ] T034 Configure Redis client (packages/backend/src/common/utils/redis.ts) with retry logic
+- [x] T024 Create packages/backend/src/main.ts (NestJS server entry point)
+- [x] T025 Create packages/backend/src/app.module.ts (NestJS app module with DI)
+- [x] T026 Implement config/index.ts (Zod-validated environment variables per research.md)
+- [x] T027 [P] Setup Pino structured logging (packages/backend/src/common/utils/logger.ts)
+- [x] T028 [P] Implement standard error handler (packages/backend/src/common/filters/http-exception.filter.ts)
+- [x] T029 [P] Create standard response format helpers (packages/backend/src/common/utils/response.ts)
+- [x] T030 Register CORS middleware with secure defaults
+- [x] T031 Register Helmet middleware for security headers
+- [x] T032 Create health endpoint (GET /api/v1/health) with database/redis checks
+- [x] T033 Configure Prisma client (packages/backend/src/common/utils/prisma.ts) with connection pooling
+- [x] T034 Configure Redis client (packages/backend/src/common/utils/redis.ts) with retry logic
 
 ### Implementation Notes
 

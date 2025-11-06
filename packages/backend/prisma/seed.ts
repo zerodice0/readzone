@@ -30,7 +30,7 @@ async function main(): Promise<void> {
   await prisma.passwordResetToken.deleteMany();
   await prisma.emailVerificationToken.deleteMany();
   await prisma.auditLog.deleteMany();
-  await prisma.mfaSettings.deleteMany();
+  await prisma.mFASettings.deleteMany();
   await prisma.oAuthConnection.deleteMany();
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();
@@ -160,7 +160,7 @@ async function main(): Promise<void> {
   console.log(`✅ Created ${users.length} test users`);
 
   // Create MFA settings for admin user
-  await prisma.mfaSettings.create({
+  await prisma.mFASettings.create({
     data: {
       userId: users[0].id, // Super admin
       enabled: true,
