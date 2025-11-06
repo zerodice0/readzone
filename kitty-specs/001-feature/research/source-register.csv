@@ -1,0 +1,22 @@
+source_id,type,url,title,accessed_date,relevance,notes
+nestjs-docs,documentation,https://docs.nestjs.com/,NestJS Documentation,2025-11-05,high,공식 문서. TypeScript 지원과 아키텍처 패턴
+typeorm-docs,documentation,https://typeorm.io/,TypeORM Documentation,2025-11-05,high,공식 문서. Entity 정의와 Relations
+passport-docs,documentation,http://www.passportjs.org/,Passport.js Documentation,2025-11-05,high,공식 문서. OAuth 전략 가이드
+passport-kakao,npm-package,https://www.npmjs.com/package/passport-kakao,passport-kakao,2025-11-05,high,카카오 OAuth 2.0 전략
+passport-naver-v2,npm-package,https://www.npmjs.com/package/passport-naver-v2,passport-naver-v2,2025-11-05,high,네이버 OAuth 2.0 전략
+passport-google-oauth20,npm-package,https://www.npmjs.com/package/passport-google-oauth20,passport-google-oauth20,2025-11-05,high,구글 OAuth 2.0 전략
+jwt-handbook,technical-article,https://jwt.io/introduction,Introduction to JWT,2025-11-05,high,JWT 표준 명세와 보안 가이드
+resend-docs,documentation,https://resend.com/docs,Resend Documentation,2025-11-05,high,공식 문서. TypeScript SDK와 API 레퍼런스
+pnpm-docs,documentation,https://pnpm.io/,pnpm Documentation,2025-11-05,high,공식 문서. Workspaces 설정 가이드
+postgresql-docs,documentation,https://www.postgresql.org/docs/16/,PostgreSQL 16 Documentation,2025-11-05,high,공식 문서. JSONB와 인덱싱 최적화
+redis-docs,documentation,https://redis.io/docs/,Redis Documentation,2025-11-05,high,공식 문서. 세션 저장 패턴과 TTL 관리
+argon2-rfc,specification,https://datatracker.ietf.org/doc/html/rfc9106,Argon2 RFC 9106,2025-11-05,high,공식 RFC. 파라미터 설정 가이드
+react-docs,documentation,https://react.dev/,React Documentation,2025-11-05,high,공식 문서. React 18 신기능과 Hooks
+vite-docs,documentation,https://vitejs.dev/,Vite Documentation,2025-11-05,high,공식 문서. 빠른 개발 서버와 HMR
+vitest-docs,documentation,https://vitest.dev/,Vitest Documentation,2025-11-05,medium,공식 문서. Jest 호환 API와 설정
+playwright-docs,documentation,https://playwright.dev/,Playwright Documentation,2025-11-05,medium,공식 문서. 크로스 브라우저 E2E 테스트
+docker-docs,documentation,https://docs.docker.com/compose/,Docker Compose Documentation,2025-11-05,high,공식 문서. 멀티 컨테이너 배포 패턴
+nestjs-typeorm,documentation,https://docs.nestjs.com/techniques/database,NestJS Database Integration,2025-11-05,high,NestJS + TypeORM 통합 가이드
+nestjs-passport,documentation,https://docs.nestjs.com/security/authentication,NestJS Authentication,2025-11-05,high,NestJS + Passport 통합 가이드
+nestjs-jwt,documentation,https://docs.nestjs.com/security/authentication#jwt,NestJS JWT,2025-11-05,high,@nestjs/jwt 패키지 사용 가이드
+owasp-password,security-guide,https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html,OWASP Password Storage,2025-11-05,high,비밀번호 저장 보안 가이드라인
