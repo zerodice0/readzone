@@ -66,26 +66,27 @@
 
 ---
 
-## Work Package WP02: Database Schema & Prisma Setup (Priority: P0)
+## Work Package WP02: Database Schema & Prisma Setup (Priority: P0) ✅
 
 **Goal**: Define and migrate PostgreSQL schema for all entities (User, Session, OAuth, MFA, AuditLog).
 **Independent Test**: `pnpm prisma migrate dev` succeeds, Prisma Client generates TypeScript types, seed data loads.
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP02-database-schema-prisma.md`
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP02-database-schema-prisma.md`
+**Status**: Completed 2025-11-06
 
 ### Included Subtasks
 
-- [ ] T012 Create packages/backend/prisma/schema.prisma with all models per spec.md Key Entities
-- [ ] T013 Define User model (id, email, password_hash, name, profile_image, role, email_verified, mfa_enabled, soft_delete, timestamps)
-- [ ] T014 Define Session model (id, user_id, token, expires_at, device_info, ip_address, created_at)
-- [ ] T015 Define OAuthConnection model (id, user_id, provider, provider_user_id, created_at)
-- [ ] T016 Define MFASettings model (id, user_id, totp_secret, backup_codes, enabled, created_at)
-- [ ] T017 Define AuditLog model (id, user_id, event_type, details_jsonb, ip_address, user_agent, success, created_at)
-- [ ] T018 Define EmailVerificationToken model (id, user_id, token, expires_at, used, created_at)
-- [ ] T019 Define PasswordResetToken model (id, user_id, token, expires_at, used, created_at)
-- [ ] T020 Add indexes (email unique, session user_id + expires_at, audit_log user_id + created_at)
-- [ ] T021 Create initial migration (`pnpm prisma migrate dev --name init`)
-- [ ] T022 Create seed.ts script (test users with different roles)
-- [ ] T023 Document schema decisions in data-model.md (if not already created)
+- [x] T012 Create packages/backend/prisma/schema.prisma with all models per spec.md Key Entities
+- [x] T013 Define User model (id, email, password_hash, name, profile_image, role, email_verified, mfa_enabled, soft_delete, timestamps)
+- [x] T014 Define Session model (id, user_id, token, expires_at, device_info, ip_address, created_at)
+- [x] T015 Define OAuthConnection model (id, user_id, provider, provider_user_id, created_at)
+- [x] T016 Define MFASettings model (id, user_id, totp_secret, backup_codes, enabled, created_at)
+- [x] T017 Define AuditLog model (id, user_id, event_type, details_jsonb, ip_address, user_agent, success, created_at)
+- [x] T018 Define EmailVerificationToken model (id, user_id, token, expires_at, used, created_at)
+- [x] T019 Define PasswordResetToken model (id, user_id, token, expires_at, used, created_at)
+- [x] T020 Add indexes (email unique, session user_id + expires_at, audit_log user_id + created_at)
+- [x] T021 Create initial migration (`pnpm prisma migrate dev --name init`)
+- [x] T022 Create seed.ts script (test users with different roles)
+- [x] T023 Document schema decisions in data-model.md (if not already created)
 
 ### Implementation Notes
 
