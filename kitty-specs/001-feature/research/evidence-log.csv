@@ -1,0 +1,14 @@
+timestamp,category,finding,source_id,confidence,notes
+2025-11-05T14:00:00Z,backend-framework,NestJS는 TypeScript 기반의 프로그레시브 프레임워크로 구조화된 아키텍처 제공,nestjs-docs,high,사용자 선택. 모듈화 구조와 의존성 주입 지원
+2025-11-05T14:05:00Z,orm-choice,TypeORM은 TypeScript 데코레이터 기반 ORM으로 NestJS와 공식 통합,typeorm-docs,high,사용자 선택. @nestjs/typeorm 패키지 사용
+2025-11-05T14:10:00Z,oauth-library,Passport.js는 Node.js 표준 인증 미들웨어로 다양한 전략 지원,passport-docs,high,사용자 선택. passport-kakao/naver-v2/google-oauth20 사용
+2025-11-05T14:15:00Z,auth-strategy,JWT + Redis 세션 하이브리드 방식으로 확장성과 즉시 무효화 모두 확보,jwt-handbook,high,사용자 선택. @nestjs/jwt와 Redis 조합
+2025-11-05T14:20:00Z,email-service,Resend는 무료 티어 3000통/월 제공하는 개발자 친화적 이메일 API,resend-docs,high,사용자 선택. 간단한 API와 TypeScript SDK 제공
+2025-11-05T14:25:00Z,monorepo-tool,pnpm workspaces는 디스크 효율적이고 빠른 monorepo 관리 도구,pnpm-docs,high,사용자 선택. npm 대비 2-3배 빠른 설치 속도
+2025-11-05T14:30:00Z,database,PostgreSQL 16은 ACID 보장과 JSONB 지원으로 인증 시스템에 적합,postgresql-docs,high,관계형 데이터 모델과 TypeORM 호환성 우수
+2025-11-05T14:35:00Z,session-store,Redis 7은 인메모리 저장소로 세션 조회 성능 최적화,redis-docs,high,TTL 지원과 빠른 응답 시간 (<1ms)
+2025-11-05T14:40:00Z,password-hashing,argon2id는 GPU 공격 저항성이 우수한 최신 해싱 알고리즘,argon2-rfc,high,bcrypt 대비 메모리 하드 함수로 보안성 향상
+2025-11-05T14:45:00Z,frontend,React 18 + Vite + TypeScript는 빠른 개발 경험과 타입 안전성 제공,react-docs,high,사용자 선택. any 타입 금지 규칙 적용
+2025-11-05T14:50:00Z,testing,Vitest는 Vite 네이티브 테스트 프레임워크로 빠른 실행 속도,vitest-docs,medium,Jest API 호환성과 TypeScript 지원
+2025-11-05T14:55:00Z,e2e-testing,Playwright는 크로스 브라우저 E2E 테스트 자동화 도구,playwright-docs,medium,Chromium/Firefox/WebKit 지원
+2025-11-05T15:00:00Z,deployment,Docker Compose는 우분투 미니PC 배포에 적합한 컨테이너 오케스트레이션,docker-docs,high,PostgreSQL + Redis + 앱 컨테이너 통합 관리
