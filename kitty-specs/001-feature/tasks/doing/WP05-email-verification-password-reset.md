@@ -49,3 +49,16 @@ All subtask details are in tasks.md WP05 section. Refer there for:
 ## Activity Log
 
 - 2025-11-06T00:00:00Z – system – lane=planned – Prompt created via /spec-kitty.tasks
+- 2025-11-06T15:35:00Z – claude (89554) – lane=doing – Started implementation
+- 2025-11-06T15:40:00Z – claude (89554) – Phase 1 completed (T046-T047)
+  - ✅ Created EmailService with mock implementation (console.log)
+  - ✅ Created token utility with crypto.randomBytes
+  - ✅ Registered EmailService in app.module.ts as global provider
+  - ✅ All Phase 1 tests passed:
+    - Token generation (32 bytes, URL-safe, unique)
+    - Email verification token generation
+    - Password reset token generation
+    - Token expiration calculation
+    - Email service verification email
+    - Email service password reset email
+  - 📋 Next: Phase 2 - Email verification endpoints (T048-T049)

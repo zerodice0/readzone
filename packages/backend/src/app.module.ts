@@ -6,6 +6,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { PrismaService } from './common/utils/prisma';
 import { RedisService } from './common/utils/redis';
 import { AuditService } from './common/services/audit.service';
+import { EmailService } from './common/services/email.service';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 
@@ -38,7 +39,8 @@ import { AuthModule } from './modules/auth/auth.module';
     PrismaService,
     RedisService,
     AuditService,
+    EmailService,
   ],
-  exports: [PrismaService, RedisService, AuditService],
+  exports: [PrismaService, RedisService, AuditService, EmailService],
 })
 export class AppModule {}
