@@ -10,10 +10,12 @@
 **Prompt Files**: Each work package references a matching prompt file in `kitty-specs/001-feature/tasks/planned/`.
 
 ## Subtask Format: `[Txxx] [P?] Description`
+
 - **[P]** indicates the subtask can proceed in parallel (different files/components).
 - Include precise file paths or modules.
 
 ## Path Conventions
+
 - **Backend**: `packages/backend/src/`
 - **Frontend**: `packages/frontend/src/`
 - **Shared**: `packages/shared/src/`
@@ -21,38 +23,44 @@
 
 ---
 
-## Work Package WP01: Setup & Monorepo Infrastructure (Priority: P0)
+## Work Package WP01: Setup & Monorepo Infrastructure (Priority: P0) ✅
 
 **Goal**: Establish monorepo skeleton, tooling, and development environment.
 **Independent Test**: Project bootstraps locally with `pnpm install && pnpm dev`, linting and formatting hooks work.
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP01-setup-monorepo-infrastructure.md`
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP01-setup-monorepo-infrastructure.md`
+**Status**: ✅ Completed and reviewed on 2025-11-06
 
 ### Included Subtasks
-- [ ] T001 Create monorepo structure (packages/backend, packages/frontend, packages/shared)
-- [ ] T002 Initialize root package.json with pnpm workspaces configuration
-- [ ] T003 [P] Setup backend package.json (Fastify, TypeScript, Prisma, dependencies per plan.md)
-- [ ] T004 [P] Setup frontend package.json (React, Vite, TypeScript, dependencies per plan.md)
-- [ ] T005 [P] Setup shared package.json (TypeScript, type definitions)
-- [ ] T006 Configure TypeScript strict mode (tsconfig.json) for all packages
-- [ ] T007 [P] Setup ESLint (Airbnb TypeScript config) and Prettier
-- [ ] T008 [P] Configure Husky + lint-staged for pre-commit hooks
-- [ ] T009 Create Docker Compose (PostgreSQL 16, Redis 7) per research.md
-- [ ] T010 Create .env.example with all required environment variables
-- [ ] T011 Document quickstart in README.md (pnpm install, docker-compose up, migrations)
+
+- [x] T001 Create monorepo structure (packages/backend, packages/frontend, packages/shared)
+- [x] T002 Initialize root package.json with pnpm workspaces configuration
+- [x] T003 [P] Setup backend package.json (Fastify, TypeScript, Prisma, dependencies per plan.md)
+- [x] T004 [P] Setup frontend package.json (React, Vite, TypeScript, dependencies per plan.md)
+- [x] T005 [P] Setup shared package.json (TypeScript, type definitions)
+- [x] T006 Configure TypeScript strict mode (tsconfig.json) for all packages
+- [x] T007 [P] Setup ESLint (Airbnb TypeScript config) and Prettier
+- [x] T008 [P] Configure Husky + lint-staged for pre-commit hooks
+- [x] T009 Create Docker Compose (PostgreSQL 16, Redis 7) per research.md
+- [x] T010 Create .env.example with all required environment variables
+- [x] T011 Document quickstart in README.md (pnpm install, docker-compose up, migrations)
 
 ### Implementation Notes
+
 - Use pnpm 8.x workspaces for monorepo management
 - Ensure TypeScript strict mode, any 타입 절대 사용 금지
 - Docker Compose should match research.md specifications (PostgreSQL, Redis)
 
 ### Parallel Opportunities
+
 - T003, T004, T005 (package.json setup) can proceed in parallel
 - T007, T008 (linting/formatting) can proceed in parallel
 
 ### Dependencies
+
 - None (starting package).
 
 ### Risks & Mitigations
+
 - Tooling compatibility → pin versions in package.json
 - Environment setup errors → comprehensive .env.example with comments
 
@@ -65,6 +73,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP02-database-schema-prisma.md`
 
 ### Included Subtasks
+
 - [ ] T012 Create packages/backend/prisma/schema.prisma with all models per spec.md Key Entities
 - [ ] T013 Define User model (id, email, password_hash, name, profile_image, role, email_verified, mfa_enabled, soft_delete, timestamps)
 - [ ] T014 Define Session model (id, user_id, token, expires_at, device_info, ip_address, created_at)
@@ -79,18 +88,22 @@
 - [ ] T023 Document schema decisions in data-model.md (if not already created)
 
 ### Implementation Notes
+
 - Follow Prisma best practices (camelCase fields, @id, @unique, @@index)
 - Use DateTime for timestamps, String for UUIDs
 - JSONB for flexible metadata (OAuth, AuditLog details)
 - Ensure relationships (User 1:N Session, User 1:N OAuth, User 1:1 MFA)
 
 ### Parallel Opportunities
+
 - Models T013-T019 can be drafted in parallel, then combined into schema.prisma
 
 ### Dependencies
+
 - Depends on WP01 (Docker Compose, environment variables).
 
 ### Risks & Mitigations
+
 - Migration conflicts → enforce single developer per migration window
 - Schema drift → validate migrations in CI
 
@@ -103,6 +116,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP03-backend-core-infrastructure.md`
 
 ### Included Subtasks
+
 - [ ] T024 Create packages/backend/src/server.ts (Fastify server entry point)
 - [ ] T025 Create packages/backend/src/app.ts (Fastify app initialization with plugins)
 - [ ] T026 Implement config/index.ts (Zod-validated environment variables per research.md)
@@ -116,18 +130,22 @@
 - [ ] T034 Configure Redis client (packages/backend/src/common/utils/redis.ts) with retry logic
 
 ### Implementation Notes
+
 - Use research.md error format: `{ status, error: { code, message, details } }`
 - Zod schema for config validation (crash early if env vars missing)
 - Pino logger with structured JSON output
 - Health endpoint checks PostgreSQL + Redis connectivity
 
 ### Parallel Opportunities
+
 - T027, T028, T029 (utils and middleware) can proceed in parallel
 
 ### Dependencies
+
 - Depends on WP01, WP02.
 
 ### Risks & Mitigations
+
 - Config validation errors → comprehensive error messages
 - Database connection failures → retry logic with exponential backoff
 
@@ -140,6 +158,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP04-authentication-core.md`
 
 ### Included Subtasks
+
 - [ ] T035 Register @fastify/jwt plugin (packages/backend/src/app.ts) with secret from config
 - [ ] T036 Register @fastify/session plugin with Redis store
 - [ ] T037 Implement password hashing service (packages/backend/src/modules/auth/services/password.service.ts) using argon2id per research.md
@@ -153,19 +172,23 @@
 - [ ] T045 Add audit logging to auth events (login success/fail, register, logout)
 
 ### Implementation Notes
+
 - Hybrid workflow: JWT payload contains session_id, verify JWT → check Redis session exists
 - argon2id config: memory=64MB, iterations=3, parallelism=4 (per research.md)
 - Session TTL: 24 hours default, extendable to 30 days (remember me)
 - Rate limiting: 5 attempts/5min per IP (defer to WP08)
 
 ### Parallel Opportunities
+
 - T037 (password service), T038 (schemas) can proceed in parallel
 - T039, T040, T041 (controllers) can proceed in parallel after T037, T038
 
 ### Dependencies
+
 - Depends on WP01, WP02, WP03.
 
 ### Risks & Mitigations
+
 - JWT secret compromise → rotate secrets, use strong random strings
 - Session fixation → regenerate session ID after login
 - Timing attacks on password verification → use constant-time comparison
@@ -179,6 +202,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP05-email-verification-password-reset.md`
 
 ### Included Subtasks
+
 - [ ] T046 Setup email service abstraction (packages/backend/src/common/services/email.service.ts) with mock implementation (console.log for dev)
 - [ ] T047 Create token generation utility (packages/backend/src/common/utils/token.ts) with crypto.randomBytes
 - [ ] T048 Implement POST /api/v1/auth/verify-email/send (send verification email with token)
@@ -190,19 +214,23 @@
 - [ ] T054 Add audit logging for email verification and password reset events
 
 ### Implementation Notes
+
 - Token format: URL-safe random string (32 bytes → base64url)
 - Store tokens in EmailVerificationToken, PasswordResetToken tables with expires_at
 - Mark token as used after confirmation (prevent replay)
 - Email service: console.log for now, integrate SendGrid/AWS SES later
 
 ### Parallel Opportunities
+
 - T046 (email service), T047 (token utility) can proceed in parallel
 - T048, T049 (verification) and T050, T051 (reset) can proceed in parallel after T046, T047
 
 ### Dependencies
+
 - Depends on WP04.
 
 ### Risks & Mitigations
+
 - Token leakage → use HTTPS only, short expiration
 - Email deliverability → log email attempts, add retry logic
 - Token reuse → mark as used after first confirmation
@@ -216,6 +244,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP06-user-management-profiles.md`
 
 ### Included Subtasks
+
 - [ ] T055 Implement GET /api/v1/users/me (get current user profile)
 - [ ] T056 Implement PATCH /api/v1/users/me (update name, profile_image)
 - [ ] T057 Implement DELETE /api/v1/users/me (soft-delete with 30-day grace period)
@@ -227,19 +256,23 @@
 - [ ] T063 Add audit logging for profile changes, role changes, account deletions
 
 ### Implementation Notes
+
 - Soft-delete: set deleted_at timestamp, hide from queries
 - GDPR compliance: document 30-day retention, hard-delete process
 - Pagination: use cursor-based (Prisma cursor, take, skip)
 - Authorization: check user.role in middleware (USER, MODERATOR, ADMIN, SUPERADMIN)
 
 ### Parallel Opportunities
+
 - T055, T056, T057 (user endpoints) can proceed in parallel
 - T059, T060, T061 (admin endpoints) can proceed in parallel
 
 ### Dependencies
+
 - Depends on WP04.
 
 ### Risks & Mitigations
+
 - Authorization bypass → enforce role checks in middleware
 - Soft-delete confusion → clear UI warnings, admin confirmation
 
@@ -252,6 +285,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP07-oauth-integration.md`
 
 ### Included Subtasks
+
 - [ ] T064 Register @fastify/oauth2 plugin for Google (packages/backend/src/app.ts)
 - [ ] T065 Register @fastify/oauth2 plugin for GitHub (packages/backend/src/app.ts)
 - [ ] T066 Configure OAuth redirect URIs in .env.example and config
@@ -265,19 +299,23 @@
 - [ ] T074 Add audit logging for OAuth connections
 
 ### Implementation Notes
+
 - PKCE enabled by @fastify/oauth2 (per research.md)
 - State parameter for CSRF protection (auto-handled by plugin)
 - OAuth profile: extract email, name, profile_image from provider
 - If email unverified in local DB, mark as verified after successful OAuth
 
 ### Parallel Opportunities
+
 - T067, T068 (Google) and T069, T070 (GitHub) can proceed in parallel
 - T071 (OAuth service) should be completed before controllers
 
 ### Dependencies
+
 - Depends on WP04, WP06.
 
 ### Risks & Mitigations
+
 - OAuth provider downtime → show error message, fallback to email/password
 - Account linking conflicts → require user confirmation before linking
 
@@ -290,6 +328,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP08-rate-limiting-security.md`
 
 ### Included Subtasks
+
 - [ ] T075 Register @fastify/rate-limit plugin with Redis store
 - [ ] T076 Configure global rate limits (100 req/min/IP for anonymous, 1000 req/min for authenticated)
 - [ ] T077 Configure endpoint-specific limits (login: 5/5min, password reset: 3/hour, register: 3/hour)
@@ -300,19 +339,23 @@
 - [ ] T082 Document security measures in README.md (rate limits, HTTPS requirement, password policy)
 
 ### Implementation Notes
+
 - Rate limit storage: Redis (shared with sessions)
 - CSRF tokens: stored in session, validated on state-changing requests
 - Audit log retention: 90 days active, archive to backup (defer backup automation)
 - Security headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options
 
 ### Parallel Opportunities
+
 - T075, T076, T077 (rate limiting) can proceed together
 - T078, T079 (CSRF, headers) can proceed in parallel
 
 ### Dependencies
+
 - Depends on WP04, WP06.
 
 ### Risks & Mitigations
+
 - False positives on rate limits → adjust thresholds based on monitoring
 - CSRF bypass → enforce HTTPS, secure cookie flags
 
@@ -325,6 +368,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP09-multi-factor-authentication.md`
 
 ### Included Subtasks
+
 - [ ] T083 Install speakeasy and qrcode libraries (packages/backend)
 - [ ] T084 Implement POST /api/v1/users/me/mfa/enable (generate TOTP secret, return QR code data URI)
 - [ ] T085 Implement POST /api/v1/users/me/mfa/verify (verify TOTP code, enable MFA)
@@ -336,19 +380,23 @@
 - [ ] T091 Add audit logging for MFA enable/disable, TOTP verification attempts
 
 ### Implementation Notes
+
 - TOTP: 6-digit code, 30-second window, ±1 window tolerance (90 seconds total)
 - QR code: data URI format (data:image/png;base64,...)
 - Backup codes: 16-character alphanumeric, bcrypt hashed before storage
 - MFA enforcement: optional for users, admin can enforce globally (defer global enforcement)
 
 ### Parallel Opportunities
+
 - T084, T085, T086 (MFA endpoints) can proceed in parallel after T083
 - T088, T089 (backup codes) can proceed in parallel
 
 ### Dependencies
+
 - Depends on WP04, WP06.
 
 ### Risks & Mitigations
+
 - Clock skew → use time window tolerance (±30s)
 - Backup code leakage → bcrypt hashing, secure display (show once)
 - Lost TOTP device → backup codes, admin recovery process
@@ -362,6 +410,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP10-session-management.md`
 
 ### Included Subtasks
+
 - [ ] T092 Implement GET /api/v1/sessions (list current user's active sessions)
 - [ ] T093 Enhance session creation to capture device info (User-Agent parsing) and IP address
 - [ ] T094 Implement DELETE /api/v1/sessions/:id (logout specific session)
@@ -371,18 +420,22 @@
 - [ ] T098 Add audit logging for session creation, deletion
 
 ### Implementation Notes
+
 - Session storage: Redis with TTL (24 hours default, 30 days for "remember me")
 - Device info: parse User-Agent for browser, OS (use ua-parser-js or similar)
 - Session listing: query Redis by user_id prefix
 - Concurrency limit: check session count on login, delete oldest
 
 ### Parallel Opportunities
+
 - T092, T093, T094, T095 (session endpoints) can proceed in parallel
 
 ### Dependencies
+
 - Depends on WP04.
 
 ### Risks & Mitigations
+
 - Session enumeration → require authentication, show only user's own sessions
 - Redis memory pressure → monitor usage, adjust TTLs
 
@@ -395,6 +448,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP11-frontend-authentication-ui.md`
 
 ### Included Subtasks
+
 - [ ] T099 Setup Vite React app (packages/frontend) with routing (React Router)
 - [ ] T100 Create API client utility (packages/frontend/src/lib/api-client.ts) with Axios, interceptors for JWT
 - [ ] T101 Create AuthContext (packages/frontend/src/lib/auth-context.tsx) for global auth state (user, token, login, logout)
@@ -410,6 +464,7 @@
 - [ ] T111 Style forms with CSS or UI library (Tailwind CSS, shadcn/ui, or custom)
 
 ### Implementation Notes
+
 - React Router v6 for routing
 - Axios for HTTP client, interceptors for JWT token injection
 - AuthContext with React.useContext for global state
@@ -417,13 +472,16 @@
 - Accessibility: WCAG 2.1 AA (labels, keyboard navigation, ARIA attributes)
 
 ### Parallel Opportunities
+
 - T102, T103, T104, T105 (pages) can proceed in parallel after T099, T100, T101
 - T109, T110, T111 (validation, errors, styling) can proceed in parallel
 
 ### Dependencies
+
 - Depends on WP04, WP05.
 
 ### Risks & Mitigations
+
 - XSS attacks → sanitize user inputs, use React's built-in escaping
 - Token storage → use httpOnly cookies or secure localStorage
 
@@ -436,6 +494,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP12-frontend-user-profile-sessions.md`
 
 ### Included Subtasks
+
 - [ ] T112 Create ProfilePage (packages/frontend/src/features/user/pages/ProfilePage.tsx)
 - [ ] T113 Create EditProfileForm component (name, profile_image upload)
 - [ ] T114 Implement profile image upload (base64 or FormData to backend)
@@ -447,17 +506,21 @@
 - [ ] T120 Style profile and settings pages
 
 ### Implementation Notes
+
 - Profile image upload: consider file size limits, image formats (JPEG, PNG)
 - Session list: show current session highlighted
 - Confirmation dialogs: use modal or native confirm (prefer accessible modal)
 
 ### Parallel Opportunities
+
 - T112, T113, T114 (profile) and T115, T116, T117 (sessions) can proceed in parallel
 
 ### Dependencies
+
 - Depends on WP06, WP10, WP11.
 
 ### Risks & Mitigations
+
 - Large image uploads → enforce size limits (2MB), validate MIME types
 - Accidental account deletion → require password confirmation
 
@@ -470,6 +533,7 @@
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP13-frontend-oauth-mfa-ui.md`
 
 ### Included Subtasks
+
 - [ ] T121 Add OAuth login buttons to LoginPage (Google, GitHub)
 - [ ] T122 Implement OAuth callback handling (parse URL params, exchange for JWT)
 - [ ] T123 Create MFASetupPage (packages/frontend/src/features/user/pages/MFASetupPage.tsx)
@@ -481,18 +545,22 @@
 - [ ] T129 Style OAuth buttons and MFA UI
 
 ### Implementation Notes
+
 - OAuth: open OAuth URL in popup or redirect (redirect simpler, better UX)
 - QR code: render `<img src={qrDataUri} />` from backend response
 - MFA TOTP input: 6-digit numeric, auto-focus, keyboard-friendly
 - Backup codes: display once, warn user to save them
 
 ### Parallel Opportunities
+
 - T121, T122 (OAuth) and T123, T124, T125, T126, T127, T128 (MFA) can proceed in parallel
 
 ### Dependencies
+
 - Depends on WP07, WP09, WP11.
 
 ### Risks & Mitigations
+
 - OAuth popup blocking → detect and show instructions to allow popups
 - QR code not scanning → provide manual TOTP secret entry option
 
@@ -521,137 +589,137 @@
 
 ## Subtask Index (Reference)
 
-| Subtask ID | Summary | Work Package | Priority | Parallel? |
-|------------|---------|--------------|----------|-----------|
-| T001 | Create monorepo structure | WP01 | P0 | No |
-| T002 | Initialize root package.json | WP01 | P0 | No |
-| T003 | Setup backend package.json | WP01 | P0 | Yes |
-| T004 | Setup frontend package.json | WP01 | P0 | Yes |
-| T005 | Setup shared package.json | WP01 | P0 | Yes |
-| T006 | Configure TypeScript strict mode | WP01 | P0 | No |
-| T007 | Setup ESLint and Prettier | WP01 | P0 | Yes |
-| T008 | Configure Husky + lint-staged | WP01 | P0 | Yes |
-| T009 | Create Docker Compose | WP01 | P0 | No |
-| T010 | Create .env.example | WP01 | P0 | No |
-| T011 | Document quickstart | WP01 | P0 | No |
-| T012 | Create schema.prisma | WP02 | P0 | No |
-| T013 | Define User model | WP02 | P0 | Yes |
-| T014 | Define Session model | WP02 | P0 | Yes |
-| T015 | Define OAuthConnection model | WP02 | P0 | Yes |
-| T016 | Define MFASettings model | WP02 | P0 | Yes |
-| T017 | Define AuditLog model | WP02 | P0 | Yes |
-| T018 | Define EmailVerificationToken model | WP02 | P0 | Yes |
-| T019 | Define PasswordResetToken model | WP02 | P0 | Yes |
-| T020 | Add indexes | WP02 | P0 | No |
-| T021 | Create initial migration | WP02 | P0 | No |
-| T022 | Create seed.ts script | WP02 | P0 | No |
-| T023 | Document schema decisions | WP02 | P0 | No |
-| T024 | Create server.ts | WP03 | P0 | No |
-| T025 | Create app.ts | WP03 | P0 | No |
-| T026 | Implement config/index.ts | WP03 | P0 | No |
-| T027 | Setup Pino logging | WP03 | P0 | Yes |
-| T028 | Implement error handler | WP03 | P0 | Yes |
-| T029 | Create response helpers | WP03 | P0 | Yes |
-| T030 | Register @fastify/cors | WP03 | P0 | No |
-| T031 | Register @fastify/helmet | WP03 | P0 | No |
-| T032 | Create health endpoint | WP03 | P0 | No |
-| T033 | Configure Prisma client | WP03 | P0 | No |
-| T034 | Configure Redis client | WP03 | P0 | No |
-| T035 | Register @fastify/jwt | WP04 | P1 | No |
-| T036 | Register @fastify/session | WP04 | P1 | No |
-| T037 | Implement password service | WP04 | P1 | Yes |
-| T038 | Create Zod schemas | WP04 | P1 | Yes |
-| T039 | Implement register endpoint | WP04 | P1 | Yes |
-| T040 | Implement login endpoint | WP04 | P1 | Yes |
-| T041 | Implement logout endpoint | WP04 | P1 | Yes |
-| T042 | Create JWT auth middleware | WP04 | P1 | No |
-| T043 | Implement session service | WP04 | P1 | No |
-| T044 | Wire auth routes | WP04 | P1 | No |
-| T045 | Add audit logging | WP04 | P1 | No |
-| T046 | Setup email service | WP05 | P1 | Yes |
-| T047 | Create token utility | WP05 | P1 | Yes |
-| T048 | Implement verify-email send | WP05 | P1 | Yes |
-| T049 | Implement verify-email confirm | WP05 | P1 | Yes |
-| T050 | Implement password-reset request | WP05 | P1 | Yes |
-| T051 | Implement password-reset confirm | WP05 | P1 | Yes |
-| T052 | Implement token expiration | WP05 | P1 | No |
-| T053 | Add rate limiting (placeholder) | WP05 | P1 | No |
-| T054 | Add audit logging | WP05 | P1 | No |
-| T055 | Implement GET /users/me | WP06 | P2 | Yes |
-| T056 | Implement PATCH /users/me | WP06 | P2 | Yes |
-| T057 | Implement DELETE /users/me | WP06 | P2 | Yes |
-| T058 | Implement hard-delete cron | WP06 | P2 | No |
-| T059 | Implement GET /users | WP06 | P2 | Yes |
-| T060 | Implement GET /users/:id | WP06 | P2 | Yes |
-| T061 | Implement PATCH /users/:id/role | WP06 | P2 | Yes |
-| T062 | Add authorization middleware | WP06 | P2 | No |
-| T063 | Add audit logging | WP06 | P2 | No |
-| T064 | Register OAuth Google plugin | WP07 | P3 | No |
-| T065 | Register OAuth GitHub plugin | WP07 | P3 | No |
-| T066 | Configure OAuth redirect URIs | WP07 | P3 | No |
-| T067 | Implement Google OAuth initiate | WP07 | P3 | Yes |
-| T068 | Implement Google OAuth callback | WP07 | P3 | Yes |
-| T069 | Implement GitHub OAuth initiate | WP07 | P3 | Yes |
-| T070 | Implement GitHub OAuth callback | WP07 | P3 | Yes |
-| T071 | Implement OAuth service | WP07 | P3 | No |
-| T072 | Handle OAuth email match | WP07 | P3 | No |
-| T073 | Handle OAuth new user | WP07 | P3 | No |
-| T074 | Add audit logging | WP07 | P3 | No |
-| T075 | Register rate-limit plugin | WP08 | P3 | No |
-| T076 | Configure global rate limits | WP08 | P3 | No |
-| T077 | Configure endpoint limits | WP08 | P3 | No |
-| T078 | Add CSRF protection | WP08 | P3 | Yes |
-| T079 | Enhance security headers | WP08 | P3 | Yes |
-| T080 | Implement audit log endpoint | WP08 | P3 | No |
-| T081 | Add IP/User-Agent capture | WP08 | P3 | No |
-| T082 | Document security measures | WP08 | P3 | No |
-| T083 | Install MFA libraries | WP09 | P4 | No |
-| T084 | Implement MFA enable endpoint | WP09 | P4 | Yes |
-| T085 | Implement MFA verify endpoint | WP09 | P4 | Yes |
-| T086 | Implement MFA disable endpoint | WP09 | P4 | Yes |
-| T087 | Implement MFA login challenge | WP09 | P4 | No |
-| T088 | Generate backup codes | WP09 | P4 | Yes |
-| T089 | Implement backup code verify | WP09 | P4 | Yes |
-| T090 | Implement backup code regenerate | WP09 | P4 | No |
-| T091 | Add audit logging | WP09 | P4 | No |
-| T092 | Implement GET /sessions | WP10 | P5 | Yes |
-| T093 | Enhance session device info | WP10 | P5 | No |
-| T094 | Implement DELETE /sessions/:id | WP10 | P5 | Yes |
-| T095 | Implement DELETE /sessions | WP10 | P5 | Yes |
-| T096 | Enforce session limit | WP10 | P5 | No |
-| T097 | Update session last_activity | WP10 | P5 | No |
-| T098 | Add audit logging | WP10 | P5 | No |
-| T099 | Setup Vite React app | WP11 | P1 | No |
-| T100 | Create API client | WP11 | P1 | No |
-| T101 | Create AuthContext | WP11 | P1 | No |
-| T102 | Create LoginPage | WP11 | P1 | Yes |
-| T103 | Create RegisterPage | WP11 | P1 | Yes |
-| T104 | Create ForgotPasswordPage | WP11 | P1 | Yes |
-| T105 | Create ResetPasswordPage | WP11 | P1 | Yes |
-| T106 | Create EmailVerificationBanner | WP11 | P1 | Yes |
-| T107 | Create ProtectedRoute | WP11 | P1 | No |
-| T108 | Create DashboardPage | WP11 | P1 | No |
-| T109 | Implement form validation | WP11 | P1 | Yes |
-| T110 | Add error handling | WP11 | P1 | Yes |
-| T111 | Style forms | WP11 | P1 | Yes |
-| T112 | Create ProfilePage | WP12 | P2 | Yes |
-| T113 | Create EditProfileForm | WP12 | P2 | Yes |
-| T114 | Implement profile image upload | WP12 | P2 | Yes |
-| T115 | Create ActiveSessionsPage | WP12 | P2 | Yes |
-| T116 | Create SessionListItem | WP12 | P2 | Yes |
-| T117 | Implement session logout | WP12 | P2 | Yes |
-| T118 | Create AccountSettingsPage | WP12 | P2 | No |
-| T119 | Add confirmation dialogs | WP12 | P2 | No |
-| T120 | Style pages | WP12 | P2 | No |
-| T121 | Add OAuth buttons | WP13 | P3 | Yes |
-| T122 | Handle OAuth callback | WP13 | P3 | Yes |
-| T123 | Create MFASetupPage | WP13 | P3 | Yes |
-| T124 | Display QR code | WP13 | P3 | Yes |
-| T125 | Create MFAVerifyForm | WP13 | P3 | Yes |
-| T126 | Add MFA login challenge | WP13 | P3 | No |
-| T127 | Create BackupCodesDisplay | WP13 | P3 | No |
-| T128 | Add MFA disable option | WP13 | P3 | No |
-| T129 | Style OAuth/MFA UI | WP13 | P3 | No |
+| Subtask ID | Summary                             | Work Package | Priority | Parallel? |
+| ---------- | ----------------------------------- | ------------ | -------- | --------- |
+| T001       | Create monorepo structure           | WP01         | P0       | No        |
+| T002       | Initialize root package.json        | WP01         | P0       | No        |
+| T003       | Setup backend package.json          | WP01         | P0       | Yes       |
+| T004       | Setup frontend package.json         | WP01         | P0       | Yes       |
+| T005       | Setup shared package.json           | WP01         | P0       | Yes       |
+| T006       | Configure TypeScript strict mode    | WP01         | P0       | No        |
+| T007       | Setup ESLint and Prettier           | WP01         | P0       | Yes       |
+| T008       | Configure Husky + lint-staged       | WP01         | P0       | Yes       |
+| T009       | Create Docker Compose               | WP01         | P0       | No        |
+| T010       | Create .env.example                 | WP01         | P0       | No        |
+| T011       | Document quickstart                 | WP01         | P0       | No        |
+| T012       | Create schema.prisma                | WP02         | P0       | No        |
+| T013       | Define User model                   | WP02         | P0       | Yes       |
+| T014       | Define Session model                | WP02         | P0       | Yes       |
+| T015       | Define OAuthConnection model        | WP02         | P0       | Yes       |
+| T016       | Define MFASettings model            | WP02         | P0       | Yes       |
+| T017       | Define AuditLog model               | WP02         | P0       | Yes       |
+| T018       | Define EmailVerificationToken model | WP02         | P0       | Yes       |
+| T019       | Define PasswordResetToken model     | WP02         | P0       | Yes       |
+| T020       | Add indexes                         | WP02         | P0       | No        |
+| T021       | Create initial migration            | WP02         | P0       | No        |
+| T022       | Create seed.ts script               | WP02         | P0       | No        |
+| T023       | Document schema decisions           | WP02         | P0       | No        |
+| T024       | Create server.ts                    | WP03         | P0       | No        |
+| T025       | Create app.ts                       | WP03         | P0       | No        |
+| T026       | Implement config/index.ts           | WP03         | P0       | No        |
+| T027       | Setup Pino logging                  | WP03         | P0       | Yes       |
+| T028       | Implement error handler             | WP03         | P0       | Yes       |
+| T029       | Create response helpers             | WP03         | P0       | Yes       |
+| T030       | Register @fastify/cors              | WP03         | P0       | No        |
+| T031       | Register @fastify/helmet            | WP03         | P0       | No        |
+| T032       | Create health endpoint              | WP03         | P0       | No        |
+| T033       | Configure Prisma client             | WP03         | P0       | No        |
+| T034       | Configure Redis client              | WP03         | P0       | No        |
+| T035       | Register @fastify/jwt               | WP04         | P1       | No        |
+| T036       | Register @fastify/session           | WP04         | P1       | No        |
+| T037       | Implement password service          | WP04         | P1       | Yes       |
+| T038       | Create Zod schemas                  | WP04         | P1       | Yes       |
+| T039       | Implement register endpoint         | WP04         | P1       | Yes       |
+| T040       | Implement login endpoint            | WP04         | P1       | Yes       |
+| T041       | Implement logout endpoint           | WP04         | P1       | Yes       |
+| T042       | Create JWT auth middleware          | WP04         | P1       | No        |
+| T043       | Implement session service           | WP04         | P1       | No        |
+| T044       | Wire auth routes                    | WP04         | P1       | No        |
+| T045       | Add audit logging                   | WP04         | P1       | No        |
+| T046       | Setup email service                 | WP05         | P1       | Yes       |
+| T047       | Create token utility                | WP05         | P1       | Yes       |
+| T048       | Implement verify-email send         | WP05         | P1       | Yes       |
+| T049       | Implement verify-email confirm      | WP05         | P1       | Yes       |
+| T050       | Implement password-reset request    | WP05         | P1       | Yes       |
+| T051       | Implement password-reset confirm    | WP05         | P1       | Yes       |
+| T052       | Implement token expiration          | WP05         | P1       | No        |
+| T053       | Add rate limiting (placeholder)     | WP05         | P1       | No        |
+| T054       | Add audit logging                   | WP05         | P1       | No        |
+| T055       | Implement GET /users/me             | WP06         | P2       | Yes       |
+| T056       | Implement PATCH /users/me           | WP06         | P2       | Yes       |
+| T057       | Implement DELETE /users/me          | WP06         | P2       | Yes       |
+| T058       | Implement hard-delete cron          | WP06         | P2       | No        |
+| T059       | Implement GET /users                | WP06         | P2       | Yes       |
+| T060       | Implement GET /users/:id            | WP06         | P2       | Yes       |
+| T061       | Implement PATCH /users/:id/role     | WP06         | P2       | Yes       |
+| T062       | Add authorization middleware        | WP06         | P2       | No        |
+| T063       | Add audit logging                   | WP06         | P2       | No        |
+| T064       | Register OAuth Google plugin        | WP07         | P3       | No        |
+| T065       | Register OAuth GitHub plugin        | WP07         | P3       | No        |
+| T066       | Configure OAuth redirect URIs       | WP07         | P3       | No        |
+| T067       | Implement Google OAuth initiate     | WP07         | P3       | Yes       |
+| T068       | Implement Google OAuth callback     | WP07         | P3       | Yes       |
+| T069       | Implement GitHub OAuth initiate     | WP07         | P3       | Yes       |
+| T070       | Implement GitHub OAuth callback     | WP07         | P3       | Yes       |
+| T071       | Implement OAuth service             | WP07         | P3       | No        |
+| T072       | Handle OAuth email match            | WP07         | P3       | No        |
+| T073       | Handle OAuth new user               | WP07         | P3       | No        |
+| T074       | Add audit logging                   | WP07         | P3       | No        |
+| T075       | Register rate-limit plugin          | WP08         | P3       | No        |
+| T076       | Configure global rate limits        | WP08         | P3       | No        |
+| T077       | Configure endpoint limits           | WP08         | P3       | No        |
+| T078       | Add CSRF protection                 | WP08         | P3       | Yes       |
+| T079       | Enhance security headers            | WP08         | P3       | Yes       |
+| T080       | Implement audit log endpoint        | WP08         | P3       | No        |
+| T081       | Add IP/User-Agent capture           | WP08         | P3       | No        |
+| T082       | Document security measures          | WP08         | P3       | No        |
+| T083       | Install MFA libraries               | WP09         | P4       | No        |
+| T084       | Implement MFA enable endpoint       | WP09         | P4       | Yes       |
+| T085       | Implement MFA verify endpoint       | WP09         | P4       | Yes       |
+| T086       | Implement MFA disable endpoint      | WP09         | P4       | Yes       |
+| T087       | Implement MFA login challenge       | WP09         | P4       | No        |
+| T088       | Generate backup codes               | WP09         | P4       | Yes       |
+| T089       | Implement backup code verify        | WP09         | P4       | Yes       |
+| T090       | Implement backup code regenerate    | WP09         | P4       | No        |
+| T091       | Add audit logging                   | WP09         | P4       | No        |
+| T092       | Implement GET /sessions             | WP10         | P5       | Yes       |
+| T093       | Enhance session device info         | WP10         | P5       | No        |
+| T094       | Implement DELETE /sessions/:id      | WP10         | P5       | Yes       |
+| T095       | Implement DELETE /sessions          | WP10         | P5       | Yes       |
+| T096       | Enforce session limit               | WP10         | P5       | No        |
+| T097       | Update session last_activity        | WP10         | P5       | No        |
+| T098       | Add audit logging                   | WP10         | P5       | No        |
+| T099       | Setup Vite React app                | WP11         | P1       | No        |
+| T100       | Create API client                   | WP11         | P1       | No        |
+| T101       | Create AuthContext                  | WP11         | P1       | No        |
+| T102       | Create LoginPage                    | WP11         | P1       | Yes       |
+| T103       | Create RegisterPage                 | WP11         | P1       | Yes       |
+| T104       | Create ForgotPasswordPage           | WP11         | P1       | Yes       |
+| T105       | Create ResetPasswordPage            | WP11         | P1       | Yes       |
+| T106       | Create EmailVerificationBanner      | WP11         | P1       | Yes       |
+| T107       | Create ProtectedRoute               | WP11         | P1       | No        |
+| T108       | Create DashboardPage                | WP11         | P1       | No        |
+| T109       | Implement form validation           | WP11         | P1       | Yes       |
+| T110       | Add error handling                  | WP11         | P1       | Yes       |
+| T111       | Style forms                         | WP11         | P1       | Yes       |
+| T112       | Create ProfilePage                  | WP12         | P2       | Yes       |
+| T113       | Create EditProfileForm              | WP12         | P2       | Yes       |
+| T114       | Implement profile image upload      | WP12         | P2       | Yes       |
+| T115       | Create ActiveSessionsPage           | WP12         | P2       | Yes       |
+| T116       | Create SessionListItem              | WP12         | P2       | Yes       |
+| T117       | Implement session logout            | WP12         | P2       | Yes       |
+| T118       | Create AccountSettingsPage          | WP12         | P2       | No        |
+| T119       | Add confirmation dialogs            | WP12         | P2       | No        |
+| T120       | Style pages                         | WP12         | P2       | No        |
+| T121       | Add OAuth buttons                   | WP13         | P3       | Yes       |
+| T122       | Handle OAuth callback               | WP13         | P3       | Yes       |
+| T123       | Create MFASetupPage                 | WP13         | P3       | Yes       |
+| T124       | Display QR code                     | WP13         | P3       | Yes       |
+| T125       | Create MFAVerifyForm                | WP13         | P3       | Yes       |
+| T126       | Add MFA login challenge             | WP13         | P3       | No        |
+| T127       | Create BackupCodesDisplay           | WP13         | P3       | No        |
+| T128       | Add MFA disable option              | WP13         | P3       | No        |
+| T129       | Style OAuth/MFA UI                  | WP13         | P3       | No        |
 
 ---
 
