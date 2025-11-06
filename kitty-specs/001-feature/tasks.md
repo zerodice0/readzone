@@ -153,32 +153,36 @@
 
 ---
 
-## Work Package WP04: Authentication Core (JWT + Redis Session) (Priority: P1) 🎯 MVP
+## Work Package WP04: Authentication Core (JWT + Database Session) (Priority: P1) 🎯 MVP ✅
 
-**Goal**: Implement hybrid authentication strategy (JWT + Redis session) with register/login/logout.
+**Goal**: Implement hybrid authentication strategy (JWT + Database session) with register/login/logout.
 **Independent Test**: User can register, login (receive JWT), access protected route, logout (session invalidated).
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP04-authentication-core.md`
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP04-authentication-core.md`
+**Status**: ✅ Completed and approved on 2025-11-06
 
 ### Included Subtasks
 
-- [ ] T035 Register @fastify/jwt plugin (packages/backend/src/app.ts) with secret from config
-- [ ] T036 Register @fastify/session plugin with Redis store
-- [ ] T037 Implement password hashing service (packages/backend/src/modules/auth/services/password.service.ts) using argon2id per research.md
-- [ ] T038 Create Zod schemas for auth endpoints (packages/backend/src/modules/auth/schemas/auth.schema.ts)
-- [ ] T039 Implement POST /api/v1/auth/register (controller: packages/backend/src/modules/auth/controllers/register.controller.ts)
-- [ ] T040 Implement POST /api/v1/auth/login (controller: packages/backend/src/modules/auth/controllers/login.controller.ts)
-- [ ] T041 Implement POST /api/v1/auth/logout (controller: packages/backend/src/modules/auth/controllers/logout.controller.ts)
-- [ ] T042 Create JWT authentication middleware (packages/backend/src/common/middleware/auth.middleware.ts) that verifies JWT + checks Redis session
-- [ ] T043 Implement session service (packages/backend/src/modules/sessions/services/session.service.ts) for create/validate/delete in Redis
-- [ ] T044 Wire auth routes (packages/backend/src/modules/auth/routes.ts) to Fastify app
-- [ ] T045 Add audit logging to auth events (login success/fail, register, logout)
+- [x] T035 Register @nestjs/jwt module with secret from config
+- [x] T036 Implement database session management with Prisma
+- [x] T037 Implement password hashing service (packages/backend/src/modules/auth/services/password.service.ts) using bcrypt per plan.md
+- [x] T038 Create class-validator DTOs for auth endpoints (packages/backend/src/modules/auth/dto/)
+- [x] T039 Implement POST /api/v1/auth/register (controller: packages/backend/src/modules/auth/controllers/auth.controller.ts)
+- [x] T040 Implement POST /api/v1/auth/login (controller: packages/backend/src/modules/auth/controllers/auth.controller.ts)
+- [x] T041 Implement POST /api/v1/auth/logout (controller: packages/backend/src/modules/auth/controllers/auth.controller.ts)
+- [x] T042 Create JWT authentication strategy (packages/backend/src/modules/auth/strategies/jwt.strategy.ts) that verifies JWT + checks database session
+- [x] T043 Implement session service (packages/backend/src/modules/auth/services/session.service.ts) for create/validate/revoke in database
+- [x] T044 Wire auth module (packages/backend/src/modules/auth/auth.module.ts) to NestJS app
+- [x] T045 Add audit logging to auth events (login success/fail, register, logout)
 
 ### Implementation Notes
 
-- Hybrid workflow: JWT payload contains session_id, verify JWT → check Redis session exists
-- argon2id config: memory=64MB, iterations=3, parallelism=4 (per research.md)
+- Hybrid workflow: JWT payload contains session_id, verify JWT → check database session exists
+- Bcrypt config: 12 rounds (per plan.md decision based on research.md benchmarks)
 - Session TTL: 24 hours default, extendable to 30 days (remember me)
 - Rate limiting: 5 attempts/5min per IP (defer to WP08)
+- Framework: NestJS with @nestjs/jwt, @nestjs/passport
+- Validation: class-validator + class-transformer (NestJS standard)
+- Session storage: PostgreSQL via Prisma (not Redis)
 
 ### Parallel Opportunities
 
