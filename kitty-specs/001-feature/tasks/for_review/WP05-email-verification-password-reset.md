@@ -2,10 +2,10 @@
 work_package_id: 'WP05'
 title: 'Email Verification & Password Reset'
 phase: 'Phase 1 - Core Auth'
-lane: 'doing'
+lane: 'for_review'
 assignee: 'Claude Code'
 agent: 'claude'
-shell_pid: '89554'
+shell_pid: '40022'
 history:
   - timestamp: '2025-11-06T00:00:00Z'
     lane: 'planned'
@@ -80,3 +80,4 @@ All subtask details are in tasks.md WP05 section. Refer there for:
     - Token replay prevention
     - Already-verified rejection
   - 📋 Next: Phase 3 - Password reset endpoints (T050-T052)
+- 2025-11-07T05:50:22Z – claude – shell_pid=40022 – lane=for_review – Completed Phase 3-5: Password reset flow with security and audit logging
