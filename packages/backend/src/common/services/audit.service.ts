@@ -4,7 +4,7 @@ import { PrismaService } from '../utils/prisma';
 import { LoggerService } from '../utils/logger';
 
 export interface AuditLogData {
-  userId?: string;
+  userId?: string | null;
   action:
     | 'LOGIN'
     | 'LOGOUT'
@@ -18,7 +18,10 @@ export interface AuditLogData {
     | 'OAUTH_CONNECT'
     | 'OAUTH_DISCONNECT'
     | 'PASSWORD_RESET'
-    | 'EMAIL_VERIFY';
+    | 'PASSWORD_RESET_REQUEST'
+    | 'PASSWORD_RESET_REQUEST_FAILED'
+    | 'EMAIL_VERIFY'
+    | 'EMAIL_VERIFY_REQUEST';
   ipAddress: string;
   userAgent: string;
   metadata?: Record<string, unknown>;
