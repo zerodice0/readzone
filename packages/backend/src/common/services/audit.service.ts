@@ -1,31 +1,15 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, AuditAction, AuditSeverity } from '@prisma/client';
 import { PrismaService } from '../utils/prisma';
 import { LoggerService } from '../utils/logger';
 
 export interface AuditLogData {
   userId?: string | null;
-  action:
-    | 'LOGIN'
-    | 'LOGOUT'
-    | 'LOGIN_FAILED'
-    | 'PASSWORD_CHANGE'
-    | 'MFA_ENABLE'
-    | 'MFA_DISABLE'
-    | 'ROLE_CHANGE'
-    | 'ACCOUNT_SUSPEND'
-    | 'ACCOUNT_DELETE'
-    | 'OAUTH_CONNECT'
-    | 'OAUTH_DISCONNECT'
-    | 'PASSWORD_RESET'
-    | 'PASSWORD_RESET_REQUEST'
-    | 'PASSWORD_RESET_REQUEST_FAILED'
-    | 'EMAIL_VERIFY'
-    | 'EMAIL_VERIFY_REQUEST';
+  action: AuditAction;
   ipAddress: string;
   userAgent: string;
   metadata?: Record<string, unknown>;
-  severity?: 'INFO' | 'WARNING' | 'CRITICAL';
+  severity?: AuditSeverity;
 }
 
 /**

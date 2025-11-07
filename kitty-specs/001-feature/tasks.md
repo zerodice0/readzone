@@ -246,42 +246,159 @@
 
 ## Work Package WP06: User Management & Profiles (Priority: P2)
 
-**Goal**: Implement user CRUD, profile management, and account deletion with 30-day soft-delete.
-**Independent Test**: User can view/update profile (name, profile_image), delete account (soft-delete), admin can list/manage users.
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP06-user-management-profiles.md`
+**Goal**: Implement user CRUD, profile management, admin functions, and RBAC authorization.
+**Independent Test**: User can view/update profile (email), delete account (soft-delete 30d), admin can list/manage users with role-based access control.
+**Prompt**: `kitty-specs/001-feature/tasks/doing/WP06-user-management-profiles.md`
+**Status**: 🔄 In Progress (2025-11-07)
+
+### Task Categories
+
+**Authorization (T063)**: RBAC middleware - foundation for all protected endpoints
+**User Endpoints (T055-T058)**: Profile CRUD and soft-delete
+**Admin Endpoints (T059-T062)**: User management for administrators
+**Audit & Quality (T064-T066)**: Logging, testing, documentation
 
 ### Included Subtasks
 
-- [ ] T055 Implement GET /api/v1/users/me (get current user profile)
-- [ ] T056 Implement PATCH /api/v1/users/me (update name, profile_image)
-- [ ] T057 Implement DELETE /api/v1/users/me (soft-delete with 30-day grace period)
-- [ ] T058 Implement cron job or scheduled task for hard-delete after 30 days (pseudocode/comment for now)
-- [ ] T059 Implement GET /api/v1/users (admin only: list users with pagination, cursor-based)
-- [ ] T060 Implement GET /api/v1/users/:id (admin only: view user details)
-- [ ] T061 Implement PATCH /api/v1/users/:id/role (admin only: change user role)
-- [ ] T062 Add authorization middleware (packages/backend/src/common/middleware/authorize.middleware.ts) for role checks
-- [ ] T063 Add audit logging for profile changes, role changes, account deletions
+#### 🔐 Authorization Foundation (Priority: Critical)
+- [ ] **T063**: RolesGuard + @Roles() decorator (3-4h, Medium)
+  - Files: `common/guards/roles.guard.ts`, `common/decorators/roles.decorator.ts`
+  - Tests: Unit tests for role checks (ADMIN, MODERATOR, USER)
+  - Blocks: T059, T060, T061, T062 (all admin endpoints)
+
+#### 👤 User Profile Endpoints
+- [ ] **T055**: GET /users/me - 프로필 조회 (2-3h, Low)
+  - Files: `users/dto/user-profile.dto.ts`, `users/users.service.ts`, `users/users.controller.ts`
+  - Returns: email, role, emailVerified, mfaEnabled, oauthConnections, hasPassword
+  - Tests: 4 integration tests (authenticated, unauthenticated, OAuth-only, MFA-enabled)
+
+- [ ] **T056**: PATCH /users/me - 프로필 수정 (3-4h, Medium)
+  - Files: `users/dto/update-profile.dto.ts`, `users/users.service.ts`, `users/users.controller.ts`
+  - Features: Email 변경 시 재인증, 중복 이메일 체크, Audit log
+  - Tests: 4 integration tests (email change, duplicate check, validation, audit)
+  - Depends: T055
+
+- [ ] **T057**: DELETE /users/me - 계정 삭제 (4-5h, Medium)
+  - Files: `users/dto/delete-account.dto.ts`, `users/users.service.ts`, `users/users.controller.ts`
+  - Features: 비밀번호 확인, soft-delete (status=DELETED, deletedAt), 30일 유예, 세션 무효화
+  - Tests: 5 integration tests (valid, invalid pwd, confirm flag, session revoke, audit)
+  - Depends: T055, T056
+
+- [ ] **T058**: Cron job - 30일 경과 계정 물리 삭제 (2-3h, Low)
+  - File: `users/tasks/cleanup-deleted-users.task.ts` (pseudocode)
+  - Implementation: 의사코드만 작성 (실제 구현 Phase 2 범위 외)
+  - Documentation: README Background Jobs 섹션 추가
+  - Depends: T057
+
+#### 👥 Admin User Management Endpoints
+- [ ] **T059**: GET /admin/users - 사용자 목록 조회 (4-5h, Medium)
+  - Files: `users/dto/list-users-query.dto.ts`, `users/users.service.ts`, `users/admin.controller.ts` (new)
+  - Features: Pagination (offset-based), filters (role, status, search), sorting
+  - Tests: 6 integration tests (admin access, user forbidden, pagination, filters, search, sort)
+  - Depends: T063 (RolesGuard)
+
+- [ ] **T060**: GET /admin/users/:id - 사용자 상세 조회 (2-3h, Low)
+  - Files: `users/users.service.ts`, `users/admin.controller.ts`
+  - Returns: User + 최근 세션 5개 + 최근 Audit log 10개 + OAuth connections + MFA
+  - Tests: 5 integration tests (admin access, not found, no password leak, sessions, audit logs)
+  - Depends: T059
+
+- [ ] **T061**: PATCH /admin/users/:id - 사용자 정보 수정 (4-5h, Medium)
+  - Files: `users/dto/update-user.dto.ts`, `users/users.service.ts`, `users/admin.controller.ts`
+  - Features: 역할 변경, 상태 변경 (SUSPENDED → 세션 무효화), emailVerified 강제 설정
+  - Rules: 자기 자신 수정 금지, ANONYMOUS 할당 금지, DELETED 할당 금지
+  - Tests: 5 integration tests (role change, self-modify block, suspend sessions, audit critical)
+  - Depends: T060
+
+- [ ] **T062**: DELETE /admin/users/:id/force-delete - 강제 삭제 (2-3h, Low)
+  - Files: `users/users.service.ts`, `users/admin.controller.ts`
+  - Features: 즉시 물리 삭제 (CASCADE: sessions, OAuth, MFA, tokens), AuditLogs 보존 (userId=null)
+  - Rules: 자기 자신 삭제 금지, GDPR 완전 삭제
+  - Tests: 5 integration tests (delete success, self-delete block, not found, CASCADE, audit preserve)
+  - Depends: T061
+
+#### 📊 Audit, Testing & Documentation
+- [ ] **T064**: Audit Logging 통합 (2h, Low)
+  - Prisma schema: AuditAction enum 확장 (PROFILE_UPDATE, ACCOUNT_DELETE, ROLE_CHANGE, etc.)
+  - Validation: 모든 T055-T062 엔드포인트 Audit log 호출 확인
+  - Critical actions: ROLE_CHANGE, ACCOUNT_DELETE, ACCOUNT_FORCE_DELETE, ACCOUNT_SUSPEND
+  - Depends: T055-T062
+
+- [ ] **T065**: Integration Tests for WP06 (6-8h, Medium)
+  - Test Files: `test/users.e2e-spec.ts`, `test/admin.e2e-spec.ts`, `test/authorization.e2e-spec.ts`
+  - Coverage: User endpoints (13 tests), Admin endpoints (21 tests), Authorization (12 tests)
+  - Total: 46 integration tests, code coverage ≥80%
+  - Depends: T055-T064
+
+- [ ] **T066**: Documentation (2h, Low)
+  - Files: `README.md` (User Management 섹션), `docs/user-management.md` (new)
+  - Content: API 사용법, RBAC 구조, Soft-delete vs Force-delete, Audit log 활용
+  - OpenAPI validation: contracts/users-api.yaml, contracts/admin-api.yaml 일치 확인
+  - Depends: T065
 
 ### Implementation Notes
 
-- Soft-delete: set deleted_at timestamp, hide from queries
-- GDPR compliance: document 30-day retention, hard-delete process
-- Pagination: use cursor-based (Prisma cursor, take, skip)
-- Authorization: check user.role in middleware (USER, MODERATOR, ADMIN, SUPERADMIN)
+**Authorization (T063)**:
+- RolesGuard: Reflector 사용, @Roles() 메타데이터 읽기
+- @Roles(UserRole.ADMIN): 데코레이터로 역할 제한
+- ResourceOwnerGuard (선택): 사용자가 자신의 리소스만 접근
+
+**Soft-Delete (T057)**:
+- status = UserStatus.DELETED, deletedAt = now()
+- 30일 유예 기간 (T058 cron job에서 물리 삭제)
+- 모든 활성 세션 즉시 무효화 (isActive = false, revokedAt = now())
+
+**Pagination (T059)**:
+- Offset-based: `skip = (page - 1) * limit`, `take = limit`
+- Cursor-based는 Phase 3에서 고려 (현재 명세에는 offset-based)
+
+**Audit Logging (T064)**:
+- 모든 User/Admin 작업에 Audit log 기록
+- Severity: INFO (일반 작업), WARNING (실패), CRITICAL (역할 변경, 계정 삭제)
+- Metadata: 변경 전/후 값, adminId (관리자 작업 시)
 
 ### Parallel Opportunities
 
-- T055, T056, T057 (user endpoints) can proceed in parallel
-- T059, T060, T061 (admin endpoints) can proceed in parallel
+**Phase 1 (Authorization + User Endpoints)**:
+- T063 (Authorization) → 먼저 완료 (다른 작업의 기반)
+- T055, T056, T057 → 병렬 가능 (서로 독립적, T063 완료 후)
+
+**Phase 2 (Admin Endpoints)**:
+- T059, T060 → 병렬 가능 (T063 완료 후)
+- T061, T062 → 병렬 가능 (T060 완료 후)
+
+**Phase 3 (Quality)**:
+- T064, T065, T066 → 순차 실행 (모든 구현 완료 후)
 
 ### Dependencies
 
-- Depends on WP04.
+**External Dependencies**:
+- WP04 (Authentication Core) - JWT, Session 기반 필수
+- WP05 (Email Verification) - EmailService 사용 (T056)
+
+**Internal Dependencies**:
+```
+T063 (AuthZ) → T059, T060, T061, T062 (Admin endpoints)
+T055 → T056 → T057 → T058 (User endpoints chain)
+T059 → T060 → T061 → T062 (Admin endpoints chain)
+T055-T062 → T064 → T065 → T066 (Quality chain)
+```
 
 ### Risks & Mitigations
 
-- Authorization bypass → enforce role checks in middleware
-- Soft-delete confusion → clear UI warnings, admin confirmation
+**High Risk**:
+- **Authorization bypass** (T063): RolesGuard 모든 admin 엔드포인트에 일관되게 적용, unit tests 필수
+- **Soft-delete 세션 누락** (T057): 세션 무효화 로직 integration test 필수
+- **자기 자신 수정** (T061, T062): adminId !== userId 검증 로직 필수
+
+**Medium Risk**:
+- **Audit log 누락** (T064): 모든 작업에 Audit log 호출 체크리스트 작성
+- **CASCADE 삭제 실패** (T062): Prisma onDelete 설정 확인, integration test 필수
+
+**Mitigation**:
+- Code review: Security-critical 코드 (T063, T061, T062) 우선 리뷰
+- Integration tests: 46 tests로 모든 엣지 케이스 커버
+- OpenAPI validation: contracts/*.yaml과 실제 구현 일치 확인 (T066)
 
 ---
 

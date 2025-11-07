@@ -176,6 +176,7 @@ enum AuditAction {
   PASSWORD_RESET_REQUEST_FAILED
   EMAIL_VERIFY
   EMAIL_VERIFY_REQUEST
+  PROFILE_UPDATE
   MFA_ENABLE
   MFA_DISABLE
   ROLE_CHANGE
@@ -188,6 +189,7 @@ enum AuditAction {
 enum AuditSeverity {
   INFO     // Normal events (login success, logout)
   WARNING  // Attention needed (login failure, password reset)
+  MEDIUM   // Moderate importance (profile updates, settings changes)
   CRITICAL // Immediate response (account suspend, role change)
 }
 
