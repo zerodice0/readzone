@@ -205,8 +205,8 @@
 
 **Goal**: Implement email verification flow and password reset flow with token-based security.
 **Independent Test**: User registers → receives verification email → clicks link → email verified. User requests password reset → receives email → resets password.
-**Prompt**: `kitty-specs/001-feature/tasks/doing/WP05-email-verification-password-reset.md`
-**Status**: 🔄 In Progress - Phase 1-2 completed (T046-T049)
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP05-email-verification-password-reset.md`
+**Status**: ✅ Done - All phases completed (T046-T054)
 
 ### Included Subtasks
 
@@ -214,11 +214,11 @@
 - [x] T047 Create token generation utility (packages/backend/src/common/utils/token.ts) with crypto.randomBytes
 - [x] T048 Implement POST /api/v1/auth/verify-email/send (send verification email with token)
 - [x] T049 Implement POST /api/v1/auth/verify-email/confirm (verify token, mark email_verified=true)
-- [ ] T050 Implement POST /api/v1/auth/password-reset/request (send reset email with token)
-- [ ] T051 Implement POST /api/v1/auth/password-reset/confirm (verify token, update password)
-- [ ] T052 Implement token expiration logic (24 hours for verification, 1 hour for password reset)
-- [ ] T053 Add rate limiting to email endpoints (3 sends/5min per email, defer actual rate limit to WP08)
-- [ ] T054 Add audit logging for email verification and password reset events
+- [x] T050 Implement POST /api/v1/auth/password-reset/request (send reset email with token)
+- [x] T051 Implement POST /api/v1/auth/password-reset/confirm (verify token, update password)
+- [x] T052 Implement token expiration logic (24 hours for verification, 1 hour for password reset)
+- [x] T053 Add rate limiting to email endpoints (3 sends/5min per email, defer actual rate limit to WP08)
+- [x] T054 Add audit logging for email verification and password reset events
 
 ### Implementation Notes
 
