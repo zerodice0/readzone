@@ -1,6 +1,13 @@
 /* eslint-disable no-console, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/require-await, @typescript-eslint/no-misused-promises */
 
-import { PrismaClient, UserRole, UserStatus, OAuthProvider, AuditAction, AuditSeverity } from '@prisma/client';
+import {
+  PrismaClient,
+  UserRole,
+  UserStatus,
+  OAuthProvider,
+  AuditAction,
+  AuditSeverity,
+} from '@prisma/client';
 import * as crypto from 'crypto';
 
 const prisma = new PrismaClient();
@@ -217,7 +224,8 @@ async function main(): Promise<void> {
         userId: users[0].id, // Super admin
         expiresAt: tomorrow,
         ipAddress: '127.0.0.1',
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        userAgent:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
         deviceInfo: {
           browser: 'Chrome',
           os: 'macOS',
@@ -232,7 +240,8 @@ async function main(): Promise<void> {
         expiresAt: thirtyDays,
         refreshExpiresAt: thirtyDays,
         ipAddress: '192.168.1.100',
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15',
+        userAgent:
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15',
         deviceInfo: {
           browser: 'Safari',
           os: 'iOS',
@@ -295,7 +304,10 @@ async function main(): Promise<void> {
         action: AuditAction.ACCOUNT_SUSPEND,
         ipAddress: '10.0.0.1',
         userAgent: 'ReadZone Admin Tool',
-        metadata: { reason: 'Spam activity detected', suspended_by: users[0].id },
+        metadata: {
+          reason: 'Spam activity detected',
+          suspended_by: users[0].id,
+        },
         severity: AuditSeverity.CRITICAL,
       },
     }),
@@ -305,7 +317,10 @@ async function main(): Promise<void> {
         action: AuditAction.LOGIN_FAILED,
         ipAddress: '203.0.113.42',
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        metadata: { email: 'unknown@example.com', reason: 'invalid_credentials' },
+        metadata: {
+          email: 'unknown@example.com',
+          reason: 'invalid_credentials',
+        },
         severity: AuditSeverity.WARNING,
       },
     }),
@@ -326,7 +341,9 @@ async function main(): Promise<void> {
   console.log('   admin2@readzone.com / Admin456! (ADMIN)');
   console.log('   moderator@readzone.com / Mod123! (MODERATOR)');
   console.log('   user@readzone.com / User123! (USER)');
-  console.log('   unverified@readzone.com / Unverified123! (USER, email not verified)');
+  console.log(
+    '   unverified@readzone.com / Unverified123! (USER, email not verified)'
+  );
 }
 
 main()

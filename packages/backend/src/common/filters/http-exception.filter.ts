@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 import {
   ExceptionFilter,
   Catch,
@@ -5,13 +6,16 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { LoggerService } from '../utils/logger';
 import { error, getErrorCode } from '../utils/response';
 
 /**
  * Global exception filter
  * Catches all HTTP exceptions and formats them according to standard response format
+ *
+ * Note: ESLint unsafe rules are disabled because NestJS's getRequest/getResponse
+ * methods return 'any' type by design, even with generic type parameters.
  */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {

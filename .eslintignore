@@ -6,3 +6,4 @@ coverage
 out
 *.config.js
 .eslintrc.js
+.eslintrc.cjs
