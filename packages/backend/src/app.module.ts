@@ -9,6 +9,7 @@ import { AuditService } from './common/services/audit.service';
 import { EmailService } from './common/services/email.service';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 /**
  * Root application module
@@ -27,6 +28,7 @@ import { AuthModule } from './modules/auth/auth.module';
     // Feature modules
     HealthModule,
     AuthModule,
+    UsersModule,
   ],
   providers: [
     // Global exception filter
