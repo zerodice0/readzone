@@ -17,10 +17,10 @@ subtasks:
   - 'T034'
 title: 'Backend - Books Module'
 phase: 'Phase 1 - Foundation'
-lane: 'planned'
+lane: 'doing'
 assignee: ''
-agent: ''
-shell_pid: ''
+agent: 'claude'
+shell_pid: '95788'
 history:
   - timestamp: '2025-11-08T17:52:47Z'
     lane: 'planned'
@@ -36,6 +36,7 @@ history:
 **Goal**: Implement Books API with external API search (Google Books, Aladin), internal DB caching, and book info retrieval.
 
 **Success Criteria**:
+
 - [ ] GET /api/books/search returns results from external APIs (Google Books, Aladin)
 - [ ] POST /api/books caches book in internal DB with deduplication
 - [ ] GET /api/books/:id returns cached book with reviewCount
@@ -50,11 +51,13 @@ history:
 ## Context & Constraints
 
 **Related Documents**:
+
 - `kitty-specs/002-feature/contracts/books-api.md` - Complete API specification
 - `kitty-specs/002-feature/data-model.md` - Book model schema
 - `kitty-specs/002-feature/plan.md` - Technical stack (NestJS 10, Prisma 6.19)
 
 **Constraints**:
+
 - External API timeout: 10 seconds
 - Google Books API: 1000 req/day (free tier)
 - Aladin API: requires API key
@@ -63,6 +66,7 @@ history:
 - Deduplication: ISBN (primary) or title+author (fallback)
 
 **Architectural Decisions**:
+
 - Module structure follows NestJS conventions
 - External API service layer for Google Books and Aladin
 - Caching strategy: Redis for search results, DB for book entities
@@ -75,6 +79,7 @@ history:
 **Purpose**: Define Books module with controllers, services, and dependencies.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/books/books.module.ts`
 2. Import necessary NestJS decorators:
    ```typescript
@@ -101,6 +106,7 @@ history:
 **Parallel?**: Yes (can proceed in parallel with T022-T026)
 
 **Validation**:
+
 ```bash
 pnpm --filter backend type-check
 ```
@@ -112,8 +118,10 @@ pnpm --filter backend type-check
 **Purpose**: Define REST API endpoints for books.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/books/books.controller.ts`
 2. Define controller with routes:
+
    ```typescript
    import {
      Controller,
@@ -156,7 +164,7 @@ pnpm --filter backend type-check
        @Param('id') id: string,
        @Query('page') page = 0,
        @Query('limit') limit = 20,
-       @Req() req?,
+       @Req() req?
      ) {
        const userId = req?.user?.id || null;
        return this.booksService.getBookReviews(id, { page, limit }, userId);
@@ -169,6 +177,7 @@ pnpm --filter backend type-check
 **Parallel?**: Yes (after T021)
 
 **Notes**:
+
 - Search requires authentication (독후감 작성 시에만 사용)
 - GET endpoints are public
 
@@ -179,8 +188,10 @@ pnpm --filter backend type-check
 **Purpose**: Implement business logic for book operations.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/books/books.service.ts`
 2. Implement search method with caching:
+
    ```typescript
    import { Injectable, NotFoundException, Inject } from '@nestjs/common';
    import { PrismaService } from '../prisma/prisma.service';
@@ -193,7 +204,7 @@ pnpm --filter backend type-check
      constructor(
        private prisma: PrismaService,
        private bookApi: BookApiService,
-       @Inject(CACHE_MANAGER) private cacheManager: Cache,
+       @Inject(CACHE_MANAGER) private cacheManager: Cache
      ) {}
 
      async searchBooks(query: SearchBookDto) {
@@ -285,7 +296,11 @@ pnpm --filter backend type-check
        };
      }
 
-     async getBookReviews(id: string, pagination: { page: number; limit: number }, userId?: string) {
+     async getBookReviews(
+       id: string,
+       pagination: { page: number; limit: number },
+       userId?: string
+     ) {
        const book = await this.prisma.book.findUnique({ where: { id } });
        if (!book) {
          throw new NotFoundException('책을 찾을 수 없습니다');
@@ -354,8 +369,10 @@ pnpm --filter backend type-check
 **Purpose**: External API integration layer for Google Books and Aladin.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/books/external/book-api.service.ts`
 2. Implement parallel API calls:
+
    ```typescript
    import { Injectable } from '@nestjs/common';
    import { HttpService } from '@nestjs/axios';
@@ -366,10 +383,15 @@ pnpm --filter backend type-check
    export class BookApiService {
      constructor(
        private httpService: HttpService,
-       private configService: ConfigService,
+       private configService: ConfigService
      ) {}
 
-     async search(query: { q: string; source?: string; page?: number; limit?: number }) {
+     async search(query: {
+       q: string;
+       source?: string;
+       page?: number;
+       limit?: number;
+     }) {
        const { q, source = 'all', page = 0, limit = 10 } = query;
 
        if (source === 'google') {
@@ -411,7 +433,11 @@ pnpm --filter backend type-check
        }
      }
 
-     private async searchGoogleBooks(query: string, page: number, limit: number) {
+     private async searchGoogleBooks(
+       query: string,
+       page: number,
+       limit: number
+     ) {
        const apiKey = this.configService.get('GOOGLE_BOOKS_API_KEY');
        const startIndex = page * limit;
 
@@ -425,22 +451,25 @@ pnpm --filter backend type-check
                key: apiKey,
              },
              timeout: 10000,
-           }),
+           })
          );
 
-         const books = response.data.items?.map((item) => ({
-           externalId: item.id,
-           externalSource: 'GOOGLE_BOOKS',
-           isbn: item.volumeInfo.industryIdentifiers?.find((id) => id.type === 'ISBN_13')?.identifier,
-           title: item.volumeInfo.title,
-           author: item.volumeInfo.authors?.join(', '),
-           publisher: item.volumeInfo.publisher,
-           publishedDate: item.volumeInfo.publishedDate,
-           coverImageUrl: item.volumeInfo.imageLinks?.thumbnail,
-           description: item.volumeInfo.description,
-           pageCount: item.volumeInfo.pageCount,
-           language: item.volumeInfo.language,
-         })) || [];
+         const books =
+           response.data.items?.map((item) => ({
+             externalId: item.id,
+             externalSource: 'GOOGLE_BOOKS',
+             isbn: item.volumeInfo.industryIdentifiers?.find(
+               (id) => id.type === 'ISBN_13'
+             )?.identifier,
+             title: item.volumeInfo.title,
+             author: item.volumeInfo.authors?.join(', '),
+             publisher: item.volumeInfo.publisher,
+             publishedDate: item.volumeInfo.publishedDate,
+             coverImageUrl: item.volumeInfo.imageLinks?.thumbnail,
+             description: item.volumeInfo.description,
+             pageCount: item.volumeInfo.pageCount,
+             language: item.volumeInfo.language,
+           })) || [];
 
          return {
            data: books,
@@ -449,7 +478,7 @@ pnpm --filter backend type-check
              page,
              limit,
              total: response.data.totalItems || 0,
-             hasMore: (startIndex + limit) < (response.data.totalItems || 0),
+             hasMore: startIndex + limit < (response.data.totalItems || 0),
              timestamp: new Date().toISOString(),
            },
          };
@@ -476,33 +505,37 @@ pnpm --filter backend type-check
 
        try {
          const response = await firstValueFrom(
-           this.httpService.get('http://www.aladin.co.kr/ttb/api/ItemSearch.aspx', {
-             params: {
-               Query: query,
-               QueryType: 'Keyword',
-               MaxResults: limit,
-               start,
-               output: 'js',
-               Version: '20131101',
-               ttbkey: apiKey,
-             },
-             timeout: 10000,
-           }),
+           this.httpService.get(
+             'http://www.aladin.co.kr/ttb/api/ItemSearch.aspx',
+             {
+               params: {
+                 Query: query,
+                 QueryType: 'Keyword',
+                 MaxResults: limit,
+                 start,
+                 output: 'js',
+                 Version: '20131101',
+                 ttbkey: apiKey,
+               },
+               timeout: 10000,
+             }
+           )
          );
 
-         const books = response.data.item?.map((item) => ({
-           externalId: item.itemId,
-           externalSource: 'ALADIN',
-           isbn: item.isbn13,
-           title: item.title,
-           author: item.author,
-           publisher: item.publisher,
-           publishedDate: item.pubDate,
-           coverImageUrl: item.cover,
-           description: item.description,
-           pageCount: null,
-           language: 'ko',
-         })) || [];
+         const books =
+           response.data.item?.map((item) => ({
+             externalId: item.itemId,
+             externalSource: 'ALADIN',
+             isbn: item.isbn13,
+             title: item.title,
+             author: item.author,
+             publisher: item.publisher,
+             publishedDate: item.pubDate,
+             coverImageUrl: item.cover,
+             description: item.description,
+             pageCount: null,
+             language: 'ko',
+           })) || [];
 
          return {
            data: books,
@@ -511,7 +544,7 @@ pnpm --filter backend type-check
              page,
              limit,
              total: response.data.totalResults || 0,
-             hasMore: (start + limit - 1) < (response.data.totalResults || 0),
+             hasMore: start + limit - 1 < (response.data.totalResults || 0),
              timestamp: new Date().toISOString(),
            },
          };
@@ -560,10 +593,20 @@ pnpm --filter backend type-check
 **Purpose**: Validate book search query parameters.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/books/dto/search-book.dto.ts`
 2. Define DTO:
+
    ```typescript
-   import { IsString, IsOptional, IsEnum, IsInt, Min, Max, MinLength } from 'class-validator';
+   import {
+     IsString,
+     IsOptional,
+     IsEnum,
+     IsInt,
+     Min,
+     Max,
+     MinLength,
+   } from 'class-validator';
    import { Type } from 'class-transformer';
 
    export class SearchBookDto {
@@ -601,8 +644,10 @@ pnpm --filter backend type-check
 **Purpose**: Validate book creation payload.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/books/dto/create-book.dto.ts`
 2. Define DTO:
+
    ```typescript
    import {
      IsString,
@@ -668,6 +713,7 @@ pnpm --filter backend type-check
 **Purpose**: Complete Google Books API integration in book-api.service.ts.
 
 **Steps**:
+
 1. Verify `searchGoogleBooks()` method is implemented (done in T024)
 2. Test with sample queries:
    ```bash
@@ -684,6 +730,7 @@ pnpm --filter backend type-check
 **Parallel?**: Yes (can proceed in parallel with T028)
 
 **Validation**:
+
 - Test with Korean books: "채식주의자", "소년이 온다"
 - Test with English books: "Harry Potter", "1984"
 - Verify 10s timeout works
@@ -695,6 +742,7 @@ pnpm --filter backend type-check
 **Purpose**: Complete Aladin API integration in book-api.service.ts.
 
 **Steps**:
+
 1. Verify `searchAladin()` method is implemented (done in T024)
 2. Configure Aladin API key in environment:
    ```bash
@@ -715,6 +763,7 @@ pnpm --filter backend type-check
 **Parallel?**: Yes (can proceed in parallel with T027)
 
 **Validation**:
+
 - Test with Korean books
 - Verify fallback to empty array on error
 
@@ -725,6 +774,7 @@ pnpm --filter backend type-check
 **Purpose**: Enable parallel search across multiple sources with deduplication.
 
 **Steps**:
+
 1. Verify `search()` method handles `source: 'all'` (done in T024)
 2. Test parallel search:
    ```bash
@@ -742,6 +792,7 @@ pnpm --filter backend type-check
 **Parallel?**: No (depends on T027, T028)
 
 **Validation**:
+
 ```bash
 # Test with network issues (one API down)
 # Verify fallback works
@@ -754,6 +805,7 @@ pnpm --filter backend type-check
 **Purpose**: Enable book caching with ISBN and title+author deduplication.
 
 **Steps**:
+
 1. Verify `createOrFindBook()` method is implemented (done in T023)
 2. Test ISBN deduplication:
    ```bash
@@ -795,8 +847,10 @@ pnpm --filter backend type-check
 **Purpose**: Enable book detail retrieval with review count aggregation.
 
 **Steps**:
+
 1. Verify `getBook()` method is implemented (done in T023)
 2. Create a book and add reviews for testing:
+
    ```bash
    # Create book
    BOOK_ID=$(curl -X POST http://localhost:3000/api/books ... | jq -r '.data.id')
@@ -806,6 +860,7 @@ pnpm --filter backend type-check
      -H "Authorization: Bearer <token>" \
      -d '{"bookId": "'$BOOK_ID'", ...}'
    ```
+
 3. Test detail endpoint:
    ```bash
    curl http://localhost:3000/api/books/$BOOK_ID
@@ -825,6 +880,7 @@ pnpm --filter backend type-check
 **Purpose**: Enable book-specific review feed.
 
 **Steps**:
+
 1. Verify `getBookReviews()` method is implemented (done in T023)
 2. Test book reviews endpoint:
    ```bash
@@ -848,6 +904,7 @@ pnpm --filter backend type-check
 **Purpose**: Register Books module in main application module.
 
 **Steps**:
+
 1. Open `packages/backend/src/app.module.ts`
 2. Import BooksModule:
    ```typescript
@@ -869,6 +926,7 @@ pnpm --filter backend type-check
 **Parallel?**: No (final integration step)
 
 **Validation**:
+
 ```bash
 pnpm --filter backend start:dev
 # Verify server starts without errors
@@ -881,6 +939,7 @@ pnpm --filter backend start:dev
 **Purpose**: Set up API keys for external services.
 
 **Steps**:
+
 1. Open `packages/backend/.env` (or create if not exists)
 2. Add environment variables:
    ```bash
@@ -893,6 +952,7 @@ pnpm --filter backend start:dev
    ALADIN_API_KEY=
    ```
 4. Verify ConfigService loads variables:
+
    ```typescript
    // In app.module.ts or books.module.ts
    import { ConfigModule } from '@nestjs/config';
@@ -907,16 +967,19 @@ pnpm --filter backend start:dev
    ```
 
 **Files**:
+
 - `packages/backend/.env`
 - `packages/backend/.env.example`
 
 **Parallel?**: Yes (can proceed in parallel with other tasks)
 
 **Notes**:
+
 - Ensure `.env` is in `.gitignore`
 - Document how to obtain API keys in README
 
 **Validation**:
+
 ```bash
 # Verify environment variables loaded
 pnpm --filter backend start:dev
@@ -928,17 +991,20 @@ pnpm --filter backend start:dev
 ## Test Strategy
 
 **Unit Tests**:
+
 - BooksService methods (searchBooks, createOrFindBook, getBook, getBookReviews)
 - BookApiService methods (searchGoogleBooks, searchAladin, deduplicateBooks)
 - Mock HttpService and PrismaService with jest
 
 **Integration Tests**:
+
 - E2E tests for all endpoints
 - Test with real database (test environment)
 - Mock external APIs with nock or MSW
 - Test caching behavior (Redis)
 
 **External API Tests**:
+
 - Test Google Books API with sample queries
 - Test Aladin API with sample queries
 - Test parallel search and fallback
@@ -947,6 +1013,7 @@ pnpm --filter backend start:dev
 ## Risks & Mitigations
 
 **Risk 1: External API rate limits or downtime**
+
 - **Impact**: Search functionality unavailable
 - **Mitigation**:
   - Implement caching (5 min TTL in Redis)
@@ -955,6 +1022,7 @@ pnpm --filter backend start:dev
 - **Recovery**: Display error message, suggest manual entry
 
 **Risk 2: Duplicate book records**
+
 - **Impact**: Database pollution, inconsistent data
 - **Mitigation**:
   - Enforce unique constraints on ISBN and (externalSource, externalId)
@@ -963,6 +1031,7 @@ pnpm --filter backend start:dev
 - **Recovery**: Database cleanup script to merge duplicates
 
 **Risk 3: Image URL failures**
+
 - **Impact**: Broken images in UI
 - **Mitigation**:
   - Frontend displays placeholder on image load error
@@ -970,6 +1039,7 @@ pnpm --filter backend start:dev
 - **Recovery**: Update coverImageUrl with new URL from external API
 
 **Risk 4: Search performance degradation**
+
 - **Impact**: Slow search queries
 - **Mitigation**:
   - Redis caching with 5 min TTL
@@ -1002,12 +1072,14 @@ pnpm --filter backend start:dev
 ## Review Guidance
 
 **Key Acceptance Checkpoints**:
+
 1. **API Completeness**: All 4 endpoints implemented and tested
 2. **External Integration**: Google Books and Aladin APIs working
 3. **Deduplication**: ISBN and title+author deduplication working
 4. **Performance**: Caching and timeout handling verified
 
 **Reviewer Should Verify**:
+
 - [ ] Test GET /books/search - returns results from external APIs
 - [ ] Test POST /books - creates or finds book with deduplication
 - [ ] Test GET /books/:id - returns book with reviewCount
@@ -1027,5 +1099,7 @@ pnpm --filter backend start:dev
 ### Next Steps After Completion
 
 Once WP03 is done, the following work packages can proceed:
+
 - **WP04**: Backend - Likes & Bookmarks Modules (depends on WP01, WP02)
 - **WP05**: Frontend - Feed Store & API Client (can start after backend APIs deployed)
+- 2025-11-08T23:28:58Z – claude – shell_pid=95788 – lane=doing – Started implementation
