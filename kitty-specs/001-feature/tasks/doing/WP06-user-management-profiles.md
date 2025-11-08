@@ -2,9 +2,9 @@
 work_package_id: 'WP06'
 title: 'User Management & Profiles'
 phase: 'Phase 2 - User Management'
-lane: "for_review"
-agent: "claude"
-shell_pid: "33383"
+lane: 'doing'
+agent: 'claude'
+shell_pid: '77303'
 history:
   - timestamp: '2025-11-06T00:00:00Z'
     lane: 'planned'
@@ -25,6 +25,11 @@ history:
     agent: 'claude'
     shell_pid: '86093'
     action: 'T056 completed: PATCH /users/me with email change workflow'
+  - timestamp: '2025-11-08T09:24:00Z'
+    lane: 'doing'
+    agent: 'claude'
+    shell_pid: '77303'
+    action: 'Resume implementation - Continuing with T057-T066 (remaining subtasks)'
 ---
 
 # Work Package Prompt: WP06 – User Management & Profiles
