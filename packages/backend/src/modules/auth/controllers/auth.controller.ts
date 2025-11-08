@@ -20,6 +20,7 @@ import { RegisterDto, LoginDto } from '../dto/index.js';
 import { ConfirmEmailVerificationDto } from '../dto/confirm-email-verification.dto.js';
 import { RequestPasswordResetDto } from '../dto/request-password-reset.dto.js';
 import { ConfirmPasswordResetDto } from '../dto/confirm-password-reset.dto.js';
+import { VerifyMfaLoginDto } from '../dto/verify-mfa-login.dto.js';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard.js';
 import { SkipCsrf } from '../../../common/decorators/skip-csrf.decorator.js';
 import { success } from '../../../common/utils/response.js';
@@ -75,6 +76,31 @@ export class AuthController {
     @Headers('user-agent') userAgent: string = 'Unknown'
   ) {
     const result = await this.authService.login(dto, ipAddress, userAgent);
+    return success(result);
+  }
+
+  /**
+   * T088: Verify MFA code and complete login
+   * POST /api/v1/auth/mfa/verify
+   * Public endpoint (no authentication required)
+   * Rate limit: 5 requests per 5 minutes
+   */
+  @Post('mfa/verify')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 300000 } }) // 5 req/5min
+  @SkipCsrf()
+  async verifyMfaLogin(
+    @Body() dto: VerifyMfaLoginDto,
+    @Ip() ipAddress: string,
+    @Headers('user-agent') userAgent: string = 'Unknown'
+  ) {
+    const result = await this.authService.verifyMfaAndLogin(
+      dto.userId,
+      dto.code,
+      dto.rememberMe,
+      ipAddress,
+      userAgent
+    );
     return success(result);
   }
 
