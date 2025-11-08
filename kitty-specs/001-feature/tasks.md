@@ -261,12 +261,14 @@
 ### Included Subtasks
 
 #### 🔐 Authorization Foundation (Priority: Critical)
+
 - [ ] **T063**: RolesGuard + @Roles() decorator (3-4h, Medium)
   - Files: `common/guards/roles.guard.ts`, `common/decorators/roles.decorator.ts`
   - Tests: Unit tests for role checks (ADMIN, MODERATOR, USER)
   - Blocks: T059, T060, T061, T062 (all admin endpoints)
 
 #### 👤 User Profile Endpoints
+
 - [ ] **T055**: GET /users/me - 프로필 조회 (2-3h, Low)
   - Files: `users/dto/user-profile.dto.ts`, `users/users.service.ts`, `users/users.controller.ts`
   - Returns: email, role, emailVerified, mfaEnabled, oauthConnections, hasPassword
@@ -291,6 +293,7 @@
   - Depends: T057
 
 #### 👥 Admin User Management Endpoints
+
 - [ ] **T059**: GET /admin/users - 사용자 목록 조회 (4-5h, Medium)
   - Files: `users/dto/list-users-query.dto.ts`, `users/users.service.ts`, `users/admin.controller.ts` (new)
   - Features: Pagination (offset-based), filters (role, status, search), sorting
@@ -318,6 +321,7 @@
   - Depends: T061
 
 #### 📊 Audit, Testing & Documentation
+
 - [ ] **T064**: Audit Logging 통합 (2h, Low)
   - Prisma schema: AuditAction enum 확장 (PROFILE_UPDATE, ACCOUNT_DELETE, ROLE_CHANGE, etc.)
   - Validation: 모든 T055-T062 엔드포인트 Audit log 호출 확인
@@ -339,20 +343,24 @@
 ### Implementation Notes
 
 **Authorization (T063)**:
+
 - RolesGuard: Reflector 사용, @Roles() 메타데이터 읽기
 - @Roles(UserRole.ADMIN): 데코레이터로 역할 제한
 - ResourceOwnerGuard (선택): 사용자가 자신의 리소스만 접근
 
 **Soft-Delete (T057)**:
+
 - status = UserStatus.DELETED, deletedAt = now()
 - 30일 유예 기간 (T058 cron job에서 물리 삭제)
 - 모든 활성 세션 즉시 무효화 (isActive = false, revokedAt = now())
 
 **Pagination (T059)**:
+
 - Offset-based: `skip = (page - 1) * limit`, `take = limit`
 - Cursor-based는 Phase 3에서 고려 (현재 명세에는 offset-based)
 
 **Audit Logging (T064)**:
+
 - 모든 User/Admin 작업에 Audit log 기록
 - Severity: INFO (일반 작업), WARNING (실패), CRITICAL (역할 변경, 계정 삭제)
 - Metadata: 변경 전/후 값, adminId (관리자 작업 시)
@@ -360,23 +368,28 @@
 ### Parallel Opportunities
 
 **Phase 1 (Authorization + User Endpoints)**:
+
 - T063 (Authorization) → 먼저 완료 (다른 작업의 기반)
 - T055, T056, T057 → 병렬 가능 (서로 독립적, T063 완료 후)
 
 **Phase 2 (Admin Endpoints)**:
+
 - T059, T060 → 병렬 가능 (T063 완료 후)
 - T061, T062 → 병렬 가능 (T060 완료 후)
 
 **Phase 3 (Quality)**:
+
 - T064, T065, T066 → 순차 실행 (모든 구현 완료 후)
 
 ### Dependencies
 
 **External Dependencies**:
+
 - WP04 (Authentication Core) - JWT, Session 기반 필수
 - WP05 (Email Verification) - EmailService 사용 (T056)
 
 **Internal Dependencies**:
+
 ```
 T063 (AuthZ) → T059, T060, T061, T062 (Admin endpoints)
 T055 → T056 → T057 → T058 (User endpoints chain)
@@ -387,61 +400,88 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 ### Risks & Mitigations
 
 **High Risk**:
+
 - **Authorization bypass** (T063): RolesGuard 모든 admin 엔드포인트에 일관되게 적용, unit tests 필수
 - **Soft-delete 세션 누락** (T057): 세션 무효화 로직 integration test 필수
 - **자기 자신 수정** (T061, T062): adminId !== userId 검증 로직 필수
 
 **Medium Risk**:
+
 - **Audit log 누락** (T064): 모든 작업에 Audit log 호출 체크리스트 작성
 - **CASCADE 삭제 실패** (T062): Prisma onDelete 설정 확인, integration test 필수
 
 **Mitigation**:
+
 - Code review: Security-critical 코드 (T063, T061, T062) 우선 리뷰
 - Integration tests: 46 tests로 모든 엣지 케이스 커버
-- OpenAPI validation: contracts/*.yaml과 실제 구현 일치 확인 (T066)
+- OpenAPI validation: contracts/\*.yaml과 실제 구현 일치 확인 (T066)
 
 ---
 
 ## Work Package WP07: OAuth Integration (Google & GitHub) (Priority: P3)
 
-**Goal**: Implement OAuth 2.0 login with Google and GitHub, link existing accounts.
+**Goal**: Implement OAuth 2.0 login with Google and GitHub using Passport.js strategies, link existing accounts.
 **Independent Test**: User clicks "Login with Google" → redirected → authenticated → logged into ReadZone. Same for GitHub.
 **Prompt**: `kitty-specs/001-feature/tasks/planned/WP07-oauth-integration.md`
 
 ### Included Subtasks
 
-- [ ] T064 Register @fastify/oauth2 plugin for Google (packages/backend/src/app.ts)
-- [ ] T065 Register @fastify/oauth2 plugin for GitHub (packages/backend/src/app.ts)
-- [ ] T066 Configure OAuth redirect URIs in .env.example and config
-- [ ] T067 Implement GET /api/v1/auth/oauth/google (initiate OAuth flow)
-- [ ] T068 Implement GET /api/v1/auth/oauth/google/callback (handle Google callback, create/link user)
-- [ ] T069 Implement GET /api/v1/auth/oauth/github (initiate OAuth flow)
-- [ ] T070 Implement GET /api/v1/auth/oauth/github/callback (handle GitHub callback, create/link user)
-- [ ] T071 Implement OAuth service (packages/backend/src/modules/auth/services/oauth.service.ts) for user creation/linking logic
-- [ ] T072 Handle case: OAuth email matches existing user → link OAuthConnection
-- [ ] T073 Handle case: OAuth email is new → create User + OAuthConnection
-- [ ] T074 Add audit logging for OAuth connections
+- [ ] T064 Install OAuth dependencies (passport-google-oauth20, passport-github2)
+- [ ] T065 Configure OAuth credentials in .env.example and config module
+- [ ] T066 Create GoogleStrategy (packages/backend/src/modules/auth/strategies/google.strategy.ts)
+- [ ] T067 Create GitHubStrategy (packages/backend/src/modules/auth/strategies/github.strategy.ts)
+- [ ] T068 Implement OAuthService (packages/backend/src/modules/auth/services/oauth.service.ts) for user creation/linking logic
+- [ ] T069 Implement GET /api/v1/auth/oauth/google (initiate OAuth flow with AuthGuard('google'))
+- [ ] T070 Implement GET /api/v1/auth/oauth/google/callback (handle Google callback, create session, return JWT)
+- [ ] T071 Implement GET /api/v1/auth/oauth/github (initiate OAuth flow with AuthGuard('github'))
+- [ ] T072 Implement GET /api/v1/auth/oauth/github/callback (handle GitHub callback, create session, return JWT)
+- [ ] T073 Handle case: OAuth email matches existing user → link OAuthConnection
+- [ ] T074 Handle case: OAuth email is new → create User + OAuthConnection, mark emailVerified=true
+- [ ] T075 Add audit logging for OAuth connection events (success, failure, account linking)
 
 ### Implementation Notes
 
-- PKCE enabled by @fastify/oauth2 (per research.md)
-- State parameter for CSRF protection (auto-handled by plugin)
-- OAuth profile: extract email, name, profile_image from provider
-- If email unverified in local DB, mark as verified after successful OAuth
+**NestJS + Passport.js Integration**:
+
+- Use @nestjs/passport with passport-google-oauth20 and passport-github2 strategies
+- Strategies extend PassportStrategy and implement validate() method
+- AuthGuard('google'), AuthGuard('github') for route protection
+- State parameter and PKCE handled by Passport strategies (per research.md)
+
+**OAuth Profile Extraction**:
+
+- Google: profile.emails[0].value, profile.displayName, profile.photos[0].value
+- GitHub: profile.emails[0].value, profile.displayName, profile.photos[0].value
+
+**Account Linking Logic**:
+
+- If OAuth email matches existing user → link OAuthConnection, preserve existing password
+- If OAuth email is new → create User + OAuthConnection, no password (OAuth-only), emailVerified=true
+- If user already has OAuth provider → update existing OAuthConnection (provider_user_id)
+
+**Security**:
+
+- Redirect URIs: whitelist in environment config (e.g., http://localhost:3000/auth/google/callback)
+- State parameter: CSRF protection (auto-handled by Passport)
+- Session creation: generate JWT token after successful OAuth validation
 
 ### Parallel Opportunities
 
-- T067, T068 (Google) and T069, T070 (GitHub) can proceed in parallel
-- T071 (OAuth service) should be completed before controllers
+- T066, T067 (Google, GitHub strategies) can proceed in parallel after T064, T065
+- T069, T070 (Google endpoints) and T071, T072 (GitHub endpoints) can proceed in parallel after T068
+- T073, T074 (account linking logic) can be implemented within OAuthService (T068)
 
 ### Dependencies
 
-- Depends on WP04, WP06.
+- Depends on WP04 (JWT authentication, session management).
+- Depends on WP06 (User management, OAuthConnection model).
 
 ### Risks & Mitigations
 
-- OAuth provider downtime → show error message, fallback to email/password
-- Account linking conflicts → require user confirmation before linking
+- OAuth provider downtime → show error message, fallback to email/password login
+- Account linking conflicts → check existing OAuthConnection before creating, update if exists
+- Email verification bypass → OAuth users automatically get emailVerified=true (trust provider)
+- Redirect URI mismatch → validate redirect URIs in config, return 400 for invalid URIs
 
 ---
 
@@ -453,14 +493,14 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Included Subtasks
 
-- [ ] T075 Register @fastify/rate-limit plugin with Redis store
-- [ ] T076 Configure global rate limits (100 req/min/IP for anonymous, 1000 req/min for authenticated)
-- [ ] T077 Configure endpoint-specific limits (login: 5/5min, password reset: 3/hour, register: 3/hour)
-- [ ] T078 Add CSRF protection for state-changing endpoints (POST, PATCH, DELETE) using @fastify/csrf-protection
-- [ ] T079 Enhance security headers (@fastify/helmet already registered in WP03, fine-tune CSP)
-- [ ] T080 Implement audit log query endpoint GET /api/v1/admin/audit-logs (admin only, paginated)
-- [ ] T081 Add IP address and User-Agent capture to all audit logs
-- [ ] T082 Document security measures in README.md (rate limits, HTTPS requirement, password policy)
+- [ ] T076 Register @fastify/rate-limit plugin with Redis store
+- [ ] T077 Configure global rate limits (100 req/min/IP for anonymous, 1000 req/min for authenticated)
+- [ ] T078 Configure endpoint-specific limits (login: 5/5min, password reset: 3/hour, register: 3/hour)
+- [ ] T079 Add CSRF protection for state-changing endpoints (POST, PATCH, DELETE) using @fastify/csrf-protection
+- [ ] T080 Enhance security headers (@fastify/helmet already registered in WP03, fine-tune CSP)
+- [ ] T081 Implement audit log query endpoint GET /api/v1/admin/audit-logs (admin only, paginated)
+- [ ] T082 Add IP address and User-Agent capture to all audit logs
+- [ ] T083 Document security measures in README.md (rate limits, HTTPS requirement, password policy)
 
 ### Implementation Notes
 
@@ -471,8 +511,8 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Parallel Opportunities
 
-- T075, T076, T077 (rate limiting) can proceed together
-- T078, T079 (CSRF, headers) can proceed in parallel
+- T076, T077, T078 (rate limiting) can proceed together
+- T079, T080 (CSRF, headers) can proceed in parallel
 
 ### Dependencies
 
@@ -493,15 +533,15 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Included Subtasks
 
-- [ ] T083 Install speakeasy and qrcode libraries (packages/backend)
-- [ ] T084 Implement POST /api/v1/users/me/mfa/enable (generate TOTP secret, return QR code data URI)
-- [ ] T085 Implement POST /api/v1/users/me/mfa/verify (verify TOTP code, enable MFA)
-- [ ] T086 Implement POST /api/v1/users/me/mfa/disable (disable MFA after password confirmation)
-- [ ] T087 Implement MFA challenge in login flow (POST /api/v1/auth/login returns mfa_required, then POST /api/v1/auth/mfa/verify)
-- [ ] T088 Generate 10 backup codes (bcrypt hashed, stored in MFASettings)
-- [ ] T089 Implement backup code verification in MFA challenge
-- [ ] T090 Implement GET /api/v1/users/me/mfa/backup-codes (regenerate backup codes, admin action)
-- [ ] T091 Add audit logging for MFA enable/disable, TOTP verification attempts
+- [ ] T084 Install speakeasy and qrcode libraries (packages/backend)
+- [ ] T085 Implement POST /api/v1/users/me/mfa/enable (generate TOTP secret, return QR code data URI)
+- [ ] T086 Implement POST /api/v1/users/me/mfa/verify (verify TOTP code, enable MFA)
+- [ ] T087 Implement POST /api/v1/users/me/mfa/disable (disable MFA after password confirmation)
+- [ ] T088 Implement MFA challenge in login flow (POST /api/v1/auth/login returns mfa_required, then POST /api/v1/auth/mfa/verify)
+- [ ] T089 Generate 10 backup codes (bcrypt hashed, stored in MFASettings)
+- [ ] T090 Implement backup code verification in MFA challenge
+- [ ] T091 Implement GET /api/v1/users/me/mfa/backup-codes (regenerate backup codes, admin action)
+- [ ] T092 Add audit logging for MFA enable/disable, TOTP verification attempts
 
 ### Implementation Notes
 
@@ -512,8 +552,8 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Parallel Opportunities
 
-- T084, T085, T086 (MFA endpoints) can proceed in parallel after T083
-- T088, T089 (backup codes) can proceed in parallel
+- T085, T086, T087 (MFA endpoints) can proceed in parallel after T084
+- T089, T090 (backup codes) can proceed in parallel
 
 ### Dependencies
 
@@ -535,13 +575,13 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Included Subtasks
 
-- [ ] T092 Implement GET /api/v1/sessions (list current user's active sessions)
-- [ ] T093 Enhance session creation to capture device info (User-Agent parsing) and IP address
-- [ ] T094 Implement DELETE /api/v1/sessions/:id (logout specific session)
-- [ ] T095 Implement DELETE /api/v1/sessions (logout all sessions except current)
-- [ ] T096 Enforce concurrent session limit (10 sessions per user, delete oldest if exceeded)
-- [ ] T097 Update session last_activity timestamp on each authenticated request
-- [ ] T098 Add audit logging for session creation, deletion
+- [ ] T093 Implement GET /api/v1/sessions (list current user's active sessions)
+- [ ] T094 Enhance session creation to capture device info (User-Agent parsing) and IP address
+- [ ] T095 Implement DELETE /api/v1/sessions/:id (logout specific session)
+- [ ] T096 Implement DELETE /api/v1/sessions (logout all sessions except current)
+- [ ] T097 Enforce concurrent session limit (10 sessions per user, delete oldest if exceeded)
+- [ ] T098 Update session last_activity timestamp on each authenticated request
+- [ ] T099 Add audit logging for session creation, deletion
 
 ### Implementation Notes
 
@@ -552,7 +592,7 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Parallel Opportunities
 
-- T092, T093, T094, T095 (session endpoints) can proceed in parallel
+- T093, T094, T095, T096 (session endpoints) can proceed in parallel
 
 ### Dependencies
 
@@ -573,19 +613,19 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Included Subtasks
 
-- [ ] T099 Setup Vite React app (packages/frontend) with routing (React Router)
-- [ ] T100 Create API client utility (packages/frontend/src/lib/api-client.ts) with Axios, interceptors for JWT
-- [ ] T101 Create AuthContext (packages/frontend/src/lib/auth-context.tsx) for global auth state (user, token, login, logout)
-- [ ] T102 [P] Create LoginPage (packages/frontend/src/features/auth/pages/LoginPage.tsx)
-- [ ] T103 [P] Create RegisterPage (packages/frontend/src/features/auth/pages/RegisterPage.tsx)
-- [ ] T104 [P] Create ForgotPasswordPage (packages/frontend/src/features/auth/pages/ForgotPasswordPage.tsx)
-- [ ] T105 [P] Create ResetPasswordPage (packages/frontend/src/features/auth/pages/ResetPasswordPage.tsx)
-- [ ] T106 [P] Create EmailVerificationBanner component (show on dashboard if email unverified)
-- [ ] T107 Create ProtectedRoute component (redirect to login if not authenticated)
-- [ ] T108 Create DashboardPage (packages/frontend/src/pages/DashboardPage.tsx) as authenticated home
-- [ ] T109 Implement form validation (Zod schemas matching backend)
-- [ ] T110 Add error handling and user feedback (toast notifications, inline errors)
-- [ ] T111 Style forms with CSS or UI library (Tailwind CSS, shadcn/ui, or custom)
+- [ ] T100 Setup Vite React app (packages/frontend) with routing (React Router)
+- [ ] T101 Create API client utility (packages/frontend/src/lib/api-client.ts) with Axios, interceptors for JWT
+- [ ] T102 Create AuthContext (packages/frontend/src/lib/auth-context.tsx) for global auth state (user, token, login, logout)
+- [ ] T103 [P] Create LoginPage (packages/frontend/src/features/auth/pages/LoginPage.tsx)
+- [ ] T104 [P] Create RegisterPage (packages/frontend/src/features/auth/pages/RegisterPage.tsx)
+- [ ] T105 [P] Create ForgotPasswordPage (packages/frontend/src/features/auth/pages/ForgotPasswordPage.tsx)
+- [ ] T106 [P] Create ResetPasswordPage (packages/frontend/src/features/auth/pages/ResetPasswordPage.tsx)
+- [ ] T107 [P] Create EmailVerificationBanner component (show on dashboard if email unverified)
+- [ ] T108 Create ProtectedRoute component (redirect to login if not authenticated)
+- [ ] T109 Create DashboardPage (packages/frontend/src/pages/DashboardPage.tsx) as authenticated home
+- [ ] T110 Implement form validation (Zod schemas matching backend)
+- [ ] T111 Add error handling and user feedback (toast notifications, inline errors)
+- [ ] T112 Style forms with CSS or UI library (Tailwind CSS, shadcn/ui, or custom)
 
 ### Implementation Notes
 
@@ -597,8 +637,8 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Parallel Opportunities
 
-- T102, T103, T104, T105 (pages) can proceed in parallel after T099, T100, T101
-- T109, T110, T111 (validation, errors, styling) can proceed in parallel
+- T103, T104, T105, T106 (pages) can proceed in parallel after T100, T101, T102
+- T110, T111, T112 (validation, errors, styling) can proceed in parallel
 
 ### Dependencies
 
@@ -619,15 +659,15 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Included Subtasks
 
-- [ ] T112 Create ProfilePage (packages/frontend/src/features/user/pages/ProfilePage.tsx)
-- [ ] T113 Create EditProfileForm component (name, profile_image upload)
-- [ ] T114 Implement profile image upload (base64 or FormData to backend)
-- [ ] T115 Create ActiveSessionsPage (packages/frontend/src/features/user/pages/ActiveSessionsPage.tsx)
-- [ ] T116 Create SessionListItem component (display device, IP, last activity)
-- [ ] T117 Implement session logout action (delete specific session)
-- [ ] T118 Create AccountSettingsPage (delete account, MFA toggle)
-- [ ] T119 Add confirmation dialogs (account deletion, session logout)
-- [ ] T120 Style profile and settings pages
+- [ ] T113 Create ProfilePage (packages/frontend/src/features/user/pages/ProfilePage.tsx)
+- [ ] T114 Create EditProfileForm component (name, profile_image upload)
+- [ ] T115 Implement profile image upload (base64 or FormData to backend)
+- [ ] T116 Create ActiveSessionsPage (packages/frontend/src/features/user/pages/ActiveSessionsPage.tsx)
+- [ ] T117 Create SessionListItem component (display device, IP, last activity)
+- [ ] T118 Implement session logout action (delete specific session)
+- [ ] T119 Create AccountSettingsPage (delete account, MFA toggle)
+- [ ] T120 Add confirmation dialogs (account deletion, session logout)
+- [ ] T121 Style profile and settings pages
 
 ### Implementation Notes
 
@@ -637,7 +677,7 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Parallel Opportunities
 
-- T112, T113, T114 (profile) and T115, T116, T117 (sessions) can proceed in parallel
+- T113, T114, T115 (profile) and T116, T117, T118 (sessions) can proceed in parallel
 
 ### Dependencies
 
@@ -658,15 +698,15 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Included Subtasks
 
-- [ ] T121 Add OAuth login buttons to LoginPage (Google, GitHub)
-- [ ] T122 Implement OAuth callback handling (parse URL params, exchange for JWT)
-- [ ] T123 Create MFASetupPage (packages/frontend/src/features/user/pages/MFASetupPage.tsx)
-- [ ] T124 Display QR code (render data URI from backend)
-- [ ] T125 Create MFAVerifyForm component (6-digit TOTP input)
-- [ ] T126 Add MFA challenge to login flow (show TOTP input if mfa_required)
-- [ ] T127 Create BackupCodesDisplay component (show backup codes once after MFA enable)
-- [ ] T128 Add MFA disable option in AccountSettingsPage
-- [ ] T129 Style OAuth buttons and MFA UI
+- [ ] T122 Add OAuth login buttons to LoginPage (Google, GitHub)
+- [ ] T123 Implement OAuth callback handling (parse URL params, exchange for JWT)
+- [ ] T124 Create MFASetupPage (packages/frontend/src/features/user/pages/MFASetupPage.tsx)
+- [ ] T125 Display QR code (render data URI from backend)
+- [ ] T126 Create MFAVerifyForm component (6-digit TOTP input)
+- [ ] T127 Add MFA challenge to login flow (show TOTP input if mfa_required)
+- [ ] T128 Create BackupCodesDisplay component (show backup codes once after MFA enable)
+- [ ] T129 Add MFA disable option in AccountSettingsPage
+- [ ] T130 Style OAuth buttons and MFA UI
 
 ### Implementation Notes
 
@@ -677,7 +717,7 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Parallel Opportunities
 
-- T121, T122 (OAuth) and T123, T124, T125, T126, T127, T128 (MFA) can proceed in parallel
+- T122, T123 (OAuth) and T124, T125, T126, T127, T128, T129 (MFA) can proceed in parallel
 
 ### Dependencies
 
@@ -778,72 +818,73 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 | T061       | Implement PATCH /users/:id/role     | WP06         | P2       | Yes       |
 | T062       | Add authorization middleware        | WP06         | P2       | No        |
 | T063       | Add audit logging                   | WP06         | P2       | No        |
-| T064       | Register OAuth Google plugin        | WP07         | P3       | No        |
-| T065       | Register OAuth GitHub plugin        | WP07         | P3       | No        |
-| T066       | Configure OAuth redirect URIs       | WP07         | P3       | No        |
-| T067       | Implement Google OAuth initiate     | WP07         | P3       | Yes       |
-| T068       | Implement Google OAuth callback     | WP07         | P3       | Yes       |
-| T069       | Implement GitHub OAuth initiate     | WP07         | P3       | Yes       |
-| T070       | Implement GitHub OAuth callback     | WP07         | P3       | Yes       |
-| T071       | Implement OAuth service             | WP07         | P3       | No        |
-| T072       | Handle OAuth email match            | WP07         | P3       | No        |
-| T073       | Handle OAuth new user               | WP07         | P3       | No        |
-| T074       | Add audit logging                   | WP07         | P3       | No        |
-| T075       | Register rate-limit plugin          | WP08         | P3       | No        |
-| T076       | Configure global rate limits        | WP08         | P3       | No        |
-| T077       | Configure endpoint limits           | WP08         | P3       | No        |
-| T078       | Add CSRF protection                 | WP08         | P3       | Yes       |
-| T079       | Enhance security headers            | WP08         | P3       | Yes       |
-| T080       | Implement audit log endpoint        | WP08         | P3       | No        |
-| T081       | Add IP/User-Agent capture           | WP08         | P3       | No        |
-| T082       | Document security measures          | WP08         | P3       | No        |
-| T083       | Install MFA libraries               | WP09         | P4       | No        |
-| T084       | Implement MFA enable endpoint       | WP09         | P4       | Yes       |
-| T085       | Implement MFA verify endpoint       | WP09         | P4       | Yes       |
-| T086       | Implement MFA disable endpoint      | WP09         | P4       | Yes       |
-| T087       | Implement MFA login challenge       | WP09         | P4       | No        |
-| T088       | Generate backup codes               | WP09         | P4       | Yes       |
-| T089       | Implement backup code verify        | WP09         | P4       | Yes       |
-| T090       | Implement backup code regenerate    | WP09         | P4       | No        |
-| T091       | Add audit logging                   | WP09         | P4       | No        |
-| T092       | Implement GET /sessions             | WP10         | P5       | Yes       |
-| T093       | Enhance session device info         | WP10         | P5       | No        |
-| T094       | Implement DELETE /sessions/:id      | WP10         | P5       | Yes       |
-| T095       | Implement DELETE /sessions          | WP10         | P5       | Yes       |
-| T096       | Enforce session limit               | WP10         | P5       | No        |
-| T097       | Update session last_activity        | WP10         | P5       | No        |
-| T098       | Add audit logging                   | WP10         | P5       | No        |
-| T099       | Setup Vite React app                | WP11         | P1       | No        |
-| T100       | Create API client                   | WP11         | P1       | No        |
-| T101       | Create AuthContext                  | WP11         | P1       | No        |
-| T102       | Create LoginPage                    | WP11         | P1       | Yes       |
-| T103       | Create RegisterPage                 | WP11         | P1       | Yes       |
-| T104       | Create ForgotPasswordPage           | WP11         | P1       | Yes       |
-| T105       | Create ResetPasswordPage            | WP11         | P1       | Yes       |
-| T106       | Create EmailVerificationBanner      | WP11         | P1       | Yes       |
-| T107       | Create ProtectedRoute               | WP11         | P1       | No        |
-| T108       | Create DashboardPage                | WP11         | P1       | No        |
-| T109       | Implement form validation           | WP11         | P1       | Yes       |
-| T110       | Add error handling                  | WP11         | P1       | Yes       |
-| T111       | Style forms                         | WP11         | P1       | Yes       |
-| T112       | Create ProfilePage                  | WP12         | P2       | Yes       |
-| T113       | Create EditProfileForm              | WP12         | P2       | Yes       |
-| T114       | Implement profile image upload      | WP12         | P2       | Yes       |
-| T115       | Create ActiveSessionsPage           | WP12         | P2       | Yes       |
-| T116       | Create SessionListItem              | WP12         | P2       | Yes       |
-| T117       | Implement session logout            | WP12         | P2       | Yes       |
-| T118       | Create AccountSettingsPage          | WP12         | P2       | No        |
-| T119       | Add confirmation dialogs            | WP12         | P2       | No        |
-| T120       | Style pages                         | WP12         | P2       | No        |
-| T121       | Add OAuth buttons                   | WP13         | P3       | Yes       |
-| T122       | Handle OAuth callback               | WP13         | P3       | Yes       |
-| T123       | Create MFASetupPage                 | WP13         | P3       | Yes       |
-| T124       | Display QR code                     | WP13         | P3       | Yes       |
-| T125       | Create MFAVerifyForm                | WP13         | P3       | Yes       |
-| T126       | Add MFA login challenge             | WP13         | P3       | No        |
-| T127       | Create BackupCodesDisplay           | WP13         | P3       | No        |
-| T128       | Add MFA disable option              | WP13         | P3       | No        |
-| T129       | Style OAuth/MFA UI                  | WP13         | P3       | No        |
+| T064       | Install OAuth dependencies          | WP07         | P3       | No        |
+| T065       | Configure OAuth credentials         | WP07         | P3       | No        |
+| T066       | Create GoogleStrategy               | WP07         | P3       | Yes       |
+| T067       | Create GitHubStrategy               | WP07         | P3       | Yes       |
+| T068       | Implement OAuthService              | WP07         | P3       | No        |
+| T069       | Implement Google OAuth initiate     | WP07         | P3       | Yes       |
+| T070       | Implement Google OAuth callback     | WP07         | P3       | Yes       |
+| T071       | Implement GitHub OAuth initiate     | WP07         | P3       | Yes       |
+| T072       | Implement GitHub OAuth callback     | WP07         | P3       | Yes       |
+| T073       | Handle OAuth email match            | WP07         | P3       | No        |
+| T074       | Handle OAuth new user               | WP07         | P3       | No        |
+| T075       | Add OAuth audit logging             | WP07         | P3       | No        |
+| T076       | Register rate-limit plugin          | WP08         | P3       | No        |
+| T077       | Configure global rate limits        | WP08         | P3       | No        |
+| T078       | Configure endpoint limits           | WP08         | P3       | No        |
+| T079       | Add CSRF protection                 | WP08         | P3       | Yes       |
+| T080       | Enhance security headers            | WP08         | P3       | Yes       |
+| T081       | Implement audit log endpoint        | WP08         | P3       | No        |
+| T082       | Add IP/User-Agent capture           | WP08         | P3       | No        |
+| T083       | Document security measures          | WP08         | P3       | No        |
+| T084       | Install MFA libraries               | WP09         | P4       | No        |
+| T085       | Implement MFA enable endpoint       | WP09         | P4       | Yes       |
+| T086       | Implement MFA verify endpoint       | WP09         | P4       | Yes       |
+| T087       | Implement MFA disable endpoint      | WP09         | P4       | Yes       |
+| T088       | Implement MFA login challenge       | WP09         | P4       | No        |
+| T089       | Generate backup codes               | WP09         | P4       | Yes       |
+| T090       | Implement backup code verify        | WP09         | P4       | Yes       |
+| T091       | Implement backup code regenerate    | WP09         | P4       | No        |
+| T092       | Add audit logging                   | WP09         | P4       | No        |
+| T093       | Implement GET /sessions             | WP10         | P5       | Yes       |
+| T094       | Enhance session device info         | WP10         | P5       | No        |
+| T095       | Implement DELETE /sessions/:id      | WP10         | P5       | Yes       |
+| T096       | Implement DELETE /sessions          | WP10         | P5       | Yes       |
+| T097       | Enforce session limit               | WP10         | P5       | No        |
+| T098       | Update session last_activity        | WP10         | P5       | No        |
+| T099       | Add audit logging                   | WP10         | P5       | No        |
+| T100       | Setup Vite React app                | WP11         | P1       | No        |
+| T101       | Create API client                   | WP11         | P1       | No        |
+| T102       | Create AuthContext                  | WP11         | P1       | No        |
+| T103       | Create LoginPage                    | WP11         | P1       | Yes       |
+| T104       | Create RegisterPage                 | WP11         | P1       | Yes       |
+| T105       | Create ForgotPasswordPage           | WP11         | P1       | Yes       |
+| T106       | Create ResetPasswordPage            | WP11         | P1       | Yes       |
+| T107       | Create EmailVerificationBanner      | WP11         | P1       | Yes       |
+| T108       | Create ProtectedRoute               | WP11         | P1       | No        |
+| T109       | Create DashboardPage                | WP11         | P1       | No        |
+| T110       | Implement form validation           | WP11         | P1       | Yes       |
+| T111       | Add error handling                  | WP11         | P1       | Yes       |
+| T112       | Style forms                         | WP11         | P1       | Yes       |
+| T113       | Create ProfilePage                  | WP12         | P2       | Yes       |
+| T114       | Create EditProfileForm              | WP12         | P2       | Yes       |
+| T115       | Implement profile image upload      | WP12         | P2       | Yes       |
+| T116       | Create ActiveSessionsPage           | WP12         | P2       | Yes       |
+| T117       | Create SessionListItem              | WP12         | P2       | Yes       |
+| T118       | Implement session logout            | WP12         | P2       | Yes       |
+| T119       | Create AccountSettingsPage          | WP12         | P2       | No        |
+| T120       | Add confirmation dialogs            | WP12         | P2       | No        |
+| T121       | Style pages                         | WP12         | P2       | No        |
+| T122       | Add OAuth buttons                   | WP13         | P3       | Yes       |
+| T123       | Handle OAuth callback               | WP13         | P3       | Yes       |
+| T124       | Create MFASetupPage                 | WP13         | P3       | Yes       |
+| T125       | Display QR code                     | WP13         | P3       | Yes       |
+| T126       | Create MFAVerifyForm                | WP13         | P3       | Yes       |
+| T127       | Add MFA login challenge             | WP13         | P3       | No        |
+| T128       | Create BackupCodesDisplay           | WP13         | P3       | No        |
+| T129       | Add MFA disable option              | WP13         | P3       | No        |
+| T130       | Style OAuth/MFA UI                  | WP13         | P3       | No        |
 
 ---
 
