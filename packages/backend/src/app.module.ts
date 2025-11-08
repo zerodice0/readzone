@@ -16,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { BooksModule } from './modules/books/books.module';
 
 /**
  * Root application module
@@ -52,6 +53,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
     UsersModule,
     AdminModule,
     ReviewsModule,
+    BooksModule,
   ],
   providers: [
     // Global exception filter
