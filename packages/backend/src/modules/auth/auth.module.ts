@@ -11,6 +11,7 @@ import { OAuthService } from './services/oauth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { GitHubStrategy } from './strategies/github.strategy';
+import { SessionsController } from './controllers/sessions.controller.js';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { GitHubStrategy } from './strategies/github.strategy';
       }),
     }),
   ],
-  controllers: [AuthController, CsrfController],
+  controllers: [AuthController, CsrfController, SessionsController],
   providers: [
     AuthService,
     PasswordService,

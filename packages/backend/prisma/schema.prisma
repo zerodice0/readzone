@@ -188,6 +188,8 @@ enum AuditAction {
   OAUTH_LOGIN
   OAUTH_CONNECT
   OAUTH_DISCONNECT
+  SESSION_LOGOUT          // T099: Individual session logout
+  SESSION_LOGOUT_ALL      // T099: Logout all sessions except current
 }
 
 enum AuditSeverity {

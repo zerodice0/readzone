@@ -27,6 +27,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   /**
    * Validate JWT payload
    * Called automatically by Passport after JWT verification
+   * T098: Updates session last activity timestamp on each request
    * @param payload Decoded JWT payload
    * @returns User info to attach to request
    */
@@ -39,6 +40,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!session) {
       throw new UnauthorizedException('Invalid or expired session');
     }
+
+    // T098: Update session last activity timestamp
+    // This runs on every authenticated request to track session activity
+    await this.sessionService.updateLastActivity(payload.sessionId);
 
     // Get user info
     const user = await this.prisma.user.findUnique({
