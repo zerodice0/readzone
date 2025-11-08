@@ -1,70 +1,75 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
+import { SessionService } from '../services/session.service';
+import { PrismaService } from '../../../common/utils/prisma';
+import { JwtPayload } from '../services/auth.service';
 
-interface JwtPayload {
-  userId: string;
-  email: string;
-  nickname: string;
-  role?: string;
-  type: 'access' | 'refresh';
-}
-
+/**
+ * JWT Strategy for Passport
+ * Validates JWT tokens and attaches user info to request
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly configService: ConfigService,
-    private readonly prismaService: PrismaService,
+    @Inject(ConfigService) configService: ConfigService,
+    @Inject(SessionService) private readonly sessionService: SessionService,
+    @Inject(PrismaService) private readonly prisma: PrismaService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get<string>('JWT_SECRET') ||
-        'default-secret-change-in-production',
+      secretOrKey: configService.get<string>('JWT_SECRET'),
     });
   }
 
+  /**
+   * Validate JWT payload
+   * Called automatically by Passport after JWT verification
+   * T098: Updates session last activity timestamp on each request
+   * @param payload Decoded JWT payload
+   * @returns User info to attach to request
+   */
   async validate(payload: JwtPayload) {
-    if (payload.type !== 'access') {
-      throw new UnauthorizedException('Invalid token type');
+    // Validate session
+    const session = await this.sessionService.validateSession(
+      payload.sessionId
+    );
+
+    if (!session) {
+      throw new UnauthorizedException('Invalid or expired session');
     }
 
-    const user = await this.prismaService.user.findUnique({
-      where: { id: payload.userId },
+    // T098: Update session last activity timestamp
+    // This runs on every authenticated request to track session activity
+    await this.sessionService.updateLastActivity(payload.sessionId);
+
+    // Get user info
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
       select: {
         id: true,
-        userid: true,
         email: true,
-        nickname: true,
-        bio: true,
-        profileImage: true,
-        isVerified: true,
+        name: true,
         role: true,
-        isSuspended: true,
-        suspendedUntil: true,
-        createdAt: true,
-        updatedAt: true,
+        status: true,
+        emailVerified: true,
       },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+    if (!user || user.status !== 'ACTIVE') {
+      throw new UnauthorizedException('User not found or inactive');
     }
 
-    // Check if user is suspended
-    if (user.isSuspended) {
-      if (user.suspendedUntil && user.suspendedUntil > new Date()) {
-        throw new UnauthorizedException(
-          `Account is suspended until ${user.suspendedUntil.toISOString()}`,
-        );
-      } else if (!user.suspendedUntil) {
-        throw new UnauthorizedException('Account is permanently suspended');
-      }
-    }
-
-    return user;
+    // Return user info to be attached to request.user
+    return {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      emailVerified: user.emailVerified,
+      sessionId: payload.sessionId,
+    };
   }
 }

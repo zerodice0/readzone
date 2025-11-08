@@ -1,14 +1,22 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
-import { AvatarService } from './avatar.service';
-import { PrismaModule } from '../../prisma/prisma.module';
+import { UsersController } from './controllers/users.controller';
+import { AdminController } from './controllers/admin.controller';
+import { MfaController } from './controllers/mfa.controller';
+import { UsersService } from './services/users.service';
+import { MfaService } from './services/mfa.service';
+import { PrismaService } from '../../common/utils/prisma';
+import { AuthModule } from '../auth/auth.module';
 
+/**
+ * Users module
+ *
+ * Handles user profile management, CRUD operations, admin functions, and MFA.
+ * Imports AuthModule for PasswordService dependency.
+ */
 @Module({
-  imports: [PrismaModule, ConfigModule],
-  controllers: [UsersController],
-  providers: [UsersService, AvatarService],
-  exports: [UsersService],
+  imports: [AuthModule],
+  controllers: [UsersController, AdminController, MfaController],
+  providers: [UsersService, MfaService, PrismaService],
+  exports: [UsersService, MfaService],
 })
 export class UsersModule {}

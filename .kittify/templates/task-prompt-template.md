@@ -1,22 +1,22 @@
 ---
-work_package_id: "WPxx"
+work_package_id: 'WPxx'
 subtasks:
-  - "Txxx"
-title: "Replace with work package title"
-phase: "Phase N - Replace with phase name"
-lane: "planned"  # planned | doing | for_review | done
-assignee: ""      # Optional friendly name when in doing/for_review
-agent: ""         # CLI agent identifier (claude, codex, etc.)
-shell_pid: ""     # PID captured when the task moved to the current lane
+  - 'Txxx'
+title: 'Replace with work package title'
+phase: 'Phase N - Replace with phase name'
+lane: 'planned' # planned | doing | for_review | done
+assignee: '' # Optional friendly name when in doing/for_review
+agent: '' # CLI agent identifier (claude, codex, etc.)
+shell_pid: '' # PID captured when the task moved to the current lane
 history:
-  - timestamp: "{{TIMESTAMP}}"
-    lane: "planned"
-    agent: "system"
-    shell_pid: ""
-    action: "Prompt generated via /spec-kitty.tasks"
+  - timestamp: '{{TIMESTAMP}}'
+    lane: 'planned'
+    agent: 'system'
+    shell_pid: ''
+    action: 'Prompt generated via /spec-kitty.tasks'
 ---
-*Path: [templates/task-prompt-template.md](templates/task-prompt-template.md)*
 
+_Path: [templates/task-prompt-template.md](templates/task-prompt-template.md)_
 
 # Work Package Prompt: {{work_package_id}} – {{title}}
 
@@ -34,6 +34,7 @@ history:
 ## Subtasks & Detailed Guidance
 
 ### Subtask TXXX – Replace with summary
+
 - **Purpose**: Explain why this subtask exists.
 - **Steps**: Detailed, actionable instructions.
 - **Files**: Canonical paths to update or create.
@@ -41,6 +42,7 @@ history:
 - **Notes**: Edge cases, dependencies, or data requirements.
 
 ### Subtask TYYY – Replace with summary
+
 - Repeat the structure above for every included `Txxx` entry.
 
 ## Test Strategy (include only when tests are required)

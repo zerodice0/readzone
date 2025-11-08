@@ -1,58 +1,49 @@
-export interface SocialLinks {
-  blog?: string;
-  twitter?: string;
-  instagram?: string;
-}
+import { UserRole } from '@prisma/client';
 
-export interface UserStats {
-  reviewCount: number;
-  likesReceived: number;
-  followerCount: number;
-  followingCount: number;
-}
-
-export interface UserRelationship {
-  isFollowing: boolean;
-  isFollowedBy: boolean;
-  isMutualFollow: boolean;
-}
-
-export interface RecentActivity {
-  lastReviewAt?: string;
-  lastActiveAt: string;
-  streakDays: number;
-}
-
-export interface UserProfileResponse {
-  user: {
-    id: string;
-    userid: string;
-    nickname: string;
-    bio?: string;
-    profileImage?: string;
-    socialLinks?: SocialLinks;
-    joinedAt: string;
-    stats: UserStats;
-    recentActivity: RecentActivity;
-    isVerified: boolean;
-  };
-  relationship?: UserRelationship;
-  isOwner: boolean;
-}
-
+/**
+ * User profile response DTO
+ *
+ * Returns public profile information for the authenticated user.
+ * Used by GET /users/me endpoint.
+ */
 export class UserProfileDto {
-  user: {
-    id: string;
-    userid: string;
-    nickname: string;
-    bio?: string;
-    profileImage?: string;
-    socialLinks?: SocialLinks;
-    joinedAt: string;
-    stats: UserStats;
-    recentActivity: RecentActivity;
-    isVerified: boolean;
-  };
-  relationship?: UserRelationship;
-  isOwner: boolean;
+  /**
+   * User email address
+   */
+  email!: string;
+
+  /**
+   * User role (ANONYMOUS, USER, MODERATOR, ADMIN, SUPERADMIN)
+   */
+  role!: UserRole;
+
+  /**
+   * Email verification status
+   */
+  emailVerified!: boolean;
+
+  /**
+   * MFA (Multi-Factor Authentication) enabled status
+   */
+  mfaEnabled!: boolean;
+
+  /**
+   * Connected OAuth providers
+   * @example ['GOOGLE', 'KAKAO']
+   */
+  oauthConnections!: string[];
+
+  /**
+   * Whether user has a password (false for OAuth-only accounts)
+   */
+  hasPassword!: boolean;
+
+  /**
+   * Account creation timestamp
+   */
+  createdAt!: Date;
+
+  constructor(partial: Partial<UserProfileDto>) {
+    Object.assign(this, partial);
+  }
 }

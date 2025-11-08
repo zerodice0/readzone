@@ -1,104 +1,77 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
+import { LoggerService } from '../utils/logger';
+import { error, getErrorCode } from '../utils/response';
 
-export interface ErrorResponse {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-    timestamp: string;
-    path: string;
-  };
-}
-
-@Catch(HttpException)
+/**
+ * Global exception filter
+ * Catches all HTTP exceptions and formats them according to standard response format
+ *
+ * Note: ESLint unsafe rules are disabled because NestJS's getRequest/getResponse
+ * methods return 'any' type by design, even with generic type parameters.
+ */
+@Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
+  private readonly logger = new LoggerService('HttpExceptionFilter');
 
-  catch(exception: HttpException, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = exception.getStatus();
 
-    // 에러 메시지 추출
-    const exceptionResponse = exception.getResponse();
-    let message: string;
-    let code: string;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = 'Internal server error';
+    let details: Record<string, unknown> | undefined;
 
-    if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-      const responseObj = exceptionResponse as Record<string, unknown>;
-      const resMessage = responseObj.message;
-      const resCode = responseObj.code;
+    // Handle HTTP exceptions
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const exceptionResponse = exception.getResponse();
 
-      message =
-        typeof resMessage === 'string' && resMessage.length > 0
-          ? resMessage
-          : exception.message;
-      code =
-        typeof resCode === 'string' && resCode.length > 0
-          ? resCode
-          : this.getErrorCode(status);
-    } else {
+      if (typeof exceptionResponse === 'string') {
+        message = exceptionResponse;
+      } else if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null
+      ) {
+        const responseObj = exceptionResponse as Record<string, unknown>;
+        message = (responseObj.message as string) || message;
+        details = responseObj;
+      }
+    } else if (exception instanceof Error) {
       message = exception.message;
-      code = this.getErrorCode(status);
-    }
-
-    // 일관된 에러 응답 구조
-    const errorResponse: ErrorResponse = {
-      success: false,
-      error: {
-        code,
-        message,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-      },
-    };
-
-    // 개발 환경에서는 더 자세한 정보 포함
-    if (process.env.NODE_ENV !== 'production') {
-      errorResponse.error.details = {
-        stack: exception.stack,
-        cause: exception.cause,
+      details = {
+        name: exception.name,
+        stack:
+          process.env.NODE_ENV === 'development' ? exception.stack : undefined,
       };
     }
 
-    // 에러 로깅
+    // Log the error
     this.logger.error(
-      `HTTP ${status} Error: ${message}`,
-      exception.stack,
-      `${request.method} ${request.url}`,
+      `${request.method} ${request.url} - ${status} ${message}`,
+      exception instanceof Error ? exception.stack : undefined,
+      {
+        status,
+        method: request.method,
+        url: request.url,
+        ip: request.ip,
+        userAgent: request.get('user-agent'),
+      }
     );
 
-    response.status(status).json(errorResponse);
-  }
-
-  private getErrorCode(status: HttpStatus): string {
-    switch (status) {
-      case HttpStatus.BAD_REQUEST:
-        return 'BAD_REQUEST';
-      case HttpStatus.UNAUTHORIZED:
-        return 'UNAUTHORIZED';
-      case HttpStatus.FORBIDDEN:
-        return 'FORBIDDEN';
-      case HttpStatus.NOT_FOUND:
-        return 'NOT_FOUND';
-      case HttpStatus.CONFLICT:
-        return 'CONFLICT';
-      case HttpStatus.UNPROCESSABLE_ENTITY:
-        return 'VALIDATION_ERROR';
-      case HttpStatus.INTERNAL_SERVER_ERROR:
-        return 'INTERNAL_ERROR';
-      default:
-        return 'HTTP_ERROR';
-    }
+    // Send formatted error response
+    response.status(status).json(
+      error(getErrorCode(status), message, details, {
+        timestamp: new Date().toISOString(),
+      })
+    );
   }
 }

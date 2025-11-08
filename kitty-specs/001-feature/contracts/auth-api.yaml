@@ -1,0 +1,1157 @@
+openapi: 3.1.0
+info:
+  title: ReadZone Authentication API
+  description: |
+    사용자 인증 및 회원가입 시스템 API
+
+    **Features**:
+    - 이메일/비밀번호 회원가입 및 로그인
+    - OAuth 2.0 (Google, GitHub)
+    - 다중 인증 (MFA/2FA) - TOTP 기반
+    - 비밀번호 재설정
+    - 이메일 인증
+    - 세션 관리
+
+    **Authentication**:
+    - JWT + Session Hybrid Strategy
+    - HttpOnly Cookie로 JWT 전달
+    - Redis Session Store로 즉시 무효화 지원
+
+    **Rate Limiting**:
+    - 로그인 시도: 10회/5분 (IP 기준)
+    - 회원가입: 3회/시간 (IP 기준)
+    - 비밀번호 재설정: 3회/시간 (사용자 기준)
+    - 이메일 인증 재전송: 3회/시간 (사용자 기준)
+  version: 1.0.0
+  contact:
+    name: ReadZone API Support
+    email: api@readzone.com
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.readzone.com/v1
+    description: Production server
+
+tags:
+  - name: auth
+    description: 인증 관련 엔드포인트
+  - name: oauth
+    description: OAuth 2.0 인증
+  - name: mfa
+    description: 다중 인증 (MFA/2FA)
+  - name: password
+    description: 비밀번호 관리
+  - name: email
+    description: 이메일 인증
+
+security:
+  - cookieAuth: []
+
+paths:
+  # ============================================================
+  # 회원가입 및 로그인
+  # ============================================================
+
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: 이메일/비밀번호 회원가입
+      description: |
+        새 사용자 계정을 생성합니다.
+
+        **Business Rules**:
+        - 이메일은 unique, 대소문자 구분 없음
+        - 비밀번호: 최소 8자, 대소문자/숫자/특수문자 포함
+        - 회원가입 성공 시 이메일 인증 메일 자동 발송
+        - 초기 role은 'user', emailVerified는 false
+
+        **Rate Limit**: 3회/시간 (IP 기준)
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  maxLength: 128
+                  pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$'
+                  example: SecureP@ss123
+                  description: 최소 8자, 대소문자/숫자/특수문자 포함
+      responses:
+        '201':
+          description: 회원가입 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 회원가입이 완료되었습니다. 이메일 인증을 진행해주세요.
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                        example: 550e8400-e29b-41d4-a716-446655440000
+                      email:
+                        type: string
+                        format: email
+                        example: user@example.com
+                      emailVerified:
+                        type: boolean
+                        example: false
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: 이메일 중복
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: EMAIL_ALREADY_EXISTS
+                  message: 이미 사용 중인 이메일입니다.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: 이메일/비밀번호 로그인
+      description: |
+        이메일과 비밀번호로 로그인합니다.
+
+        **Business Rules**:
+        - 로그인 성공 시 JWT를 HttpOnly cookie로 설정
+        - Session 레코드 생성 (DB + Redis)
+        - remember-me 옵션: 세션 TTL 30일 (기본 24시간)
+        - MFA 활성화 사용자: 401 반환 + mfaRequired: true
+
+        **Rate Limit**: 10회/5분 (IP 기준)
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: SecureP@ss123
+                rememberMe:
+                  type: boolean
+                  default: false
+                  description: true일 경우 세션 TTL 30일
+      responses:
+        '200':
+          description: 로그인 성공
+          headers:
+            Set-Cookie:
+              description: JWT 토큰 (HttpOnly, Secure, SameSite=Strict)
+              schema:
+                type: string
+                example: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict; Max-Age=86400
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 로그인 성공
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/UserProfile'
+                      sessionId:
+                        type: string
+                        format: uuid
+                        example: 660e8400-e29b-41d4-a716-446655440001
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: 2025-11-06T12:00:00Z
+        '401':
+          description: 인증 실패 또는 MFA 필요
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: false
+                      error:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            example: MFA_REQUIRED
+                          message:
+                            type: string
+                            example: 다중 인증이 필요합니다.
+                          mfaRequired:
+                            type: boolean
+                            example: true
+                          tempSessionId:
+                            type: string
+                            format: uuid
+                            description: MFA 검증용 임시 세션 ID
+              examples:
+                invalidCredentials:
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_CREDENTIALS
+                      message: 이메일 또는 비밀번호가 올바르지 않습니다.
+                mfaRequired:
+                  value:
+                    success: false
+                    error:
+                      code: MFA_REQUIRED
+                      message: 다중 인증이 필요합니다.
+                      mfaRequired: true
+                      tempSessionId: 770e8400-e29b-41d4-a716-446655440002
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      summary: 로그아웃
+      description: |
+        현재 세션을 무효화하고 로그아웃합니다.
+
+        **Business Rules**:
+        - Session 레코드 비활성화 (isActive = false, revokedAt 설정)
+        - Redis 세션 삭제
+        - Cookie 삭제
+        - Audit log 기록
+      operationId: logoutUser
+      responses:
+        '200':
+          description: 로그아웃 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 로그아웃되었습니다.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout-all:
+    post:
+      tags:
+        - auth
+      summary: 모든 세션 로그아웃
+      description: |
+        현재 사용자의 모든 활성 세션을 무효화합니다.
+
+        **Use Cases**:
+        - 비밀번호 변경 후 자동 호출
+        - 보안 사고 대응
+        - 사용자 직접 요청
+      operationId: logoutAllSessions
+      responses:
+        '200':
+          description: 모든 세션 로그아웃 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 모든 세션이 로그아웃되었습니다.
+                  data:
+                    type: object
+                    properties:
+                      revokedSessionsCount:
+                        type: integer
+                        example: 3
+                        description: 무효화된 세션 개수
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - auth
+      summary: 토큰 갱신
+      description: |
+        만료된 JWT를 refresh token으로 갱신합니다.
+
+        **Business Rules**:
+        - Refresh token 검증 (DB)
+        - 새 JWT 발급 (동일 session ID 유지)
+        - Redis 세션 TTL 갱신
+      operationId: refreshToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.refresh...
+      responses:
+        '200':
+          description: 토큰 갱신 성공
+          headers:
+            Set-Cookie:
+              description: 새 JWT 토큰
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 토큰이 갱신되었습니다.
+                  data:
+                    type: object
+                    properties:
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: 2025-11-06T12:00:00Z
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================
+  # OAuth 2.0
+  # ============================================================
+
+  /auth/oauth/{provider}/authorize:
+    get:
+      tags:
+        - oauth
+      summary: OAuth 인증 시작
+      description: |
+        OAuth 제공자의 인증 페이지로 리다이렉트합니다.
+
+        **Supported Providers**: google, github
+
+        **Flow**:
+        1. 사용자 클릭 → 이 엔드포인트 호출
+        2. OAuth 제공자 로그인 페이지로 리다이렉트
+        3. 사용자 인증 완료 → callback URL로 리다이렉트
+      operationId: oauthAuthorize
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, github]
+          example: google
+        - name: redirect_uri
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uri
+            default: http://localhost:3000/auth/callback
+          description: OAuth callback URL (기본값 사용 권장)
+      responses:
+        '302':
+          description: OAuth 제공자 페이지로 리다이렉트
+          headers:
+            Location:
+              description: OAuth 인증 URL
+              schema:
+                type: string
+                example: https://accounts.google.com/o/oauth2/v2/auth?client_id=...
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/oauth/{provider}/callback:
+    get:
+      tags:
+        - oauth
+      summary: OAuth 콜백 처리
+      description: |
+        OAuth 제공자로부터 인증 코드를 받아 처리합니다.
+
+        **Flow**:
+        1. 인증 코드로 access token 획득
+        2. 제공자 API에서 사용자 프로필 조회
+        3. 기존 사용자 확인 (email 기준)
+           - 존재: OAuthConnection 연결
+           - 미존재: User + OAuthConnection 생성
+        4. Session 생성 및 JWT 발급
+        5. 프론트엔드 페이지로 리다이렉트
+      operationId: oauthCallback
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, github]
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: OAuth authorization code
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+          description: CSRF 방지용 state 파라미터
+      responses:
+        '302':
+          description: 프론트엔드 페이지로 리다이렉트
+          headers:
+            Location:
+              schema:
+                type: string
+                example: http://localhost:5173/auth/success
+            Set-Cookie:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================
+  # MFA (Multi-Factor Authentication)
+  # ============================================================
+
+  /auth/mfa/setup:
+    post:
+      tags:
+        - mfa
+      summary: MFA 설정 시작
+      description: |
+        TOTP 기반 MFA를 설정합니다.
+
+        **Flow**:
+        1. TOTP secret 생성
+        2. QR 코드 데이터 반환 (otpauth:// URI)
+        3. 사용자가 Authenticator 앱에 등록
+        4. /auth/mfa/verify로 검증 후 활성화
+      operationId: setupMFA
+      responses:
+        '200':
+          description: MFA 설정 정보 반환
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      secret:
+                        type: string
+                        example: JBSWY3DPEHPK3PXP
+                        description: TOTP secret (Base32)
+                      qrCodeUrl:
+                        type: string
+                        format: uri
+                        example: otpauth://totp/ReadZone:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=ReadZone
+                        description: QR 코드 생성용 URI
+                      manualEntryKey:
+                        type: string
+                        example: JBSW Y3DP EHPK 3PXP
+                        description: 수동 입력용 (공백 포함)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: MFA 이미 활성화됨
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: MFA_ALREADY_ENABLED
+                  message: MFA가 이미 활성화되어 있습니다.
+
+  /auth/mfa/verify:
+    post:
+      tags:
+        - mfa
+      summary: MFA 활성화 완료
+      description: |
+        TOTP 코드를 검증하고 MFA를 활성화합니다.
+
+        **Business Rules**:
+        - TOTP 코드 검증 (6자리, ±1 time step 허용)
+        - 검증 성공 시:
+          - MFASettings.enabled = true
+          - Backup codes 10개 생성 및 반환
+          - Audit log 기록
+      operationId: verifyMFA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: '123456'
+                  description: Authenticator 앱의 6자리 코드
+      responses:
+        '200':
+          description: MFA 활성화 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: MFA가 활성화되었습니다. 복구 코드를 안전하게 보관하세요.
+                  data:
+                    type: object
+                    properties:
+                      backupCodes:
+                        type: array
+                        items:
+                          type: string
+                        example: ['A1B2C3D4E5F6G7H8', 'I9J0K1L2M3N4O5P6']
+                        description: 복구 코드 (10개, 1회용)
+        '400':
+          description: 잘못된 코드
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: INVALID_MFA_CODE
+                  message: 잘못된 인증 코드입니다.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/mfa/verify-login:
+    post:
+      tags:
+        - mfa
+      summary: 로그인 시 MFA 검증
+      description: |
+        로그인 후 MFA 코드를 검증합니다.
+
+        **Flow**:
+        1. /auth/login에서 MFA_REQUIRED 응답 수신
+        2. tempSessionId와 TOTP 코드로 이 엔드포인트 호출
+        3. 검증 성공 시 정식 JWT 발급
+      operationId: verifyMFALogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tempSessionId
+                - code
+              properties:
+                tempSessionId:
+                  type: string
+                  format: uuid
+                  example: 770e8400-e29b-41d4-a716-446655440002
+                code:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: '123456'
+      responses:
+        '200':
+          description: MFA 검증 성공, 로그인 완료
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 로그인 성공
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/UserProfile'
+                      sessionId:
+                        type: string
+                        format: uuid
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/mfa/disable:
+    post:
+      tags:
+        - mfa
+      summary: MFA 비활성화
+      description: |
+        MFA를 비활성화합니다.
+
+        **Business Rules**:
+        - 비밀번호 재확인 필수
+        - MFASettings 레코드 삭제
+        - Audit log 기록 (CRITICAL severity)
+      operationId: disableMFA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  format: password
+                  example: SecureP@ss123
+                  description: 현재 비밀번호 (보안 확인)
+      responses:
+        '200':
+          description: MFA 비활성화 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: MFA가 비활성화되었습니다.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/mfa/regenerate-backup-codes:
+    post:
+      tags:
+        - mfa
+      summary: 복구 코드 재생성
+      description: |
+        MFA 복구 코드를 재생성합니다.
+
+        **Business Rules**:
+        - 기존 복구 코드 모두 무효화
+        - 새 복구 코드 10개 생성
+        - Audit log 기록
+      operationId: regenerateBackupCodes
+      responses:
+        '200':
+          description: 복구 코드 재생성 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 복구 코드가 재생성되었습니다.
+                  data:
+                    type: object
+                    properties:
+                      backupCodes:
+                        type: array
+                        items:
+                          type: string
+                        example: ['Q7R8S9T0U1V2W3X4', 'Y5Z6A7B8C9D0E1F2']
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: MFA 비활성화 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================================================
+  # 비밀번호 관리
+  # ============================================================
+
+  /auth/password/reset-request:
+    post:
+      tags:
+        - password
+      summary: 비밀번호 재설정 요청
+      description: |
+        비밀번호 재설정 이메일을 발송합니다.
+
+        **Business Rules**:
+        - 이메일 존재 여부와 관계없이 동일 응답 (보안)
+        - 토큰 생성 및 이메일 발송
+        - TTL: 1시간
+        - Rate limit: 3회/시간 (사용자 기준)
+      operationId: requestPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        '200':
+          description: 요청 처리 완료 (이메일 존재 여부 무관)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 비밀번호 재설정 이메일을 발송했습니다. (등록된 이메일인 경우)
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/password/reset:
+    post:
+      tags:
+        - password
+      summary: 비밀번호 재설정 완료
+      description: |
+        토큰을 검증하고 새 비밀번호를 설정합니다.
+
+        **Business Rules**:
+        - 토큰 검증 (유효성, 만료 여부, 사용 여부)
+        - 비밀번호 해시 업데이트
+        - 모든 활성 세션 무효화 (/auth/logout-all 호출)
+        - 토큰 사용 처리 (usedAt 설정)
+        - Audit log 기록
+      operationId: resetPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - newPassword
+              properties:
+                token:
+                  type: string
+                  example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+                  description: 이메일로 받은 재설정 토큰
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 8
+                  maxLength: 128
+                  pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$'
+                  example: NewSecureP@ss456
+      responses:
+        '200':
+          description: 비밀번호 재설정 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 비밀번호가 재설정되었습니다. 새 비밀번호로 로그인하세요.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: 토큰 무효
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                tokenExpired:
+                  value:
+                    success: false
+                    error:
+                      code: TOKEN_EXPIRED
+                      message: 재설정 링크가 만료되었습니다. 다시 요청하세요.
+                tokenUsed:
+                  value:
+                    success: false
+                    error:
+                      code: TOKEN_ALREADY_USED
+                      message: 이미 사용된 재설정 링크입니다.
+
+  /auth/password/change:
+    post:
+      tags:
+        - password
+      summary: 비밀번호 변경
+      description: |
+        로그인 상태에서 비밀번호를 변경합니다.
+
+        **Business Rules**:
+        - 현재 비밀번호 검증 필수
+        - 새 비밀번호 설정
+        - 모든 활성 세션 무효화 (현재 세션 제외)
+        - Audit log 기록
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                  example: OldP@ss123
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 8
+                  maxLength: 128
+                  pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$'
+                  example: NewSecureP@ss456
+                keepCurrentSession:
+                  type: boolean
+                  default: true
+                  description: true일 경우 현재 세션 유지, false일 경우 모든 세션 로그아웃
+      responses:
+        '200':
+          description: 비밀번호 변경 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 비밀번호가 변경되었습니다.
+                  data:
+                    type: object
+                    properties:
+                      revokedSessionsCount:
+                        type: integer
+                        example: 2
+                        description: 무효화된 세션 개수
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: 현재 비밀번호 불일치
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: INVALID_CURRENT_PASSWORD
+                  message: 현재 비밀번호가 올바르지 않습니다.
+
+  # ============================================================
+  # 이메일 인증
+  # ============================================================
+
+  /auth/email/verify:
+    get:
+      tags:
+        - email
+      summary: 이메일 인증 완료
+      description: |
+        이메일로 받은 인증 링크를 처리합니다.
+
+        **Business Rules**:
+        - 토큰 검증 (유효성, 만료 여부, 사용 여부)
+        - User.emailVerified = true, emailVerifiedAt 설정
+        - 토큰 사용 처리 (usedAt 설정)
+        - Audit log 기록
+      operationId: verifyEmail
+      security: []
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          example: x1y2z3a4b5c6d7e8f9g0h1i2j3k4l5m6
+      responses:
+        '302':
+          description: 프론트엔드 성공 페이지로 리다이렉트
+          headers:
+            Location:
+              schema:
+                type: string
+                example: http://localhost:5173/email-verified
+        '400':
+          description: 토큰 무효
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                tokenExpired:
+                  value:
+                    success: false
+                    error:
+                      code: TOKEN_EXPIRED
+                      message: 인증 링크가 만료되었습니다. 재전송을 요청하세요.
+                tokenUsed:
+                  value:
+                    success: false
+                    error:
+                      code: TOKEN_ALREADY_USED
+                      message: 이미 인증된 이메일입니다.
+
+  /auth/email/resend:
+    post:
+      tags:
+        - email
+      summary: 이메일 인증 재전송
+      description: |
+        이메일 인증 메일을 재전송합니다.
+
+        **Business Rules**:
+        - 기존 미사용 토큰 무효화
+        - 새 토큰 생성 및 이메일 발송
+        - Rate limit: 3회/시간 (사용자 기준)
+      operationId: resendEmailVerification
+      responses:
+        '200':
+          description: 이메일 재전송 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 인증 이메일을 재전송했습니다.
+        '400':
+          description: 이미 인증된 이메일
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: EMAIL_ALREADY_VERIFIED
+                  message: 이미 인증된 이메일입니다.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+# ============================================================
+# Components
+# ============================================================
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+      description: JWT 토큰 (HttpOnly cookie)
+
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        emailVerified:
+          type: boolean
+          example: true
+        role:
+          type: string
+          enum: [anonymous, user, moderator, admin]
+          example: user
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2025-11-05T10:30:00Z
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-10-01T08:00:00Z
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+              description: 에러 코드
+            message:
+              type: string
+              example: 입력 값이 유효하지 않습니다.
+              description: 사용자에게 표시할 에러 메시지
+            details:
+              type: object
+              additionalProperties: true
+              nullable: true
+              description: 추가 에러 상세 정보
+
+  responses:
+    BadRequest:
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: VALIDATION_ERROR
+              message: 입력 값이 유효하지 않습니다.
+              details:
+                email: 이메일 형식이 올바르지 않습니다.
+
+    Unauthorized:
+      description: 인증 실패 또는 권한 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: UNAUTHORIZED
+              message: 인증이 필요합니다.
+
+    TooManyRequests:
+      description: Rate limit 초과
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: 요청 한도를 초과했습니다. 잠시 후 다시 시도하세요.
+              details:
+                retryAfter: 3600
+                retryAfterHuman: 1시간

@@ -1,64 +1,88 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import * as path from 'node:path';
-import { existsSync, mkdirSync } from 'node:fs';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { configFactory } from './config';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
+import { CsrfGuard } from './common/guards/csrf.guard';
+import { PrismaService } from './common/utils/prisma';
+import { RedisService } from './common/utils/redis';
+import { ThrottlerRedisStorage } from './common/utils/throttler-redis-storage';
+import { AuditService } from './common/services/audit.service';
+import { EmailService } from './common/services/email.service';
+import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
-import { BooksModule } from './modules/books/books.module';
-import { ReviewsModule } from './modules/reviews/reviews.module';
-import { ContentModule } from './modules/content/content.module';
-import { UploadModule } from './modules/upload/upload.module';
-import { TagsModule } from './modules/tags/tags.module';
-import { SearchModule } from './modules/search/search.module';
-import { SettingsModule } from './modules/settings/settings.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
-import { ModerationModule } from './modules/moderation/moderation.module';
+import { AdminModule } from './modules/admin/admin.module';
 
-const storageRoot = process.env.FILE_STORAGE_ROOT
-  ? path.resolve(process.env.FILE_STORAGE_ROOT)
-  : path.resolve(process.cwd(), 'packages/backend/storage');
-const uploadsRoot = path.join(storageRoot, 'uploads');
-
-if (!existsSync(uploadsRoot)) {
-  mkdirSync(uploadsRoot, { recursive: true });
-}
-
+/**
+ * Root application module
+ * Imports all feature modules and configures global providers
+ */
+@Global()
 @Module({
   imports: [
+    // Configuration module with Zod validation
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env.local',
+      load: [configFactory],
+      cache: true,
     }),
-    ServeStaticModule.forRoot({
-      rootPath: uploadsRoot,
-      serveRoot: '/uploads',
-      serveStaticOptions: {
-        maxAge: 31536000000, // 1년 (밀리초)
-        immutable: true, // 파일이 절대 변경되지 않음
-        etag: true, // ETag 헤더 활성화
-        lastModified: true, // Last-Modified 헤더 활성화
-      },
+
+    // Rate limiting module with Redis storage
+    ThrottlerModule.forRootAsync({
+      inject: [RedisService],
+      useFactory: (redis: RedisService) => ({
+        throttlers: [
+          {
+            name: 'default',
+            ttl: 60000, // 1 minute in milliseconds
+            limit: 100, // 100 requests per minute for anonymous users
+          },
+        ],
+        storage: new ThrottlerRedisStorage(redis),
+      }),
     }),
-    ScheduleModule.forRoot(),
-    PrismaModule,
+
+    // Feature modules
+    HealthModule,
     AuthModule,
     UsersModule,
-    BooksModule,
-    ReviewsModule,
-    ContentModule,
-    UploadModule,
-    TagsModule,
-    SearchModule,
-    SettingsModule,
-    NotificationsModule,
-    ModerationModule,
+    AdminModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    // Global exception filter
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+
+    // Global CSRF protection guard (executes first)
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
+    },
+
+    // Global rate limiting guard (custom with auth-based limits)
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+
+    // Global services
+    PrismaService,
+    RedisService,
+    ThrottlerRedisStorage,
+    AuditService,
+    EmailService,
+  ],
+  exports: [
+    PrismaService,
+    RedisService,
+    ThrottlerRedisStorage,
+    AuditService,
+    EmailService,
+  ],
 })
 export class AppModule {}

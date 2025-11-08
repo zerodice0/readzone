@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm list:*)",
+      "Bash(cat:*)",
+      "Bash(pnpm why:*)",
+      "Bash(pnpm info:*)",
+      "Bash(pnpm lint:*)",
+      "WebSearch",
+      "Skill(/sc:analyze)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

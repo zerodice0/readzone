@@ -1,207 +1,350 @@
-# ReadZone
+# ReadZone - Book Review Platform
 
-독서 후 의견을 공유하는 **독서 전용 커뮤니티 SNS 플랫폼**
+ReadZone is a modern book review and reading management platform with comprehensive user authentication.
 
-## 🎯 프로젝트 개요
+## 📋 Prerequisites
 
-ReadZone은 독서 계획 수립이 아닌, **독서 이후 커뮤니티 형성**에 초점을 둔 Threads 스타일 SNS 플랫폼입니다.
+Before you begin, ensure you have the following installed:
 
-### 핵심 기능
-- 📚 **3단계 도서 검색**: DB → 카카오 API → 수동 입력
-- ✍️ **마크다운 독후감**: 실시간 미리보기 + 자동저장
-- 💬 **소셜 기능**: 좋아요, 댓글, 팔로우 시스템
-- 🔔 **실시간 알림**: WebSocket 기반 알림 시스템
-- 📱 **반응형 디자인**: 모바일 퍼스트 UI/UX
+- **Node.js** 20.x or higher ([Download](https://nodejs.org/))
+- **pnpm** 8.x or higher (`npm install -g pnpm@8`)
+- **Docker** and **Docker Compose** ([Get Docker](https://docs.docker.com/get-docker/))
 
-## 🛠️ 기술 스택
+## 🚀 Quick Start
 
-### Frontend
-- **Framework**: React 18 + Vite
-- **Language**: TypeScript (strict mode)
-- **State**: Zustand + TanStack Query
-- **Router**: TanStack Router
-- **UI**: Tailwind CSS + shadcn/ui
-- **Editor**: @uiw/react-md-editor
-
-### Backend
-- **Framework**: Hono (Node.js)
-- **Language**: TypeScript (strict mode)
-- **Database**: SQLite + Prisma ORM
-- **API**: 카카오 도서 검색 API
-
-## 🚀 빠른 시작
-
-### 필수 요구사항
-- Node.js 18.17.0+
-- pnpm 8.0.0+
-
-### 설치 및 실행
+### 1. Clone and Setup
 
 ```bash
-# Node 버전 설정
-nvm use
+# Clone the repository
+git clone <repository-url>
+cd readzone
 
-# 의존성 설치
+# Install dependencies
 pnpm install
-
-# 환경 변수 설정
-cp .env.example .env.local
-# .env.local 파일을 편집하여 필요한 값들을 설정하세요
-
-# 데이터베이스 설정
-pnpm db:generate
-pnpm db:migrate
-
-# 개발 서버 실행 (frontend: 3000, backend: 4001)
-pnpm dev
 ```
 
-### 개별 패키지 실행
+### 2. Configure Environment
+
 ```bash
-# 프론트엔드만 실행
-pnpm dev:frontend
+# Copy environment template
+cp .env.example .env
 
-# 백엔드만 실행
-pnpm dev:backend
+# Edit .env with your actual values
+# At minimum, update:
+# - JWT_SECRET (generate with: openssl rand -base64 32)
+# - SESSION_SECRET (generate with: openssl rand -base64 32)
+# - OAuth credentials (Google, GitHub)
+# - SMTP credentials (SendGrid)
 ```
 
-## 📁 프로젝트 구조
+### 3. Start Development Services
+
+```bash
+# Start PostgreSQL and Redis
+docker-compose up -d
+
+# Verify services are running
+docker-compose ps
+
+# Check health
+docker-compose exec postgres pg_isready
+docker-compose exec redis redis-cli ping
+```
+
+### 4. Setup Database
+
+```bash
+# Run Prisma migrations
+pnpm --filter @readzone/backend migrate
+
+# Seed database with test data (optional)
+pnpm --filter @readzone/backend db:seed
+```
+
+### 5. Start Development Servers
+
+```bash
+# Start all services (backend + frontend)
+pnpm dev
+
+# Backend will run on: http://localhost:3000
+# Frontend will run on: http://localhost:5173
+```
+
+## 📦 Project Structure
 
 ```
 readzone/
 ├── packages/
-│   ├── frontend/              # React + Vite 프론트엔드
+│   ├── backend/          # Fastify API server
 │   │   ├── src/
-│   │   │   ├── components/    # 재사용 가능한 컴포넌트
-│   │   │   ├── pages/         # 페이지 컴포넌트
-│   │   │   ├── hooks/         # 커스텀 훅
-│   │   │   ├── store/         # Zustand 스토어
-│   │   │   ├── lib/           # 유틸리티 함수
-│   │   │   └── types/         # TypeScript 타입 정의
-│   │   └── package.json
-│   └── backend/               # Hono 백엔드
-│       ├── src/
-│       │   ├── routes/        # API 라우트
-│       │   ├── services/      # 비즈니스 로직
-│       │   ├── middleware/    # 미들웨어
-│       │   ├── db/            # 데이터베이스 관련
-│       │   └── types/         # TypeScript 타입 정의
-│       ├── prisma/
-│       └── package.json
-├── docs/                      # 프로젝트 문서
-└── package.json              # 모노레포 루트
+│   │   │   ├── server.ts         # Entry point
+│   │   │   ├── app.ts            # Fastify app config
+│   │   │   ├── modules/          # Feature modules
+│   │   │   └── common/           # Shared utilities
+│   │   └── prisma/               # Database schema & migrations
+│   │
+│   ├── frontend/         # React + Vite application
+│   │   ├── src/
+│   │   │   ├── features/         # Feature-based components
+│   │   │   ├── lib/              # Auth context, API client
+│   │   │   └── pages/            # Page components
+│   │   └── public/               # Static assets
+│   │
+│   └── shared/           # Shared types and utilities
+│       └── src/
+│           └── types/            # TypeScript type definitions
+│
+├── docker-compose.yml    # PostgreSQL + Redis setup
+├── .env.example          # Environment template
+└── README.md             # This file
 ```
 
-## 📋 사용 가능한 명령어
+## 📜 Available Scripts
 
-### 개발
+### Root Level
+
 ```bash
-pnpm dev                # 전체 개발 서버 실행
-pnpm dev:frontend       # 프론트엔드만 실행
-pnpm dev:backend        # 백엔드만 실행
+pnpm dev              # Start all packages in development mode
+pnpm build            # Build all packages
+pnpm lint             # Run ESLint on all packages
+pnpm format           # Format all files with Prettier
+pnpm format:check     # Check formatting without changes
+pnpm type-check       # Run TypeScript type checking
 ```
 
-### 빌드
+### Backend
+
 ```bash
-pnpm build              # 전체 빌드
-pnpm build:frontend     # 프론트엔드 빌드
-pnpm build:backend      # 백엔드 빌드
+pnpm --filter @readzone/backend dev           # Start backend dev server
+pnpm --filter @readzone/backend build         # Build backend
+pnpm --filter @readzone/backend migrate       # Run Prisma migrations
+pnpm --filter @readzone/backend db:seed       # Seed database
+pnpm --filter @readzone/backend test          # Run tests
 ```
 
-### 코드 품질
+### Frontend
+
 ```bash
-pnpm lint               # 전체 린트 검사
-pnpm lint:frontend      # 프론트엔드 린트
-pnpm lint:backend       # 백엔드 린트
-pnpm type-check         # 전체 타입 체크
-pnpm type-check:frontend # 프론트엔드 타입 체크
-pnpm type-check:backend # 백엔드 타입 체크
+pnpm --filter @readzone/frontend dev          # Start frontend dev server
+pnpm --filter @readzone/frontend build        # Build frontend for production
+pnpm --filter @readzone/frontend preview      # Preview production build
+pnpm --filter @readzone/frontend test         # Run tests
 ```
 
-### 테스트
+## 🧰 Tech Stack
+
+### Backend
+- **Framework**: Fastify 4.x
+- **Database**: PostgreSQL 16 with Prisma ORM
+- **Cache/Sessions**: Redis 7
+- **Authentication**: JWT + @fastify/jwt, OAuth 2.0, MFA (TOTP)
+- **Validation**: Zod
+- **Password Hashing**: Argon2
+- **Email**: SendGrid / AWS SES
+
+### Frontend
+- **Framework**: React 18 + TypeScript
+- **Build Tool**: Vite 5
+- **Routing**: React Router v6
+- **HTTP Client**: Axios
+- **Styling**: Tailwind CSS (to be configured)
+- **State Management**: React Context API
+
+### Development Tools
+- **Monorepo**: pnpm workspaces
+- **Linting**: ESLint (Airbnb TypeScript config)
+- **Formatting**: Prettier
+- **Pre-commit**: Husky + lint-staged
+- **Testing**: Vitest
+- **Type Safety**: TypeScript 5.3 (strict mode)
+
+## 🔐 Authentication Features
+
+- Email-based registration with verification
+- Social login (Google, GitHub OAuth)
+- Password reset via email
+- Session management with "remember me"
+- Multi-factor authentication (TOTP)
+- Active session monitoring
+- Rate limiting and brute-force protection
+- Audit logging
+
+## 🛠️ Development Workflow
+
+### Code Quality
+
+All code must pass:
+- TypeScript strict mode compilation (no `any` types)
+- ESLint checks (Airbnb TypeScript config)
+- Prettier formatting
+- Pre-commit hooks (automatic)
+
+### Database Changes
+
 ```bash
-pnpm test               # 전체 테스트
-pnpm test:frontend      # 프론트엔드 테스트
-pnpm test:backend       # 백엔드 테스트
+# Create a new migration
+pnpm --filter @readzone/backend prisma migrate dev --name <migration-name>
+
+# Apply migrations
+pnpm --filter @readzone/backend prisma migrate deploy
+
+# Reset database (WARNING: deletes all data)
+pnpm --filter @readzone/backend prisma migrate reset
 ```
 
-### 데이터베이스
+### Docker Commands
+
 ```bash
-pnpm db:generate        # Prisma 클라이언트 생성
-pnpm db:migrate         # 데이터베이스 마이그레이션
-pnpm db:reset           # 데이터베이스 초기화
-pnpm db:seed            # 시드 데이터 삽입
+# Start services
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Reset volumes (WARNING: deletes all data)
+docker-compose down -v
 ```
 
-### 유틸리티
+## 🐛 Troubleshooting
+
+### Port Conflicts
+
+If ports 5432 (PostgreSQL) or 6379 (Redis) are already in use:
+
+```yaml
+# Edit docker-compose.yml and change ports:
+services:
+  postgres:
+    ports:
+      - '5433:5432'  # Use different host port
+  redis:
+    ports:
+      - '6380:6379'  # Use different host port
+```
+
+Then update `DATABASE_URL` and `REDIS_URL` in `.env`:
+
 ```bash
-pnpm clean              # 모든 빌드 파일과 node_modules 제거
-pnpm fresh-install      # 클린 후 재설치
+DATABASE_URL=postgresql://readzone:readzone_dev_password@localhost:5433/readzone
+REDIS_URL=redis://:readzone_dev_redis_password@localhost:6380/0
 ```
 
-## 🔧 개발 규칙
+### pnpm Installation Issues
 
-### 코드 품질 필수 사항
-- ✅ **TypeScript strict mode** 준수
-- ✅ **ESLint 에러 0개, 경고 0개** 유지
-- ✅ **any 타입 사용 금지**
-- ✅ **사용하지 않는 변수/import 금지**
-- ✅ **모든 undefined 가능성 명시적 처리**
-
-### 커밋 전 체크리스트
 ```bash
-# 필수 검증 명령어
-pnpm lint           # 린트 검사 (0개 에러 필수)
-pnpm type-check     # 타입 체크 (0개 에러 필수)
-pnpm test           # 테스트 실행
+# Clear pnpm cache
+pnpm store prune
+
+# Reinstall dependencies
+rm -rf node_modules packages/*/node_modules
+pnpm install
 ```
 
-## 📱 주요 페이지 (11개)
+### Prisma Issues
 
-1. **독후감 피드** (`/`) - Threads 스타일 무한 스크롤
-2. **로그인** (`/login`) - 서비스 소개 + 로그인
-3. **회원가입** (`/register`) - 이메일 인증 포함
-4. **비밀번호 찾기** (`/forgot-password`) - 이메일 재설정
-5. **이메일 인증** (`/verify-email`) - 회원가입 후 처리
-6. **도서 검색** (`/search`) - 카카오 API + 수동 입력
-7. **도서 상세** (`/books/[id]`) - 도서 정보 + 독후감 목록
-8. **독후감 작성** (`/write`) - 마크다운 에디터 + 자동저장
-9. **독후감 상세** (`/review/[id]`) - 안전한 HTML 렌더링 + 댓글
-10. **프로필** (`/profile/[userId]`) - 기본 정보 + 활동 통계
-11. **설정** (`/settings`) - 프로필 편집 + 계정 관리
+```bash
+# Regenerate Prisma Client
+pnpm --filter @readzone/backend prisma generate
 
-## 🔒 보안 고려사항
+# Reset database and migrations
+pnpm --filter @readzone/backend prisma migrate reset
+```
 
-### 환경 변수 보안
-- 모든 API 키와 시크릿은 `.env.local`에 저장
-- 환경 변수 파일은 절대 Git에 커밋하지 않음
-- 정기적인 키 로테이션 실시
+## 🔒 Security
 
-### 애플리케이션 보안
-- DOMPurify로 XSS 방지
-- Prisma ORM으로 SQL Injection 방지
-- 모든 사용자 입력 Zod 스키마 검증
-- JWT 토큰 기반 인증 시스템
+ReadZone implements comprehensive security measures to protect user data and prevent abuse:
 
-## 📚 문서
+### Rate Limiting
 
-- [📋 개발 가이드](./docs/development-guide.md) - 상세 개발 규칙
-- [🗄️ 데이터베이스 스키마](./docs/database-schema.md) - Prisma 스키마 전체
-- [👥 사용자 흐름](./docs/user-flows.md) - UI/UX 플로우차트
-- [🔗 API 통합](./docs/api-integration.md) - 카카오 API 가이드
+**Global Rate Limits**:
+- **Anonymous users**: 100 requests per minute per IP address
+- **Authenticated users**: 1,000 requests per minute per user
 
-## 🤝 기여하기
+**Endpoint-Specific Rate Limits**:
+- **Login** (`POST /api/v1/auth/login`): 5 requests per 5 minutes
+- **Registration** (`POST /api/v1/auth/register`): 3 requests per hour
+- **Password Reset** (`POST /api/v1/auth/password-reset/request`): 3 requests per hour
 
-1. 이 저장소를 Fork
-2. 새 브랜치 생성 (`git checkout -b feature/amazing-feature`)
-3. 변경사항 커밋 (`git commit -m 'Add amazing feature'`)
-4. 브랜치에 Push (`git push origin feature/amazing-feature`)
-5. Pull Request 생성
+Rate limits are enforced using Redis-backed storage for distributed environments.
 
-## 📄 라이센스
+### Security Headers
 
-이 프로젝트는 MIT 라이센스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
+All responses include comprehensive security headers via Helmet:
 
-## 📞 문의
+- **Content-Security-Policy (CSP)**: Restricts resource loading to trusted sources
+- **HTTP Strict Transport Security (HSTS)**: Forces HTTPS connections with 1-year max-age
+- **X-Frame-Options**: Prevents clickjacking attacks by denying iframe embedding
+- **X-Content-Type-Options**: Prevents MIME-type sniffing
+- **X-XSS-Protection**: Enables browser XSS filtering
+- **Referrer-Policy**: Controls referrer information sent with requests
 
-질문이나 제안사항이 있으시면 이슈를 생성해 주세요.
+### Authentication & Authorization
+
+- **JWT Tokens**: Short-lived access tokens (1 hour expiration)
+- **Session Management**: Database-backed sessions with device tracking
+- **Password Security**: Argon2 hashing with strong complexity requirements
+- **OAuth 2.0**: Secure third-party authentication (Google, GitHub)
+- **Multi-Factor Authentication (MFA)**: TOTP-based 2FA with backup codes
+
+### Audit Logging
+
+Comprehensive audit logging captures all security-sensitive events:
+
+- **Login attempts**: Successful and failed login events
+- **Password changes**: Password resets and updates
+- **Account modifications**: Email verification, profile updates
+- **OAuth events**: Third-party authentication flows
+- **Admin actions**: Administrative operations and access
+
+Audit logs include:
+- User ID and email
+- Action type and severity
+- IP address and User-Agent
+- Timestamp and metadata
+- Success/failure status
+
+**Audit Log API** (Admin only):
+```bash
+GET /api/v1/admin/audit-logs?userId=<id>&action=<action>&severity=<level>&page=1&limit=20
+```
+
+### Password Policy
+
+Strong password requirements:
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+- At least one special character
+
+### HTTPS Requirement
+
+**Production deployments must use HTTPS**. The application enforces HSTS headers to ensure all connections use encrypted transport.
+
+### Additional Security Measures
+
+- **Email Verification**: Required for new accounts
+- **Session Expiration**: Automatic logout after inactivity
+- **IP Tracking**: All sensitive operations log IP addresses
+- **Soft Deletion**: User accounts are soft-deleted, not permanently removed
+- **CORS Configuration**: Strict origin validation for cross-origin requests
+
+## 📝 License
+
+MIT
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📧 Support
+
+For issues and questions, please open an issue on GitHub.
