@@ -420,26 +420,27 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ---
 
-## Work Package WP07: OAuth Integration (Google & GitHub) (Priority: P3)
+## Work Package WP07: OAuth Integration (Google & GitHub) (Priority: P3) ✅
 
 **Goal**: Implement OAuth 2.0 login with Google and GitHub using Passport.js strategies, link existing accounts.
 **Independent Test**: User clicks "Login with Google" → redirected → authenticated → logged into ReadZone. Same for GitHub.
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP07-oauth-integration.md`
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP07-oauth-integration.md`
+**Status**: ✅ Approved (2025-11-08, shell_pid=36480)
 
 ### Included Subtasks
 
-- [ ] T064 Install OAuth dependencies (passport-google-oauth20, passport-github2)
-- [ ] T065 Configure OAuth credentials in .env.example and config module
-- [ ] T066 Create GoogleStrategy (packages/backend/src/modules/auth/strategies/google.strategy.ts)
-- [ ] T067 Create GitHubStrategy (packages/backend/src/modules/auth/strategies/github.strategy.ts)
-- [ ] T068 Implement OAuthService (packages/backend/src/modules/auth/services/oauth.service.ts) for user creation/linking logic
-- [ ] T069 Implement GET /api/v1/auth/oauth/google (initiate OAuth flow with AuthGuard('google'))
-- [ ] T070 Implement GET /api/v1/auth/oauth/google/callback (handle Google callback, create session, return JWT)
-- [ ] T071 Implement GET /api/v1/auth/oauth/github (initiate OAuth flow with AuthGuard('github'))
-- [ ] T072 Implement GET /api/v1/auth/oauth/github/callback (handle GitHub callback, create session, return JWT)
-- [ ] T073 Handle case: OAuth email matches existing user → link OAuthConnection
-- [ ] T074 Handle case: OAuth email is new → create User + OAuthConnection, mark emailVerified=true
-- [ ] T075 Add audit logging for OAuth connection events (success, failure, account linking)
+- [x] T064 Install OAuth dependencies (passport-google-oauth20, passport-github2)
+- [x] T065 Configure OAuth credentials in .env.example and config module
+- [x] T066 Create GoogleStrategy (packages/backend/src/modules/auth/strategies/google.strategy.ts)
+- [x] T067 Create GitHubStrategy (packages/backend/src/modules/auth/strategies/github.strategy.ts)
+- [x] T068 Implement OAuthService (packages/backend/src/modules/auth/services/oauth.service.ts) for user creation/linking logic
+- [x] T069 Implement GET /api/v1/auth/oauth/google (initiate OAuth flow with AuthGuard('google'))
+- [x] T070 Implement GET /api/v1/auth/oauth/google/callback (handle Google callback, create session, return JWT)
+- [x] T071 Implement GET /api/v1/auth/oauth/github (initiate OAuth flow with AuthGuard('github'))
+- [x] T072 Implement GET /api/v1/auth/oauth/github/callback (handle GitHub callback, create session, return JWT)
+- [x] T073 Handle case: OAuth email matches existing user → link OAuthConnection
+- [x] T074 Handle case: OAuth email is new → create User + OAuthConnection, mark emailVerified=true
+- [x] T075 Add audit logging for OAuth connection events (success, failure, account linking)
 
 ### Implementation Notes
 
