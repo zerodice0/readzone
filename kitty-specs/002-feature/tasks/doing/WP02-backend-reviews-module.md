@@ -16,16 +16,21 @@ subtasks:
   - 'T020'
 title: 'Backend - Reviews Module'
 phase: 'Phase 1 - Foundation'
-lane: 'planned'
+lane: 'doing'
 assignee: ''
-agent: ''
-shell_pid: ''
+agent: 'claude'
+shell_pid: '51802'
 history:
   - timestamp: '2025-11-08T17:52:47Z'
     lane: 'planned'
     agent: 'system'
     shell_pid: ''
     action: 'Prompt generated via /spec-kitty.tasks'
+  - timestamp: '2025-11-09T07:42:00Z'
+    lane: 'doing'
+    agent: 'claude'
+    shell_pid: '51802'
+    action: 'Started implementation'
 ---
 
 # Work Package Prompt: WP02 – Backend - Reviews Module
