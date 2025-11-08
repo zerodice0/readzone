@@ -706,15 +706,15 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ### Included Subtasks
 
-- [ ] T122 Add OAuth login buttons to LoginPage (Google, GitHub)
-- [ ] T123 Implement OAuth callback handling (parse URL params, exchange for JWT)
-- [ ] T124 Create MFASetupPage (packages/frontend/src/features/user/pages/MFASetupPage.tsx)
-- [ ] T125 Display QR code (render data URI from backend)
-- [ ] T126 Create MFAVerifyForm component (6-digit TOTP input)
-- [ ] T127 Add MFA challenge to login flow (show TOTP input if mfa_required)
-- [ ] T128 Create BackupCodesDisplay component (show backup codes once after MFA enable)
-- [ ] T129 Add MFA disable option in AccountSettingsPage
-- [ ] T130 Style OAuth buttons and MFA UI
+- [x] T122 Add OAuth login buttons to LoginPage (Google, GitHub)
+- [x] T123 Implement OAuth callback handling (parse URL params, exchange for JWT)
+- [x] T124 Create MFASetupPage (packages/frontend/src/features/user/pages/MFASetupPage.tsx)
+- [x] T125 Display QR code (render data URI from backend)
+- [x] T126 Create MFAVerifyForm component (6-digit TOTP input)
+- [x] T127 Add MFA challenge to login flow (show TOTP input if mfa_required)
+- [x] T128 Create BackupCodesDisplay component (show backup codes once after MFA enable)
+- [x] T129 Add MFA disable option in AccountSettingsPage
+- [x] T130 Style OAuth buttons and MFA UI
 
 ### Implementation Notes
 
@@ -889,10 +889,10 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 | T124       | Create MFASetupPage                 | WP13         | P3       | Yes       |
 | T125       | Display QR code                     | WP13         | P3       | Yes       |
 | T126       | Create MFAVerifyForm                | WP13         | P3       | Yes       |
-| T127       | Add MFA login challenge             | WP13         | P3       | No        |
-| T128       | Create BackupCodesDisplay           | WP13         | P3       | No        |
-| T129       | Add MFA disable option              | WP13         | P3       | No        |
-| T130       | Style OAuth/MFA UI                  | WP13         | P3       | No        |
+| T127       | Add MFA login challenge             | WP13         | P3       | Yes       |
+| T128       | Create BackupCodesDisplay           | WP13         | P3       | Yes       |
+| T129       | Add MFA disable option              | WP13         | P3       | Yes       |
+| T130       | Style OAuth/MFA UI                  | WP13         | P3       | Yes       |
 
 ---
 
