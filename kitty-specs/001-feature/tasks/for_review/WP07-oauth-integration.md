@@ -2,7 +2,7 @@
 work_package_id: 'WP07'
 title: 'OAuth Integration (Google & GitHub)'
 phase: 'Phase 3 - Advanced Features'
-lane: 'doing'
+lane: 'for_review'
 subtasks:
   [
     'T064',
@@ -29,6 +29,14 @@ history:
     lane: 'planned'
     agent: 'claude'
     action: 'Updated to NestJS + Passport.js strategy-based implementation'
+  - timestamp: '2025-11-08T17:42:00Z'
+    lane: 'doing'
+    agent: 'claude'
+    action: 'Started implementation - OAuth dependencies, strategies, and endpoints'
+  - timestamp: '2025-11-08T18:30:00Z'
+    lane: 'for_review'
+    agent: 'claude'
+    action: 'Implementation completed - Ready for code review'
 ---
 
 # Work Package Prompt: WP07 – OAuth Integration (Google & GitHub)
