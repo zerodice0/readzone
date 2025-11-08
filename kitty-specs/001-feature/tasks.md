@@ -576,17 +576,18 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 **Goal**: Implement session listing, individual session logout, and concurrent session limits.
 **Independent Test**: User views active sessions (devices, IPs, last activity), logs out specific session, limit enforced (10 sessions max).
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP10-session-management.md`
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP10-session-management.md`
+**Status**: ✅ Completed and reviewed on 2025-11-09
 
 ### Included Subtasks
 
-- [ ] T093 Implement GET /api/v1/sessions (list current user's active sessions)
-- [ ] T094 Enhance session creation to capture device info (User-Agent parsing) and IP address
-- [ ] T095 Implement DELETE /api/v1/sessions/:id (logout specific session)
-- [ ] T096 Implement DELETE /api/v1/sessions (logout all sessions except current)
-- [ ] T097 Enforce concurrent session limit (10 sessions per user, delete oldest if exceeded)
-- [ ] T098 Update session last_activity timestamp on each authenticated request
-- [ ] T099 Add audit logging for session creation, deletion
+- [x] T093 Implement GET /api/v1/sessions (list current user's active sessions)
+- [x] T094 Enhance session creation to capture device info (User-Agent parsing) and IP address
+- [x] T095 Implement DELETE /api/v1/sessions/:id (logout specific session)
+- [x] T096 Implement DELETE /api/v1/sessions (logout all sessions except current)
+- [x] T097 Enforce concurrent session limit (10 sessions per user, delete oldest if exceeded)
+- [x] T098 Update session last_activity timestamp on each authenticated request
+- [x] T099 Add audit logging for session creation, deletion
 
 ### Implementation Notes
 
