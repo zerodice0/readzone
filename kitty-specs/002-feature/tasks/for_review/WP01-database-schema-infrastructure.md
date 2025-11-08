@@ -10,7 +10,7 @@ subtasks:
   - 'T007'
 title: 'Database Schema & Infrastructure'
 phase: 'Phase 1 - Foundation'
-lane: "doing"
+lane: "for_review"
 assignee: ''
 agent: "claude"
 shell_pid: "51802"
@@ -20,6 +20,16 @@ history:
     agent: 'system'
     shell_pid: ''
     action: 'Prompt generated via /spec-kitty.tasks'
+  - timestamp: '2025-11-08T22:32:50Z'
+    lane: 'doing'
+    agent: 'claude'
+    shell_pid: '51802'
+    action: 'Started implementation'
+  - timestamp: '2025-11-09T07:40:00Z'
+    lane: 'for_review'
+    agent: 'claude'
+    shell_pid: '51802'
+    action: 'Completed all subtasks, moved to review'
 ---
 
 # Work Package Prompt: WP01 – Database Schema & Infrastructure
