@@ -7,7 +7,7 @@ import { OAuthService } from '../services/oauth.service';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(
-    private readonly configService: ConfigService,
+    configService: ConfigService,
     private readonly oauthService: OAuthService
   ) {
     super({
@@ -19,15 +19,15 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   }
 
   async validate(
-    accessToken: string,
-    refreshToken: string,
+    _accessToken: string,
+    _refreshToken: string,
     profile: Profile,
     done: VerifyCallback
   ): Promise<void> {
     const { emails, displayName, photos } = profile;
 
     if (!emails || emails.length === 0 || !emails[0].value) {
-      done(new Error('No email found in Google profile'), undefined);
+      done(new Error('No email found in Google profile'), false);
       return;
     }
 
@@ -41,9 +41,15 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
     try {
       const user = await this.oauthService.handleOAuthLogin(oauthProfile);
-      done(null, user);
+      if (!user) {
+        done(new Error('Failed to create or find user'), false);
+        return;
+      }
+      // Type assertion: Passport expects Express.User but we use Prisma User
+      // This is safe because we control the user object structure
+      done(null, user as unknown as Express.User);
     } catch (error) {
-      done(error, undefined);
+      done(error as Error, false);
     }
   }
 }

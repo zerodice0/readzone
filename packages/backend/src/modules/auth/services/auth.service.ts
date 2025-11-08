@@ -583,8 +583,10 @@ export class AuthService {
     provider: string
   ): Promise<{ token: string }> {
     // Type-safe extraction of user from OAuth-authenticated request
-    const authenticatedReq = req as Request & { user?: { id: string; email: string } };
-    const user = authenticatedReq.user;
+    const authenticatedReq = req as Request & {
+      user?: { id: string; email: string };
+    };
+    const { user } = authenticatedReq;
 
     if (!user || !user.id) {
       throw new UnauthorizedException('OAuth authentication failed');
@@ -592,7 +594,9 @@ export class AuthService {
 
     // Extract IP and User-Agent from request
     const requestWithIp = req as Request & { ip?: string };
-    const requestWithHeaders = req as Request & { headers?: { 'user-agent'?: string } };
+    const requestWithHeaders = req as Request & {
+      headers?: { 'user-agent'?: string };
+    };
     const ipAddress = requestWithIp.ip || 'unknown';
     const userAgent = requestWithHeaders.headers?.['user-agent'] || 'unknown';
 
@@ -623,7 +627,7 @@ export class AuthService {
     await this.auditService.log({
       userId: user.id,
       action: 'OAUTH_LOGIN',
-      details: { provider },
+      metadata: { provider },
       ipAddress,
       userAgent,
       severity: 'INFO',

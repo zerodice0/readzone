@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-github2';
+import type { User } from '@prisma/client';
 import { OAuthService } from '../services/oauth.service';
 
 @Injectable()
 export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
   constructor(
-    private readonly configService: ConfigService,
+    configService: ConfigService,
     private readonly oauthService: OAuthService
   ) {
     super({
@@ -19,10 +20,10 @@ export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
   }
 
   async validate(
-    accessToken: string,
-    refreshToken: string,
+    _accessToken: string,
+    _refreshToken: string,
     profile: Profile
-  ): Promise<Profile> {
+  ): Promise<User> {
     const { emails, displayName, username, photos } = profile;
 
     if (!emails || emails.length === 0 || !emails[0].value) {
@@ -38,6 +39,9 @@ export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
     };
 
     const user = await this.oauthService.handleOAuthLogin(oauthProfile);
+    if (!user) {
+      throw new Error('Failed to create or find user');
+    }
     return user;
   }
 }

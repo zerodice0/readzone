@@ -35,7 +35,8 @@ import { PrismaService } from '../../../common/utils/prisma';
 export class CleanupDeletedUsersTask {
   private readonly logger = new Logger(CleanupDeletedUsersTask.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  // @ts-expect-error - Pseudocode only, prisma will be used in actual implementation
+  constructor(private readonly _prisma: PrismaService) {}
 
   /**
    * PSEUDOCODE - Cleanup deleted users cron job
