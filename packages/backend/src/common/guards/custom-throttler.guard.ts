@@ -9,10 +9,10 @@ import type { RequestWithUser } from '../../modules/users/interfaces/request-wit
  */
 @Injectable()
 export class CustomThrottlerGuard extends ThrottlerGuard {
-  protected getTracker(req: RequestWithUser): string {
+  protected getTracker(req: RequestWithUser): Promise<string> {
     // Use user ID for authenticated users, IP for anonymous
     const tracker = req.user?.userId ?? req.ip ?? 'unknown';
-    return tracker;
+    return Promise.resolve(tracker);
   }
 
   protected getLimit(context: ExecutionContext): number {

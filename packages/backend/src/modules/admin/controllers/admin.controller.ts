@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Inject,
 } from '@nestjs/common';
+import { AuditAction, AuditSeverity, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -33,33 +34,21 @@ export class AdminController {
   @Get('audit-logs')
   @HttpCode(HttpStatus.OK)
   async queryAuditLogs(@Query() query: QueryAuditLogsDto) {
-    const {
-      userId,
-      action,
-      severity,
-      ipAddress,
-      page = 1,
-      limit = 20,
-    } = query;
+    const { userId, action, severity, ipAddress, page = 1, limit = 20 } = query;
 
     const skip = (page - 1) * limit;
 
     // Build where clause for filtering
-    const where: {
-      userId?: string;
-      action?: string;
-      severity?: string;
-      ipAddress?: string;
-    } = {};
+    const where: Prisma.AuditLogWhereInput = {};
 
     if (userId) {
       where.userId = userId;
     }
     if (action) {
-      where.action = action;
+      where.action = action as AuditAction;
     }
     if (severity) {
-      where.severity = severity;
+      where.severity = severity as AuditSeverity;
     }
     if (ipAddress) {
       where.ipAddress = ipAddress;

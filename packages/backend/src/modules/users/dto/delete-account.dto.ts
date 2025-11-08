@@ -14,7 +14,7 @@ export class DeleteAccountDto {
    */
   @IsString()
   @MinLength(8)
-  password: string;
+  password!: string;
 
   /**
    * Explicit confirmation flag
@@ -23,5 +23,5 @@ export class DeleteAccountDto {
    * This provides an additional safeguard against accidental deletion.
    */
   @IsBoolean()
-  confirmDeletion: boolean;
+  confirmDeletion!: boolean;
 }
