@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../lib/auth-context';
 import EmailVerificationBanner from '../components/EmailVerificationBanner';
 
@@ -99,12 +99,24 @@ function DashboardPage() {
                     <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700">
                       내 독후감 보기
                     </button>
-                    <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700">
+                    <Link
+                      to="/profile"
+                      className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700"
+                    >
                       프로필 설정
-                    </button>
-                    <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700">
+                    </Link>
+                    <Link
+                      to="/sessions"
+                      className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700"
+                    >
                       활성 세션 관리
-                    </button>
+                    </Link>
+                    <Link
+                      to="/settings"
+                      className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700"
+                    >
+                      계정 설정
+                    </Link>
                   </div>
                 </div>
               </div>
