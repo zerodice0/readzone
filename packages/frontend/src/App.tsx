@@ -7,10 +7,12 @@ import LoginPage from './features/auth/pages/LoginPage';
 import RegisterPage from './features/auth/pages/RegisterPage';
 import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage';
 import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
+import OAuthCallbackPage from './features/auth/pages/OAuthCallbackPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './features/user/pages/ProfilePage';
 import ActiveSessionsPage from './features/user/pages/ActiveSessionsPage';
 import AccountSettingsPage from './features/user/pages/AccountSettingsPage';
+import MFASetupPage from './features/user/pages/MFASetupPage';
 
 function App() {
   return (
@@ -21,6 +23,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
         {/* Protected routes */}
         <Route
@@ -52,6 +55,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AccountSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/mfa/setup"
+          element={
+            <ProtectedRoute>
+              <MFASetupPage />
             </ProtectedRoute>
           }
         />
