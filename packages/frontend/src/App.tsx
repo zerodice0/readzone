@@ -8,6 +8,9 @@ import RegisterPage from './features/auth/pages/RegisterPage';
 import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage';
 import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './features/user/pages/ProfilePage';
+import ActiveSessionsPage from './features/user/pages/ActiveSessionsPage';
+import AccountSettingsPage from './features/user/pages/AccountSettingsPage';
 
 function App() {
   return (
@@ -25,6 +28,30 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sessions"
+          element={
+            <ProtectedRoute>
+              <ActiveSessionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <AccountSettingsPage />
             </ProtectedRoute>
           }
         />
