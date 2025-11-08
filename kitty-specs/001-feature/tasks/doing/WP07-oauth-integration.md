@@ -2,7 +2,7 @@
 work_package_id: 'WP07'
 title: 'OAuth Integration (Google & GitHub)'
 phase: 'Phase 3 - Advanced Features'
-lane: 'planned'
+lane: 'doing'
 subtasks:
   [
     'T064',
@@ -18,6 +18,8 @@ subtasks:
     'T074',
     'T075',
   ]
+agent: 'claude'
+shell_pid: '48323'
 history:
   - timestamp: '2025-11-06T00:00:00Z'
     lane: 'planned'
@@ -742,3 +744,4 @@ export class AuthModule {}
 
 - 2025-11-06T00:00:00Z – system – lane=planned – Prompt created via /spec-kitty.tasks
 - 2025-11-08T00:00:00Z – claude – lane=planned – Updated to NestJS + Passport.js implementation with detailed guidance
+- 2025-11-08T08:42:39Z – claude – shell_pid=48323 – lane=doing – Started OAuth implementation
