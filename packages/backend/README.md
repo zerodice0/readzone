@@ -296,7 +296,17 @@ Key entities:
 - **Password Hashing**: bcrypt with salt rounds = 10
 - **JWT Tokens**: Short-lived access tokens (1h) + long-lived refresh tokens (7d)
 - **Session Revocation**: Immediate revocation on logout, deletion, suspension
-- **MFA Support**: TOTP-based 2FA with backup codes
+- **Multi-Factor Authentication (MFA)**: TOTP-based 2FA with backup codes
+  - **TOTP Setup**: Generate QR code for authenticator apps (Google Authenticator, Authy, etc.)
+  - **6-digit codes**: 30-second window with ±1 window tolerance (90 seconds total)
+  - **Backup codes**: 10 single-use recovery codes (16-character alphanumeric)
+  - **MFA Challenge**: Required on login when enabled, supports both TOTP and backup codes
+  - **Endpoints**:
+    - `POST /api/v1/users/me/mfa/enable` - Generate QR code and backup codes
+    - `POST /api/v1/users/me/mfa/verify` - Verify code and activate MFA
+    - `POST /api/v1/users/me/mfa/disable` - Disable MFA (requires password)
+    - `GET /api/v1/users/me/mfa/backup-codes` - Regenerate backup codes
+    - `POST /api/v1/auth/mfa/verify` - Complete login with MFA code
 - **Role-Based Access Control (RBAC)**: 5 role levels with granular permissions
 
 #### Request Protection
@@ -384,13 +394,18 @@ pnpm test:e2e --watch
 - User endpoints: 13 tests
 - Admin endpoints: 21 tests
 - Authorization & RBAC: 12 tests
-- **Total:** 46 integration tests
+- MFA (Multi-Factor Authentication): 19 tests
+- CSRF protection: 16 tests
+- Rate limiting: 13 tests
+- **Total:** 94 integration tests
 
 ### Test Files
 
 - `test/users.e2e-spec.ts` - User profile endpoints (T055-T057)
-- `test/admin.e2e-spec.ts` - Admin user management (T059-T062)
-- `test/authorization.e2e-spec.ts` - RBAC and authorization (T063)
+- `test/admin.e2e-spec.ts` - Admin endpoints and RBAC (T059-T066)
+- `test/mfa.e2e-spec.ts` - MFA endpoints and login flow (T084-T092)
+- `test/csrf.e2e-spec.ts` - CSRF protection (T079)
+- `test/rate-limiting.e2e-spec.ts` - Rate limiting (T076-T078)
 
 ## Documentation
 

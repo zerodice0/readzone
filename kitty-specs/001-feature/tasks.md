@@ -488,22 +488,23 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ---
 
-## Work Package WP08: Rate Limiting & Security Hardening (Priority: P3)
+## Work Package WP08: Rate Limiting & Security Hardening (Priority: P3) ✅
 
 **Goal**: Implement rate limiting, security headers, CSRF protection, and audit logging.
 **Independent Test**: Exceed rate limits → receive 429 errors, security headers present, CSRF token required for state-changing operations.
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP08-rate-limiting-security.md`
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP08-rate-limiting-security.md`
+**Status**: ✅ Approved (2025-11-08, shell_pid=67475)
 
 ### Included Subtasks
 
-- [ ] T076 Register @fastify/rate-limit plugin with Redis store
-- [ ] T077 Configure global rate limits (100 req/min/IP for anonymous, 1000 req/min for authenticated)
-- [ ] T078 Configure endpoint-specific limits (login: 5/5min, password reset: 3/hour, register: 3/hour)
-- [ ] T079 Add CSRF protection for state-changing endpoints (POST, PATCH, DELETE) using @fastify/csrf-protection
-- [ ] T080 Enhance security headers (@fastify/helmet already registered in WP03, fine-tune CSP)
-- [ ] T081 Implement audit log query endpoint GET /api/v1/admin/audit-logs (admin only, paginated)
-- [ ] T082 Add IP address and User-Agent capture to all audit logs
-- [ ] T083 Document security measures in README.md (rate limits, HTTPS requirement, password policy)
+- [x] T076 Register @fastify/rate-limit plugin with Redis store
+- [x] T077 Configure global rate limits (100 req/min/IP for anonymous, 1000 req/min for authenticated)
+- [x] T078 Configure endpoint-specific limits (login: 5/5min, password reset: 3/hour, register: 3/hour)
+- [x] T079 Add CSRF protection for state-changing endpoints (POST, PATCH, DELETE) using @fastify/csrf-protection
+- [x] T080 Enhance security headers (@fastify/helmet already registered in WP03, fine-tune CSP)
+- [x] T081 Implement audit log query endpoint GET /api/v1/admin/audit-logs (admin only, paginated)
+- [x] T082 Add IP address and User-Agent capture to all audit logs
+- [x] T083 Document security measures in README.md (rate limits, HTTPS requirement, password policy)
 
 ### Implementation Notes
 

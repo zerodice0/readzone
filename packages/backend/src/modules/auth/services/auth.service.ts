@@ -98,22 +98,25 @@ export class AuthService {
    * @param dto Login data
    * @param ipAddress Client IP address
    * @param userAgent Client user agent
-   * @returns JWT tokens and user info
+   * @returns JWT tokens and user info, or MFA challenge if MFA enabled
    */
   async login(
     dto: LoginDto,
     ipAddress: string,
     userAgent: string
-  ): Promise<{
-    tokens: AuthTokens;
-    user: {
-      id: string;
-      email: string;
-      name: string | null;
-      role: string;
-      emailVerified: boolean;
-    };
-  }> {
+  ): Promise<
+    | {
+        tokens: AuthTokens;
+        user: {
+          id: string;
+          email: string;
+          name: string | null;
+          role: string;
+          emailVerified: boolean;
+        };
+      }
+    | { mfaRequired: true; userId: string }
+  > {
     // Find user
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
@@ -125,6 +128,7 @@ export class AuthService {
         role: true,
         status: true,
         emailVerified: true,
+        mfaEnabled: true,
       },
     });
 
@@ -164,6 +168,15 @@ export class AuthService {
         'Invalid password'
       );
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // T088: Check if MFA is enabled - require MFA verification
+    if (user.mfaEnabled) {
+      this.logger.log(`MFA challenge required for user: ${user.email}`);
+      return {
+        mfaRequired: true,
+        userId: user.id,
+      };
     }
 
     // Parse device info from user agent (simplified)
@@ -214,6 +227,117 @@ export class AuthService {
     return {
       tokens,
       user: userWithoutPassword,
+    };
+  }
+
+  /**
+   * T088: Verify MFA code and complete login
+   * @param userId User ID from initial login
+   * @param code MFA code (TOTP or backup code)
+   * @param rememberMe Remember me option
+   * @param ipAddress Client IP address
+   * @param userAgent Client user agent
+   * @returns JWT tokens and user info
+   */
+  async verifyMfaAndLogin(
+    userId: string,
+    code: string,
+    rememberMe: boolean,
+    ipAddress: string,
+    userAgent: string
+  ): Promise<{
+    tokens: AuthTokens;
+    user: {
+      id: string;
+      email: string;
+      name: string | null;
+      role: string;
+      emailVerified: boolean;
+    };
+  }> {
+    // Import MfaService dynamically to avoid circular dependency
+    const { MfaService } = await import('../../users/services/mfa.service.js');
+    const mfaService = new MfaService(this.prisma, this.auditService);
+
+    // Verify MFA code
+    const isValid = await mfaService.verifyMfaChallenge(
+      userId,
+      code,
+      ipAddress,
+      userAgent
+    );
+
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid MFA code');
+    }
+
+    // Get user details
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        status: true,
+        emailVerified: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new UnauthorizedException('Account is suspended or deleted');
+    }
+
+    // Parse device info
+    const deviceInfo = AuthService.parseUserAgent(userAgent);
+
+    // Calculate expiration
+    const expiresAt = new Date(
+      Date.now() + (rememberMe ? 30 : 1) * 24 * 60 * 60 * 1000
+    );
+
+    // Create session
+    const sessionId = await this.sessionService.createSession({
+      userId: user.id,
+      ipAddress,
+      userAgent,
+      deviceInfo,
+      expiresAt,
+      rememberMe,
+    });
+
+    // Generate JWT
+    const tokens = this.generateTokens({
+      sub: user.id,
+      sessionId,
+      email: user.email,
+      role: user.role,
+    });
+
+    // Update last login
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        lastLoginAt: new Date(),
+        lastLoginIp: ipAddress,
+      },
+    });
+
+    // Log successful login with MFA
+    await this.auditService.logLogin(user.id, ipAddress, userAgent, {
+      rememberMe,
+      mfaVerified: true,
+    });
+
+    this.logger.log(`User logged in with MFA: ${user.email}`);
+
+    return {
+      tokens,
+      user,
     };
   }
 
