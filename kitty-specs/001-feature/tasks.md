@@ -529,23 +529,24 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ---
 
-## Work Package WP09: Multi-Factor Authentication (MFA/TOTP) (Priority: P4)
+## Work Package WP09: Multi-Factor Authentication (MFA/TOTP) (Priority: P4) ✅
 
 **Goal**: Implement TOTP-based 2FA with QR code generation and backup codes.
 **Independent Test**: User enables MFA → scans QR → enters TOTP → MFA active. Login requires TOTP. Backup codes work.
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP09-multi-factor-authentication.md`
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP09-multi-factor-authentication.md`
+**Status**: ✅ Completed and reviewed on 2025-11-08
 
 ### Included Subtasks
 
-- [ ] T084 Install speakeasy and qrcode libraries (packages/backend)
-- [ ] T085 Implement POST /api/v1/users/me/mfa/enable (generate TOTP secret, return QR code data URI)
-- [ ] T086 Implement POST /api/v1/users/me/mfa/verify (verify TOTP code, enable MFA)
-- [ ] T087 Implement POST /api/v1/users/me/mfa/disable (disable MFA after password confirmation)
-- [ ] T088 Implement MFA challenge in login flow (POST /api/v1/auth/login returns mfa_required, then POST /api/v1/auth/mfa/verify)
-- [ ] T089 Generate 10 backup codes (bcrypt hashed, stored in MFASettings)
-- [ ] T090 Implement backup code verification in MFA challenge
-- [ ] T091 Implement GET /api/v1/users/me/mfa/backup-codes (regenerate backup codes, admin action)
-- [ ] T092 Add audit logging for MFA enable/disable, TOTP verification attempts
+- [x] T084 Install speakeasy and qrcode libraries (packages/backend)
+- [x] T085 Implement POST /api/v1/users/me/mfa/enable (generate TOTP secret, return QR code data URI)
+- [x] T086 Implement POST /api/v1/users/me/mfa/verify (verify TOTP code, enable MFA)
+- [x] T087 Implement POST /api/v1/users/me/mfa/disable (disable MFA after password confirmation)
+- [x] T088 Implement MFA challenge in login flow (POST /api/v1/auth/login returns mfa_required, then POST /api/v1/auth/mfa/verify)
+- [x] T089 Generate 10 backup codes (bcrypt hashed, stored in MFASettings)
+- [x] T090 Implement backup code verification in MFA challenge
+- [x] T091 Implement GET /api/v1/users/me/mfa/backup-codes (regenerate backup codes, admin action)
+- [x] T092 Add audit logging for MFA enable/disable, TOTP verification attempts
 
 ### Implementation Notes
 
