@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
+  setToken: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -94,6 +95,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const setToken = (token: string) => {
+    localStorage.setItem('auth_token', token);
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -101,6 +106,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     logout,
     updateUser,
+    setToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
