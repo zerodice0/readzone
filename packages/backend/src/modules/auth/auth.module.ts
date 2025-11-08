@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { AuthController } from './controllers/auth.controller';
+import { CsrfController } from './controllers/csrf.controller';
 import { AuthService } from './services/auth.service';
 import { PasswordService } from './services/password.service';
 import { SessionService } from './services/session.service';
@@ -24,7 +25,7 @@ import { GitHubStrategy } from './strategies/github.strategy';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, CsrfController],
   providers: [
     AuthService,
     PasswordService,
@@ -34,6 +35,12 @@ import { GitHubStrategy } from './strategies/github.strategy';
     GoogleStrategy,
     GitHubStrategy,
   ],
-  exports: [AuthService, PasswordService, SessionService, OAuthService, JwtModule],
+  exports: [
+    AuthService,
+    PasswordService,
+    SessionService,
+    OAuthService,
+    JwtModule,
+  ],
 })
 export class AuthModule {}

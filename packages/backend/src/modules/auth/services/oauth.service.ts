@@ -101,20 +101,19 @@ export class OAuthService {
           updatedAt: new Date(),
         },
       });
-    } else {
-      // Create new connection
-      return this.prisma.oAuthConnection.create({
-        data: {
-          userId,
-          provider,
-          providerId,
-          email,
-          profile: {
-            name,
-            profileImage,
-          },
-        },
-      });
     }
+    // Create new connection
+    return this.prisma.oAuthConnection.create({
+      data: {
+        userId,
+        provider,
+        providerId,
+        email,
+        profile: {
+          name,
+          profileImage,
+        },
+      },
+    });
   }
 }

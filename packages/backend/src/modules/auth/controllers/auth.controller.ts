@@ -12,7 +12,7 @@ import {
   Get,
   Res,
 } from '@nestjs/common';
-import { Response as ExpressResponse } from 'express';
+import type { Response as ExpressResponse } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from '../services/auth.service.js';
@@ -21,6 +21,7 @@ import { ConfirmEmailVerificationDto } from '../dto/confirm-email-verification.d
 import { RequestPasswordResetDto } from '../dto/request-password-reset.dto.js';
 import { ConfirmPasswordResetDto } from '../dto/confirm-password-reset.dto.js';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard.js';
+import { SkipCsrf } from '../../../common/decorators/skip-csrf.decorator.js';
 import { success } from '../../../common/utils/response.js';
 
 /**
@@ -47,10 +48,12 @@ export class AuthController {
    * Register a new user
    * POST /api/v1/auth/register
    * Rate limit: 3 requests per hour
+   * CSRF: Skipped (public endpoint)
    */
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 req/hour
+  @SkipCsrf()
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
     return success(user);
@@ -60,10 +63,12 @@ export class AuthController {
    * Login user
    * POST /api/v1/auth/login
    * Rate limit: 5 requests per 5 minutes
+   * CSRF: Skipped (public endpoint)
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 300000 } }) // 5 req/5min
+  @SkipCsrf()
   async login(
     @Body() dto: LoginDto,
     @Ip() ipAddress: string,
@@ -126,9 +131,11 @@ export class AuthController {
    * Confirm email verification
    * POST /api/v1/auth/verify-email/confirm
    * Public endpoint (no authentication required)
+   * CSRF: Skipped (public endpoint with token)
    */
   @Post('verify-email/confirm')
   @HttpCode(HttpStatus.OK)
+  @SkipCsrf()
   async confirmVerificationEmail(
     @Body() dto: ConfirmEmailVerificationDto,
     @Ip() ipAddress: string
@@ -142,10 +149,12 @@ export class AuthController {
    * POST /api/v1/auth/password-reset/request
    * Public endpoint (no authentication required)
    * Rate limit: 3 requests per hour
+   * CSRF: Skipped (public endpoint)
    */
   @Post('password-reset/request')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 req/hour
+  @SkipCsrf()
   async requestPasswordReset(
     @Body() dto: RequestPasswordResetDto,
     @Ip() ipAddress: string,
@@ -166,9 +175,11 @@ export class AuthController {
    * Confirm password reset
    * POST /api/v1/auth/password-reset/confirm
    * Public endpoint (no authentication required)
+   * CSRF: Skipped (public endpoint with token)
    */
   @Post('password-reset/confirm')
   @HttpCode(HttpStatus.OK)
+  @SkipCsrf()
   async confirmPasswordReset(
     @Body() dto: ConfirmPasswordResetDto,
     @Ip() ipAddress: string
@@ -188,9 +199,11 @@ export class AuthController {
    * Initiate Google OAuth flow
    * GET /api/v1/auth/oauth/google
    * Public endpoint
+   * CSRF: Skipped (GET request, OAuth flow)
    */
   @Get('oauth/google')
   @UseGuards(AuthGuard('google'))
+  @SkipCsrf()
   // eslint-disable-next-line class-methods-use-this
   googleAuth() {
     // Passport handles redirect to Google
@@ -200,17 +213,16 @@ export class AuthController {
    * Google OAuth callback
    * GET /api/v1/auth/oauth/google/callback
    * Public endpoint (OAuth callback)
+   * CSRF: Skipped (GET request, OAuth callback)
    */
   @Get('oauth/google/callback')
   @UseGuards(AuthGuard('google'))
+  @SkipCsrf()
   async googleAuthCallback(
     @Request() req: Request,
     @Res({ passthrough: false }) res: ExpressResponse
   ): Promise<void> {
-    const result = await this.authService.handleOAuthCallback(
-      req,
-      'GOOGLE'
-    );
+    const result = await this.authService.handleOAuthCallback(req, 'GOOGLE');
     // Redirect to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
@@ -220,9 +232,11 @@ export class AuthController {
    * Initiate GitHub OAuth flow
    * GET /api/v1/auth/oauth/github
    * Public endpoint
+   * CSRF: Skipped (GET request, OAuth flow)
    */
   @Get('oauth/github')
   @UseGuards(AuthGuard('github'))
+  @SkipCsrf()
   // eslint-disable-next-line class-methods-use-this
   githubAuth() {
     // Passport handles redirect to GitHub
@@ -232,17 +246,16 @@ export class AuthController {
    * GitHub OAuth callback
    * GET /api/v1/auth/oauth/github/callback
    * Public endpoint (OAuth callback)
+   * CSRF: Skipped (GET request, OAuth callback)
    */
   @Get('oauth/github/callback')
   @UseGuards(AuthGuard('github'))
+  @SkipCsrf()
   async githubAuthCallback(
     @Request() req: Request,
     @Res({ passthrough: false }) res: ExpressResponse
   ): Promise<void> {
-    const result = await this.authService.handleOAuthCallback(
-      req,
-      'GITHUB'
-    );
+    const result = await this.authService.handleOAuthCallback(req, 'GITHUB');
     // Redirect to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
