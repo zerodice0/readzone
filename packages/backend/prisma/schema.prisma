@@ -17,29 +17,32 @@ datasource db {
 // ============================================
 
 model User {
-  id               String    @id @default(uuid())
-  email            String    @unique
-  emailVerified    Boolean   @default(false)
-  emailVerifiedAt  DateTime?
-  passwordHash     String?   // Nullable for OAuth-only accounts
-  name             String?
-  profileImage     String?
-  role             UserRole  @default(USER)
-  status           UserStatus @default(ACTIVE)
-  mfaEnabled       Boolean   @default(false)
-  deletedAt        DateTime? // Soft-delete timestamp
-  lastLoginAt      DateTime?
-  lastLoginIp      String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id              String     @id @default(uuid())
+  email           String     @unique
+  emailVerified   Boolean    @default(false)
+  emailVerifiedAt DateTime?
+  passwordHash    String? // Nullable for OAuth-only accounts
+  name            String?
+  profileImage    String?
+  role            UserRole   @default(USER)
+  status          UserStatus @default(ACTIVE)
+  mfaEnabled      Boolean    @default(false)
+  deletedAt       DateTime? // Soft-delete timestamp
+  lastLoginAt     DateTime?
+  lastLoginIp     String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   // Relationships
-  sessions                 Session[]
-  oauthConnections         OAuthConnection[]
-  mfaSettings              MFASettings?
-  auditLogs                AuditLog[]
-  emailVerificationTokens  EmailVerificationToken[]
-  passwordResetTokens      PasswordResetToken[]
+  sessions                Session[]
+  oauthConnections        OAuthConnection[]
+  mfaSettings             MFASettings?
+  auditLogs               AuditLog[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  reviews                 Review[]
+  likes                   Like[]
+  bookmarks               Bookmark[]
 
   @@index([email])
   @@index([status, deletedAt])
@@ -48,17 +51,17 @@ model User {
 }
 
 enum UserRole {
-  ANONYMOUS  // Read-only, non-logged-in user
-  USER       // Regular user (can write reviews)
-  MODERATOR  // Content moderator
-  ADMIN      // System administrator
+  ANONYMOUS // Read-only, non-logged-in user
+  USER // Regular user (can write reviews)
+  MODERATOR // Content moderator
+  ADMIN // System administrator
   SUPERADMIN // Super administrator (full access)
 }
 
 enum UserStatus {
-  ACTIVE     // Active account
-  SUSPENDED  // Suspended account (login disabled)
-  DELETED    // Marked for deletion (30-day grace period)
+  ACTIVE // Active account
+  SUSPENDED // Suspended account (login disabled)
+  DELETED // Marked for deletion (30-day grace period)
 }
 
 // ============================================
@@ -66,19 +69,19 @@ enum UserStatus {
 // ============================================
 
 model Session {
-  id                String    @id @default(uuid())
-  userId            String
-  token             String?   // JWT full string for verification
-  refreshToken      String?
-  expiresAt         DateTime
-  refreshExpiresAt  DateTime?
-  ipAddress         String
-  userAgent         String
-  deviceInfo        Json      // { browser, os, device }
-  isActive          Boolean   @default(true)
-  revokedAt         DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(uuid())
+  userId           String
+  token            String? // JWT full string for verification
+  refreshToken     String?
+  expiresAt        DateTime
+  refreshExpiresAt DateTime?
+  ipAddress        String
+  userAgent        String
+  deviceInfo       Json // { browser, os, device }
+  isActive         Boolean   @default(true)
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // Relationships
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -94,17 +97,17 @@ model Session {
 // ============================================
 
 model OAuthConnection {
-  id              String        @id @default(uuid())
-  userId          String
-  provider        OAuthProvider
-  providerId      String        // Provider's user ID
-  email           String
-  accessToken     String?       // Encrypted with AES-256-GCM
-  refreshToken    String?       // Encrypted with AES-256-GCM
-  tokenExpiresAt  DateTime?
-  profile         Json          // Provider profile: { name, avatar, etc. }
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id             String        @id @default(uuid())
+  userId         String
+  provider       OAuthProvider
+  providerId     String // Provider's user ID
+  email          String
+  accessToken    String? // Encrypted with AES-256-GCM
+  refreshToken   String? // Encrypted with AES-256-GCM
+  tokenExpiresAt DateTime?
+  profile        Json // Provider profile: { name, avatar, etc. }
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   // Relationships
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -125,14 +128,14 @@ enum OAuthProvider {
 // ============================================
 
 model MFASettings {
-  id           String    @id @default(uuid())
-  userId       String    @unique
-  enabled      Boolean   @default(false)
-  secret       String    // TOTP secret, encrypted with AES-256-GCM
-  backupCodes  String[]  // Array of SHA-256 hashed backup codes
-  verifiedAt   DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  enabled     Boolean   @default(false)
+  secret      String // TOTP secret, encrypted with AES-256-GCM
+  backupCodes String[] // Array of SHA-256 hashed backup codes
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relationships
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -145,15 +148,15 @@ model MFASettings {
 // ============================================
 
 model AuditLog {
-  id         String        @id @default(uuid())
-  userId     String?       // Nullable for system/pre-auth events
-  action     AuditAction
-  ipAddress  String
-  userAgent  String
-  metadata   Json?         // Additional context: { reason, before, after, etc. }
-  severity   AuditSeverity @default(INFO)
-  timestamp  DateTime      @default(now())
-  createdAt  DateTime      @default(now())
+  id        String        @id @default(uuid())
+  userId    String? // Nullable for system/pre-auth events
+  action    AuditAction
+  ipAddress String
+  userAgent String
+  metadata  Json? // Additional context: { reason, before, after, etc. }
+  severity  AuditSeverity @default(INFO)
+  timestamp DateTime      @default(now())
+  createdAt DateTime      @default(now())
 
   // Relationships
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -188,14 +191,14 @@ enum AuditAction {
   OAUTH_LOGIN
   OAUTH_CONNECT
   OAUTH_DISCONNECT
-  SESSION_LOGOUT          // T099: Individual session logout
-  SESSION_LOGOUT_ALL      // T099: Logout all sessions except current
+  SESSION_LOGOUT // T099: Individual session logout
+  SESSION_LOGOUT_ALL // T099: Logout all sessions except current
 }
 
 enum AuditSeverity {
-  INFO     // Normal events (login success, logout)
-  WARNING  // Attention needed (login failure, password reset)
-  MEDIUM   // Moderate importance (profile updates, settings changes)
+  INFO // Normal events (login success, logout)
+  WARNING // Attention needed (login failure, password reset)
+  MEDIUM // Moderate importance (profile updates, settings changes)
   CRITICAL // Immediate response (account suspend, role change)
 }
 
@@ -204,13 +207,13 @@ enum AuditSeverity {
 // ============================================
 
 model EmailVerificationToken {
-  id         String    @id @default(uuid())
-  userId     String
-  token      String    @unique // URL-safe random 32 chars
-  expiresAt  DateTime  // Default 24 hours from creation
-  usedAt     DateTime?
-  ipAddress  String?
-  createdAt  DateTime  @default(now())
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique // URL-safe random 32 chars
+  expiresAt DateTime // Default 24 hours from creation
+  usedAt    DateTime?
+  ipAddress String?
+  createdAt DateTime  @default(now())
 
   // Relationships
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -226,13 +229,13 @@ model EmailVerificationToken {
 // ============================================
 
 model PasswordResetToken {
-  id         String    @id @default(uuid())
-  userId     String
-  token      String    @unique // URL-safe random 32 chars
-  expiresAt  DateTime  // Default 1 hour from creation
-  usedAt     DateTime?
-  ipAddress  String?
-  createdAt  DateTime  @default(now())
+  id        String    @id @default(uuid())
+  userId    String
+  token     String    @unique // URL-safe random 32 chars
+  expiresAt DateTime // Default 1 hour from creation
+  usedAt    DateTime?
+  ipAddress String?
+  createdAt DateTime  @default(now())
 
   // Relationships
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -241,4 +244,124 @@ model PasswordResetToken {
   @@index([token])
   @@index([expiresAt])
   @@map("password_reset_tokens")
+}
+
+// ============================================
+// Book Entity (Feature: 002-feature)
+// ============================================
+
+model Book {
+  id             String          @id @default(uuid())
+  isbn           String?         @unique
+  title          String
+  author         String
+  publisher      String?
+  publishedDate  DateTime?
+  coverImageUrl  String?
+  description    String?         @db.Text
+  pageCount      Int?
+  language       String?
+  externalId     String?
+  externalSource ExternalSource?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  // Relationships
+  reviews Review[]
+
+  @@unique([externalSource, externalId])
+  @@index([title, author])
+  @@map("books")
+}
+
+enum ExternalSource {
+  GOOGLE_BOOKS
+  ALADIN
+  MANUAL
+}
+
+// ============================================
+// Review Entity (Feature: 002-feature)
+// ============================================
+
+model Review {
+  id            String       @id @default(uuid())
+  userId        String
+  bookId        String
+  title         String?
+  content       String       @db.Text
+  rating        Int?
+  isRecommended Boolean
+  readStatus    ReadStatus   @default(COMPLETED)
+  likeCount     Int          @default(0)
+  bookmarkCount Int          @default(0)
+  viewCount     Int          @default(0)
+  status        ReviewStatus @default(PUBLISHED)
+  publishedAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relationships
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book       @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  likes     Like[]
+  bookmarks Bookmark[]
+
+  @@index([userId, status, publishedAt])
+  @@index([bookId, status, publishedAt])
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([status, deletedAt])
+  @@map("reviews")
+}
+
+enum ReadStatus {
+  READING
+  COMPLETED
+  DROPPED
+}
+
+enum ReviewStatus {
+  DRAFT
+  PUBLISHED
+  DELETED
+}
+
+// ============================================
+// Like Entity (Feature: 002-feature)
+// ============================================
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  reviewId  String
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reviewId])
+  @@index([reviewId, createdAt])
+  @@map("likes")
+}
+
+// ============================================
+// Bookmark Entity (Feature: 002-feature)
+// ============================================
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  reviewId  String
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reviewId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([reviewId])
+  @@map("bookmarks")
 }
