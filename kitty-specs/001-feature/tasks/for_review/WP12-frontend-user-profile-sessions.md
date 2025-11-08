@@ -2,7 +2,7 @@
 work_package_id: 'WP12'
 title: 'Frontend User Profile & Sessions'
 phase: 'Phase 2 - User Management'
-lane: 'doing'
+lane: 'for_review'
 agent: 'claude'
 shell_pid: '35062'
 history:
@@ -45,3 +45,4 @@ All subtask details are in tasks.md WP12 section. Refer there for:
 
 - 2025-11-06T00:00:00Z – system – lane=planned – Prompt created via /spec-kitty.tasks
 - 2025-11-08T16:09:52Z – claude – shell_pid=35062 – lane=doing – Started implementation
+- 2025-11-08T16:16:23Z – claude – shell_pid=35062 – lane=for_review – Ready for review - All 9 subtasks completed
