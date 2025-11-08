@@ -3,13 +3,13 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
+import { AuditAction, AuditSeverity } from '@prisma/client';
 import { PrismaService } from '../../../common/utils/prisma';
 import { AuditService } from '../../../common/services/audit.service';
 import { EmailService } from '../../../common/services/email.service';
 import { UserProfileDto } from '../dto/user-profile.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { generateToken } from '../../../common/utils/token.util';
-import { AuditAction, AuditSeverity } from '@prisma/client';
 
 /**
  * Users service
@@ -21,7 +21,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
-    private readonly emailService: EmailService,
+    private readonly emailService: EmailService
   ) {}
 
   /**
@@ -83,7 +83,7 @@ export class UsersService {
     userId: string,
     updateProfileDto: UpdateProfileDto,
     ipAddress: string,
-    userAgent: string,
+    userAgent: string
   ): Promise<UserProfileDto> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -164,7 +164,7 @@ export class UsersService {
         emailVerified: updatedUser.emailVerified,
         mfaEnabled: updatedUser.mfaEnabled,
         oauthConnections: updatedUser.oauthConnections.map(
-          (conn) => conn.provider,
+          (conn) => conn.provider
         ),
         hasPassword: updatedUser.passwordHash !== null,
         createdAt: updatedUser.createdAt,

@@ -2,9 +2,9 @@
 work_package_id: 'WP06'
 title: 'User Management & Profiles'
 phase: 'Phase 2 - User Management'
-lane: 'planned'
+lane: 'doing'
 agent: 'claude'
-shell_pid: '34601'
+shell_pid: '33383'
 history:
   - timestamp: '2025-11-06T00:00:00Z'
     lane: 'planned'

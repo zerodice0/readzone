@@ -12,8 +12,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   private client: RedisClientType | null = null;
 
-  private reconnectAttempts = 0;
-
   private readonly maxReconnectAttempts = 10;
 
   private readonly reconnectDelay = 1000; // Start with 1 second
@@ -77,7 +75,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.client.on('connect', () => {
-        this.reconnectAttempts = 0;
         this.logger.log('Redis connecting...');
       });
 
@@ -86,10 +83,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.client.on('reconnecting', () => {
-        this.reconnectAttempts++;
-        this.logger.warn(
-          `Redis reconnecting (attempt ${this.reconnectAttempts})`
-        );
+        this.logger.warn('Redis reconnecting...');
       });
 
       this.client.on('end', () => {

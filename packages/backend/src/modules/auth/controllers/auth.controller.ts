@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { Response as ExpressResponse } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from '../services/auth.service.js';
 import { RegisterDto, LoginDto } from '../dto/index.js';
 import { ConfirmEmailVerificationDto } from '../dto/confirm-email-verification.dto.js';
@@ -45,9 +46,11 @@ export class AuthController {
   /**
    * Register a new user
    * POST /api/v1/auth/register
+   * Rate limit: 3 requests per hour
    */
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 req/hour
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
     return success(user);
@@ -56,9 +59,11 @@ export class AuthController {
   /**
    * Login user
    * POST /api/v1/auth/login
+   * Rate limit: 5 requests per 5 minutes
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 300000 } }) // 5 req/5min
   async login(
     @Body() dto: LoginDto,
     @Ip() ipAddress: string,
@@ -136,11 +141,11 @@ export class AuthController {
    * Request password reset
    * POST /api/v1/auth/password-reset/request
    * Public endpoint (no authentication required)
-   *
-   * TODO(WP08): Add rate limiting - 3 requests per 5 minutes per email
+   * Rate limit: 3 requests per hour
    */
   @Post('password-reset/request')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 req/hour
   async requestPasswordReset(
     @Body() dto: RequestPasswordResetDto,
     @Ip() ipAddress: string,
@@ -200,7 +205,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(
     @Request() req: Request,
-    @Res() res: ExpressResponse
+    @Res({ passthrough: false }) res: ExpressResponse
   ): Promise<void> {
     const result = await this.authService.handleOAuthCallback(
       req,
@@ -208,8 +213,7 @@ export class AuthController {
     );
     // Redirect to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const response: ExpressResponse = res;
-    response.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
+    res.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
   }
 
   /**
@@ -233,7 +237,7 @@ export class AuthController {
   @UseGuards(AuthGuard('github'))
   async githubAuthCallback(
     @Request() req: Request,
-    @Res() res: ExpressResponse
+    @Res({ passthrough: false }) res: ExpressResponse
   ): Promise<void> {
     const result = await this.authService.handleOAuthCallback(
       req,
@@ -241,7 +245,6 @@ export class AuthController {
     );
     // Redirect to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const response: ExpressResponse = res;
-    response.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
+    res.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
   }
 }

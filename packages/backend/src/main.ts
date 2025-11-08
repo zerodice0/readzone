@@ -42,10 +42,28 @@ async function bootstrap() {
             styleSrc: ["'self'", "'unsafe-inline'"],
             scriptSrc: ["'self'"],
             imgSrc: ["'self'", 'data:', 'https:'],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'", 'data:'],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"],
           },
         },
         crossOriginEmbedderPolicy: false,
         crossOriginResourcePolicy: { policy: 'cross-origin' },
+        hsts: {
+          maxAge: 31536000, // 1 year
+          includeSubDomains: true,
+          preload: true,
+        },
+        frameguard: {
+          action: 'deny',
+        },
+        xssFilter: true,
+        noSniff: true,
+        referrerPolicy: {
+          policy: 'strict-origin-when-cross-origin',
+        },
       })
     );
 
@@ -111,4 +129,8 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-void bootstrap();
+bootstrap().catch((err: unknown) => {
+  const logger = new LoggerService('Bootstrap');
+  logger.error('Failed to start application', err);
+  process.exit(1);
+});

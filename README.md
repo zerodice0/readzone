@@ -254,6 +254,85 @@ pnpm --filter @readzone/backend prisma generate
 pnpm --filter @readzone/backend prisma migrate reset
 ```
 
+## 🔒 Security
+
+ReadZone implements comprehensive security measures to protect user data and prevent abuse:
+
+### Rate Limiting
+
+**Global Rate Limits**:
+- **Anonymous users**: 100 requests per minute per IP address
+- **Authenticated users**: 1,000 requests per minute per user
+
+**Endpoint-Specific Rate Limits**:
+- **Login** (`POST /api/v1/auth/login`): 5 requests per 5 minutes
+- **Registration** (`POST /api/v1/auth/register`): 3 requests per hour
+- **Password Reset** (`POST /api/v1/auth/password-reset/request`): 3 requests per hour
+
+Rate limits are enforced using Redis-backed storage for distributed environments.
+
+### Security Headers
+
+All responses include comprehensive security headers via Helmet:
+
+- **Content-Security-Policy (CSP)**: Restricts resource loading to trusted sources
+- **HTTP Strict Transport Security (HSTS)**: Forces HTTPS connections with 1-year max-age
+- **X-Frame-Options**: Prevents clickjacking attacks by denying iframe embedding
+- **X-Content-Type-Options**: Prevents MIME-type sniffing
+- **X-XSS-Protection**: Enables browser XSS filtering
+- **Referrer-Policy**: Controls referrer information sent with requests
+
+### Authentication & Authorization
+
+- **JWT Tokens**: Short-lived access tokens (1 hour expiration)
+- **Session Management**: Database-backed sessions with device tracking
+- **Password Security**: Argon2 hashing with strong complexity requirements
+- **OAuth 2.0**: Secure third-party authentication (Google, GitHub)
+- **Multi-Factor Authentication (MFA)**: TOTP-based 2FA with backup codes
+
+### Audit Logging
+
+Comprehensive audit logging captures all security-sensitive events:
+
+- **Login attempts**: Successful and failed login events
+- **Password changes**: Password resets and updates
+- **Account modifications**: Email verification, profile updates
+- **OAuth events**: Third-party authentication flows
+- **Admin actions**: Administrative operations and access
+
+Audit logs include:
+- User ID and email
+- Action type and severity
+- IP address and User-Agent
+- Timestamp and metadata
+- Success/failure status
+
+**Audit Log API** (Admin only):
+```bash
+GET /api/v1/admin/audit-logs?userId=<id>&action=<action>&severity=<level>&page=1&limit=20
+```
+
+### Password Policy
+
+Strong password requirements:
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+- At least one special character
+
+### HTTPS Requirement
+
+**Production deployments must use HTTPS**. The application enforces HSTS headers to ensure all connections use encrypted transport.
+
+### Additional Security Measures
+
+- **Email Verification**: Required for new accounts
+- **Session Expiration**: Automatic logout after inactivity
+- **IP Tracking**: All sensitive operations log IP addresses
+- **Soft Deletion**: User accounts are soft-deleted, not permanently removed
+- **CORS Configuration**: Strict origin validation for cross-origin requests
+
 ## 📝 License
 
 MIT
