@@ -12,6 +12,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { UsersService } from '../services/users.service';
 import { UserProfileDto } from '../dto/user-profile.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
+import { RequestWithUser } from '../interfaces/request-with-user.interface';
 
 /**
  * Users controller
@@ -32,7 +33,7 @@ export class UsersController {
    */
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getProfile(@Request() req): Promise<UserProfileDto> {
+  async getProfile(@Request() req: RequestWithUser): Promise<UserProfileDto> {
     return this.usersService.getProfile(req.user.userId);
   }
 
@@ -51,16 +52,16 @@ export class UsersController {
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   async updateProfile(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() updateProfileDto: UpdateProfileDto,
     @Ip() ipAddress: string,
-    @Headers('user-agent') userAgent: string,
+    @Headers('user-agent') userAgent: string
   ): Promise<UserProfileDto> {
     return this.usersService.updateProfile(
       req.user.userId,
       updateProfileDto,
       ipAddress,
-      userAgent || 'Unknown',
+      userAgent || 'Unknown'
     );
   }
 }

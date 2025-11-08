@@ -22,6 +22,8 @@ module.exports = {
     'import/prefer-default-export': 'off',
     // NestJS DI pattern: @Injectable() classes use instance methods without 'this'
     'class-methods-use-this': 'off',
+    // Allow void operator for floating promises (e.g., void bootstrap())
+    'no-void': ['error', { allowAsStatement: true }],
     'import/extensions': [
       'error',
       'ignorePackages',
