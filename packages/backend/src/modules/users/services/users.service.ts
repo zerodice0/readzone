@@ -5,7 +5,12 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
-import { AuditAction, AuditSeverity, UserStatus } from '@prisma/client';
+import {
+  AuditAction,
+  AuditSeverity,
+  UserStatus,
+  UserRole,
+} from '@prisma/client';
 import { PrismaService } from '../../../common/utils/prisma';
 import { AuditService } from '../../../common/services/audit.service';
 import { EmailService } from '../../../common/services/email.service';
@@ -314,13 +319,24 @@ export class UsersService {
    * @returns Paginated user list with metadata
    */
   async listUsers(query: ListUsersQueryDto) {
-    const { page = 1, limit = 20, role, status, search, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+    const {
+      page = 1,
+      limit = 20,
+      role,
+      status,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
 
     // Build where clause for filtering
     const where: {
       role?: typeof role;
       status?: typeof status;
-      OR?: Array<{ email?: { contains: string; mode: 'insensitive' }; name?: { contains: string; mode: 'insensitive' } }>;
+      OR?: Array<{
+        email?: { contains: string; mode: 'insensitive' };
+        name?: { contains: string; mode: 'insensitive' };
+      }>;
     } = {};
 
     if (role) {
@@ -435,10 +451,12 @@ export class UsersService {
           },
           select: {
             id: true,
-            device: true,
+            deviceInfo: true,
             ipAddress: true,
+            userAgent: true,
             createdAt: true,
             expiresAt: true,
+            isActive: true,
           },
         },
         auditLogs: {
@@ -596,15 +614,21 @@ export class UsersService {
       data: updateData,
     });
 
-    // Create audit log
-    const severity =
-      role !== undefined && role !== user.role
-        ? AuditSeverity.CRITICAL // Role change is critical
-        : AuditSeverity.MEDIUM;
+    // Create audit log (use ROLE_CHANGE for role modifications, ACCOUNT_SUSPEND for status changes)
+    let auditAction: AuditAction = AuditAction.PROFILE_UPDATE;
+    let severity: AuditSeverity = AuditSeverity.MEDIUM;
+
+    if (role !== undefined && role !== user.role) {
+      auditAction = AuditAction.ROLE_CHANGE;
+      severity = AuditSeverity.CRITICAL;
+    } else if (status !== undefined && status === UserStatus.SUSPENDED) {
+      auditAction = AuditAction.ACCOUNT_SUSPEND;
+      severity = AuditSeverity.CRITICAL;
+    }
 
     await this.auditService.log({
       userId,
-      action: AuditAction.PROFILE_UPDATE,
+      action: auditAction,
       severity,
       ipAddress,
       userAgent,
@@ -689,7 +713,7 @@ export class UsersService {
     // Create final audit log before deletion
     await this.auditService.log({
       userId,
-      action: AuditAction.ACCOUNT_DELETE,
+      action: AuditAction.ACCOUNT_FORCE_DELETE,
       severity: AuditSeverity.CRITICAL,
       ipAddress,
       userAgent,
