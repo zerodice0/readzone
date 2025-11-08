@@ -570,4 +570,69 @@ export class AuthService {
       `Password reset confirmed for user ${resetToken.user.email} (userId: ${resetToken.userId})`
     );
   }
+
+  /**
+   * Handle OAuth callback after successful authentication
+   * Creates session and generates JWT token
+   * @param req Request object containing authenticated user
+   * @param provider OAuth provider (GOOGLE or GITHUB)
+   * @returns Object with JWT token
+   */
+  async handleOAuthCallback(
+    req: Request,
+    provider: string
+  ): Promise<{ token: string }> {
+    // Type-safe extraction of user from OAuth-authenticated request
+    const authenticatedReq = req as Request & { user?: { id: string; email: string } };
+    const user = authenticatedReq.user;
+
+    if (!user || !user.id) {
+      throw new UnauthorizedException('OAuth authentication failed');
+    }
+
+    // Extract IP and User-Agent from request
+    const requestWithIp = req as Request & { ip?: string };
+    const requestWithHeaders = req as Request & { headers?: { 'user-agent'?: string } };
+    const ipAddress = requestWithIp.ip || 'unknown';
+    const userAgent = requestWithHeaders.headers?.['user-agent'] || 'unknown';
+
+    // Parse device info from user agent
+    const deviceInfo = AuthService.parseUserAgent(userAgent);
+
+    // Calculate expiration (30 days for OAuth, as these are trusted providers)
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    // Create session
+    const sessionId = await this.sessionService.createSession({
+      userId: user.id,
+      ipAddress,
+      userAgent,
+      deviceInfo,
+      expiresAt,
+      rememberMe: true, // OAuth sessions are long-lived
+    });
+
+    // Generate JWT token
+    const token = this.jwtService.sign({
+      sub: user.id,
+      sessionId,
+      email: user.email,
+    });
+
+    // Log OAuth login audit event
+    await this.auditService.log({
+      userId: user.id,
+      action: 'OAUTH_LOGIN',
+      details: { provider },
+      ipAddress,
+      userAgent,
+      severity: 'INFO',
+    });
+
+    this.logger.log(
+      `OAuth login successful for ${user.email} via ${provider} (userId: ${user.id})`
+    );
+
+    return { token };
+  }
 }

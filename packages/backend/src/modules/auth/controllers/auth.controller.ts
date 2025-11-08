@@ -9,7 +9,11 @@ import {
   UseGuards,
   Request,
   Inject,
+  Get,
+  Res,
 } from '@nestjs/common';
+import { Response as ExpressResponse } from 'express';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../services/auth.service.js';
 import { RegisterDto, LoginDto } from '../dto/index.js';
 import { ConfirmEmailVerificationDto } from '../dto/confirm-email-verification.dto.js';
@@ -173,5 +177,71 @@ export class AuthController {
       message:
         'Password reset successfully. Please login with your new password',
     });
+  }
+
+  /**
+   * Initiate Google OAuth flow
+   * GET /api/v1/auth/oauth/google
+   * Public endpoint
+   */
+  @Get('oauth/google')
+  @UseGuards(AuthGuard('google'))
+  // eslint-disable-next-line class-methods-use-this
+  googleAuth() {
+    // Passport handles redirect to Google
+  }
+
+  /**
+   * Google OAuth callback
+   * GET /api/v1/auth/oauth/google/callback
+   * Public endpoint (OAuth callback)
+   */
+  @Get('oauth/google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(
+    @Request() req: Request,
+    @Res() res: ExpressResponse
+  ): Promise<void> {
+    const result = await this.authService.handleOAuthCallback(
+      req,
+      'GOOGLE'
+    );
+    // Redirect to frontend with token
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const response: ExpressResponse = res;
+    response.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
+  }
+
+  /**
+   * Initiate GitHub OAuth flow
+   * GET /api/v1/auth/oauth/github
+   * Public endpoint
+   */
+  @Get('oauth/github')
+  @UseGuards(AuthGuard('github'))
+  // eslint-disable-next-line class-methods-use-this
+  githubAuth() {
+    // Passport handles redirect to GitHub
+  }
+
+  /**
+   * GitHub OAuth callback
+   * GET /api/v1/auth/oauth/github/callback
+   * Public endpoint (OAuth callback)
+   */
+  @Get('oauth/github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubAuthCallback(
+    @Request() req: Request,
+    @Res() res: ExpressResponse
+  ): Promise<void> {
+    const result = await this.authService.handleOAuthCallback(
+      req,
+      'GITHUB'
+    );
+    // Redirect to frontend with token
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const response: ExpressResponse = res;
+    response.redirect(`${frontendUrl}/auth/callback?token=${result.token}`);
   }
 }
