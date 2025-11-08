@@ -292,14 +292,30 @@ Key entities:
 
 ### Security Features
 
+#### Authentication & Authorization
 - **Password Hashing**: bcrypt with salt rounds = 10
 - **JWT Tokens**: Short-lived access tokens (1h) + long-lived refresh tokens (7d)
 - **Session Revocation**: Immediate revocation on logout, deletion, suspension
 - **MFA Support**: TOTP-based 2FA with backup codes
-- **Audit Logging**: Comprehensive security event logging
-- **Input Validation**: class-validator for all DTOs
+- **Role-Based Access Control (RBAC)**: 5 role levels with granular permissions
+
+#### Request Protection
+- **CSRF Protection**: Double-submit cookie pattern with timing-safe token comparison
+  - Required for all state-changing operations (POST, PUT, PATCH, DELETE)
+  - Safe methods (GET, HEAD, OPTIONS) allowed without token
+  - Public endpoints (login, register, OAuth) properly excluded
+  - Get token: `GET /api/v1/csrf/token`
+- **Rate Limiting**: Distributed rate limiting with Redis storage
+  - Global: 100 req/min (anonymous), 1000 req/min (authenticated)
+  - Login: 5 attempts per 5 minutes per IP
+  - Register: 3 attempts per hour per IP
+  - Password Reset: 3 attempts per hour per IP
+- **Input Validation**: class-validator for all DTOs with strict whitelist mode
+
+#### Data Protection
 - **SQL Injection Protection**: Prisma ORM with parameterized queries
-- **XSS Protection**: Helmet.js security headers
+- **XSS Protection**: Helmet.js security headers (CSP, X-Frame-Options, etc.)
+- **Audit Logging**: Comprehensive security event logging with IP and User-Agent capture
 
 ## Development
 
