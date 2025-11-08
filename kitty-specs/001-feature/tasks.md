@@ -658,23 +658,24 @@ T055-T062 → T064 → T065 → T066 (Quality chain)
 
 ---
 
-## Work Package WP12: Frontend User Profile & Sessions (Priority: P2)
+## Work Package WP12: Frontend User Profile & Sessions (Priority: P2) ✅
 
 **Goal**: Implement React UI for user profile management and session management.
 **Independent Test**: User can view/edit profile, view active sessions, logout specific sessions.
-**Prompt**: `kitty-specs/001-feature/tasks/planned/WP12-frontend-user-profile-sessions.md`
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP12-frontend-user-profile-sessions.md`
+**Status**: ✅ Approved (2025-11-08, shell_pid=59645)
 
 ### Included Subtasks
 
-- [ ] T113 Create ProfilePage (packages/frontend/src/features/user/pages/ProfilePage.tsx)
-- [ ] T114 Create EditProfileForm component (name, profile_image upload)
-- [ ] T115 Implement profile image upload (base64 or FormData to backend)
-- [ ] T116 Create ActiveSessionsPage (packages/frontend/src/features/user/pages/ActiveSessionsPage.tsx)
-- [ ] T117 Create SessionListItem component (display device, IP, last activity)
-- [ ] T118 Implement session logout action (delete specific session)
-- [ ] T119 Create AccountSettingsPage (delete account, MFA toggle)
-- [ ] T120 Add confirmation dialogs (account deletion, session logout)
-- [ ] T121 Style profile and settings pages
+- [x] T113 Create ProfilePage (packages/frontend/src/features/user/pages/ProfilePage.tsx)
+- [x] T114 Create EditProfileForm component (name, profile_image upload)
+- [x] T115 Implement profile image upload (base64 or FormData to backend)
+- [x] T116 Create ActiveSessionsPage (packages/frontend/src/features/user/pages/ActiveSessionsPage.tsx)
+- [x] T117 Create SessionListItem component (display device, IP, last activity)
+- [x] T118 Implement session logout action (delete specific session)
+- [x] T119 Create AccountSettingsPage (delete account, MFA toggle)
+- [x] T120 Add confirmation dialogs (account deletion, session logout)
+- [x] T121 Style profile and settings pages
 
 ### Implementation Notes
 
