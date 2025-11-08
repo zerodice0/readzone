@@ -179,8 +179,8 @@ export class AuthService {
       };
     }
 
-    // Parse device info from user agent (simplified)
-    const deviceInfo = AuthService.parseUserAgent(userAgent);
+    // T094: Parse device info from user agent using SessionService utility
+    const deviceInfo = this.sessionService.parseDeviceInfo(userAgent);
 
     // Calculate expiration
     const expiresAt = new Date(
@@ -292,8 +292,8 @@ export class AuthService {
       throw new UnauthorizedException('Account is suspended or deleted');
     }
 
-    // Parse device info
-    const deviceInfo = AuthService.parseUserAgent(userAgent);
+    // T094: Parse device info from user agent using SessionService utility
+    const deviceInfo = this.sessionService.parseDeviceInfo(userAgent);
 
     // Calculate expiration
     const expiresAt = new Date(
@@ -521,40 +521,6 @@ export class AuthService {
   }
 
   /**
-   * Parse user agent string (simplified)
-   * @param userAgent User agent string
-   * @returns Device info object
-   */
-  private static parseUserAgent(userAgent: string): {
-    browser?: string;
-    os?: string;
-    device?: string;
-  } {
-    // Simplified parsing - in production, use a library like ua-parser-js
-    let browser = 'Unknown';
-    if (userAgent.includes('Chrome')) {
-      browser = 'Chrome';
-    } else if (userAgent.includes('Firefox')) {
-      browser = 'Firefox';
-    } else if (userAgent.includes('Safari')) {
-      browser = 'Safari';
-    }
-
-    let os = 'Unknown';
-    if (userAgent.includes('Windows')) {
-      os = 'Windows';
-    } else if (userAgent.includes('Mac')) {
-      os = 'macOS';
-    } else if (userAgent.includes('Linux')) {
-      os = 'Linux';
-    }
-
-    const device = userAgent.includes('Mobile') ? 'Mobile' : 'Desktop';
-
-    return { browser, os, device };
-  }
-
-  /**
    * Request password reset
    * @param email User email
    * @param ipAddress Client IP address (for audit logging)
@@ -724,8 +690,8 @@ export class AuthService {
     const ipAddress = requestWithIp.ip || 'unknown';
     const userAgent = requestWithHeaders.headers?.['user-agent'] || 'unknown';
 
-    // Parse device info from user agent
-    const deviceInfo = AuthService.parseUserAgent(userAgent);
+    // T094: Parse device info from user agent using SessionService utility
+    const deviceInfo = this.sessionService.parseDeviceInfo(userAgent);
 
     // Calculate expiration (30 days for OAuth, as these are trusted providers)
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);

@@ -20,8 +20,8 @@ ReadZone Backend provides a comprehensive authentication and user management sys
 
 - **Email/Password Authentication**: Secure password-based authentication with bcrypt hashing
 - **OAuth Integration**: Google and GitHub OAuth providers
-- **Multi-Factor Authentication (MFA)**: TOTP-based 2FA
-- **Session Management**: Hybrid JWT + Redis session storage
+- **Multi-Factor Authentication (MFA)**: TOTP-based 2FA with backup codes
+- **Session Management**: Active session tracking, device info, concurrent session limits (10 max)
 - **Role-Based Access Control (RBAC)**: 5-level permission system
 - **Audit Logging**: Comprehensive security and compliance logging
 - **User Profile Management**: Self-service and admin-managed profiles
@@ -307,6 +307,14 @@ Key entities:
     - `POST /api/v1/users/me/mfa/disable` - Disable MFA (requires password)
     - `GET /api/v1/users/me/mfa/backup-codes` - Regenerate backup codes
     - `POST /api/v1/auth/mfa/verify` - Complete login with MFA code
+- **Session Management**: Active session tracking with device information
+  - **Device Info**: Automatically parsed from User-Agent (browser, OS, device type)
+  - **Session Limits**: Maximum 10 concurrent sessions per user (oldest auto-revoked)
+  - **Last Activity**: Updated on each authenticated request for tracking
+  - **Endpoints**:
+    - `GET /api/v1/sessions` - List all active sessions with device info and last activity
+    - `DELETE /api/v1/sessions/:id` - Logout specific session
+    - `DELETE /api/v1/sessions` - Logout all sessions except current
 - **Role-Based Access Control (RBAC)**: 5 role levels with granular permissions
 
 #### Request Protection
@@ -395,15 +403,17 @@ pnpm test:e2e --watch
 - Admin endpoints: 21 tests
 - Authorization & RBAC: 12 tests
 - MFA (Multi-Factor Authentication): 19 tests
+- Session Management: 7 tests (planned)
 - CSRF protection: 16 tests
 - Rate limiting: 13 tests
-- **Total:** 94 integration tests
+- **Total:** 94 integration tests (101 with session management tests)
 
 ### Test Files
 
 - `test/users.e2e-spec.ts` - User profile endpoints (T055-T057)
 - `test/admin.e2e-spec.ts` - Admin endpoints and RBAC (T059-T066)
 - `test/mfa.e2e-spec.ts` - MFA endpoints and login flow (T084-T092)
+- `test/sessions.e2e-spec.ts` - Session management endpoints (T093-T099, planned)
 - `test/csrf.e2e-spec.ts` - CSRF protection (T079)
 - `test/rate-limiting.e2e-spec.ts` - Rate limiting (T076-T078)
 
