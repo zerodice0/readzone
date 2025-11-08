@@ -248,8 +248,8 @@
 
 **Goal**: Implement user CRUD, profile management, admin functions, and RBAC authorization.
 **Independent Test**: User can view/update profile (email), delete account (soft-delete 30d), admin can list/manage users with role-based access control.
-**Prompt**: `kitty-specs/001-feature/tasks/doing/WP06-user-management-profiles.md`
-**Status**: 🔄 In Progress (2025-11-07)
+**Prompt**: `kitty-specs/001-feature/tasks/done/WP06-user-management-profiles.md`
+**Status**: ✅ Partial Complete - T055, T056 done (2025-11-08), T057-T066 remaining
 
 ### Task Categories
 
@@ -269,16 +269,18 @@
 
 #### 👤 User Profile Endpoints
 
-- [ ] **T055**: GET /users/me - 프로필 조회 (2-3h, Low)
+- [x] **T055**: GET /users/me - 프로필 조회 (2-3h, Low) ✅ 2025-11-08
   - Files: `users/dto/user-profile.dto.ts`, `users/users.service.ts`, `users/users.controller.ts`
   - Returns: email, role, emailVerified, mfaEnabled, oauthConnections, hasPassword
   - Tests: 4 integration tests (authenticated, unauthenticated, OAuth-only, MFA-enabled)
+  - Note: See `kitty-specs/001-feature/tasks/done/WP06-user-management-profiles.md`
 
-- [ ] **T056**: PATCH /users/me - 프로필 수정 (3-4h, Medium)
+- [x] **T056**: PATCH /users/me - 프로필 수정 (3-4h, Medium) ✅ 2025-11-08
   - Files: `users/dto/update-profile.dto.ts`, `users/users.service.ts`, `users/users.controller.ts`
   - Features: Email 변경 시 재인증, 중복 이메일 체크, Audit log
   - Tests: 4 integration tests (email change, duplicate check, validation, audit)
   - Depends: T055
+  - Note: See `kitty-specs/001-feature/tasks/done/WP06-user-management-profiles.md`
 
 - [ ] **T057**: DELETE /users/me - 계정 삭제 (4-5h, Medium)
   - Files: `users/dto/delete-account.dto.ts`, `users/users.service.ts`, `users/users.controller.ts`
