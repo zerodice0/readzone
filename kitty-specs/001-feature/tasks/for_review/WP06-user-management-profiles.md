@@ -2,9 +2,9 @@
 work_package_id: 'WP06'
 title: 'User Management & Profiles'
 phase: 'Phase 2 - User Management'
-lane: 'doing'
-agent: 'claude'
-shell_pid: '33383'
+lane: "for_review"
+agent: "claude"
+shell_pid: "33383"
 history:
   - timestamp: '2025-11-06T00:00:00Z'
     lane: 'planned'
@@ -135,3 +135,4 @@ All subtask details are in tasks.md WP06 section. Refer there for:
 - 2025-11-07T08:14:58Z – claude – shell_pid=86093 – lane=for_review – T056 completed: PATCH /users/me with email change workflow
 - 2025-11-08T00:00:00Z – claude – shell_pid=34601 – lane=for_review – Code review completed: Critical issues found (DI dependencies, integration tests missing), returning to planned for fixes
 - 2025-11-08T08:39:53Z – claude – shell_pid=34601 – lane=planned – Code review: Critical issues found (DI dependencies, tests missing) - returned for fixes
+- 2025-11-08T09:14:25Z – claude – shell_pid=33383 – lane=for_review – Critical Issues fixed: Integration tests added (8 tests), AppModule @Global provides services
