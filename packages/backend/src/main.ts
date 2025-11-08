@@ -131,6 +131,9 @@ process.on('SIGINT', () => {
 
 bootstrap().catch((err: unknown) => {
   const logger = new LoggerService('Bootstrap');
-  logger.error('Failed to start application', err);
+  logger.fatal(
+    'Failed to start application',
+    err instanceof Error ? err.stack : String(err)
+  );
   process.exit(1);
 });
