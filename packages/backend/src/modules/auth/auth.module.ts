@@ -6,7 +6,10 @@ import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './services/auth.service';
 import { PasswordService } from './services/password.service';
 import { SessionService } from './services/session.service';
+import { OAuthService } from './services/oauth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { GitHubStrategy } from './strategies/github.strategy';
 
 @Module({
   imports: [
@@ -26,8 +29,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     AuthService,
     PasswordService,
     SessionService,
+    OAuthService,
     JwtStrategy,
+    GoogleStrategy,
+    GitHubStrategy,
   ],
-  exports: [AuthService, PasswordService, SessionService, JwtModule],
+  exports: [AuthService, PasswordService, SessionService, OAuthService, JwtModule],
 })
 export class AuthModule {}

@@ -57,11 +57,12 @@ export const configSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   EMAIL_FROM: z.string().email().optional(),
 
-  // OAuth
+  // OAuth - Google
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z.string().url().optional(),
 
+  // OAuth - GitHub
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
   GITHUB_CALLBACK_URL: z.string().url().optional(),
