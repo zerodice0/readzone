@@ -16,10 +16,10 @@ subtasks:
   - 'T020'
 title: 'Backend - Reviews Module'
 phase: 'Phase 1 - Foundation'
-lane: 'for_review'
+lane: 'planned'
 assignee: ''
 agent: 'claude'
-shell_pid: '51802'
+shell_pid: '31661'
 history:
   - timestamp: '2025-11-08T17:52:47Z'
     lane: 'planned'
@@ -45,6 +45,7 @@ history:
 **Goal**: Implement Reviews API with feed endpoint, CRUD operations, pagination, and N+1 query prevention.
 
 **Success Criteria**:
+
 - [ ] GET /api/reviews/feed returns paginated reviews with book and user info
 - [ ] GET /api/reviews/:id returns full review details
 - [ ] POST /api/reviews creates new review and returns 201
@@ -59,11 +60,13 @@ history:
 ## Context & Constraints
 
 **Related Documents**:
+
 - `kitty-specs/002-feature/contracts/reviews-api.md` - Complete API specification
 - `kitty-specs/002-feature/data-model.md` - Review model schema
 - `kitty-specs/002-feature/plan.md` - Technical stack (NestJS 10, Prisma 6.19)
 
 **Constraints**:
+
 - Must use Prisma for all database operations
 - Must prevent N+1 queries (use `include` for relations)
 - Feed endpoint must support both authenticated and anonymous users
@@ -72,6 +75,7 @@ history:
 - Response time target: <200ms p95
 
 **Architectural Decisions**:
+
 - Module structure follows NestJS conventions (module, controller, service)
 - DTOs for all request/response validation
 - Pagination: cursor-based using publishedAt + id for stability
@@ -84,6 +88,7 @@ history:
 **Purpose**: Define Reviews module with controllers, services, and Prisma dependency.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/reviews/reviews.module.ts`
 2. Import necessary NestJS decorators:
    ```typescript
@@ -109,10 +114,12 @@ history:
 **Parallel?**: Yes (can proceed in parallel with T009-T013)
 
 **Notes**:
+
 - Export ReviewsService for potential use by other modules
 - PrismaModule should already exist in the codebase
 
 **Validation**:
+
 ```bash
 # Check TypeScript compilation
 pnpm --filter backend type-check
@@ -125,6 +132,7 @@ pnpm --filter backend type-check
 **Purpose**: Define REST API endpoints for reviews.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/reviews/reviews.controller.ts`
 2. Import necessary decorators:
    ```typescript
@@ -147,6 +155,7 @@ pnpm --filter backend type-check
    import { UpdateReviewDto } from './dto/update-review.dto';
    ```
 3. Define controller with routes:
+
    ```typescript
    @Controller('reviews')
    export class ReviewsController {
@@ -175,7 +184,7 @@ pnpm --filter backend type-check
      async updateReview(
        @Param('id') id: string,
        @Body() dto: UpdateReviewDto,
-       @Req() req,
+       @Req() req
      ) {
        return this.reviewsService.updateReview(id, dto, req.user.id);
      }
@@ -193,6 +202,7 @@ pnpm --filter backend type-check
 **Parallel?**: Yes (after T008)
 
 **Notes**:
+
 - Optional authentication: GET endpoints don't require auth
 - AuthGuard('jwt') should exist from existing auth system
 - userId from req.user is used for isLikedByMe/isBookmarkedByMe checks
@@ -204,10 +214,16 @@ pnpm --filter backend type-check
 **Purpose**: Implement business logic for review operations with Prisma queries.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/reviews/reviews.service.ts`
 2. Implement getFeed method with N+1 prevention:
+
    ```typescript
-   import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+   import {
+     Injectable,
+     NotFoundException,
+     ForbiddenException,
+   } from '@nestjs/common';
    import { PrismaService } from '../prisma/prisma.service';
    import { FeedQueryDto } from './dto/feed-query.dto';
 
@@ -229,7 +245,12 @@ pnpm --filter backend type-check
              select: { id: true, name: true, profileImage: true },
            },
            book: {
-             select: { id: true, title: true, author: true, coverImageUrl: true },
+             select: {
+               id: true,
+               title: true,
+               author: true,
+               coverImageUrl: true,
+             },
            },
            likes: userId ? { where: { userId } } : false,
            bookmarks: userId ? { where: { userId } } : false,
@@ -407,12 +428,14 @@ pnpm --filter backend type-check
 **Parallel?**: No (depends on DTOs T011-T013)
 
 **Notes**:
+
 - Use `include` to fetch relations in single query (prevent N+1)
 - Truncate content to 150 chars for feed endpoint
 - Soft delete: update status to DELETED, set deletedAt
 - View count increment on detail page load
 
 **Validation**:
+
 ```bash
 # Test with curl after starting server
 curl http://localhost:3000/api/reviews/feed?page=0&limit=20
@@ -425,8 +448,10 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
 **Purpose**: Validate feed query parameters.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/reviews/dto/feed-query.dto.ts`
 2. Define DTO:
+
    ```typescript
    import { IsOptional, IsInt, Min, Max } from 'class-validator';
    import { Type } from 'class-transformer';
@@ -452,6 +477,7 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
 **Parallel?**: Yes (can proceed in parallel with other DTOs)
 
 **Notes**:
+
 - Default values: page=0, limit=20
 - Max limit: 50 to prevent abuse
 
@@ -462,8 +488,10 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
 **Purpose**: Validate review creation payload.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/reviews/dto/create-review.dto.ts`
 2. Define DTO:
+
    ```typescript
    import {
      IsString,
@@ -511,6 +539,7 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
 **Parallel?**: Yes
 
 **Notes**:
+
 - Content is required, no max length (use @db.Text in schema)
 - Rating is 1-5 scale, optional
 - Status defaults to PUBLISHED if not provided
@@ -522,8 +551,10 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
 **Purpose**: Validate review update payload.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/reviews/dto/update-review.dto.ts`
 2. Define DTO:
+
    ```typescript
    import { PartialType } from '@nestjs/mapped-types';
    import { CreateReviewDto } from './create-review.dto';
@@ -536,6 +567,7 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
 **Parallel?**: Yes (after T012)
 
 **Notes**:
+
 - Use PartialType to make all fields optional
 - Reuse validation logic from CreateReviewDto
 
@@ -546,8 +578,10 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
 **Purpose**: Ensure fast feed queries with composite index.
 
 **Steps**:
+
 1. Open `packages/backend/prisma/schema.prisma`
 2. Verify Review model has index:
+
    ```prisma
    model Review {
      // ... fields ...
@@ -556,6 +590,7 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
      @@map("reviews")
    }
    ```
+
 3. If index is missing, add it
 4. Generate migration:
    ```bash
@@ -568,10 +603,12 @@ curl http://localhost:3000/api/reviews/feed?page=0&limit=20
 **Parallel?**: No (depends on WP01)
 
 **Notes**:
+
 - Composite index on (status, publishedAt DESC) for fast feed queries
 - Should already exist from WP01, verify only
 
 **Validation**:
+
 ```bash
 psql $DATABASE_URL -c "\d reviews"  # Check indexes
 ```
@@ -583,6 +620,7 @@ psql $DATABASE_URL -c "\d reviews"  # Check indexes
 **Purpose**: Register Reviews module in main application module.
 
 **Steps**:
+
 1. Open `packages/backend/src/app.module.ts`
 2. Import ReviewsModule:
    ```typescript
@@ -604,9 +642,11 @@ psql $DATABASE_URL -c "\d reviews"  # Check indexes
 **Parallel?**: No (final integration step)
 
 **Notes**:
+
 - Ensure ReviewsModule is after PrismaModule in imports
 
 **Validation**:
+
 ```bash
 pnpm --filter backend start:dev
 # Check that server starts without errors
@@ -619,6 +659,7 @@ pnpm --filter backend start:dev
 **Purpose**: Verify feed endpoint returns paginated reviews correctly.
 
 **Steps**:
+
 1. Ensure seed data is loaded (from WP01):
    ```bash
    cd packages/backend
@@ -629,6 +670,7 @@ pnpm --filter backend start:dev
    pnpm --filter backend start:dev
    ```
 3. Test with curl:
+
    ```bash
    # Test default pagination
    curl http://localhost:3000/api/reviews/feed
@@ -640,6 +682,7 @@ pnpm --filter backend start:dev
    curl -H "Authorization: Bearer <token>" \
         http://localhost:3000/api/reviews/feed
    ```
+
 4. Verify response includes:
    - `data` array with reviews
    - `meta` object with page, limit, total, hasMore
@@ -652,6 +695,7 @@ pnpm --filter backend start:dev
 **Parallel?**: No (depends on all previous subtasks)
 
 **Notes**:
+
 - Test both authenticated and unauthenticated requests
 - Verify pagination works (hasMore flag changes)
 
@@ -662,6 +706,7 @@ pnpm --filter backend start:dev
 **Purpose**: Verify detail endpoint returns full review correctly.
 
 **Steps**:
+
 1. Get a review ID from feed endpoint:
    ```bash
    curl http://localhost:3000/api/reviews/feed | jq '.data[0].id'
@@ -687,6 +732,7 @@ pnpm --filter backend start:dev
 **Purpose**: Verify review creation works correctly.
 
 **Steps**:
+
 1. Get authentication token (from existing auth system)
 2. Get a book ID (from seed data or create one):
    ```bash
@@ -723,6 +769,7 @@ pnpm --filter backend start:dev
 **Purpose**: Verify review update works correctly (author only).
 
 **Steps**:
+
 1. Create a review (from T018)
 2. Update the review:
    ```bash
@@ -750,6 +797,7 @@ pnpm --filter backend start:dev
 **Purpose**: Verify soft delete works correctly (author only).
 
 **Steps**:
+
 1. Create a review (from T018)
 2. Delete the review:
    ```bash
@@ -774,6 +822,7 @@ pnpm --filter backend start:dev
 **Parallel?**: No (depends on T018)
 
 **Validation**:
+
 ```bash
 # Check database record
 psql $DATABASE_URL -c "SELECT id, status, \"deletedAt\" FROM reviews WHERE id='$REVIEW_ID';"
@@ -784,18 +833,21 @@ psql $DATABASE_URL -c "SELECT id, status, \"deletedAt\" FROM reviews WHERE id='$
 ## Test Strategy
 
 **Unit Tests**:
+
 - ReviewsService methods (getFeed, getReview, createReview, updateReview, deleteReview)
 - Mock PrismaService with jest
 - Test pagination logic (hasMore calculation)
 - Test soft delete logic
 
 **Integration Tests**:
+
 - E2E tests for all endpoints
 - Test with real database (test environment)
 - Test authentication and authorization
 - Test N+1 query prevention (use Prisma query logging)
 
 **Performance Tests**:
+
 - Measure feed endpoint response time with 1000+ reviews
 - Verify index usage with EXPLAIN ANALYZE
 - Target: <200ms p95
@@ -803,21 +855,25 @@ psql $DATABASE_URL -c "SELECT id, status, \"deletedAt\" FROM reviews WHERE id='$
 ## Risks & Mitigations
 
 **Risk 1: N+1 query problem**
+
 - **Impact**: Slow feed queries, database overload
 - **Mitigation**: Use Prisma `include` for relations, enable query logging, monitor with APM
 - **Validation**: Check query count with Prisma debug logs
 
 **Risk 2: Performance degradation with large datasets**
+
 - **Impact**: Slow feed queries as reviews grow
 - **Mitigation**: Composite index on (status, publishedAt DESC), limit max page size to 50
 - **Monitor**: Query performance in production, add database monitoring
 
 **Risk 3: Soft delete exposing data**
+
 - **Impact**: Deleted reviews still accessible via direct queries
 - **Mitigation**: Always filter by status != DELETED, add application-level checks
 - **Recovery**: Add database trigger to prevent accidental exposure
 
 **Risk 4: Concurrent update conflicts**
+
 - **Impact**: Lost updates when multiple requests update same review
 - **Mitigation**: Use Prisma optimistic locking (version field), handle conflicts gracefully
 - **Recovery**: Implement retry logic on version mismatch
@@ -845,12 +901,14 @@ psql $DATABASE_URL -c "SELECT id, status, \"deletedAt\" FROM reviews WHERE id='$
 ## Review Guidance
 
 **Key Acceptance Checkpoints**:
+
 1. **API Completeness**: All 5 endpoints implemented and tested
 2. **Performance**: Feed endpoint <200ms p95 with index usage verified
 3. **Security**: Authentication and authorization working correctly
 4. **Data Integrity**: Soft delete working, no data leaks
 
 **Reviewer Should Verify**:
+
 - [ ] Test GET /reviews/feed - returns paginated results
 - [ ] Test GET /reviews/:id - returns full review
 - [ ] Test POST /reviews - creates review (auth required)
@@ -869,6 +927,8 @@ psql $DATABASE_URL -c "SELECT id, status, \"deletedAt\" FROM reviews WHERE id='$
 ### Next Steps After Completion
 
 Once WP02 is done, the following work packages can proceed in parallel:
+
 - **WP03**: Backend - Books Module (depends on DB schema)
 - **WP04**: Backend - Likes & Bookmarks Modules (depends on DB schema and WP02)
 - **WP05**: Frontend - Feed Store & API Client (can start after WP02 is deployed)
+- 2025-11-08T23:02:38Z – claude – shell_pid=31661 – lane=planned – Reset to planned - implementation not found
