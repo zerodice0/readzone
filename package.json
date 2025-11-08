@@ -1,61 +1,47 @@
 {
-  "name": "readzone",
+  "name": "readzone-monorepo",
   "version": "1.0.0",
-  "description": "독서 후 의견을 공유하는 독서 전용 커뮤니티 SNS 플랫폼",
   "private": true,
-  "packageManager": "npm@10.9.0",
+  "description": "ReadZone - Book review platform with user authentication",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "dev": "turbo dev",
-    "dev:frontend": "turbo dev --filter=@readzone/frontend",
-    "dev:backend": "turbo dev --filter=@readzone/backend",
-    "build": "turbo build",
-    "build:frontend": "turbo build --filter=@readzone/frontend",
-    "build:backend": "turbo build --filter=@readzone/backend",
-    "lint": "turbo lint",
-    "lint:frontend": "turbo lint --filter=@readzone/frontend",
-    "lint:backend": "turbo lint --filter=@readzone/backend",
-    "type-check": "turbo type-check",
-    "type-check:frontend": "turbo type-check --filter=@readzone/frontend",
-    "type-check:backend": "turbo type-check --filter=@readzone/backend",
-    "test": "turbo test",
-    "test:frontend": "turbo test --filter=@readzone/frontend",
-    "test:backend": "turbo test --filter=@readzone/backend",
-    "clean": "turbo clean && rm -rf node_modules"
+    "dev": "pnpm --parallel --filter \"./packages/*\" dev",
+    "build": "pnpm --filter \"./packages/*\" --sequential build",
+    "lint": "pnpm --parallel --filter \"./packages/*\" lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "type-check": "pnpm --parallel --filter \"./packages/*\" type-check",
+    "prepare": "husky install"
   },
-  "prisma": {
-    "seed": "ts-node ./prisma/seed.ts"
-  },
-  "dependencies": {
-    "@tanstack/react-router": "^1.131.27",
-    "@testing-library/jest-dom": "^6.7.0",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
-    "framer-motion": "^12.23.22",
-    "immer": "^10.1.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "turbo": "^2.5.6",
-    "typescript": "^5.9.2"
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.10.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prettier": "^5.1.3",
+    "husky": "^9.0.10",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
   },
+  "packageManager": "pnpm@8.15.3",
   "engines": {
-    "node": ">=18.17.0",
-    "npm": ">=8.0.0"
-  },
-  "keywords": [
-    "독서",
-    "커뮤니티",
-    "SNS",
-    "독후감",
-    "리뷰",
-    "책",
-    "도서"
-  ],
-  "author": "ReadZone Team",
-  "license": "MIT"
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
 }

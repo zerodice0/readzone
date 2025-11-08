@@ -1,98 +1,442 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# ReadZone Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS-based backend API for ReadZone user authentication system.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Table of Contents
 
-## Description
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [API Endpoints](#api-endpoints)
+- [User Management](#user-management)
+- [Architecture](#architecture)
+- [Development](#development)
+- [Testing](#testing)
+- [Documentation](#documentation)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Overview
 
-## Project setup
+ReadZone Backend provides a comprehensive authentication and user management system with:
 
-```bash
-$ npm install
-```
+- **Email/Password Authentication**: Secure password-based authentication with bcrypt hashing
+- **OAuth Integration**: Google and GitHub OAuth providers
+- **Multi-Factor Authentication (MFA)**: TOTP-based 2FA with backup codes
+- **Session Management**: Active session tracking, device info, concurrent session limits (10 max)
+- **Role-Based Access Control (RBAC)**: 5-level permission system
+- **Audit Logging**: Comprehensive security and compliance logging
+- **User Profile Management**: Self-service and admin-managed profiles
 
-## Compile and run the project
+## Tech Stack
 
-```bash
-# development
-$ npm run start
+- **Runtime**: Node.js 20.x
+- **Framework**: NestJS 10.x
+- **Language**: TypeScript 5.x (strict mode)
+- **Database**: PostgreSQL 16
+- **ORM**: Prisma 5.x
+- **Cache**: Redis 7.x
+- **Authentication**: JWT + Passport.js
+- **Testing**: Jest + Supertest
+- **Validation**: class-validator + class-transformer
 
-# watch mode
-$ npm run start:dev
+## Getting Started
 
-# production mode
-$ npm run start:prod
-```
+### Prerequisites
 
-## Run tests
+- Node.js 20.x or higher
+- pnpm 8.x
+- Docker & Docker Compose (for PostgreSQL and Redis)
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Installation
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Install dependencies
+pnpm install
+
+# Start PostgreSQL and Redis
+docker-compose up -d
+
+# Run database migrations
+pnpm prisma migrate dev
+
+# Seed database (optional)
+pnpm prisma db seed
+
+# Start development server
+pnpm dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Environment Variables
 
-## Resources
+Copy `.env.example` to `.env` and configure:
 
-Check out a few resources that may come in handy when working with NestJS:
+```env
+# Database
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/readzone"
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Redis
+REDIS_URL="redis://localhost:6379"
 
-## Support
+# JWT
+JWT_SECRET="your-secret-key"
+JWT_EXPIRES_IN="1h"
+JWT_REFRESH_SECRET="your-refresh-secret"
+JWT_REFRESH_EXPIRES_IN="7d"
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# OAuth
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+GITHUB_CLIENT_ID="your-github-client-id"
+GITHUB_CLIENT_SECRET="your-github-client-secret"
 
-## Stay in touch
+# Email
+SMTP_HOST="smtp.example.com"
+SMTP_PORT=587
+SMTP_USER="your-email@example.com"
+SMTP_PASSWORD="your-password"
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# Application
+NODE_ENV="development"
+PORT=3000
+API_PREFIX="/api/v1"
+```
+
+## API Endpoints
+
+### Authentication
+
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Email/password login
+- `POST /auth/refresh` - Refresh access token
+- `POST /auth/logout` - Logout and revoke tokens
+- `POST /auth/verify-email` - Verify email address
+- `POST /auth/forgot-password` - Request password reset
+- `POST /auth/reset-password` - Reset password
+- `GET /auth/google` - Initiate Google OAuth
+- `GET /auth/google/callback` - Google OAuth callback
+- `GET /auth/github` - Initiate GitHub OAuth
+- `GET /auth/github/callback` - GitHub OAuth callback
+
+### User Profile
+
+- `GET /users/me` - Get authenticated user profile
+- `PATCH /users/me` - Update user profile
+- `DELETE /users/me` - Delete user account (soft-delete with 30-day grace period)
+
+### Admin User Management
+
+**Role Required:** ADMIN or SUPERADMIN
+
+- `GET /admin/users` - List all users (with pagination, filtering, sorting)
+- `GET /admin/users/:id` - Get user details (includes sessions and audit logs)
+- `PATCH /admin/users/:id` - Update user (role, status, email verification)
+- `DELETE /admin/users/:id/force-delete` - Permanently delete user account
+
+## User Management
+
+### Self-Service Profile Management
+
+Users can manage their own profiles through the `/users/me` endpoints:
+
+**Get Profile:**
+
+```bash
+curl -X GET http://localhost:3000/api/v1/users/me \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**Update Profile:**
+
+```bash
+curl -X PATCH http://localhost:3000/api/v1/users/me \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newemail@example.com",
+    "name": "New Name"
+  }'
+```
+
+**Delete Account:**
+
+```bash
+curl -X DELETE http://localhost:3000/api/v1/users/me \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "password": "UserPassword123!",
+    "confirmDeletion": true
+  }'
+```
+
+### Administrative User Management
+
+Admins can manage all users through the `/admin/users` endpoints:
+
+**List Users:**
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/admin/users?page=1&limit=20&role=USER&status=ACTIVE" \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+**Get User Details:**
+
+```bash
+curl -X GET http://localhost:3000/api/v1/admin/users/<user_id> \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+**Update User:**
+
+```bash
+curl -X PATCH http://localhost:3000/api/v1/admin/users/<user_id> \
+  -H "Authorization: Bearer <admin_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "role": "MODERATOR",
+    "status": "ACTIVE",
+    "emailVerified": true
+  }'
+```
+
+**Force Delete User:**
+
+```bash
+curl -X DELETE http://localhost:3000/api/v1/admin/users/<user_id>/force-delete \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+### Role-Based Access Control (RBAC)
+
+| Role       | Level | Description                        |
+| ---------- | ----- | ---------------------------------- |
+| ANONYMOUS  | 0     | Non-logged-in users (read-only)    |
+| USER       | 1     | Regular authenticated users        |
+| MODERATOR  | 2     | Content moderators                 |
+| ADMIN      | 3     | System administrators              |
+| SUPERADMIN | 4     | Super administrators (full access) |
+
+### Account Deletion
+
+**Soft-Delete (User):**
+
+- 30-day grace period before permanent deletion
+- All sessions immediately revoked
+- User can contact support to restore account
+- Background job permanently deletes after 30 days
+
+**Force-Delete (Admin):**
+
+- Immediate permanent deletion
+- No grace period
+- CASCADE deletes related records (sessions, OAuth, MFA, tokens)
+- Preserves audit logs with `userId = null`
+- GDPR "right to be forgotten" compliant
+
+### Audit Logging
+
+All critical user management actions are logged:
+
+| Action               | Severity | Trigger                     |
+| -------------------- | -------- | --------------------------- |
+| PROFILE_UPDATE       | MEDIUM   | User updates email/name     |
+| ROLE_CHANGE          | CRITICAL | Admin changes user role     |
+| ACCOUNT_SUSPEND      | CRITICAL | Admin suspends user         |
+| ACCOUNT_DELETE       | CRITICAL | User soft-deletes account   |
+| ACCOUNT_FORCE_DELETE | CRITICAL | Admin force-deletes account |
+
+For detailed documentation, see [docs/user-management.md](./docs/user-management.md).
+
+## Architecture
+
+### Module Structure
+
+```
+src/
+├── app.module.ts                 # Root module
+├── common/                       # Shared utilities and services
+│   ├── decorators/              # Custom decorators (@Roles, etc.)
+│   ├── guards/                  # Guards (RolesGuard, etc.)
+│   ├── filters/                 # Exception filters
+│   ├── services/                # Shared services (Audit, Email)
+│   └── utils/                   # Utilities (Prisma, crypto)
+├── modules/
+│   ├── auth/                    # Authentication module
+│   │   ├── controllers/         # Auth controllers
+│   │   ├── services/            # Auth services
+│   │   ├── strategies/          # Passport strategies
+│   │   ├── guards/              # JWT guards
+│   │   └── dto/                 # DTOs
+│   └── users/                   # User management module
+│       ├── controllers/         # User & Admin controllers
+│       ├── services/            # User service
+│       ├── dto/                 # DTOs
+│       └── tasks/               # Background jobs (pseudocode)
+└── prisma/
+    ├── schema.prisma            # Database schema
+    ├── migrations/              # Database migrations
+    └── seed.ts                  # Seed data
+```
+
+### Database Schema
+
+Key entities:
+
+- **User**: Core user entity with email, password, role, status
+- **Session**: JWT session management
+- **OAuthConnection**: Google/GitHub OAuth links
+- **MFASettings**: TOTP secrets and backup codes
+- **AuditLog**: Security and compliance logging
+- **EmailVerificationToken**: Email verification tokens
+- **PasswordResetToken**: Password reset tokens
+
+### Security Features
+
+#### Authentication & Authorization
+- **Password Hashing**: bcrypt with salt rounds = 10
+- **JWT Tokens**: Short-lived access tokens (1h) + long-lived refresh tokens (7d)
+- **Session Revocation**: Immediate revocation on logout, deletion, suspension
+- **Multi-Factor Authentication (MFA)**: TOTP-based 2FA with backup codes
+  - **TOTP Setup**: Generate QR code for authenticator apps (Google Authenticator, Authy, etc.)
+  - **6-digit codes**: 30-second window with ±1 window tolerance (90 seconds total)
+  - **Backup codes**: 10 single-use recovery codes (16-character alphanumeric)
+  - **MFA Challenge**: Required on login when enabled, supports both TOTP and backup codes
+  - **Endpoints**:
+    - `POST /api/v1/users/me/mfa/enable` - Generate QR code and backup codes
+    - `POST /api/v1/users/me/mfa/verify` - Verify code and activate MFA
+    - `POST /api/v1/users/me/mfa/disable` - Disable MFA (requires password)
+    - `GET /api/v1/users/me/mfa/backup-codes` - Regenerate backup codes
+    - `POST /api/v1/auth/mfa/verify` - Complete login with MFA code
+- **Session Management**: Active session tracking with device information
+  - **Device Info**: Automatically parsed from User-Agent (browser, OS, device type)
+  - **Session Limits**: Maximum 10 concurrent sessions per user (oldest auto-revoked)
+  - **Last Activity**: Updated on each authenticated request for tracking
+  - **Endpoints**:
+    - `GET /api/v1/sessions` - List all active sessions with device info and last activity
+    - `DELETE /api/v1/sessions/:id` - Logout specific session
+    - `DELETE /api/v1/sessions` - Logout all sessions except current
+- **Role-Based Access Control (RBAC)**: 5 role levels with granular permissions
+
+#### Request Protection
+- **CSRF Protection**: Double-submit cookie pattern with timing-safe token comparison
+  - Required for all state-changing operations (POST, PUT, PATCH, DELETE)
+  - Safe methods (GET, HEAD, OPTIONS) allowed without token
+  - Public endpoints (login, register, OAuth) properly excluded
+  - Get token: `GET /api/v1/csrf/token`
+- **Rate Limiting**: Distributed rate limiting with Redis storage
+  - Global: 100 req/min (anonymous), 1000 req/min (authenticated)
+  - Login: 5 attempts per 5 minutes per IP
+  - Register: 3 attempts per hour per IP
+  - Password Reset: 3 attempts per hour per IP
+- **Input Validation**: class-validator for all DTOs with strict whitelist mode
+
+#### Data Protection
+- **SQL Injection Protection**: Prisma ORM with parameterized queries
+- **XSS Protection**: Helmet.js security headers (CSP, X-Frame-Options, etc.)
+- **Audit Logging**: Comprehensive security event logging with IP and User-Agent capture
+
+## Development
+
+### Code Quality
+
+```bash
+# Lint
+pnpm lint
+
+# Format
+pnpm format
+
+# Type check
+pnpm tsc --noEmit
+
+# Run all checks
+pnpm lint && pnpm format && pnpm tsc --noEmit
+```
+
+### Database
+
+```bash
+# Create migration
+pnpm prisma migrate dev --name <migration_name>
+
+# Apply migrations
+pnpm prisma migrate deploy
+
+# Reset database (⚠️ deletes all data)
+pnpm prisma migrate reset
+
+# Open Prisma Studio
+pnpm prisma studio
+```
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run unit tests
+pnpm test
+
+# Watch mode
+pnpm test:watch
+
+# Coverage
+pnpm test:cov
+```
+
+### Integration Tests (E2E)
+
+```bash
+# Run all e2e tests
+pnpm test:e2e
+
+# Run specific test file
+pnpm test:e2e test/users.e2e-spec.ts
+
+# Watch mode
+pnpm test:e2e --watch
+```
+
+**Test Coverage:**
+
+- User endpoints: 13 tests
+- Admin endpoints: 21 tests
+- Authorization & RBAC: 12 tests
+- MFA (Multi-Factor Authentication): 19 tests
+- Session Management: 7 tests (planned)
+- CSRF protection: 16 tests
+- Rate limiting: 13 tests
+- **Total:** 94 integration tests (101 with session management tests)
+
+### Test Files
+
+- `test/users.e2e-spec.ts` - User profile endpoints (T055-T057)
+- `test/admin.e2e-spec.ts` - Admin endpoints and RBAC (T059-T066)
+- `test/mfa.e2e-spec.ts` - MFA endpoints and login flow (T084-T092)
+- `test/sessions.e2e-spec.ts` - Session management endpoints (T093-T099, planned)
+- `test/csrf.e2e-spec.ts` - CSRF protection (T079)
+- `test/rate-limiting.e2e-spec.ts` - Rate limiting (T076-T078)
+
+## Documentation
+
+- [User Management Guide](./docs/user-management.md) - Comprehensive guide to user management APIs
+- [API Reference](./docs/api-reference.md) - Detailed API documentation
+- [Database Schema](./docs/database-schema.md) - Database design and relationships
+- [Audit Logging](./docs/audit-logging.md) - Security and compliance logging
+- [Development Guide](./docs/development.md) - Development workflows and best practices
+
+## Contributing
+
+Please read [CONTRIBUTING.md](../../CONTRIBUTING.md) for details on our code of conduct and development process.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License - see [LICENSE](../../LICENSE) file for details.
+
+## Support
+
+For questions or issues:
+
+- GitHub Issues: [https://github.com/your-org/readzone/issues](https://github.com/your-org/readzone/issues)
+- Documentation: [./docs/](./docs/)
+- Email: support@readzone.com

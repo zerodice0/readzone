@@ -18,6 +18,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 Before proceeding, verify you are in the correct working directory:
 
 **Check your current branch:**
+
 ```bash
 git branch --show-current
 ```
@@ -28,6 +29,7 @@ git branch --show-current
 **This command MUST run from a feature worktree, not the main repository.**
 
 If you're on the `main` branch:
+
 1. Check for available worktrees: `ls .worktrees/`
 2. Navigate to the appropriate feature worktree: `cd .worktrees/<feature-name>`
 3. Verify you're in the right place: `git branch --show-current` should show the feature branch
@@ -42,6 +44,7 @@ The script will fail if you're not in a feature worktree. This is intentional - 
    **CRITICAL**: The script returns JSON with `FEATURE_DIR` as an ABSOLUTE path (e.g., `/Users/robert/Code/new_specify/kitty-specs/001-feature-name`).
 
    **YOU MUST USE THIS PATH** for ALL subsequent file operations. Example:
+
    ```
    FEATURE_DIR = "/Users/robert/Code/new_specify/kitty-specs/001-a-simple-hello"
    tasks.md location: FEATURE_DIR + "/tasks.md"
@@ -101,8 +104,9 @@ The script will fail if you're not in a feature worktree. This is intentional - 
    - Work package count and per-package subtask tallies
    - Parallelization highlights
    - MVP scope recommendation (usually Work Package 1)
-  - Prompt generation stats (files written, directory structure, any skipped items with rationale)
-   - Next suggested command (e.g., `/spec-kitty.analyze` or `/spec-kitty.implement`)
+
+- Prompt generation stats (files written, directory structure, any skipped items with rationale)
+- Next suggested command (e.g., `/spec-kitty.analyze` or `/spec-kitty.implement`)
 
 Context for work-package planning: {ARGS}
 

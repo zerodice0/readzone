@@ -7,31 +7,21 @@ import {
 } from 'class-validator';
 
 export class RegisterDto {
-  @IsString()
-  @MinLength(2, { message: '사용자 ID는 최소 2자 이상이어야 합니다.' })
-  @MaxLength(30, { message: '사용자 ID는 최대 30자까지 입력할 수 있습니다.' })
-  @Matches(/^[a-zA-Z0-9_-]+$/, {
-    message: '사용자 ID는 영문, 숫자, 밑줄(_), 하이픈(-)만 사용할 수 있습니다.',
+  @IsEmail({}, { message: 'Invalid email format' })
+  @MaxLength(255, { message: 'Email must not exceed 255 characters' })
+  email!: string;
+
+  @IsString({ message: 'Password must be a string' })
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
+  @MaxLength(128, { message: 'Password must not exceed 128 characters' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
   })
-  userid: string;
+  password!: string;
 
-  @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다.' })
-  @MaxLength(320, { message: '이메일은 최대 320자까지 입력할 수 있습니다.' })
-  email: string;
-
-  @IsString()
-  @MaxLength(50, { message: '닉네임은 최대 50자까지 입력할 수 있습니다.' })
-  nickname: string;
-
-  @IsString()
-  @MinLength(8, { message: '비밀번호는 최소 8자 이상이어야 합니다.' })
-  @MaxLength(64, { message: '비밀번호는 최대 64자까지 입력할 수 있습니다.' })
-  @Matches(
-    /^(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{}|;:,.<>?])[A-Za-z\d!@#$%^&*()_+\-=[\]{}|;:,.<>?]+$/,
-    {
-      message:
-        '비밀번호는 소문자, 숫자, 특수문자(!@#$%^&*()_+-=[]{}|;:,.<>?)를 각각 최소 1개씩 포함해야 합니다.',
-    },
-  )
-  password: string;
+  @IsString({ message: 'Name must be a string' })
+  @MinLength(2, { message: 'Name must be at least 2 characters long' })
+  @MaxLength(100, { message: 'Name must not exceed 100 characters' })
+  name!: string;
 }

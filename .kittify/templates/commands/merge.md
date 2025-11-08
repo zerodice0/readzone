@@ -1,13 +1,13 @@
 ---
 description: Merge a completed feature into the main branch and clean up worktree
 scripts:
-  sh: ".kittify/scripts/bash/merge-feature.sh"
-  ps: ".kittify/scripts/powershell/Merge-Feature.ps1"
+  sh: '.kittify/scripts/bash/merge-feature.sh'
+  ps: '.kittify/scripts/powershell/Merge-Feature.ps1'
 ---
+
 **Path reference rule:** When you mention directories or files, provide either the absolute path or a path relative to the project root (for example, `kitty-specs/<feature>/tasks/`). Never refer to a folder by name alone.
 
-*Path: [templates/commands/merge.md](templates/commands/merge.md)*
-
+_Path: [templates/commands/merge.md](templates/commands/merge.md)_
 
 # Merge Feature Branch
 
@@ -42,6 +42,7 @@ spec-kitty merge
 ```
 
 This will:
+
 - Create a merge commit
 - Remove the worktree
 - Delete the feature branch
@@ -85,48 +86,58 @@ spec-kitty merge --target develop --push
 ## Merge Strategies
 
 ### `merge` (default)
+
 Creates a merge commit preserving all feature branch commits.
+
 ```bash
 spec-kitty merge --strategy merge
 ```
+
 ✅ Preserves full commit history
 ✅ Clear feature boundaries in git log
 ❌ More commits in main branch
 
 ### `squash`
+
 Squashes all feature commits into a single commit.
+
 ```bash
 spec-kitty merge --strategy squash
 ```
+
 ✅ Clean, linear history on main
 ✅ Single commit per feature
 ❌ Loses individual commit details
 
 ### `rebase`
+
 Requires manual rebase first (command will guide you).
+
 ```bash
 spec-kitty merge --strategy rebase
 ```
+
 ✅ Linear history without merge commits
 ❌ Requires manual intervention
 ❌ Rewrites commit history
 
 ## Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--strategy` | Merge strategy: `merge`, `squash`, or `rebase` | `merge` |
-| `--delete-branch` / `--keep-branch` | Delete feature branch after merge | delete |
-| `--remove-worktree` / `--keep-worktree` | Remove feature worktree after merge | remove |
-| `--push` | Push to origin after merge | no push |
-| `--target` | Target branch to merge into | `main` |
-| `--dry-run` | Show what would be done without executing | off |
+| Option                                  | Description                                    | Default |
+| --------------------------------------- | ---------------------------------------------- | ------- |
+| `--strategy`                            | Merge strategy: `merge`, `squash`, or `rebase` | `merge` |
+| `--delete-branch` / `--keep-branch`     | Delete feature branch after merge              | delete  |
+| `--remove-worktree` / `--keep-worktree` | Remove feature worktree after merge            | remove  |
+| `--push`                                | Push to origin after merge                     | no push |
+| `--target`                              | Target branch to merge into                    | `main`  |
+| `--dry-run`                             | Show what would be done without executing      | off     |
 
 ## Worktree Strategy
 
 Spec Kitty uses an **opinionated worktree approach**:
 
 ### The Pattern
+
 ```
 my-project/                    # Main repo (main branch)
 ├── .worktrees/
@@ -139,6 +150,7 @@ my-project/                    # Main repo (main branch)
 ```
 
 ### The Rules
+
 1. **Main branch** stays in the primary repo root
 2. **Feature branches** live in `.worktrees/<feature-slug>/`
 3. **Work on features** happens in their worktrees (isolation)
@@ -146,6 +158,7 @@ my-project/                    # Main repo (main branch)
 5. **Cleanup is automatic** - worktrees removed after merge
 
 ### Why Worktrees?
+
 - ✅ Work on multiple features simultaneously
 - ✅ Each feature has its own sandbox
 - ✅ No branch switching in main repo
@@ -153,6 +166,7 @@ my-project/                    # Main repo (main branch)
 - ✅ Clean separation of concerns
 
 ### The Flow
+
 ```
 1. /spec-kitty.specify           → Creates branch + worktree
 2. cd .worktrees/<feature>/      → Enter worktree
@@ -168,7 +182,9 @@ my-project/                    # Main repo (main branch)
 ## Error Handling
 
 ### "Already on main branch"
+
 You're not on a feature branch. Switch to your feature branch first:
+
 ```bash
 cd .worktrees/<feature-slug>
 # or
@@ -176,7 +192,9 @@ git checkout <feature-branch>
 ```
 
 ### "Working directory has uncommitted changes"
+
 Commit or stash your changes:
+
 ```bash
 git add .
 git commit -m "Final changes"
@@ -185,7 +203,9 @@ git stash
 ```
 
 ### "Could not fast-forward main"
+
 Your main branch is behind origin:
+
 ```bash
 git checkout main
 git pull
@@ -194,7 +214,9 @@ spec-kitty merge
 ```
 
 ### "Merge failed - conflicts"
+
 Resolve conflicts manually:
+
 ```bash
 # Fix conflicts in files
 git add <resolved-files>
@@ -215,6 +237,7 @@ git branch -d <feature-branch>
 ## Examples
 
 ### Complete feature and push
+
 ```bash
 cd .worktrees/001-auth-system
 /spec-kitty.accept
@@ -222,16 +245,19 @@ cd .worktrees/001-auth-system
 ```
 
 ### Squash merge for cleaner history
+
 ```bash
 spec-kitty merge --strategy squash --push
 ```
 
 ### Merge but keep branch for reference
+
 ```bash
 spec-kitty merge --keep-branch --push
 ```
 
 ### Check what will happen first
+
 ```bash
 spec-kitty merge --dry-run
 ```
@@ -239,6 +265,7 @@ spec-kitty merge --dry-run
 ## After Merging
 
 After a successful merge, you're back on the main branch with:
+
 - ✅ Feature code integrated
 - ✅ Worktree removed (if it existed)
 - ✅ Feature branch deleted (unless `--keep-branch`)
@@ -257,6 +284,7 @@ The typical flow is:
 ```
 
 Or combine conceptually:
+
 ```bash
 # Accept verifies readiness
 /spec-kitty.accept --mode local
@@ -269,6 +297,7 @@ The `/spec-kitty.accept` command **verifies** your feature is complete.
 The `/spec-kitty.merge` command **integrates** your feature into main.
 
 Together they complete the workflow:
+
 ```
 specify → plan → tasks → implement → review → accept → merge ✅
 ```
