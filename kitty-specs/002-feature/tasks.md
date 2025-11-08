@@ -62,27 +62,29 @@
 
 ---
 
-## Work Package WP02: Backend - Reviews Module (Priority: P0)
+## Work Package WP02: Backend - Reviews Module (Priority: P0) ✅
 
 **Goal**: Implement Reviews API with feed endpoint, CRUD operations, and pagination.
 **Independent Test**: GET /api/reviews/feed returns paginated reviews; POST /api/reviews creates new review; PATCH/DELETE work for author.
-**Prompt**: `kitty-specs/002-feature/tasks/planned/WP02-backend-reviews-module.md`
+**Prompt**: `kitty-specs/002-feature/tasks/done/WP02-backend-reviews-module.md`
+**Status**: ✅ COMPLETED (2025-11-09)
+**Review**: Approved by claude (shell_pid=51400)
 
 ### Included Subtasks
 
-- [ ] T008 [P] Create `packages/backend/src/reviews/reviews.module.ts`
-- [ ] T009 [P] Create `packages/backend/src/reviews/reviews.controller.ts`
-- [ ] T010 [P] Create `packages/backend/src/reviews/reviews.service.ts`
-- [ ] T011 [P] Create `packages/backend/src/reviews/dto/create-review.dto.ts` with Zod validation
-- [ ] T012 [P] Create `packages/backend/src/reviews/dto/update-review.dto.ts` with Zod validation
-- [ ] T013 [P] Create `packages/backend/src/reviews/dto/review-response.dto.ts`
-- [ ] T014 Implement GET /api/reviews/feed with pagination (page, limit)
-- [ ] T015 Implement GET /api/reviews/:id with viewCount increment
-- [ ] T016 Implement POST /api/reviews with authentication guard
-- [ ] T017 Implement PATCH /api/reviews/:id with author authorization
-- [ ] T018 Implement DELETE /api/reviews/:id with soft delete (status=DELETED)
-- [ ] T019 Implement GET /api/reviews/:id/share-link for shareable URLs
-- [ ] T020 Add Reviews module to app.module.ts imports
+- [x] T008 [P] Create `packages/backend/src/modules/reviews/reviews.module.ts`
+- [x] T009 [P] Create `packages/backend/src/modules/reviews/controllers/reviews.controller.ts`
+- [x] T010 [P] Create `packages/backend/src/modules/reviews/services/reviews.service.ts`
+- [x] T011 [P] Create `packages/backend/src/modules/reviews/dto/create-review.dto.ts` with class-validator
+- [x] T012 [P] Create `packages/backend/src/modules/reviews/dto/update-review.dto.ts` with class-validator
+- [x] T013 [P] Create `packages/backend/src/modules/reviews/dto/review-response.dto.ts`
+- [x] T014 Implement GET /api/reviews/feed with pagination (page, limit)
+- [x] T015 Implement GET /api/reviews/:id with viewCount increment
+- [x] T016 Implement POST /api/reviews with authentication guard
+- [x] T017 Implement PATCH /api/reviews/:id with author authorization
+- [x] T018 Implement DELETE /api/reviews/:id with soft delete (status=DELETED)
+- [x] T019 Redis caching for anonymous feed requests (TTL: 60s)
+- [x] T020 Add Reviews module to app.module.ts imports
 
 ### Implementation Notes
 
