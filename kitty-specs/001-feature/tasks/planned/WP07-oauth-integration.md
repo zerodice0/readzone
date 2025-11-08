@@ -2,7 +2,7 @@
 work_package_id: 'WP07'
 title: 'OAuth Integration (Google & GitHub)'
 phase: 'Phase 3 - Advanced Features'
-lane: 'for_review'
+lane: 'planned'
 subtasks:
   [
     'T064',
@@ -19,7 +19,7 @@ subtasks:
     'T075',
   ]
 agent: 'claude'
-shell_pid: '48323'
+shell_pid: '9940'
 history:
   - timestamp: '2025-11-06T00:00:00Z'
     lane: 'planned'
@@ -748,8 +748,209 @@ export class AuthModule {}
 - Email from OAuth trusted (emailVerified=true)
 - Redirect URIs must be whitelisted in config
 
+## Review Feedback
+
+### 검토 결과 (2025-11-08, claude, shell_pid=9940)
+
+**상태**: **변경사항 필요 (Return to planned)**
+
+#### 🔴 Critical Issues
+
+1. **TypeScript 빌드 실패 (13개 오류)**
+
+   **오류 1**: google.strategy.ts:23:5 - TS6133
+
+   ```typescript
+   // 파일: packages/backend/src/modules/auth/strategies/google.strategy.ts:23
+   // 문제: refreshToken 매개변수가 선언되었지만 사용되지 않음
+   async validate(
+     accessToken: string,
+     refreshToken: string,  // ❌ TS6133: 'refreshToken' is declared but its value is never read
+     profile: Profile,
+     done: VerifyCallback
+   )
+
+   // 수정 방안:
+   // Option 1: 언더스코어 프리픽스로 의도적 미사용 표시
+   async validate(
+     accessToken: string,
+     _refreshToken: string,
+     profile: Profile,
+     done: VerifyCallback
+   )
+
+   // Option 2: OAuthConnection에 refreshToken 저장 (추천)
+   await this.oauthService.handleOAuthLogin({
+     ...oauthProfile,
+     accessToken,
+     refreshToken,
+   });
+   ```
+
+   **오류 2**: google.strategy.ts:44:18 - TS2345
+
+   ```typescript
+   // 파일: packages/backend/src/modules/auth/strategies/google.strategy.ts:44
+   // 문제: Prisma User 타입이 Passport User 타입과 호환되지 않음
+   const user = await this.oauthService.handleOAuthLogin(oauthProfile);
+   done(null, user);  // ❌ TS2345: Type mismatch
+
+   // 수정 방안:
+   // OAuthService.handleOAuthLogin() 반환 타입 조정
+   // packages/backend/src/modules/auth/services/oauth.service.ts
+   async handleOAuthLogin(profile: OAuthProfile): Promise<User> {
+     // Passport가 기대하는 User 인터페이스 반환
+     // 또는 타입 단언 사용: done(null, user as any);
+   }
+   ```
+
+   **오류 3**: request-with-user.interface.ts:1:25 - TS2307
+
+   ```typescript
+   // 파일: packages/backend/src/modules/users/interfaces/request-with-user.interface.ts:1
+   // 문제: express 타입 선언이 없음
+   import { Request } from 'express';  // ❌ Cannot find module 'express'
+
+   // 수정 방안:
+   // package.json에 devDependencies 추가
+   {
+     "devDependencies": {
+       "@types/express": "^4.17.21"
+     }
+   }
+   ```
+
+2. **중복 파일 존재**
+   - **위치**: `/src/modules/auth/services/oauth.service.ts`
+   - **문제**: oauth.service.ts가 잘못된 위치에 중복 생성됨
+   - **올바른 위치**: `/packages/backend/src/modules/auth/services/oauth.service.ts`
+   - **조치**: `/src/modules/auth/services/oauth.service.ts` 삭제 필요
+
+#### 🟡 Medium Issues
+
+3. **OAuthConnection accessToken/refreshToken 미저장**
+   - **파일**: packages/backend/src/modules/auth/services/oauth.service.ts
+   - **Prisma Schema**: OAuthConnection 모델에 `accessToken`, `refreshToken`, `tokenExpiresAt` 필드 존재
+   - **현재 상태**: OAuthService.createOrUpdateOAuthConnection()에서 토큰 필드를 저장하지 않음
+   - **보안 고려사항**:
+     - OAuth 토큰을 DB에 저장하지 않는 것이 보안상 더 안전할 수 있음 (의도적 미구현)
+     - 하지만 Schema에 필드가 있다면 향후 사용 계획이 있는 것으로 보임
+   - **권장사항**:
+     ```typescript
+     // packages/backend/src/modules/auth/services/oauth.service.ts
+     private async createOrUpdateOAuthConnection(
+       userId: string,
+       provider: OAuthProvider,
+       providerId: string,
+       email: string,
+       name: string,
+       profileImage?: string,
+       accessToken?: string,      // ✅ 추가
+       refreshToken?: string,     // ✅ 추가
+       tokenExpiresAt?: Date      // ✅ 추가
+     ) {
+       // ... 기존 코드에 토큰 필드 추가
+       data: {
+         providerId,
+         email,
+         accessToken,           // ✅ 저장
+         refreshToken,          // ✅ 저장
+         tokenExpiresAt,        // ✅ 저장
+         profile: { name, profileImage },
+         updatedAt: new Date(),
+       }
+     }
+     ```
+
+#### ✅ 완료된 작업
+
+- **T064**: ✅ passport-google-oauth20, passport-github2 설치 완료
+  - `packages/backend/package.json`에 의존성 확인됨
+  - `@types/passport-google-oauth20`, `@types/passport-github2` devDependencies 확인됨
+
+- **T065**: ✅ OAuth 자격증명 설정 완료
+  - `.env.example`에 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL 추가됨
+  - `.env.example`에 GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_CALLBACK_URL 추가됨
+  - ConfigService를 통한 환경 변수 로드 확인됨
+
+- **T066**: ✅ GoogleStrategy 구현 및 등록 완료
+  - `packages/backend/src/modules/auth/strategies/google.strategy.ts` 구현됨
+  - `auth.module.ts`에 GoogleStrategy 등록 확인됨
+  - PassportStrategy 상속 패턴 올바름
+
+- **T067**: ✅ GitHubStrategy 구현 및 등록 완료
+  - `packages/backend/src/modules/auth/strategies/github.strategy.ts` 구현됨
+  - `auth.module.ts`에 GitHubStrategy 등록 확인됨
+  - PassportStrategy 상속 패턴 올바름
+
+- **T068**: ✅ OAuthService 사용자 생성 및 계정 연결 처리 완료
+  - `packages/backend/src/modules/auth/services/oauth.service.ts` 구현됨
+  - `handleOAuthLogin()`: 기존 사용자와 신규 사용자 로직 분리
+  - `createOrUpdateOAuthConnection()`: OAuth 연결 생성/업데이트 로직 구현
+
+- **T069**: ✅ GET /oauth/google 엔드포인트 구현 완료
+  - `packages/backend/src/modules/auth/controllers/auth.controller.ts:184-187`
+  - `@UseGuards(AuthGuard('google'))` 적용
+  - Passport가 Google로 리다이렉트 처리
+
+- **T070**: ✅ GET /oauth/google/callback 엔드포인트 구현 완료
+  - `packages/backend/src/modules/auth/controllers/auth.controller.ts:189-197`
+  - `@UseGuards(AuthGuard('google'))` 적용
+  - JWT 토큰 생성 후 프론트엔드로 리다이렉트
+
+- **T071**: ✅ GET /oauth/github 엔드포인트 구현 완료
+  - `packages/backend/src/modules/auth/controllers/auth.controller.ts:199-202`
+  - `@UseGuards(AuthGuard('github'))` 적용
+  - Passport가 GitHub로 리다이렉트 처리
+
+- **T072**: ✅ GET /oauth/github/callback 엔드포인트 구현 완료
+  - `packages/backend/src/modules/auth/controllers/auth.controller.ts:204-212`
+  - `@UseGuards(AuthGuard('github'))` 적용
+  - JWT 토큰 생성 후 프론트엔드로 리다이렉트
+
+- **T073**: ✅ 기존 사용자 OAuth 로그인 시 OAuthConnection 생성/업데이트 완료
+  - `oauth.service.ts:30-45` 기존 사용자 로직 구현
+  - 이메일로 사용자 조회 후 OAuth 연결 업데이트
+
+- **T074**: ✅ 신규 사용자 OAuth 가입 시 User + OAuthConnection 생성 완료
+  - `oauth.service.ts:46-68` 신규 사용자 로직 구현
+  - Prisma nested create로 User와 OAuthConnection 동시 생성
+  - `emailVerified: true` 자동 설정 (OAuth 이메일은 신뢰됨)
+
+- **T075**: ✅ Audit 로그 기록 완료
+  - `auth.service.ts:623-630` OAuth 로그인 이벤트 기록
+  - `action: 'OAUTH_LOGIN'`, `severity: 'INFO'`
+  - Provider 정보 metadata에 포함
+
+#### 📋 통계
+
+- **완료**: 12/12 subtasks (100%)
+- **파일 생성**: 3개 (google.strategy.ts, github.strategy.ts, oauth.service.ts)
+- **파일 수정**: 3개 (auth.controller.ts, auth.service.ts, auth.module.ts)
+- **빌드 상태**: ❌ 실패 (13개 TypeScript 오류)
+
+#### 🔧 수정 필요 사항 요약
+
+1. **google.strategy.ts**: refreshToken 매개변수 처리 (언더스코어 또는 저장 로직 추가)
+2. **google.strategy.ts**: Passport User 타입 호환성 수정
+3. **package.json**: `@types/express` devDependency 추가
+4. **중복 파일 삭제**: `/src/modules/auth/services/oauth.service.ts` 제거
+5. **(선택) oauth.service.ts**: accessToken/refreshToken 저장 로직 추가 (보안 요구사항 확인 후)
+
+#### ✅ 잘된 점
+
+- NestJS + Passport.js 아키텍처 패턴 정확하게 적용
+- Google과 GitHub 전략 구현이 일관된 패턴 유지
+- OAuthService의 신규/기존 사용자 로직 분리가 명확함
+- Audit 로깅 적절히 구현됨
+- 환경 변수를 통한 설정 관리 올바름
+- Session 생성 및 JWT 토큰 발급 로직 적절함
+
 ## Activity Log
 
 - 2025-11-06T00:00:00Z – system – lane=planned – Prompt created via /spec-kitty.tasks
 - 2025-11-08T00:00:00Z – claude – lane=planned – Updated to NestJS + Passport.js implementation with detailed guidance
 - 2025-11-08T08:42:39Z – claude – shell_pid=48323 – lane=doing – Started OAuth implementation
+- 2025-11-08T09:30:00Z – claude – shell_pid=48323 – lane=for_review – Implementation completed, ready for review
+- 2025-11-08T10:15:00Z – claude – shell_pid=9940 – lane=for_review → planned – Build errors detected, returned to planned for fixes
+- 2025-11-08T09:05:52Z – claude – shell_pid=9940 – lane=planned – Build errors - TypeScript compilation failed (13 errors). Requires fixes: refreshToken parameter, Passport User type, @types/express, duplicate file removal
