@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../../../lib/api-client';
 import { useAuth } from '../../../lib/auth-context';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { extractErrorMessage } from '../../../utils/error';
 
 /**
  * T119: AccountSettingsPage
@@ -49,17 +50,12 @@ function AccountSettingsPage() {
       await logout();
       navigate('/login');
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        setDeleteError(
-          axiosError.response?.data?.message ||
-            '계정 삭제에 실패했습니다. 비밀번호를 확인하세요.'
-        );
-      } else {
-        setDeleteError('계정 삭제에 실패했습니다. 비밀번호를 확인하세요.');
-      }
+      setDeleteError(
+        extractErrorMessage(
+          error,
+          '계정 삭제에 실패했습니다. 비밀번호를 확인하세요.'
+        )
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -80,16 +76,7 @@ function AccountSettingsPage() {
         navigate('/settings/mfa/setup');
       }
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        setMfaError(
-          axiosError.response?.data?.message || 'MFA 설정 변경에 실패했습니다'
-        );
-      } else {
-        setMfaError('MFA 설정 변경에 실패했습니다');
-      }
+      setMfaError(extractErrorMessage(error, 'MFA 설정 변경에 실패했습니다'));
     } finally {
       setIsMfaLoading(false);
     }

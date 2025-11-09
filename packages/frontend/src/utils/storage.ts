@@ -2,13 +2,10 @@
  * Safe localStorage utilities with type safety
  */
 
-// Type assertion for localStorage to satisfy ESLint
-const safeLocalStorage = localStorage as Storage;
-
 export const storage = {
   getItem: (key: string): string | null => {
     try {
-      return safeLocalStorage.getItem(key);
+      return localStorage.getItem(key);
     } catch {
       return null;
     }
@@ -16,7 +13,7 @@ export const storage = {
 
   setItem: (key: string, value: string): void => {
     try {
-      safeLocalStorage.setItem(key, value);
+      localStorage.setItem(key, value);
     } catch {
       // Silently fail if localStorage is not available
     }
@@ -24,7 +21,7 @@ export const storage = {
 
   removeItem: (key: string): void => {
     try {
-      safeLocalStorage.removeItem(key);
+      localStorage.removeItem(key);
     } catch {
       // Silently fail if localStorage is not available
     }

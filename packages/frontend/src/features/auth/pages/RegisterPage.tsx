@@ -78,7 +78,7 @@ function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const { confirmPassword, ...registerData } = result.data;
+      const { confirmPassword: _confirmPassword, ...registerData } = result.data;
       await authApi.register(registerData);
 
       setSuccessMessage(

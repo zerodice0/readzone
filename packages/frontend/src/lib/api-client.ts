@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { logError } from '../utils/error';
 
 /**
  * T101: API Client Utility
@@ -46,12 +47,12 @@ apiClient.interceptors.response.use(
 
     // Handle 403 Forbidden
     if (error.response?.status === 403) {
-      console.error('Access forbidden:', error.response.data);
+      logError(error, 'Access forbidden');
     }
 
     // Handle 500 Internal Server Error
     if (error.response?.status === 500) {
-      console.error('Server error:', error.response.data);
+      logError(error, 'Server error');
     }
 
     return Promise.reject(error);

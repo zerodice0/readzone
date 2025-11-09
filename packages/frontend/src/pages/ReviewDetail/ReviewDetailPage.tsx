@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -18,6 +18,7 @@ import { Button } from '../../components/ui/button';
 import { useAuth } from '../../lib/auth-context';
 import { useLoginPromptStore } from '../../stores/loginPromptStore';
 import { LoginPrompt } from '../../components/LoginPrompt';
+import { logError } from '../../utils/error';
 
 export function ReviewDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +34,7 @@ export function ReviewDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
-  const loadReview = async (reviewId: string): Promise<void> => {
+  const loadReview = useCallback(async (reviewId: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
@@ -53,7 +54,7 @@ export function ReviewDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -80,13 +81,13 @@ export function ReviewDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, loadReview]);
 
-  const handleBack = (): void => {
+  const handleBack = useCallback((): void => {
     navigate('/feed');
-  };
+  }, [navigate]);
 
-  const handleLike = (): void => {
+  const handleLike = useCallback((): void => {
     if (!review) return;
 
     // T108: Check authentication before allowing like
@@ -108,17 +109,15 @@ export function ReviewDetailPage() {
         setLikeCount(response.data.likeCount);
       })
       .catch((err: unknown) => {
-        // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
         alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
-        // eslint-disable-next-line no-console
-        console.error('Toggle like failed:', err);
+        logError(err, 'Toggle like failed');
         // Rollback to previous state
         setIsLiked(prevIsLiked);
         setLikeCount(prevLikeCount);
       });
-  };
+  }, [review, isAuthenticated, isLiked, likeCount, showLoginPrompt]);
 
-  const handleBookmark = (): void => {
+  const handleBookmark = useCallback((): void => {
     if (!review) return;
 
     // T108: Check authentication before allowing bookmark
@@ -137,16 +136,14 @@ export function ReviewDetailPage() {
         setIsBookmarked(response.data.isBookmarked);
       })
       .catch((err: unknown) => {
-        // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
         alert('북마크 처리에 실패했습니다. 다시 시도해주세요.');
-        // eslint-disable-next-line no-console
-        console.error('Toggle bookmark failed:', err);
+        logError(err, 'Toggle bookmark failed');
         // Rollback to previous state
         setIsBookmarked(prevIsBookmarked);
       });
-  };
+  }, [review, isAuthenticated, isBookmarked, showLoginPrompt]);
 
-  const handleShare = (): void => {
+  const handleShare = useCallback((): void => {
     // Check if clipboard API is available
     if (
       typeof navigator !== 'undefined' &&
@@ -164,13 +161,11 @@ export function ReviewDetailPage() {
         })
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         .catch((err: unknown) => {
-          // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
           alert('링크 복사에 실패했습니다');
-          // eslint-disable-next-line no-console
-          console.error('Share failed:', err);
+          logError(err, 'Share failed');
         });
     }
-  };
+  }, []);
 
   // Loading state
   if (isLoading) {

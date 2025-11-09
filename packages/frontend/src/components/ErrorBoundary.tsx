@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { AlertCircle } from 'lucide-react';
+import { logError } from '../utils/error';
 
 interface Props {
   children: React.ReactNode;
@@ -26,9 +27,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to console
-    // eslint-disable-next-line no-console
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    // Log error (development: console, production: tracking service)
+    logError(error, `ErrorBoundary: ${errorInfo.componentStack || ''}`);
 
     // TODO: Send to error tracking service (e.g., Sentry)
     // Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } });

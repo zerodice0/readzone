@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import apiClient from '../../../lib/api-client';
 import SessionListItem from '../components/SessionListItem';
+import { extractErrorMessage } from '../../../utils/error';
 
 /**
  * T116: ActiveSessionsPage
@@ -26,7 +27,7 @@ function ActiveSessionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     setIsLoading(true);
     setError('');
 
@@ -36,48 +37,37 @@ function ActiveSessionsPage() {
       );
       setSessions(response.data.sessions);
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as {
-          response?: { data?: { message?: string } };
-        };
-        setError(
-          axiosError.response?.data?.message ||
-            '세션 목록을 불러오는데 실패했습니다'
-        );
-      } else {
-        setError('세션 목록을 불러오는데 실패했습니다');
-      }
+      setError(
+        extractErrorMessage(err, '세션 목록을 불러오는데 실패했습니다')
+      );
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadSessions();
   }, []);
 
-  const handleLogoutSession = async (sessionId: string) => {
+  useEffect(() => {
+    void loadSessions();
+  }, [loadSessions]);
+
+  const handleLogoutSession = useCallback(async (sessionId: string) => {
     try {
       await apiClient.delete(`/users/me/sessions/${sessionId}`);
 
       // Remove from list
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as {
-          response?: { data?: { message?: string } };
-        };
-        setError(
-          axiosError.response?.data?.message || '세션 로그아웃에 실패했습니다'
-        );
-      } else {
-        setError('세션 로그아웃에 실패했습니다');
-      }
+      setError(extractErrorMessage(err, '세션 로그아웃에 실패했습니다'));
     }
-  };
+  }, []);
 
-  const currentSession = sessions.find((s) => s.current);
-  const otherSessions = sessions.filter((s) => !s.current);
+  const currentSession = useMemo(
+    () => sessions.find((s) => s.current),
+    [sessions]
+  );
+  const otherSessions = useMemo(
+    () => sessions.filter((s) => !s.current),
+    [sessions]
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">

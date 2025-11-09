@@ -176,7 +176,9 @@ function LoginPage() {
           </div>
 
           <form
-            onSubmit={(e) => void handleMFAVerify(e)}
+            onSubmit={(e) => {
+              void handleMFAVerify(e);
+            }}
             className="mt-8 space-y-6"
           >
             {apiError && (
@@ -265,7 +267,12 @@ function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <form className="mt-8 space-y-6" onSubmit={(e) => void handleSubmit(e)}>
+        <form
+          className="mt-8 space-y-6"
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+        >
           {/* T111: API Error Display */}
           {apiError && (
             <div
