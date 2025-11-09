@@ -9,7 +9,9 @@ import { authApi } from '../lib/api-client';
 function EmailVerificationBanner() {
   const [isResending, setIsResending] = useState(false);
   const [message, setMessage] = useState<string>('');
-  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+  const [messageType, setMessageType] = useState<'success' | 'error'>(
+    'success'
+  );
   const [isVisible, setIsVisible] = useState(true);
 
   const handleResendVerification = async () => {
@@ -23,8 +25,12 @@ function EmailVerificationBanner() {
     } catch (error: unknown) {
       setMessageType('error');
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { message?: string } } };
-        setMessage(axiosError.response?.data?.message || '이메일 재전송에 실패했습니다');
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        setMessage(
+          axiosError.response?.data?.message || '이메일 재전송에 실패했습니다'
+        );
       } else {
         setMessage('이메일 재전송에 실패했습니다');
       }
@@ -66,7 +72,8 @@ function EmailVerificationBanner() {
             <p className="ml-3 font-medium text-yellow-800">
               <span className="md:hidden">이메일 인증이 필요합니다</span>
               <span className="hidden md:inline">
-                이메일 인증이 완료되지 않았습니다. 독후감 작성을 위해 이메일을 인증해주세요.
+                이메일 인증이 완료되지 않았습니다. 독후감 작성을 위해 이메일을
+                인증해주세요.
               </span>
             </p>
           </div>

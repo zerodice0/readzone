@@ -26,7 +26,11 @@ interface SessionListItemProps {
   onLogout: (sessionId: string) => Promise<void>;
 }
 
-function SessionListItem({ session, isCurrent, onLogout }: SessionListItemProps) {
+function SessionListItem({
+  session,
+  isCurrent,
+  onLogout,
+}: SessionListItemProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -116,7 +120,9 @@ function SessionListItem({ session, isCurrent, onLogout }: SessionListItemProps)
       <div className="flex items-start justify-between">
         {/* Device Icon and Info */}
         <div className="flex space-x-4 flex-1">
-          <div className="flex-shrink-0">{getDeviceIcon(session.deviceType)}</div>
+          <div className="flex-shrink-0">
+            {getDeviceIcon(session.deviceType)}
+          </div>
           <div className="flex-1 min-w-0">
             {/* Device Name */}
             <div className="flex items-center">
@@ -136,7 +142,8 @@ function SessionListItem({ session, isCurrent, onLogout }: SessionListItemProps)
                 <span className="font-medium">기기:</span> {session.deviceType}
               </p>
               <p className="text-sm text-gray-500">
-                <span className="font-medium">IP 주소:</span> {session.ipAddress}
+                <span className="font-medium">IP 주소:</span>{' '}
+                {session.ipAddress}
               </p>
               <p className="text-sm text-gray-500">
                 <span className="font-medium">마지막 활동:</span>{' '}

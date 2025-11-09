@@ -68,8 +68,7 @@ function ActiveSessionsPage() {
           response?: { data?: { message?: string } };
         };
         setError(
-          axiosError.response?.data?.message ||
-            '세션 로그아웃에 실패했습니다'
+          axiosError.response?.data?.message || '세션 로그아웃에 실패했습니다'
         );
       } else {
         setError('세션 로그아웃에 실패했습니다');

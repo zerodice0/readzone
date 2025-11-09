@@ -15,6 +15,10 @@ import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
+import { BooksModule } from './modules/books/books.module';
+import { LikesModule } from './modules/likes/likes.module';
+import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 
 /**
  * Root application module
@@ -50,6 +54,10 @@ import { AdminModule } from './modules/admin/admin.module';
     AuthModule,
     UsersModule,
     AdminModule,
+    ReviewsModule,
+    BooksModule,
+    LikesModule,
+    BookmarksModule,
   ],
   providers: [
     // Global exception filter

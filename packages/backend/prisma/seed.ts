@@ -37,16 +37,16 @@ async function main(): Promise<void> {
   console.log('🌱 Starting database seed...');
 
   // Clean existing data (in reverse order of dependencies)
-  await prisma.bookmark.deleteMany();
-  await prisma.like.deleteMany();
-  await prisma.review.deleteMany();
-  await prisma.book.deleteMany();
   await prisma.passwordResetToken.deleteMany();
   await prisma.emailVerificationToken.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.mFASettings.deleteMany();
   await prisma.oAuthConnection.deleteMany();
   await prisma.session.deleteMany();
+  await prisma.bookmark.deleteMany();
+  await prisma.like.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.book.deleteMany();
   await prisma.user.deleteMany();
 
   console.log('✅ Cleared existing data');
@@ -335,7 +335,7 @@ async function main(): Promise<void> {
 
   console.log('✅ Created audit logs');
 
-  // Create books
+  // Create sample books (Feature: 002-feature)
   const books = await Promise.all([
     prisma.book.create({
       data: {
@@ -345,9 +345,9 @@ async function main(): Promise<void> {
         publisher: '창비',
         publishedDate: new Date('2007-10-30'),
         coverImageUrl:
-          'https://image.aladin.co.kr/product/43/35/cover500/8936433598_1.jpg',
+          'https://image.aladin.co.kr/product/43/35/cover150/8936433598_1.jpg',
         description:
-          '채식주의자는 한강의 장편소설이다. 세 부로 나뉘어 있으며, 각 부는 다른 화자의 시점에서 서술된다.',
+          '채식주의자는 한강의 장편소설이다. 맨부커 인터내셔널상을 수상한 작품으로, 육식을 거부하는 한 여성의 이야기를 통해 인간 내면의 폭력성과 억압을 탐구한다.',
         pageCount: 192,
         language: 'ko',
         externalSource: ExternalSource.ALADIN,
@@ -356,261 +356,268 @@ async function main(): Promise<void> {
     }),
     prisma.book.create({
       data: {
-        isbn: '9788932917245',
-        title: '아몬드',
-        author: '손원평',
-        publisher: '창비',
-        publishedDate: new Date('2017-03-30'),
-        coverImageUrl:
-          'https://image.aladin.co.kr/product/11/72/cover500/8932917248_1.jpg',
-        description:
-          '감정을 느끼지 못하는 소년 윤재의 성장 이야기. 따뜻하고 섬세한 문체로 인간 존재의 근원적 외로움과 소통의 가능성을 탐색한다.',
-        pageCount: 264,
-        language: 'ko',
-        externalSource: ExternalSource.ALADIN,
-        externalId: 'K292917245',
-      },
-    }),
-    prisma.book.create({
-      data: {
-        isbn: '9788936434120',
-        title: '소년이 온다',
-        author: '한강',
-        publisher: '창비',
-        publishedDate: new Date('2014-05-19'),
-        coverImageUrl:
-          'https://image.aladin.co.kr/product/43/41/cover500/8936434128_1.jpg',
-        description:
-          '1980년 5월 광주를 배경으로 한 소설. 광주민주화운동의 참혹함을 생생하게 그려내며, 역사적 사건의 의미를 다시 생각하게 한다.',
-        pageCount: 216,
-        language: 'ko',
-        externalSource: ExternalSource.ALADIN,
-        externalId: 'K432434120',
-      },
-    }),
-    prisma.book.create({
-      data: {
-        isbn: '9788954654715',
+        isbn: '9788954609142',
         title: '달러구트 꿈 백화점',
         author: '이미예',
         publisher: '팩토리나인',
-        publishedDate: new Date('2020-07-08'),
+        publishedDate: new Date('2020-07-10'),
         coverImageUrl:
-          'https://image.aladin.co.kr/product/24/88/cover500/8954654711_1.jpg',
+          'https://image.aladin.co.kr/product/24/31/cover150/8954609147_1.jpg',
         description:
-          '꿈을 사고파는 신비한 백화점 이야기. 따뜻하고 위로가 되는 판타지 소설로, 많은 독자들에게 사랑받았다.',
-        pageCount: 312,
+          '우연히 꿈 백화점에 들어가게 된 주인공 페니의 성장 이야기. 다양한 꿈들이 판매되는 신비로운 백화점을 배경으로 한 따뜻한 판타지 소설.',
+        pageCount: 304,
         language: 'ko',
         externalSource: ExternalSource.ALADIN,
-        externalId: 'K292654715',
+        externalId: 'K546091424',
+      },
+    }),
+    prisma.book.create({
+      data: {
+        isbn: '9788954675642',
+        title: '파친코',
+        author: '이민진',
+        publisher: '문학사상',
+        publishedDate: new Date('2018-03-15'),
+        coverImageUrl:
+          'https://image.aladin.co.kr/product/13/67/cover150/8954675646_1.jpg',
+        description:
+          '일제강점기부터 1980년대까지 재일 한국인 가족 4대의 이야기를 그린 대하소설. 뉴욕타임스 베스트셀러에 오른 작품.',
+        pageCount: 764,
+        language: 'ko',
+        externalSource: ExternalSource.ALADIN,
+        externalId: 'K546756424',
+      },
+    }),
+    prisma.book.create({
+      data: {
+        isbn: '9788936434267',
+        title: '작별하지 않는다',
+        author: '한강',
+        publisher: '창비',
+        publishedDate: new Date('2021-11-15'),
+        coverImageUrl:
+          'https://image.aladin.co.kr/product/27/84/cover150/8936434268_1.jpg',
+        description:
+          '한강 작가의 장편소설. 상실과 애도, 그리고 재생에 관한 이야기.',
+        pageCount: 224,
+        language: 'ko',
+        externalSource: ExternalSource.ALADIN,
+        externalId: 'K432434267',
       },
     }),
   ]);
 
-  console.log(`✅ Created ${books.length} books`);
+  console.log(`✅ Created ${books.length} sample books`);
 
-  // Create reviews
+  // Create sample reviews (Feature: 002-feature)
+  const reviewNow = new Date();
+  const oneDayAgo = new Date(reviewNow.getTime() - 1 * 24 * 60 * 60 * 1000);
+  const twoDaysAgo = new Date(reviewNow.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const threeDaysAgo = new Date(reviewNow.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const oneWeekAgo = new Date(reviewNow.getTime() - 7 * 24 * 60 * 60 * 1000);
+
   const reviews = await Promise.all([
-    // Book 1: 채식주의자 - 3 reviews
+    // Reviews for 채식주의자
     prisma.review.create({
       data: {
         userId: users[3].id, // Regular user
         bookId: books[0].id,
         title: '충격적이고 아름다운 이야기',
         content:
-          '한강 작가의 문체는 정말 독특하다. 채식주의자라는 주제를 통해 인간의 근원적인 욕망과 억압을 탐구한다. 영혜라는 캐릭터가 매우 인상적이었고, 그녀의 선택이 주변 사람들에게 미치는 영향이 섬뜩하면서도 아름다웠다. 한국 문학의 저력을 보여주는 작품이라고 생각한다.',
+          '한강 작가의 문체는 정말 독특하다. 채식주의자라는 주제를 통해 인간 내면의 폭력성과 억압을 다루는 방식이 인상적이었다. 처음엔 이해하기 어려웠지만, 읽고 나서 한참을 생각하게 만드는 작품이다.',
         rating: 5,
         isRecommended: true,
         readStatus: ReadStatus.COMPLETED,
         status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-11-01T10:30:00Z'),
-      },
-    }),
-    prisma.review.create({
-      data: {
-        userId: users[4].id, // OAuth user
-        bookId: books[0].id,
-        title: '독특하지만 난해함',
-        content:
-          '채식주의자는 확실히 특별한 작품이다. 하지만 나에게는 너무 난해하고 답답했다. 인물들의 행동과 심리를 이해하기 어려웠고, 전체적으로 어두운 분위기가 불편했다. 문학적 가치는 인정하지만 개인적으로는 별로였다.',
-        rating: 2,
-        isRecommended: false,
-        readStatus: ReadStatus.COMPLETED,
-        status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-10-28T14:20:00Z'),
-      },
-    }),
-    prisma.review.create({
-      data: {
-        userId: users[2].id, // Moderator
-        bookId: books[0].id,
-        content:
-          '한강 작가의 채식주의자를 읽고 나서 머릿속이 복잡하다. 영혜의 극단적인 선택과 그로 인한 파장이 인상적이었다. 특히 3부 구조로 각기 다른 시점에서 이야기를 풀어가는 방식이 참신했다.',
-        rating: 4,
-        isRecommended: true,
-        readStatus: ReadStatus.COMPLETED,
-        status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-10-25T09:15:00Z'),
-      },
-    }),
-
-    // Book 2: 아몬드 - 4 reviews
-    prisma.review.create({
-      data: {
-        userId: users[3].id,
-        bookId: books[1].id,
-        title: '따뜻한 성장소설',
-        content:
-          '아몬드는 정말 따뜻한 소설이다. 감정을 느끼지 못하는 윤재가 곤이를 만나면서 점차 변화하는 과정이 감동적이었다. 특히 윤재가 처음으로 분노를 느끼는 장면은 가슴이 뭉클했다. 청소년은 물론 성인들도 충분히 공감할 수 있는 보편적인 주제를 다룬다.',
-        rating: 5,
-        isRecommended: true,
-        readStatus: ReadStatus.COMPLETED,
-        status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-11-03T16:40:00Z'),
-      },
-    }),
-    prisma.review.create({
-      data: {
-        userId: users[5].id,
-        bookId: books[1].id,
-        title: '청소년 성장소설의 정석',
-        content:
-          '아몬드를 읽으면서 학창 시절이 떠올랐다. 윤재와 곤이의 우정이 특히 인상적이었고, 두 인물의 대비가 명확해서 이야기가 더 흥미로웠다. 다만 후반부가 조금 빠르게 전개되어 아쉬웠다.',
-        rating: 4,
-        isRecommended: true,
-        readStatus: ReadStatus.COMPLETED,
-        status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-11-02T11:25:00Z'),
+        publishedAt: threeDaysAgo,
+        likeCount: 15,
+        bookmarkCount: 8,
+        viewCount: 142,
       },
     }),
     prisma.review.create({
       data: {
         userId: users[1].id, // Admin
-        bookId: books[1].id,
+        bookId: books[0].id,
+        title: '무거운 주제, 깊은 울림',
         content:
-          '아몬드는 청소년 문학의 새로운 가능성을 보여준다. 감정을 느끼지 못하는 소년이라는 독특한 설정과 따뜻한 결말이 인상적이다.',
+          '맨부커상을 받은 이유를 알 것 같다. 여성의 신체와 자유의지에 대한 깊은 성찰을 담고 있다.',
         rating: 4,
         isRecommended: true,
         readStatus: ReadStatus.COMPLETED,
         status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-10-30T08:00:00Z'),
+        publishedAt: oneWeekAgo,
+        likeCount: 8,
+        bookmarkCount: 3,
+        viewCount: 89,
+      },
+    }),
+
+    // Reviews for 달러구트 꿈 백화점
+    prisma.review.create({
+      data: {
+        userId: users[4].id, // OAuth user
+        bookId: books[1].id,
+        title: '따뜻하고 위로가 되는 이야기',
+        content:
+          '독특한 설정의 판타지 소설. 꿈을 파는 백화점이라는 아이디어가 신선했고, 각각의 에피소드마다 감동이 있었다. 힘들 때 읽으면 위로받을 수 있는 책.',
+        rating: 5,
+        isRecommended: true,
+        readStatus: ReadStatus.COMPLETED,
+        status: ReviewStatus.PUBLISHED,
+        publishedAt: twoDaysAgo,
+        likeCount: 23,
+        bookmarkCount: 12,
+        viewCount: 201,
       },
     }),
     prisma.review.create({
       data: {
-        userId: users[6].id, // Unverified user
+        userId: users[2].id, // Moderator
         bookId: books[1].id,
-        title: '기대 이하',
+        title: '가볍게 읽기 좋은 판타지',
         content:
-          '많은 사람들이 추천해서 읽었는데, 기대에 못 미쳤다. 설정은 흥미로웠지만 전개가 예측 가능하고 캐릭터가 평면적으로 느껴졌다.',
+          '출퇴근길에 읽기 좋았다. 무겁지 않으면서도 생각할 거리를 주는 소설이다.',
+        rating: 4,
+        isRecommended: true,
+        readStatus: ReadStatus.COMPLETED,
+        status: ReviewStatus.PUBLISHED,
+        publishedAt: oneDayAgo,
+        likeCount: 7,
+        bookmarkCount: 4,
+        viewCount: 67,
+      },
+    }),
+
+    // Reviews for 파친코
+    prisma.review.create({
+      data: {
+        userId: users[3].id, // Regular user
+        bookId: books[2].id,
+        title: '재일 한국인의 삶을 그린 대서사시',
+        content:
+          '4대에 걸친 가족사를 통해 역사의 무게를 느낄 수 있었다. 700페이지가 넘는 분량이지만 지루하지 않았고, 각 인물들의 삶이 생생하게 그려져 있다. 다만 번역이 조금 아쉬운 부분도 있었다.',
+        rating: 5,
+        isRecommended: true,
+        readStatus: ReadStatus.COMPLETED,
+        status: ReviewStatus.PUBLISHED,
+        publishedAt: oneWeekAgo,
+        likeCount: 31,
+        bookmarkCount: 18,
+        viewCount: 287,
+      },
+    }),
+    prisma.review.create({
+      data: {
+        userId: users[5].id, // GitHub OAuth user
+        bookId: books[2].id,
+        content:
+          '분량이 길어서 중간에 포기할 뻔했지만, 끝까지 읽길 잘했다. 역사 속 개인의 삶이 어떻게 펼쳐지는지 잘 보여주는 작품. 특히 후반부가 감동적이었다.',
+        rating: 4,
+        isRecommended: true,
+        readStatus: ReadStatus.COMPLETED,
+        status: ReviewStatus.PUBLISHED,
+        publishedAt: twoDaysAgo,
+        likeCount: 12,
+        bookmarkCount: 6,
+        viewCount: 124,
+      },
+    }),
+
+    // Reviews for 작별하지 않는다
+    prisma.review.create({
+      data: {
+        userId: users[1].id, // Admin
+        bookId: books[3].id,
+        title: '상실과 재생에 대한 깊은 성찰',
+        content:
+          '한강 작가 특유의 시적인 문체로 죽음과 상실, 그리고 다시 살아가는 것에 대해 이야기한다. 느린 호흡으로 읽어야 하는 책.',
+        rating: 5,
+        isRecommended: true,
+        readStatus: ReadStatus.COMPLETED,
+        status: ReviewStatus.PUBLISHED,
+        publishedAt: oneDayAgo,
+        likeCount: 19,
+        bookmarkCount: 11,
+        viewCount: 156,
+      },
+    }),
+    prisma.review.create({
+      data: {
+        userId: users[4].id, // OAuth user
+        bookId: books[3].id,
+        title: '아름답지만 무거운 이야기',
+        content:
+          '한강 작가의 작품은 항상 읽고 나면 여운이 길게 남는다. 이 작품도 마찬가지였다.',
+        rating: 4,
+        isRecommended: true,
+        readStatus: ReadStatus.COMPLETED,
+        status: ReviewStatus.PUBLISHED,
+        publishedAt: threeDaysAgo,
+        likeCount: 9,
+        bookmarkCount: 5,
+        viewCount: 78,
+      },
+    }),
+
+    // Reading status variations
+    prisma.review.create({
+      data: {
+        userId: users[2].id, // Moderator
+        bookId: books[2].id,
+        title: '읽는 중이지만 매우 흥미롭다',
+        content:
+          '아직 절반 정도밖에 못 읽었지만 벌써부터 몰입도가 높다. 재일 한국인의 역사를 이렇게 디테일하게 다룬 소설은 처음 본다.',
+        rating: null,
+        isRecommended: true,
+        readStatus: ReadStatus.READING,
+        status: ReviewStatus.PUBLISHED,
+        publishedAt: oneDayAgo,
+        likeCount: 3,
+        bookmarkCount: 1,
+        viewCount: 34,
+      },
+    }),
+
+    // Not recommended review
+    prisma.review.create({
+      data: {
+        userId: users[3].id, // Regular user
+        bookId: books[1].id,
+        title: '기대에 못 미쳤다',
+        content:
+          '많은 사람들이 추천해서 읽어봤는데, 개인적으로는 조금 아쉬웠다. 설정은 참신했지만 스토리 전개가 너무 예측 가능했고, 캐릭터들의 깊이가 부족한 느낌이었다. 가볍게 읽기에는 좋지만 큰 감동은 없었다.',
         rating: 2,
         isRecommended: false,
         readStatus: ReadStatus.COMPLETED,
         status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-10-27T13:50:00Z'),
+        publishedAt: oneDayAgo,
+        likeCount: 4,
+        bookmarkCount: 1,
+        viewCount: 52,
       },
     }),
 
-    // Book 3: 소년이 온다 - 2 reviews
+    // Draft review (not published)
     prisma.review.create({
       data: {
-        userId: users[3].id,
-        bookId: books[2].id,
-        title: '잊지 말아야 할 역사',
-        content:
-          '소년이 온다를 읽으면서 많이 울었다. 5·18 광주민주화운동의 참혹함을 생생하게 느낄 수 있었다. 한강 작가의 문체가 슬픔을 더욱 깊이 있게 전달한다. 이 소설을 통해 역사를 다시 생각하게 되었고, 절대 잊지 말아야 할 일이라는 것을 깨달았다.',
-        rating: 5,
-        isRecommended: true,
-        readStatus: ReadStatus.COMPLETED,
-        status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-11-04T15:10:00Z'),
-      },
-    }),
-    prisma.review.create({
-      data: {
-        userId: users[2].id,
-        bookId: books[2].id,
-        content:
-          '소년이 온다는 무겁고 슬픈 이야기지만 반드시 읽어야 할 소설이다. 5·18의 참상을 직접 목격한 듯한 생생함이 가슴을 먹먹하게 한다.',
-        rating: 5,
-        isRecommended: true,
-        readStatus: ReadStatus.COMPLETED,
-        status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-10-29T10:30:00Z'),
-      },
-    }),
-
-    // Book 4: 달러구트 꿈 백화점 - 1 review
-    prisma.review.create({
-      data: {
-        userId: users[4].id,
+        userId: users[3].id, // Regular user
         bookId: books[3].id,
-        title: '따뜻하고 위로되는 이야기',
-        content:
-          '달러구트 꿈 백화점은 정말 독특한 설정의 소설이다. 꿈을 사고파는 백화점이라는 아이디어가 신선했고, 각 에피소드마다 담긴 메시지가 따뜻했다. 힘들고 지친 날에 읽기 좋은 힐링 소설이다.',
-        rating: 4,
+        title: '임시 저장',
+        content: '아직 작성 중...',
+        rating: null,
         isRecommended: true,
-        readStatus: ReadStatus.COMPLETED,
-        status: ReviewStatus.PUBLISHED,
-        publishedAt: new Date('2024-11-05T12:00:00Z'),
+        readStatus: ReadStatus.READING,
+        status: ReviewStatus.DRAFT,
+        publishedAt: null,
+        likeCount: 0,
+        bookmarkCount: 0,
+        viewCount: 0,
       },
     }),
   ]);
 
-  console.log(`✅ Created ${reviews.length} reviews`);
-
-  // Create likes and bookmarks
-  await Promise.all([
-    // Likes for reviews
-    prisma.like.create({
-      data: {
-        userId: users[4].id,
-        reviewId: reviews[0].id,
-      },
-    }),
-    prisma.like.create({
-      data: {
-        userId: users[5].id,
-        reviewId: reviews[0].id,
-      },
-    }),
-    prisma.like.create({
-      data: {
-        userId: users[2].id,
-        reviewId: reviews[3].id,
-      },
-    }),
-
-    // Bookmarks for reviews
-    prisma.bookmark.create({
-      data: {
-        userId: users[3].id,
-        reviewId: reviews[8].id,
-      },
-    }),
-    prisma.bookmark.create({
-      data: {
-        userId: users[4].id,
-        reviewId: reviews[3].id,
-      },
-    }),
-  ]);
-
-  // Update review likeCount based on actual likes
-  await prisma.review.update({
-    where: { id: reviews[0].id },
-    data: { likeCount: 2 },
-  });
-  await prisma.review.update({
-    where: { id: reviews[3].id },
-    data: { likeCount: 1, bookmarkCount: 1 },
-  });
-  await prisma.review.update({
-    where: { id: reviews[8].id },
-    data: { bookmarkCount: 1 },
-  });
-
-  console.log('✅ Created likes and bookmarks');
+  console.log(`✅ Created ${reviews.length} sample reviews`);
 
   console.log('🎉 Database seeding completed successfully!');
   console.log('\n📊 Seed Summary:');
@@ -621,9 +628,9 @@ async function main(): Promise<void> {
   console.log(`   - Active Sessions: 2`);
   console.log(`   - Audit Logs: 5`);
   console.log(`   - Books: ${books.length}`);
-  console.log(`   - Reviews: ${reviews.length}`);
-  console.log(`   - Likes: 3`);
-  console.log(`   - Bookmarks: 2`);
+  console.log(
+    `   - Reviews: ${reviews.length} (Published: ${reviews.filter((r) => r.status === ReviewStatus.PUBLISHED).length}, Draft: ${reviews.filter((r) => r.status === ReviewStatus.DRAFT).length})`
+  );
   console.log('\n🔑 Test Credentials:');
   console.log('   admin@readzone.com / Admin123! (SUPERADMIN, MFA enabled)');
   console.log('   admin2@readzone.com / Admin456! (ADMIN)');
