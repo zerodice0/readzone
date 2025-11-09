@@ -15,10 +15,15 @@ import { likesService } from '../../services/api/likes';
 import { bookmarksService } from '../../services/api/bookmarks';
 import { Review } from '../../types/review';
 import { Button } from '../../components/ui/button';
+import { useAuth } from '../../lib/auth-context';
+import { useLoginPromptStore } from '../../stores/loginPromptStore';
+import { LoginPrompt } from '../../components/LoginPrompt';
 
 export function ReviewDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { show: showLoginPrompt } = useLoginPromptStore();
   const [review, setReview] = useState<Review | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +89,12 @@ export function ReviewDetailPage() {
   const handleLike = (): void => {
     if (!review) return;
 
+    // T108: Check authentication before allowing like
+    if (!isAuthenticated) {
+      showLoginPrompt('좋아요를 누르려면 로그인이 필요합니다.');
+      return;
+    }
+
     // Optimistic update
     const prevIsLiked = isLiked;
     const prevLikeCount = likeCount;
@@ -109,6 +120,12 @@ export function ReviewDetailPage() {
 
   const handleBookmark = (): void => {
     if (!review) return;
+
+    // T108: Check authentication before allowing bookmark
+    if (!isAuthenticated) {
+      showLoginPrompt('북마크를 추가하려면 로그인이 필요합니다.');
+      return;
+    }
 
     // Optimistic update
     const prevIsBookmarked = isBookmarked;
@@ -209,7 +226,11 @@ export function ReviewDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl">
+    <>
+      {/* T108: Login prompt for unauthenticated users */}
+      <LoginPrompt />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl">
       {/* Header with back button */}
       <div className="mb-6">
         <Button variant="ghost" size="sm" onClick={handleBack} className="mb-4">
@@ -319,6 +340,7 @@ export function ReviewDetailPage() {
           <span className="sr-only">공유</span>
         </Button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

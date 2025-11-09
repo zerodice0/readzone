@@ -6,6 +6,7 @@ import { ReviewCard } from '../../components/ReviewCard';
 import { InfiniteScroll } from '../../components/InfiniteScroll';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Button } from '../../components/ui/button';
+import { LoginPrompt } from '../../components/LoginPrompt';
 
 export function FeedPage() {
   const navigate = useNavigate();
@@ -28,10 +29,14 @@ export function FeedPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-left">
-        독후감 피드
-      </h1>
+    <>
+      {/* T104: Global login prompt modal */}
+      <LoginPrompt />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-left">
+          독후감 피드
+        </h1>
 
       {/* Loading skeleton */}
       {isLoading && reviews.length === 0 && (
@@ -108,6 +113,7 @@ export function FeedPage() {
           />
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 }
