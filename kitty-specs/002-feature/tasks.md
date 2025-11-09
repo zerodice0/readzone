@@ -165,28 +165,30 @@
 
 ---
 
-## Work Package WP04: Backend - Likes & Bookmarks Modules (Priority: P0)
+## Work Package WP04: Backend - Likes & Bookmarks Modules (Priority: P0) ✅
 
 **Goal**: Implement Likes and Bookmarks toggle APIs with transaction-safe likeCount/bookmarkCount updates.
 **Independent Test**: POST /api/reviews/:id/like toggles like state and updates count; POST /api/reviews/:id/bookmark toggles bookmark.
-**Prompt**: `kitty-specs/002-feature/tasks/planned/WP04-backend-likes-bookmarks-modules.md`
+**Prompt**: `kitty-specs/002-feature/tasks/done/WP04-backend-likes-bookmarks-modules.md`
+**Status**: ✅ COMPLETED (2025-11-09)
+**Review**: Approved by claude (shell_pid=2348)
 
 ### Included Subtasks
 
-- [ ] T035 [P] Create `packages/backend/src/likes/likes.module.ts`
-- [ ] T036 [P] Create `packages/backend/src/likes/likes.controller.ts`
-- [ ] T037 [P] Create `packages/backend/src/likes/likes.service.ts`
-- [ ] T038 [P] Create `packages/backend/src/bookmarks/bookmarks.module.ts`
-- [ ] T039 [P] Create `packages/backend/src/bookmarks/bookmarks.controller.ts`
-- [ ] T040 [P] Create `packages/backend/src/bookmarks/bookmarks.service.ts`
-- [ ] T041 Implement POST /api/reviews/:id/like toggle with Prisma transaction
-- [ ] T042 Implement GET /api/reviews/:id/likes for like list
-- [ ] T043 Implement GET /users/me/likes for user's liked reviews
-- [ ] T044 Implement POST /api/reviews/:id/bookmark toggle with Prisma transaction
-- [ ] T045 Implement GET /users/me/bookmarks for user's bookmarked reviews
-- [ ] T046 Implement DELETE /api/bookmarks/:id for direct bookmark removal
-- [ ] T047 Add Likes and Bookmarks modules to app.module.ts imports
-- [ ] T048 Add authentication guards to all endpoints
+- [x] T035 [P] Create `packages/backend/src/likes/likes.module.ts`
+- [x] T036 [P] Create `packages/backend/src/likes/likes.controller.ts`
+- [x] T037 [P] Create `packages/backend/src/likes/likes.service.ts`
+- [x] T038 [P] Create `packages/backend/src/bookmarks/bookmarks.module.ts`
+- [x] T039 [P] Create `packages/backend/src/bookmarks/bookmarks.controller.ts`
+- [x] T040 [P] Create `packages/backend/src/bookmarks/bookmarks.service.ts`
+- [x] T041 Implement POST /api/reviews/:id/like toggle with Prisma transaction
+- [x] T042 Implement GET /api/reviews/:id/likes for like list
+- [x] T043 Implement GET /users/me/likes for user's liked reviews
+- [x] T044 Implement POST /api/reviews/:id/bookmark toggle with Prisma transaction
+- [x] T045 Implement GET /users/me/bookmarks for user's bookmarked reviews
+- [x] T046 Implement DELETE /api/bookmarks/:id for direct bookmark removal
+- [x] T047 Add Likes and Bookmarks modules to app.module.ts imports
+- [x] T048 Add authentication guards to all endpoints
 
 ### Implementation Notes
 
@@ -213,26 +215,28 @@
 
 ---
 
-## Work Package WP05: Frontend - Feed Store & API Client (Priority: P1)
+## Work Package WP05: Frontend - Feed Store & API Client (Priority: P1) ✅
 
 **Goal**: Implement Zustand feed store with pagination, infinite scroll state, and API client for reviews, likes, bookmarks.
 **Independent Test**: Feed store loads data, handles pagination, toggles like/bookmark with optimistic updates.
-**Prompt**: `kitty-specs/002-feature/tasks/planned/WP05-frontend-feed-store-api-client.md`
+**Prompt**: `kitty-specs/002-feature/tasks/done/WP05-frontend-feed-store-api-client.md`
+**Status**: ✅ COMPLETED (2025-11-09)
+**Review**: Approved by claude (shell_pid=11720)
 
 ### Included Subtasks
 
-- [ ] T049 [P] Install Zustand: `pnpm add zustand`
-- [ ] T050 [P] Create `packages/frontend/src/types/review.ts` with TypeScript interfaces
-- [ ] T051 [P] Create `packages/frontend/src/types/book.ts` with TypeScript interfaces
-- [ ] T052 [P] Create `packages/frontend/src/services/api/reviews.ts` with axios client
-- [ ] T053 [P] Create `packages/frontend/src/services/api/likes.ts` with axios client
-- [ ] T054 [P] Create `packages/frontend/src/services/api/bookmarks.ts` with axios client
-- [ ] T055 Create `packages/frontend/src/stores/feedStore.ts` with Zustand
-- [ ] T056 Implement loadFeed() action (initial load, page=0)
-- [ ] T057 Implement loadMore() action (pagination, page++)
-- [ ] T058 Implement toggleLike() action with optimistic update and rollback on error
-- [ ] T059 Implement toggleBookmark() action with optimistic update and rollback on error
-- [ ] T060 Add loading, error, and hasMore state management
+- [x] T049 [P] Install Zustand: `pnpm add zustand`
+- [x] T050 [P] Create `packages/frontend/src/types/review.ts` with TypeScript interfaces
+- [x] T051 [P] Create `packages/frontend/src/types/book.ts` with TypeScript interfaces
+- [x] T052 [P] Create `packages/frontend/src/services/api/reviews.ts` with axios client
+- [x] T053 [P] Create `packages/frontend/src/services/api/likes.ts` with axios client
+- [x] T054 [P] Create `packages/frontend/src/services/api/bookmarks.ts` with axios client
+- [x] T055 Create `packages/frontend/src/stores/feedStore.ts` with Zustand
+- [x] T056 Implement loadFeed() action (initial load, page=0)
+- [x] T057 Implement loadMore() action (pagination, page++)
+- [x] T058 Implement toggleLike() action with optimistic update and rollback on error
+- [x] T059 Implement toggleBookmark() action with optimistic update and rollback on error
+- [x] T060 Add loading, error, and hasMore state management
 
 ### Implementation Notes
 
@@ -264,27 +268,29 @@
 
 ---
 
-## Work Package WP06: Frontend - Review Card Component (Priority: P1) 🎯 MVP
+## Work Package WP06: Frontend - Review Card Component (Priority: P1) ✅
 
 **Goal**: Implement ReviewCard component displaying book cover, title, author, review excerpt, likes, bookmarks, recommend status.
 **Independent Test**: ReviewCard renders correctly with all data fields; like/bookmark buttons trigger store actions.
-**Prompt**: `kitty-specs/002-feature/tasks/planned/WP06-frontend-review-card-component.md`
+**Prompt**: `kitty-specs/002-feature/tasks/done/WP06-frontend-review-card-component.md`
+**Status**: ✅ COMPLETED (2025-11-09)
+**Review**: Approved by claude (shell_pid=23535)
 
 ### Included Subtasks
 
-- [ ] T061 [P] Install shadcn/ui: `npx shadcn-ui@latest init`
-- [ ] T062 [P] Add shadcn/ui components: `npx shadcn-ui@latest add card button skeleton`
-- [ ] T063 Create `packages/frontend/src/components/ReviewCard/ReviewCard.tsx`
-- [ ] T064 Implement book cover display with lazy loading and error fallback
-- [ ] T065 Implement review excerpt truncation (max 150 chars)
-- [ ] T066 Implement relative time display (e.g., "3시간 전", fallback to absolute date after 1 year)
-- [ ] T067 Implement recommend/not recommend icon display (not emoji, use actual icons)
-- [ ] T068 Implement like button with count and active state
-- [ ] T069 Implement bookmark button with active state
-- [ ] T070 Implement share button (opens share modal/options)
-- [ ] T071 Add click handler to navigate to review detail (React Router)
-- [ ] T072 Add responsive styling (mobile-first, Tailwind CSS)
-- [ ] T073 Add hover effects and transitions
+- [x] T061 [P] Install shadcn/ui: `npx shadcn-ui@latest init`
+- [x] T062 [P] Add shadcn/ui components: `npx shadcn-ui@latest add card button skeleton`
+- [x] T063 Create `packages/frontend/src/components/ReviewCard/ReviewCard.tsx`
+- [x] T064 Implement book cover display with lazy loading and error fallback
+- [x] T065 Implement review excerpt truncation (max 150 chars)
+- [x] T066 Implement relative time display (e.g., "3시간 전", fallback to absolute date after 1 year)
+- [x] T067 Implement recommend/not recommend icon display (not emoji, use actual icons)
+- [x] T068 Implement like button with count and active state
+- [x] T069 Implement bookmark button with active state
+- [x] T070 Implement share button (opens share modal/options)
+- [x] T071 Add click handler to navigate to review detail (React Router)
+- [x] T072 Add responsive styling (mobile-first, Tailwind CSS)
+- [x] T073 Add hover effects and transitions
 
 ### Implementation Notes
 
@@ -562,7 +568,7 @@
 | T021-T034  | Books module implementation          | WP03         | P0       | Partial   |
 | T035-T048  | Likes & Bookmarks modules            | WP04         | P0       | Partial   |
 | T049-T060  | Feed store and API client            | WP05         | P1       | Partial   |
-| T061-T073  | ReviewCard component                 | WP06         | P1       | Partial   |
+| T061-T073  | ReviewCard component                 | WP06         | P1       | ✅ Done   |
 | T074-T080  | InfiniteScroll component             | WP07         | P1       | No        |
 | T081-T091  | FeedPage component                   | WP08         | P1       | Partial   |
 | T092-T101  | ReviewDetailPage                     | WP09         | P2       | Partial   |
