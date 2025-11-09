@@ -33,7 +33,20 @@ export function FeedPage() {
       {/* T104: Global login prompt modal */}
       <LoginPrompt />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl">
+      {/* T110: Add skip navigation link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded focus:shadow-lg"
+      >
+        본문으로 건너뛰기
+      </a>
+
+      {/* T110: Use semantic main element */}
+      <main
+        id="main-content"
+        role="main"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl"
+      >
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-left">
           독후감 피드
         </h1>
@@ -106,14 +119,17 @@ export function FeedPage() {
           </div>
 
           {/* Infinite scroll */}
-          <InfiniteScroll
-            isLoading={isLoading}
-            hasMore={hasMore}
-            onLoadMore={handleLoadMore}
-          />
+          {/* T110: Add navigation landmark for pagination */}
+          <nav aria-label="페이지네이션">
+            <InfiniteScroll
+              isLoading={isLoading}
+              hasMore={hasMore}
+              onLoadMore={handleLoadMore}
+            />
+          </nav>
         </>
       )}
-      </div>
+      </main>
     </>
   );
 }

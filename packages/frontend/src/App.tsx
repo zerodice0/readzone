@@ -1,34 +1,69 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, ScrollRestoration } from 'react-router-dom';
 import { AuthProvider } from './lib/auth-context';
 import ProtectedRoute from './components/ProtectedRoute';
+import { Skeleton } from './components/ui/skeleton';
 
-// Pages
-import LoginPage from './features/auth/pages/LoginPage';
-import RegisterPage from './features/auth/pages/RegisterPage';
-import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage';
-import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
-import OAuthCallbackPage from './features/auth/pages/OAuthCallbackPage';
-import DashboardPage from './pages/DashboardPage';
-import ProfilePage from './features/user/pages/ProfilePage';
-import ActiveSessionsPage from './features/user/pages/ActiveSessionsPage';
-import AccountSettingsPage from './features/user/pages/AccountSettingsPage';
-import MFASetupPage from './features/user/pages/MFASetupPage';
+// T113: Code splitting with React.lazy() for bundle optimization
+// Public pages - Eager loaded (frequently accessed)
 import { FeedPage } from './pages/Feed';
 import { ReviewDetailPage } from './pages/ReviewDetail';
+
+// Auth pages - Lazy loaded
+const LoginPage = lazy(() => import('./features/auth/pages/LoginPage'));
+const RegisterPage = lazy(() => import('./features/auth/pages/RegisterPage'));
+const ForgotPasswordPage = lazy(
+  () => import('./features/auth/pages/ForgotPasswordPage')
+);
+const ResetPasswordPage = lazy(
+  () => import('./features/auth/pages/ResetPasswordPage')
+);
+const OAuthCallbackPage = lazy(
+  () => import('./features/auth/pages/OAuthCallbackPage')
+);
+
+// Protected pages - Lazy loaded
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ProfilePage = lazy(() => import('./features/user/pages/ProfilePage'));
+const ActiveSessionsPage = lazy(
+  () => import('./features/user/pages/ActiveSessionsPage')
+);
+const AccountSettingsPage = lazy(
+  () => import('./features/user/pages/AccountSettingsPage')
+);
+const MFASetupPage = lazy(() => import('./features/user/pages/MFASetupPage'));
+
+// T113: Loading fallback component
+function PageLoader() {
+  return (
+    <div className="container mx-auto px-4 py-8 space-y-4">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-64 w-full" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
+}
 
 function App() {
   return (
     <AuthProvider>
       <ScrollRestoration />
-      <Routes>
-        {/* Public routes */}
-        <Route path="/feed" element={<FeedPage />} />
-        <Route path="/reviews/:id" element={<ReviewDetailPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+      {/* T113: Wrap routes in Suspense for lazy loading */}
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public routes - FeedPage and ReviewDetailPage are eager loaded */}
+          <Route path="/feed" element={<FeedPage />} />
+          <Route path="/reviews/:id" element={<ReviewDetailPage />} />
+
+          {/* Auth routes - Lazy loaded */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route
+            path="/reset-password/:token"
+            element={<ResetPasswordPage />}
+          />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
         {/* Protected routes */}
         <Route
@@ -72,10 +107,11 @@ function App() {
           }
         />
 
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/feed" replace />} />
-        <Route path="*" element={<Navigate to="/feed" replace />} />
-      </Routes>
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/feed" replace />} />
+          <Route path="*" element={<Navigate to="/feed" replace />} />
+        </Routes>
+      </Suspense>
     </AuthProvider>
   );
 }
