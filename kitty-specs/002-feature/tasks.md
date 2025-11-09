@@ -362,25 +362,25 @@
 
 ---
 
-## Work Package WP08: Frontend - Feed Page (Priority: P1) 🎯 MVP
+## Work Package WP08: Frontend - Feed Page (Priority: P1) 🎯 MVP ✅
 
 **Goal**: Implement FeedPage component integrating feed store, ReviewCard list, and InfiniteScroll.
 **Independent Test**: FeedPage loads on /feed route; displays review cards; infinite scroll loads more; empty/error states handled.
-**Prompt**: `kitty-specs/002-feature/tasks/planned/WP08-frontend-feed-page.md`
+**Prompt**: `kitty-specs/002-feature/tasks/done/WP08-frontend-feed-page.md`
 
 ### Included Subtasks
 
-- [ ] T081 Create `packages/frontend/src/pages/Feed/FeedPage.tsx`
-- [ ] T082 Create `packages/frontend/src/pages/Feed/index.tsx` (export)
-- [ ] T083 Integrate feedStore with useEffect for initial load
-- [ ] T084 Map reviews array to ReviewCard components
-- [ ] T085 Integrate InfiniteScroll component at list end
-- [ ] T086 Implement loading skeleton for initial load (shadcn/ui skeleton)
-- [ ] T087 Implement empty state ("아직 작성된 독후감이 없습니다")
-- [ ] T088 Implement error state with retry button
-- [ ] T089 Add route to React Router: `/feed`
-- [ ] T090 Set FeedPage as home route (`/` redirects to `/feed`)
-- [ ] T091 Add page-level responsive layout (container, padding)
+- [x] T081 Create `packages/frontend/src/pages/Feed/FeedPage.tsx`
+- [x] T082 Create `packages/frontend/src/pages/Feed/index.tsx` (export)
+- [x] T083 Integrate feedStore with useEffect for initial load
+- [x] T084 Map reviews array to ReviewCard components
+- [x] T085 Integrate InfiniteScroll component at list end
+- [x] T086 Implement loading skeleton for initial load (shadcn/ui skeleton)
+- [x] T087 Implement empty state ("아직 작성된 독후감이 없습니다")
+- [x] T088 Implement error state with retry button
+- [x] T089 Add route to React Router: `/feed`
+- [x] T090 Set FeedPage as home route (`/` redirects to `/feed`)
+- [x] T091 Add page-level responsive layout (container, padding)
 
 ### Implementation Notes
 
