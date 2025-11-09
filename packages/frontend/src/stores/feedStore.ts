@@ -3,6 +3,7 @@ import type { Review } from '../types/review';
 import { reviewsService } from '../services/api/reviews';
 import { likesService } from '../services/api/likes';
 import { bookmarksService } from '../services/api/bookmarks';
+import { useLoginPromptStore } from './loginPromptStore';
 
 interface FeedState {
   // State
@@ -92,8 +93,17 @@ export const useFeedStore = create<FeedState>((set, get) => ({
 
   /**
    * Toggle like with optimistic update
+   * T103: Check authentication before allowing like action
    */
   toggleLike: async (reviewId: string) => {
+    // Check authentication by looking for token
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      // Show login prompt
+      useLoginPromptStore.getState().show('좋아요를 누르려면 로그인이 필요합니다.');
+      return;
+    }
+
     const { reviews } = get();
 
     // Find the review
@@ -151,8 +161,19 @@ export const useFeedStore = create<FeedState>((set, get) => ({
 
   /**
    * Toggle bookmark with optimistic update
+   * T103: Check authentication before allowing bookmark action
    */
   toggleBookmark: async (reviewId: string) => {
+    // Check authentication by looking for token
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      // Show login prompt
+      useLoginPromptStore
+        .getState()
+        .show('북마크를 추가하려면 로그인이 필요합니다.');
+      return;
+    }
+
     const { reviews } = get();
 
     // Find the review

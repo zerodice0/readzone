@@ -41,7 +41,10 @@ function LoginPage() {
   const [mfaToken, setMfaToken] = useState<string>('');
   const [totpCode, setTotpCode] = useState<string>('');
 
+  // T107: Check sessionStorage for returnUrl first, then location.state, then default to /dashboard
+  const returnUrl = sessionStorage.getItem('returnUrl');
   const from =
+    returnUrl ||
     (location.state as { from?: { pathname: string } })?.from?.pathname ||
     '/dashboard';
 
@@ -78,6 +81,8 @@ function LoginPage() {
 
     try {
       await login(result.data);
+      // T107: Clear returnUrl from sessionStorage after successful login
+      sessionStorage.removeItem('returnUrl');
       navigate(from, { replace: true });
     } catch (error: unknown) {
       // T127: Check if MFA is required
@@ -133,6 +138,8 @@ function LoginPage() {
 
       // Store token and navigate
       localStorage.setItem('auth_token', response.data.accessToken);
+      // T107: Clear returnUrl from sessionStorage after successful MFA verification
+      sessionStorage.removeItem('returnUrl');
       navigate(from, { replace: true });
       // Reload to update auth context
       setTimeout(() => {

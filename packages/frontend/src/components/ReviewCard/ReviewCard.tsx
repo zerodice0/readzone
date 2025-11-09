@@ -13,6 +13,7 @@ import { useFeedStore } from '../../stores/feedStore';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useAuth } from '../../lib/auth-context';
 
 interface ReviewCardProps {
   review: Review;
@@ -23,6 +24,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
   const toggleLike = useFeedStore((state) => state.toggleLike);
   const toggleBookmark = useFeedStore((state) => state.toggleBookmark);
   const [imageError, setImageError] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't navigate if clicking on buttons
@@ -146,12 +148,13 @@ export function ReviewCard({ review }: ReviewCardProps) {
 
       <CardFooter className="flex flex-wrap justify-between items-center gap-2 p-4 sm:p-6">
         <div className="flex gap-2">
-          {/* Like button */}
+          {/* Like button - T105: Show authentication hint */}
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLike}
             className={`transition-colors hover:bg-accent hover:text-accent-foreground ${review.isLikedByMe ? 'text-red-500' : ''}`}
+            title={!isAuthenticated ? '로그인이 필요합니다' : undefined}
           >
             <Heart
               className={`w-4 h-4 mr-1 ${review.isLikedByMe ? 'fill-current' : ''}`}
@@ -159,12 +162,13 @@ export function ReviewCard({ review }: ReviewCardProps) {
             <span>{review.likeCount}</span>
           </Button>
 
-          {/* Bookmark button */}
+          {/* Bookmark button - T105: Show authentication hint */}
           <Button
             variant="ghost"
             size="sm"
             onClick={handleBookmark}
             className={`transition-colors hover:bg-accent hover:text-accent-foreground ${review.isBookmarkedByMe ? 'text-blue-500' : ''}`}
+            title={!isAuthenticated ? '로그인이 필요합니다' : undefined}
           >
             <Bookmark
               className={`w-4 h-4 ${review.isBookmarkedByMe ? 'fill-current' : ''}`}
