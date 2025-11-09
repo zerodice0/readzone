@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import apiClient from '../../../lib/api-client';
 import SessionListItem from '../components/SessionListItem';
 import { extractErrorMessage } from '../../../utils/error';
@@ -27,7 +27,7 @@ function ActiveSessionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     setIsLoading(true);
     setError('');
 
@@ -43,13 +43,13 @@ function ActiveSessionsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadSessions();
-  }, []);
+  }, [loadSessions]);
 
-  const handleLogoutSession = async (sessionId: string) => {
+  const handleLogoutSession = useCallback(async (sessionId: string) => {
     try {
       await apiClient.delete(`/users/me/sessions/${sessionId}`);
 
@@ -58,10 +58,16 @@ function ActiveSessionsPage() {
     } catch (err: unknown) {
       setError(extractErrorMessage(err, '세션 로그아웃에 실패했습니다'));
     }
-  };
+  }, []);
 
-  const currentSession = sessions.find((s) => s.current);
-  const otherSessions = sessions.filter((s) => !s.current);
+  const currentSession = useMemo(
+    () => sessions.find((s) => s.current),
+    [sessions]
+  );
+  const otherSessions = useMemo(
+    () => sessions.filter((s) => !s.current),
+    [sessions]
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">

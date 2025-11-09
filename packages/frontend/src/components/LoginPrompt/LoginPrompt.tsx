@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -29,16 +29,16 @@ export function LoginPrompt() {
     }
   }, [isOpen]);
 
-  const handleLogin = (): void => {
+  const handleLogin = useCallback((): void => {
     // T106: Store current URL for return after login
     sessionStorage.setItem('returnUrl', window.location.pathname);
     navigate('/login');
     hide();
-  };
+  }, [navigate, hide]);
 
-  const handleClose = (): void => {
+  const handleClose = useCallback((): void => {
     hide();
-  };
+  }, [hide]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
