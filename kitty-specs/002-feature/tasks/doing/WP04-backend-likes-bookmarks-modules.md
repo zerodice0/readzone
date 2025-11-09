@@ -17,10 +17,10 @@ subtasks:
   - 'T048'
 title: 'Backend - Likes & Bookmarks Modules'
 phase: 'Phase 1 - Foundation'
-lane: 'planned'
+lane: 'doing'
 assignee: ''
-agent: ''
-shell_pid: ''
+agent: 'claude'
+shell_pid: '31753'
 history:
   - timestamp: '2025-11-08T17:52:47Z'
     lane: 'planned'
@@ -36,6 +36,7 @@ history:
 **Goal**: Implement Likes and Bookmarks toggle APIs with transaction-safe likeCount/bookmarkCount updates.
 
 **Success Criteria**:
+
 - [ ] POST /api/reviews/:id/like toggles like state and updates count
 - [ ] GET /api/reviews/:id/likes returns user list who liked
 - [ ] GET /api/users/me/likes returns user's liked reviews
@@ -51,11 +52,13 @@ history:
 ## Context & Constraints
 
 **Related Documents**:
+
 - `kitty-specs/002-feature/contracts/likes-api.md` - Likes API specification
 - `kitty-specs/002-feature/contracts/bookmarks-api.md` - Bookmarks API specification
 - `kitty-specs/002-feature/data-model.md` - Like and Bookmark model schemas
 
 **Constraints**:
+
 - Prisma transactions required for count synchronization
 - Toggle behavior: idempotent operations (create if not exists, delete if exists)
 - Unique constraint: (userId, reviewId) per table
@@ -63,6 +66,7 @@ history:
 - Count fields must always match actual record counts
 
 **Architectural Decisions**:
+
 - Separate modules for Likes and Bookmarks (similar patterns)
 - Transaction-safe increment/decrement for counts
 - Return both state (isLiked/isBookmarked) and count in response
@@ -74,8 +78,10 @@ history:
 **Purpose**: Define Likes module with controllers and services.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/likes/likes.module.ts`
 2. Define module:
+
    ```typescript
    import { Module } from '@nestjs/common';
    import { LikesController } from './likes.controller';
@@ -102,8 +108,10 @@ history:
 **Purpose**: Define REST API endpoints for likes.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/likes/likes.controller.ts`
 2. Define controller:
+
    ```typescript
    import {
      Controller,
@@ -131,7 +139,7 @@ history:
      async getReviewLikes(
        @Param('reviewId') reviewId: string,
        @Query('page') page = 0,
-       @Query('limit') limit = 20,
+       @Query('limit') limit = 20
      ) {
        return this.likesService.getReviewLikes(reviewId, { page, limit });
      }
@@ -141,7 +149,7 @@ history:
      async getUserLikes(
        @Req() req,
        @Query('page') page = 0,
-       @Query('limit') limit = 20,
+       @Query('limit') limit = 20
      ) {
        return this.likesService.getUserLikes(req.user.id, { page, limit });
      }
@@ -159,10 +167,16 @@ history:
 **Purpose**: Implement business logic for like operations with Prisma transactions.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/likes/likes.service.ts`
 2. Implement toggle method:
+
    ```typescript
-   import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+   import {
+     Injectable,
+     NotFoundException,
+     UnprocessableEntityException,
+   } from '@nestjs/common';
    import { PrismaService } from '../prisma/prisma.service';
 
    @Injectable()
@@ -180,7 +194,9 @@ history:
        }
 
        if (review.status === 'DELETED') {
-         throw new UnprocessableEntityException('삭제된 독후감에는 좋아요를 할 수 없습니다');
+         throw new UnprocessableEntityException(
+           '삭제된 독후감에는 좋아요를 할 수 없습니다'
+         );
        }
 
        // Check if like exists
@@ -240,8 +256,13 @@ history:
        };
      }
 
-     async getReviewLikes(reviewId: string, pagination: { page: number; limit: number }) {
-       const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
+     async getReviewLikes(
+       reviewId: string,
+       pagination: { page: number; limit: number }
+     ) {
+       const review = await this.prisma.review.findUnique({
+         where: { id: reviewId },
+       });
        if (!review) {
          throw new NotFoundException('독후감을 찾을 수 없습니다');
        }
@@ -282,7 +303,10 @@ history:
        };
      }
 
-     async getUserLikes(userId: string, pagination: { page: number; limit: number }) {
+     async getUserLikes(
+       userId: string,
+       pagination: { page: number; limit: number }
+     ) {
        const { page, limit } = pagination;
        const skip = page * limit;
 
@@ -295,7 +319,12 @@ history:
                  select: { id: true, name: true, profileImage: true },
                },
                book: {
-                 select: { id: true, title: true, author: true, coverImageUrl: true },
+                 select: {
+                   id: true,
+                   title: true,
+                   author: true,
+                   coverImageUrl: true,
+                 },
                },
              },
            },
@@ -342,6 +371,7 @@ history:
 **Parallel?**: No (depends on T035, T036)
 
 **Notes**:
+
 - Use `$transaction` for atomic operations
 - Use `increment/decrement` for count updates (race condition safe)
 - Unique constraint on (userId, reviewId) prevents duplicate likes
@@ -353,8 +383,10 @@ history:
 **Purpose**: Define Bookmarks module with controllers and services.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/bookmarks/bookmarks.module.ts`
 2. Define module:
+
    ```typescript
    import { Module } from '@nestjs/common';
    import { BookmarksController } from './bookmarks.controller';
@@ -381,8 +413,10 @@ history:
 **Purpose**: Define REST API endpoints for bookmarks.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/bookmarks/bookmarks.controller.ts`
 2. Define controller:
+
    ```typescript
    import {
      Controller,
@@ -412,9 +446,12 @@ history:
      async getUserBookmarks(
        @Req() req,
        @Query('page') page = 0,
-       @Query('limit') limit = 20,
+       @Query('limit') limit = 20
      ) {
-       return this.bookmarksService.getUserBookmarks(req.user.id, { page, limit });
+       return this.bookmarksService.getUserBookmarks(req.user.id, {
+         page,
+         limit,
+       });
      }
 
      @Delete('bookmarks/:id')
@@ -436,8 +473,10 @@ history:
 **Purpose**: Implement business logic for bookmark operations with Prisma transactions.
 
 **Steps**:
+
 1. Create file: `packages/backend/src/bookmarks/bookmarks.service.ts`
 2. Implement toggle method:
+
    ```typescript
    import {
      Injectable,
@@ -462,7 +501,9 @@ history:
        }
 
        if (review.status === 'DELETED') {
-         throw new UnprocessableEntityException('삭제된 독후감은 북마크할 수 없습니다');
+         throw new UnprocessableEntityException(
+           '삭제된 독후감은 북마크할 수 없습니다'
+         );
        }
 
        // Check if bookmark exists
@@ -522,7 +563,10 @@ history:
        };
      }
 
-     async getUserBookmarks(userId: string, pagination: { page: number; limit: number }) {
+     async getUserBookmarks(
+       userId: string,
+       pagination: { page: number; limit: number }
+     ) {
        const { page, limit } = pagination;
        const skip = page * limit;
 
@@ -535,7 +579,12 @@ history:
                  select: { id: true, name: true, profileImage: true },
                },
                book: {
-                 select: { id: true, title: true, author: true, coverImageUrl: true },
+                 select: {
+                   id: true,
+                   title: true,
+                   author: true,
+                   coverImageUrl: true,
+                 },
                },
              },
            },
@@ -620,12 +669,14 @@ history:
 **Purpose**: Test like toggle functionality.
 
 **Steps**:
+
 1. Start backend server
 2. Create a review for testing:
    ```bash
    REVIEW_ID=$(curl -X POST http://localhost:3000/api/reviews ... | jq -r '.data.id')
    ```
 3. Test like toggle:
+
    ```bash
    # First request: Add like
    curl -X POST http://localhost:3000/api/reviews/$REVIEW_ID/like \
@@ -637,6 +688,7 @@ history:
      -H "Authorization: Bearer <token>"
    # Response: {"data":{"isLiked":false,"likeCount":0},...}
    ```
+
 4. Verify database:
    ```bash
    psql $DATABASE_URL -c "SELECT * FROM likes WHERE \"reviewId\"='$REVIEW_ID';"
@@ -654,6 +706,7 @@ history:
 **Purpose**: Test like list retrieval.
 
 **Steps**:
+
 1. Create multiple likes on a review (different users)
 2. Test like list endpoint:
    ```bash
@@ -675,6 +728,7 @@ history:
 **Purpose**: Test user's liked reviews list.
 
 **Steps**:
+
 1. Like multiple reviews as a user
 2. Test user likes endpoint:
    ```bash
@@ -697,7 +751,9 @@ history:
 **Purpose**: Test bookmark toggle functionality.
 
 **Steps**:
+
 1. Test bookmark toggle:
+
    ```bash
    # First request: Add bookmark
    curl -X POST http://localhost:3000/api/reviews/$REVIEW_ID/bookmark \
@@ -709,6 +765,7 @@ history:
      -H "Authorization: Bearer <token>"
    # Response: {"data":{"isBookmarked":false,"bookmarkCount":0},...}
    ```
+
 2. Verify database:
    ```bash
    psql $DATABASE_URL -c "SELECT * FROM bookmarks WHERE \"reviewId\"='$REVIEW_ID';"
@@ -726,6 +783,7 @@ history:
 **Purpose**: Test user's bookmarked reviews list.
 
 **Steps**:
+
 1. Bookmark multiple reviews as a user
 2. Test user bookmarks endpoint:
    ```bash
@@ -748,6 +806,7 @@ history:
 **Purpose**: Test direct bookmark deletion.
 
 **Steps**:
+
 1. Create a bookmark:
    ```bash
    curl -X POST http://localhost:3000/api/reviews/$REVIEW_ID/bookmark \
@@ -779,6 +838,7 @@ history:
 **Purpose**: Register both modules in main application module.
 
 **Steps**:
+
 1. Open `packages/backend/src/app.module.ts`
 2. Import modules:
    ```typescript
@@ -808,6 +868,7 @@ history:
 **Purpose**: Verify all endpoints have proper authentication.
 
 **Steps**:
+
 1. Review all endpoints in controllers
 2. Verify `@UseGuards(AuthGuard('jwt'))` applied to:
    - POST /reviews/:id/like
@@ -831,18 +892,21 @@ history:
 ## Test Strategy
 
 **Unit Tests**:
+
 - LikesService methods (toggleLike, getReviewLikes, getUserLikes)
 - BookmarksService methods (toggleBookmark, getUserBookmarks, deleteBookmark)
 - Mock PrismaService with jest
 - Test transaction rollback on errors
 
 **Integration Tests**:
+
 - E2E tests for all endpoints
 - Test with real database (test environment)
 - Test concurrent toggle operations (race conditions)
 - Verify count synchronization
 
 **Transaction Tests**:
+
 - Test transaction atomicity (like creation + count update)
 - Test rollback on failures
 - Verify no partial updates
@@ -850,6 +914,7 @@ history:
 ## Risks & Mitigations
 
 **Risk 1: Race condition on concurrent toggles**
+
 - **Impact**: Lost updates, count desynchronization
 - **Mitigation**:
   - Use database-level unique constraints
@@ -858,6 +923,7 @@ history:
 - **Recovery**: Background reconciliation job to fix counts
 
 **Risk 2: likeCount/bookmarkCount desynchronization**
+
 - **Impact**: Incorrect counts displayed in UI
 - **Mitigation**:
   - Use transactions for all operations
@@ -866,6 +932,7 @@ history:
 - **Recovery**: Admin endpoint to recalculate counts
 
 **Risk 3: Deleted reviews with orphaned likes/bookmarks**
+
 - **Impact**: Invalid foreign key references
 - **Mitigation**:
   - Soft delete reviews (don't actually delete)
@@ -897,12 +964,14 @@ history:
 ## Review Guidance
 
 **Key Acceptance Checkpoints**:
+
 1. **Toggle Functionality**: Like and bookmark toggles work correctly
 2. **Transaction Safety**: Counts always synchronized with records
 3. **Authorization**: Only authenticated users can like/bookmark
 4. **Data Integrity**: Unique constraints and soft delete checks work
 
 **Reviewer Should Verify**:
+
 - [ ] Test POST /reviews/:id/like - toggles like state
 - [ ] Test GET /reviews/:id/likes - returns user list
 - [ ] Test GET /users/me/likes - returns user's liked reviews
@@ -923,5 +992,7 @@ history:
 ### Next Steps After Completion
 
 Once WP04 is done, the following work packages can proceed:
+
 - **WP05**: Frontend - Feed Store & API Client (depends on WP02, WP03, WP04)
 - Backend foundation complete, frontend can begin integration
+- 2025-11-09T00:05:17Z – claude – shell_pid=31753 – lane=doing – Started WP04 Likes & Bookmarks implementation
