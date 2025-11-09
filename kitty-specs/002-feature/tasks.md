@@ -114,28 +114,30 @@
 
 ---
 
-## Work Package WP03: Backend - Books Module (Priority: P0)
+## Work Package WP03: Backend - Books Module (Priority: P0) ✅
 
 **Goal**: Implement Books API with external API search, internal DB caching, and book info retrieval.
 **Independent Test**: GET /api/books/search returns results from external APIs; POST /api/books caches book; GET /api/books/:id returns cached book.
-**Prompt**: `kitty-specs/002-feature/tasks/planned/WP03-backend-books-module.md`
+**Prompt**: `kitty-specs/002-feature/tasks/done/WP03-backend-books-module.md`
+**Status**: ✅ COMPLETED (2025-11-09)
+**Review**: Approved by claude (shell_pid=21049)
 
 ### Included Subtasks
 
-- [ ] T021 [P] Create `packages/backend/src/books/books.module.ts`
-- [ ] T022 [P] Create `packages/backend/src/books/books.controller.ts`
-- [ ] T023 [P] Create `packages/backend/src/books/books.service.ts`
-- [ ] T024 [P] Create `packages/backend/src/books/external/book-api.service.ts`
-- [ ] T025 [P] Create `packages/backend/src/books/dto/search-book.dto.ts`
-- [ ] T026 [P] Create `packages/backend/src/books/dto/create-book.dto.ts`
-- [ ] T027 Implement Google Books API integration in book-api.service.ts
-- [ ] T028 Implement Aladin API integration in book-api.service.ts
-- [ ] T029 Implement GET /api/books/search with parallel API calls and deduplication
-- [ ] T030 Implement POST /api/books with ISBN/title+author deduplication
-- [ ] T031 Implement GET /api/books/:id with reviewCount aggregation
-- [ ] T032 Implement GET /api/books/:id/reviews for book-specific feed
-- [ ] T033 Add Books module to app.module.ts imports
-- [ ] T034 Configure environment variables (GOOGLE_BOOKS_API_KEY, ALADIN_API_KEY)
+- [x] T021 [P] Create `packages/backend/src/books/books.module.ts`
+- [x] T022 [P] Create `packages/backend/src/books/books.controller.ts`
+- [x] T023 [P] Create `packages/backend/src/books/books.service.ts`
+- [x] T024 [P] Create `packages/backend/src/books/external/book-api.service.ts`
+- [x] T025 [P] Create `packages/backend/src/books/dto/search-book.dto.ts`
+- [x] T026 [P] Create `packages/backend/src/books/dto/create-book.dto.ts`
+- [x] T027 Implement Google Books API integration in book-api.service.ts
+- [x] T028 Implement Aladin API integration in book-api.service.ts
+- [x] T029 Implement GET /api/books/search with parallel API calls and deduplication
+- [x] T030 Implement POST /api/books with ISBN/title+author deduplication
+- [x] T031 Implement GET /api/books/:id with reviewCount aggregation
+- [x] T032 Implement GET /api/books/:id/reviews for book-specific feed
+- [x] T033 Add Books module to app.module.ts imports
+- [x] T034 Configure environment variables (GOOGLE_BOOKS_API_KEY, ALADIN_API_KEY)
 
 ### Implementation Notes
 
