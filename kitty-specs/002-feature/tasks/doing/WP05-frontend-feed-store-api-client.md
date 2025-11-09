@@ -15,10 +15,10 @@ subtasks:
   - 'T060'
 title: 'Frontend - Feed Store & API Client'
 phase: 'Phase 2 - Frontend'
-lane: 'planned'
+lane: 'doing'
 assignee: ''
-agent: ''
-shell_pid: ''
+agent: 'claude'
+shell_pid: '54481'
 history:
   - timestamp: '2025-11-08T17:52:47Z'
     lane: 'planned'
@@ -34,6 +34,7 @@ history:
 **Goal**: Implement Zustand feed store with pagination, infinite scroll state, and API client for reviews, likes, bookmarks.
 
 **Success Criteria**:
+
 - [ ] Zustand installed and configured
 - [ ] TypeScript interfaces for Review and Book defined
 - [ ] Axios API clients for reviews, likes, bookmarks created
@@ -48,12 +49,14 @@ history:
 ## Context & Constraints
 
 **Related Documents**:
+
 - `kitty-specs/002-feature/contracts/reviews-api.md` - Reviews API spec
 - `kitty-specs/002-feature/contracts/likes-api.md` - Likes API spec
 - `kitty-specs/002-feature/contracts/bookmarks-api.md` - Bookmarks API spec
 - `kitty-specs/002-feature/plan.md` - Frontend tech stack (React 18, Zustand, Axios)
 
 **Constraints**:
+
 - Must use Zustand for state management
 - Optimistic updates for like/bookmark toggles
 - Rollback mechanism on API errors
@@ -61,6 +64,7 @@ history:
 - Prevent concurrent API calls with isLoading flag
 
 **Architectural Decisions**:
+
 - Zustand for global state (lighter than Redux)
 - Axios for HTTP client with interceptors
 - Optimistic UI updates for better UX
@@ -73,6 +77,7 @@ history:
 **Purpose**: Add Zustand state management library.
 
 **Steps**:
+
 1. Install Zustand:
    ```bash
    cd packages/frontend
@@ -88,6 +93,7 @@ history:
 **Parallel?**: Yes
 
 **Validation**:
+
 ```bash
 pnpm --filter frontend type-check
 ```
@@ -99,8 +105,10 @@ pnpm --filter frontend type-check
 **Purpose**: Define TypeScript interfaces for Review entity.
 
 **Steps**:
+
 1. Create file: `packages/frontend/src/types/review.ts`
 2. Define interfaces based on API contracts:
+
    ```typescript
    export interface Review {
      id: string;
@@ -158,8 +166,10 @@ pnpm --filter frontend type-check
 **Purpose**: Define TypeScript interfaces for Book entity.
 
 **Steps**:
+
 1. Create file: `packages/frontend/src/types/book.ts`
 2. Define interfaces:
+
    ```typescript
    export interface Book {
      id: string;
@@ -205,8 +215,10 @@ pnpm --filter frontend type-check
 **Purpose**: Create Axios client for reviews API.
 
 **Steps**:
+
 1. Create file: `packages/frontend/src/services/api/reviews.ts`
 2. Implement API methods:
+
    ```typescript
    import axios from 'axios';
    import type { FeedResponse, Review } from '../../types/review';
@@ -267,8 +279,10 @@ pnpm --filter frontend type-check
 **Purpose**: Create Axios client for likes API.
 
 **Steps**:
+
 1. Create file: `packages/frontend/src/services/api/likes.ts`
 2. Implement API methods:
+
    ```typescript
    import axios from 'axios';
 
@@ -288,7 +302,9 @@ pnpm --filter frontend type-check
    });
 
    export const likesApi = {
-     toggleLike: async (reviewId: string): Promise<{
+     toggleLike: async (
+       reviewId: string
+     ): Promise<{
        data: { isLiked: boolean; likeCount: number };
      }> => {
        const response = await api.post(`/reviews/${reviewId}/like`);
@@ -322,8 +338,10 @@ pnpm --filter frontend type-check
 **Purpose**: Create Axios client for bookmarks API.
 
 **Steps**:
+
 1. Create file: `packages/frontend/src/services/api/bookmarks.ts`
 2. Implement API methods:
+
    ```typescript
    import axios from 'axios';
 
@@ -343,7 +361,9 @@ pnpm --filter frontend type-check
    });
 
    export const bookmarksApi = {
-     toggleBookmark: async (reviewId: string): Promise<{
+     toggleBookmark: async (
+       reviewId: string
+     ): Promise<{
        data: { isBookmarked: boolean; bookmarkCount: number };
      }> => {
        const response = await api.post(`/reviews/${reviewId}/bookmark`);
@@ -374,8 +394,10 @@ pnpm --filter frontend type-check
 **Purpose**: Implement Zustand store for feed state management.
 
 **Steps**:
+
 1. Create file: `packages/frontend/src/stores/feedStore.ts`
 2. Define store:
+
    ```typescript
    import { create } from 'zustand';
    import type { Review } from '../types/review';
@@ -443,7 +465,9 @@ pnpm --filter frontend type-check
 **Purpose**: Fetch initial feed data (page 0).
 
 **Steps**:
+
 1. Update `loadFeed` method in feedStore.ts:
+
    ```typescript
    loadFeed: async () => {
      const { isLoading } = get();
@@ -473,6 +497,7 @@ pnpm --filter frontend type-check
 **Parallel?**: No (depends on T055)
 
 **Validation**:
+
 - Test in browser console: `useFeedStore.getState().loadFeed()`
 - Verify reviews populated
 
@@ -483,7 +508,9 @@ pnpm --filter frontend type-check
 **Purpose**: Fetch next page of feed data (pagination).
 
 **Steps**:
+
 1. Update `loadMore` method in feedStore.ts:
+
    ```typescript
    loadMore: async () => {
      const { isLoading, hasMore, page } = get();
@@ -520,7 +547,9 @@ pnpm --filter frontend type-check
 **Purpose**: Like toggle with optimistic UI update and rollback on error.
 
 **Steps**:
+
 1. Update `toggleLike` method in feedStore.ts:
+
    ```typescript
    toggleLike: async (reviewId: string) => {
      const { reviews } = get();
@@ -542,7 +571,7 @@ pnpm --filter frontend type-check
 
      try {
        const response = await likesApi.toggleLike(reviewId);
-       
+
        // Update with server response
        const updatedReviews = [...get().reviews];
        updatedReviews[reviewIndex] = {
@@ -559,7 +588,7 @@ pnpm --filter frontend type-check
          isLikedByMe: prevIsLiked,
          likeCount: prevLikeCount,
        };
-       set({ 
+       set({
          reviews: rollbackReviews,
          error: error.message || '좋아요 처리에 실패했습니다',
        });
@@ -578,7 +607,9 @@ pnpm --filter frontend type-check
 **Purpose**: Bookmark toggle with optimistic UI update and rollback on error.
 
 **Steps**:
+
 1. Update `toggleBookmark` method in feedStore.ts:
+
    ```typescript
    toggleBookmark: async (reviewId: string) => {
      const { reviews } = get();
@@ -600,7 +631,7 @@ pnpm --filter frontend type-check
 
      try {
        const response = await bookmarksApi.toggleBookmark(reviewId);
-       
+
        // Update with server response
        const updatedReviews = [...get().reviews];
        updatedReviews[reviewIndex] = {
@@ -617,7 +648,7 @@ pnpm --filter frontend type-check
          isBookmarkedByMe: prevIsBookmarked,
          bookmarkCount: prevBookmarkCount,
        };
-       set({ 
+       set({
          reviews: rollbackReviews,
          error: error.message || '북마크 처리에 실패했습니다',
        });
@@ -636,21 +667,23 @@ pnpm --filter frontend type-check
 **Purpose**: Verify state management for UI feedback.
 
 **Steps**:
+
 1. Verify state shape in feedStore.ts:
    - `isLoading: boolean` - prevents concurrent API calls
    - `error: string | null` - displays error messages
    - `hasMore: boolean` - controls infinite scroll behavior
 2. Test state transitions:
+
    ```typescript
    // Initial state
    { isLoading: false, error: null, hasMore: true }
-   
+
    // During loadFeed
    { isLoading: true, error: null, hasMore: true }
-   
+
    // After successful load
    { isLoading: false, error: null, hasMore: response.meta.hasMore }
-   
+
    // After error
    { isLoading: false, error: 'Error message', hasMore: true }
    ```
@@ -660,6 +693,7 @@ pnpm --filter frontend type-check
 **Parallel?**: No (verification step)
 
 **Validation**:
+
 - Test loading state prevents concurrent calls
 - Test error state displays message
 - Test hasMore=false prevents loadMore
@@ -669,18 +703,21 @@ pnpm --filter frontend type-check
 ## Test Strategy
 
 **Unit Tests**:
+
 - feedStore actions (loadFeed, loadMore, toggleLike, toggleBookmark)
 - Mock API clients with Vitest
 - Test optimistic updates and rollbacks
 - Test state transitions
 
 **Integration Tests**:
+
 - Test with real backend API
 - Test pagination behavior
 - Test error handling and recovery
 - Test concurrent action prevention
 
 **Browser Tests**:
+
 - Test in React DevTools
 - Verify Zustand state updates
 - Test network failures and rollbacks
@@ -688,21 +725,25 @@ pnpm --filter frontend type-check
 ## Risks & Mitigations
 
 **Risk 1: Race condition between loadFeed and loadMore**
+
 - **Impact**: Duplicate data, incorrect pagination
 - **Mitigation**: Use isLoading flag to prevent concurrent calls
 - **Recovery**: Reset store and reload
 
 **Risk 2: Stale data after optimistic update**
+
 - **Impact**: UI shows incorrect state
 - **Mitigation**: Implement rollback mechanism on error
 - **Recovery**: Server response always overrides optimistic update
 
 **Risk 3: Authentication token expiration**
+
 - **Impact**: API calls fail with 401
 - **Mitigation**: Axios interceptor catches 401, triggers login
 - **Recovery**: Redirect to login page, preserve returnUrl
 
 **Risk 4: Memory leak from store subscriptions**
+
 - **Impact**: Performance degradation
 - **Mitigation**: Zustand handles cleanup automatically
 - **Recovery**: Verify no leaks in DevTools Memory profiler
@@ -727,12 +768,14 @@ pnpm --filter frontend type-check
 ## Review Guidance
 
 **Key Acceptance Checkpoints**:
+
 1. **State Management**: Zustand store working correctly
 2. **API Integration**: All API clients functional
 3. **Optimistic Updates**: Like/bookmark toggles update UI immediately
 4. **Error Handling**: Rollback on errors, clear error messages
 
 **Reviewer Should Verify**:
+
 - [ ] Test loadFeed() - populates reviews array
 - [ ] Test loadMore() - appends to reviews array
 - [ ] Test toggleLike() - optimistic update and rollback
@@ -751,5 +794,7 @@ pnpm --filter frontend type-check
 ### Next Steps After Completion
 
 Once WP05 is done, the following work packages can proceed in parallel:
+
 - **WP06**: Frontend - Review Card Component (depends on WP05 types and store)
 - **WP07**: Frontend - Infinite Scroll Component (depends on WP05 store)
+- 2025-11-09T00:28:53Z – claude – shell_pid=54481 – lane=doing – Started WP05 Frontend Feed Store implementation
