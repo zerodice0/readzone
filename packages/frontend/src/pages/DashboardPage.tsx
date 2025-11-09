@@ -1,6 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../lib/auth-context';
 import EmailVerificationBanner from '../components/EmailVerificationBanner';
+import { logError } from '../utils/error';
 
 /**
  * T109: DashboardPage
@@ -16,7 +17,7 @@ function DashboardPage() {
       await logout();
       navigate('/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      logError(error, 'Logout failed');
       // Even if logout fails, redirect to login
       navigate('/login');
     }

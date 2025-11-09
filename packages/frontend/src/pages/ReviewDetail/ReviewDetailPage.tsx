@@ -18,6 +18,7 @@ import { Button } from '../../components/ui/button';
 import { useAuth } from '../../lib/auth-context';
 import { useLoginPromptStore } from '../../stores/loginPromptStore';
 import { LoginPrompt } from '../../components/LoginPrompt';
+import { logError } from '../../utils/error';
 
 export function ReviewDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -108,10 +109,8 @@ export function ReviewDetailPage() {
         setLikeCount(response.data.likeCount);
       })
       .catch((err: unknown) => {
-        // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
         alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
-        // eslint-disable-next-line no-console
-        console.error('Toggle like failed:', err);
+        logError(err, 'Toggle like failed');
         // Rollback to previous state
         setIsLiked(prevIsLiked);
         setLikeCount(prevLikeCount);
@@ -137,10 +136,8 @@ export function ReviewDetailPage() {
         setIsBookmarked(response.data.isBookmarked);
       })
       .catch((err: unknown) => {
-        // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
         alert('북마크 처리에 실패했습니다. 다시 시도해주세요.');
-        // eslint-disable-next-line no-console
-        console.error('Toggle bookmark failed:', err);
+        logError(err, 'Toggle bookmark failed');
         // Rollback to previous state
         setIsBookmarked(prevIsBookmarked);
       });
@@ -164,10 +161,8 @@ export function ReviewDetailPage() {
         })
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         .catch((err: unknown) => {
-          // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
           alert('링크 복사에 실패했습니다');
-          // eslint-disable-next-line no-console
-          console.error('Share failed:', err);
+          logError(err, 'Share failed');
         });
     }
   };

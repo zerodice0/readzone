@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../../../lib/api-client';
 import SessionListItem from '../components/SessionListItem';
+import { extractErrorMessage } from '../../../utils/error';
 
 /**
  * T116: ActiveSessionsPage
@@ -36,17 +37,9 @@ function ActiveSessionsPage() {
       );
       setSessions(response.data.sessions);
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as {
-          response?: { data?: { message?: string } };
-        };
-        setError(
-          axiosError.response?.data?.message ||
-            '세션 목록을 불러오는데 실패했습니다'
-        );
-      } else {
-        setError('세션 목록을 불러오는데 실패했습니다');
-      }
+      setError(
+        extractErrorMessage(err, '세션 목록을 불러오는데 실패했습니다')
+      );
     } finally {
       setIsLoading(false);
     }
@@ -63,16 +56,7 @@ function ActiveSessionsPage() {
       // Remove from list
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as {
-          response?: { data?: { message?: string } };
-        };
-        setError(
-          axiosError.response?.data?.message || '세션 로그아웃에 실패했습니다'
-        );
-      } else {
-        setError('세션 로그아웃에 실패했습니다');
-      }
+      setError(extractErrorMessage(err, '세션 로그아웃에 실패했습니다'));
     }
   };
 

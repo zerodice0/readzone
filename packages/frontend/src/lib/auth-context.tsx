@@ -6,6 +6,7 @@ import {
   ReactNode,
 } from 'react';
 import { authApi, LoginRequest } from './api-client';
+import { logError } from '../utils/error';
 
 /**
  * T102: AuthContext
@@ -55,7 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const response = await authApi.getCurrentUser();
         setUser(response.data.user);
       } catch (error) {
-        console.error('Failed to load user:', error);
+        logError(error, 'Failed to load user');
         // Clear invalid token
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
@@ -78,7 +79,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setUser(userData);
     } catch (error) {
-      console.error('Login failed:', error);
+      logError(error, 'Login failed');
       throw error;
     }
   };
@@ -87,7 +88,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await authApi.logout();
     } catch (error) {
-      console.error('Logout failed:', error);
+      logError(error, 'Logout failed');
     } finally {
       // Clear local state regardless of API call result
       localStorage.removeItem('auth_token');
