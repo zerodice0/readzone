@@ -20,7 +20,9 @@ function ForgotPasswordPage() {
     email: '',
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ForgotPasswordFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ForgotPasswordFormData, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -45,10 +47,12 @@ function ForgotPasswordPage() {
     // Validate form data
     const result = forgotPasswordSchema.safeParse(formData);
     if (!result.success) {
-      const fieldErrors: Partial<Record<keyof ForgotPasswordFormData, string>> = {};
+      const fieldErrors: Partial<Record<keyof ForgotPasswordFormData, string>> =
+        {};
       result.error.errors.forEach((err) => {
         if (err.path[0]) {
-          fieldErrors[err.path[0] as keyof ForgotPasswordFormData] = err.message;
+          fieldErrors[err.path[0] as keyof ForgotPasswordFormData] =
+            err.message;
         }
       });
       setErrors(fieldErrors);
@@ -65,9 +69,12 @@ function ForgotPasswordPage() {
       setFormData({ email: '' });
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { message?: string } } };
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
         setApiError(
-          axiosError.response?.data?.message || '비밀번호 재설정 요청에 실패했습니다'
+          axiosError.response?.data?.message ||
+            '비밀번호 재설정 요청에 실패했습니다'
         );
       } else {
         setApiError('비밀번호 재설정 요청에 실패했습니다');
@@ -86,7 +93,8 @@ function ForgotPasswordPage() {
             비밀번호 찾기
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            가입하신 이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.
+            가입하신 이메일 주소를 입력하시면 비밀번호 재설정 링크를
+            보내드립니다.
           </p>
         </div>
 
@@ -115,7 +123,10 @@ function ForgotPasswordPage() {
           <div className="rounded-md shadow-sm space-y-4">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 이메일
               </label>
               <input
@@ -154,7 +165,10 @@ function ForgotPasswordPage() {
 
           {/* Back to Login Link */}
           <div className="text-center">
-            <Link to="/login" className="text-sm font-medium text-primary-600 hover:text-primary-500">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-primary-600 hover:text-primary-500"
+            >
               로그인 페이지로 돌아가기
             </Link>
           </div>

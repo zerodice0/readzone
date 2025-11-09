@@ -38,7 +38,9 @@ function RegisterPage() {
     confirmPassword: '',
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof RegisterFormData, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -79,7 +81,9 @@ function RegisterPage() {
       const { confirmPassword, ...registerData } = result.data;
       await authApi.register(registerData);
 
-      setSuccessMessage('회원가입이 완료되었습니다! 이메일을 확인하여 계정을 인증해주세요.');
+      setSuccessMessage(
+        '회원가입이 완료되었습니다! 이메일을 확인하여 계정을 인증해주세요.'
+      );
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -87,8 +91,12 @@ function RegisterPage() {
       }, 2000);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { message?: string } } };
-        setApiError(axiosError.response?.data?.message || '회원가입에 실패했습니다');
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        setApiError(
+          axiosError.response?.data?.message || '회원가입에 실패했습니다'
+        );
       } else {
         setApiError('회원가입에 실패했습니다');
       }
@@ -107,7 +115,10 @@ function RegisterPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             이미 계정이 있으신가요?{' '}
-            <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
+            <Link
+              to="/login"
+              className="font-medium text-primary-600 hover:text-primary-500"
+            >
               로그인하기
             </Link>
           </p>
@@ -138,7 +149,10 @@ function RegisterPage() {
           <div className="rounded-md shadow-sm space-y-4">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 이메일
               </label>
               <input
@@ -165,7 +179,10 @@ function RegisterPage() {
 
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 이름
               </label>
               <input
@@ -192,7 +209,10 @@ function RegisterPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 비밀번호
               </label>
               <input
@@ -208,7 +228,9 @@ function RegisterPage() {
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
                 placeholder="••••••••"
                 aria-invalid={!!errors.password}
-                aria-describedby={errors.password ? 'password-error' : undefined}
+                aria-describedby={
+                  errors.password ? 'password-error' : undefined
+                }
               />
               {errors.password && (
                 <p id="password-error" className="mt-1 text-sm text-red-600">
@@ -241,10 +263,15 @@ function RegisterPage() {
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
                 placeholder="••••••••"
                 aria-invalid={!!errors.confirmPassword}
-                aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
+                aria-describedby={
+                  errors.confirmPassword ? 'confirmPassword-error' : undefined
+                }
               />
               {errors.confirmPassword && (
-                <p id="confirmPassword-error" className="mt-1 text-sm text-red-600">
+                <p
+                  id="confirmPassword-error"
+                  className="mt-1 text-sm text-red-600"
+                >
                   {errors.confirmPassword}
                 </p>
               )}

@@ -78,7 +78,6 @@ function AccountSettingsPage() {
       } else {
         // Redirect to MFA setup page
         navigate('/settings/mfa/setup');
-        return;
       }
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
@@ -86,8 +85,7 @@ function AccountSettingsPage() {
           response?: { data?: { message?: string } };
         };
         setMfaError(
-          axiosError.response?.data?.message ||
-            'MFA 설정 변경에 실패했습니다'
+          axiosError.response?.data?.message || 'MFA 설정 변경에 실패했습니다'
         );
       } else {
         setMfaError('MFA 설정 변경에 실패했습니다');
@@ -186,7 +184,9 @@ function AccountSettingsPage() {
               {/* Active Sessions */}
               <div className="flex items-center justify-between pt-6 border-t">
                 <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-gray-900">활성 세션</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    활성 세션
+                  </h3>
                   <p className="mt-1 text-sm text-gray-500">
                     다른 기기에서 로그인한 세션을 관리합니다
                   </p>

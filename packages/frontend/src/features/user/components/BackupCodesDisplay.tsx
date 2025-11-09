@@ -37,7 +37,9 @@ function BackupCodesDisplay({ codes, onComplete }: BackupCodesDisplayProps) {
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">백업 코드 저장</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          백업 코드 저장
+        </h2>
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
           <div className="flex">
             <div className="flex-shrink-0">

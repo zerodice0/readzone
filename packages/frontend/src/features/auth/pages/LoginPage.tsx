@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { z } from 'zod';
 import { useAuth } from '../../../lib/auth-context';
 import apiClient from '../../../lib/api-client';
-import { z } from 'zod';
 
 /**
  * T103: LoginPage
@@ -30,7 +30,9 @@ function LoginPage() {
     rememberMe: false,
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof LoginFormData, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string>('');
 
@@ -39,7 +41,9 @@ function LoginPage() {
   const [mfaToken, setMfaToken] = useState<string>('');
   const [totpCode, setTotpCode] = useState<string>('');
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+  const from =
+    (location.state as { from?: { pathname: string } })?.from?.pathname ||
+    '/dashboard';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -78,7 +82,15 @@ function LoginPage() {
     } catch (error: unknown) {
       // T127: Check if MFA is required
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { message?: string; mfaRequired?: boolean; mfaToken?: string } } };
+        const axiosError = error as {
+          response?: {
+            data?: {
+              message?: string;
+              mfaRequired?: boolean;
+              mfaToken?: string;
+            };
+          };
+        };
 
         if (axiosError.response?.data?.mfaRequired) {
           // MFA is required, show TOTP input
@@ -87,7 +99,9 @@ function LoginPage() {
           return;
         }
 
-        setApiError(axiosError.response?.data?.message || '로그인에 실패했습니다');
+        setApiError(
+          axiosError.response?.data?.message || '로그인에 실패했습니다'
+        );
       } else {
         setApiError('로그인에 실패했습니다');
       }
@@ -109,7 +123,10 @@ function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await apiClient.post<{ accessToken: string; user: unknown }>('/api/v1/auth/mfa/verify', {
+      const response = await apiClient.post<{
+        accessToken: string;
+        user: unknown;
+      }>('/api/v1/auth/mfa/verify', {
         mfaToken,
         totpCode,
       });
@@ -123,8 +140,12 @@ function LoginPage() {
       }, 100);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { message?: string } } };
-        setApiError(axiosError.response?.data?.message || '인증 코드가 올바르지 않습니다.');
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        setApiError(
+          axiosError.response?.data?.message || '인증 코드가 올바르지 않습니다.'
+        );
       } else {
         setApiError('인증 코드 확인에 실패했습니다.');
       }
@@ -147,7 +168,10 @@ function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={(e) => void handleMFAVerify(e)} className="mt-8 space-y-6">
+          <form
+            onSubmit={(e) => void handleMFAVerify(e)}
+            className="mt-8 space-y-6"
+          >
             {apiError && (
               <div
                 className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded"
@@ -158,7 +182,10 @@ function LoginPage() {
             )}
 
             <div>
-              <label htmlFor="totpCode" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="totpCode"
+                className="block text-sm font-medium text-gray-700"
+              >
                 인증 코드
               </label>
               <input
@@ -180,7 +207,8 @@ function LoginPage() {
                 autoFocus
               />
               <p className="mt-2 text-xs text-gray-500">
-                인증 앱에서 생성된 6자리 숫자를 입력하세요. 백업 코드로도 로그인할 수 있습니다.
+                인증 앱에서 생성된 6자리 숫자를 입력하세요. 백업 코드로도
+                로그인할 수 있습니다.
               </p>
             </div>
 
@@ -244,7 +272,10 @@ function LoginPage() {
           <div className="rounded-md shadow-sm space-y-4">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 이메일
               </label>
               <input
@@ -272,7 +303,10 @@ function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 비밀번호
               </label>
               <input
@@ -288,7 +322,9 @@ function LoginPage() {
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
                 placeholder="••••••••"
                 aria-invalid={!!errors.password}
-                aria-describedby={errors.password ? 'password-error' : undefined}
+                aria-describedby={
+                  errors.password ? 'password-error' : undefined
+                }
               />
               {/* T111: Inline error */}
               {errors.password && (
@@ -310,7 +346,10 @@ function LoginPage() {
                 onChange={handleChange}
                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
               />
-              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
+              <label
+                htmlFor="rememberMe"
+                className="ml-2 block text-sm text-gray-900"
+              >
                 로그인 상태 유지
               </label>
             </div>
@@ -343,7 +382,9 @@ function LoginPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">또는 소셜 로그인</span>
+                <span className="px-2 bg-gray-50 text-gray-500">
+                  또는 소셜 로그인
+                </span>
               </div>
             </div>
 
@@ -367,7 +408,12 @@ function LoginPage() {
                 href={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1/auth/oauth/github`}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
                   <path
                     fillRule="evenodd"
                     d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"

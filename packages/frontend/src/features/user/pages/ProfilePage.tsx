@@ -60,15 +60,25 @@ function ProfilePage() {
                       </h3>
                       <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">이메일</dt>
-                          <dd className="mt-1 text-sm text-gray-900">{user.email}</dd>
+                          <dt className="text-sm font-medium text-gray-500">
+                            이메일
+                          </dt>
+                          <dd className="mt-1 text-sm text-gray-900">
+                            {user.email}
+                          </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">이름</dt>
-                          <dd className="mt-1 text-sm text-gray-900">{user.name}</dd>
+                          <dt className="text-sm font-medium text-gray-500">
+                            이름
+                          </dt>
+                          <dd className="mt-1 text-sm text-gray-900">
+                            {user.name}
+                          </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">역할</dt>
+                          <dt className="text-sm font-medium text-gray-500">
+                            역할
+                          </dt>
                           <dd className="mt-1 text-sm text-gray-900">
                             {user.role === 'USER'
                               ? '사용자'
@@ -96,7 +106,9 @@ function ProfilePage() {
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">2단계 인증</dt>
+                          <dt className="text-sm font-medium text-gray-500">
+                            2단계 인증
+                          </dt>
                           <dd className="mt-1">
                             {user.mfaEnabled ? (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -140,7 +152,9 @@ function ProfilePage() {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Security Card */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">보안 설정</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                보안 설정
+              </h3>
               <div className="space-y-3">
                 <a
                   href="/settings"
