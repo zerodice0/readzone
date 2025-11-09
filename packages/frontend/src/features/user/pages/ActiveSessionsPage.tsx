@@ -53,7 +53,7 @@ function ActiveSessionsPage() {
   };
 
   useEffect(() => {
-    loadSessions();
+    void loadSessions();
   }, []);
 
   const handleLogoutSession = async (sessionId: string) => {

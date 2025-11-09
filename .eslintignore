@@ -1,9 +1,0 @@
-node_modules
-dist
-build
-coverage
-.next
-out
-*.config.js
-.eslintrc.js
-.eslintrc.cjs
