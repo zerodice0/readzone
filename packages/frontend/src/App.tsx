@@ -13,12 +13,14 @@ import ProfilePage from './features/user/pages/ProfilePage';
 import ActiveSessionsPage from './features/user/pages/ActiveSessionsPage';
 import AccountSettingsPage from './features/user/pages/AccountSettingsPage';
 import MFASetupPage from './features/user/pages/MFASetupPage';
+import { FeedPage } from './pages/Feed';
 
 function App() {
   return (
     <AuthProvider>
       <Routes>
         {/* Public routes */}
+        <Route path="/feed" element={<FeedPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -68,8 +70,8 @@ function App() {
         />
 
         {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/feed" replace />} />
+        <Route path="*" element={<Navigate to="/feed" replace />} />
       </Routes>
     </AuthProvider>
   );
