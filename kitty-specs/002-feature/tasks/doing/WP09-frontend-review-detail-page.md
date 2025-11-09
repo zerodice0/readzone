@@ -13,10 +13,10 @@ subtasks:
   - 'T101'
 title: 'Frontend - Review Detail Page'
 phase: 'Phase 2 - Frontend'
-lane: 'planned'
+lane: 'doing'
 assignee: ''
-agent: ''
-shell_pid: ''
+agent: 'claude'
+shell_pid: '88760'
 history:
   - timestamp: '2025-11-08T17:52:47Z'
     lane: 'planned'
@@ -32,6 +32,7 @@ history:
 **Goal**: Implement ReviewDetailPage displaying full review content with SPA navigation and scroll position preservation.
 
 **Success Criteria**:
+
 - [ ] ReviewDetailPage component created
 - [ ] Review detail API call (GET /api/reviews/:id) implemented
 - [ ] Full review content displayed (no truncation)
@@ -46,16 +47,19 @@ history:
 ## Context & Constraints
 
 **Related Documents**:
+
 - `kitty-specs/002-feature/contracts/reviews-api.md` - GET /reviews/:id spec
 - `kitty-specs/002-feature/spec.md` - Detail page requirements
 
 **Constraints**:
+
 - Must increment viewCount on page load
 - Scroll restoration on back navigation
 - Mobile-optimized reading experience
 - SEO-friendly meta tags (future enhancement)
 
 **Architectural Decisions**:
+
 - React Router useParams() for ID extraction
 - Separate detail store or component state (not feed store)
 - ScrollRestoration component from React Router
@@ -63,19 +67,29 @@ history:
 ## Subtasks & Detailed Guidance
 
 ### Subtask T092 – Create ReviewDetailPage component
+
 ### Subtask T093 – Create index file for export
+
 ### Subtask T094 – Implement review detail API call
+
 ### Subtask T095 – Display full review content
+
 ### Subtask T096 – Display book information section
+
 ### Subtask T097 – Implement like/bookmark buttons
+
 ### Subtask T098 – Implement share functionality
+
 ### Subtask T099 – Add route to React Router
+
 ### Subtask T100 – Implement scroll position restoration
+
 ### Subtask T101 – Add loading and error states
 
 ## Implementation Guidance
 
 **Create component structure** (T092-T093):
+
 ```typescript
 // packages/frontend/src/pages/ReviewDetail/ReviewDetailPage.tsx
 import { useEffect, useState } from 'react';
@@ -116,6 +130,7 @@ export function ReviewDetailPage() {
 ```
 
 **Fetch review data** (T094):
+
 ```typescript
 const loadReview = async (reviewId: string) => {
   setIsLoading(true);
@@ -133,6 +148,7 @@ const loadReview = async (reviewId: string) => {
 ```
 
 **Display full content** (T095):
+
 ```typescript
 {review && (
   <>
@@ -195,6 +211,7 @@ const loadReview = async (reviewId: string) => {
 ```
 
 **Book information section** (T096):
+
 ```typescript
 <div className="border rounded-lg p-6 mb-8 bg-muted/50">
   <h2 className="text-xl font-semibold mb-4">책 정보</h2>
@@ -214,6 +231,7 @@ const loadReview = async (reviewId: string) => {
 ```
 
 **Action buttons** (T097-T098):
+
 ```typescript
 import { likesApi } from '../../services/api/likes';
 import { bookmarksApi } from '../../services/api/bookmarks';
@@ -266,6 +284,7 @@ const handleShare = async () => {
 ```
 
 **Routing** (T099):
+
 ```typescript
 // In App.tsx
 import { ReviewDetailPage } from './pages/ReviewDetail';
@@ -278,6 +297,7 @@ import { ReviewDetailPage } from './pages/ReviewDetail';
 ```
 
 **Scroll restoration** (T100):
+
 ```typescript
 // In App.tsx
 import { BrowserRouter, ScrollRestoration } from 'react-router-dom';
@@ -291,6 +311,7 @@ import { BrowserRouter, ScrollRestoration } from 'react-router-dom';
 ```
 
 **Loading and error states** (T101):
+
 ```typescript
 {isLoading && (
   <div className="flex justify-center items-center py-16">
@@ -326,6 +347,7 @@ import { BrowserRouter, ScrollRestoration } from 'react-router-dom';
 ## Review Guidance
 
 **Reviewer Should Verify**:
+
 - [ ] Navigate to feed, click review card - navigates to detail
 - [ ] View detail page - full content displayed
 - [ ] Click like button - toggles state
@@ -346,3 +368,4 @@ import { BrowserRouter, ScrollRestoration } from 'react-router-dom';
 
 - **WP10**: Frontend - Authentication Integration
 - **WP11**: Polish & Performance
+- 2025-11-09T01:25:01Z – claude – shell_pid=88760 – lane=doing – Started implementation
