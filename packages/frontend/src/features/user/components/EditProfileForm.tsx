@@ -105,7 +105,7 @@ function EditProfileForm({ user, onCancel, onSuccess }: EditProfileFormProps) {
 
     try {
       // Update profile
-      const response = await apiClient.patch('/users/me', {
+      const response = await apiClient.patch<{ user: User }>('/users/me', {
         name: formData.name,
         email: formData.email,
       });

@@ -222,7 +222,7 @@ export class AuthService {
     this.logger.log(`User logged in: ${user.email}`);
 
     // Remove password hash from response
-    const { passwordHash, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
     return {
       tokens,
