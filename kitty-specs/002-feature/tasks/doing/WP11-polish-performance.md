@@ -15,10 +15,10 @@ subtasks:
   - 'T120'
 title: 'Polish & Performance'
 phase: 'Phase 3 - Polish'
-lane: 'planned'
+lane: 'doing'
 assignee: ''
-agent: ''
-shell_pid: ''
+agent: 'claude'
+shell_pid: '93805'
 history:
   - timestamp: '2025-11-08T17:52:47Z'
     lane: 'planned'
@@ -34,6 +34,7 @@ history:
 **Goal**: Optimize performance, accessibility, and user experience across the feature.
 
 **Success Criteria**:
+
 - [ ] Lighthouse scores >90 (Performance, Accessibility, Best Practices, SEO)
 - [ ] 60fps scrolling performance verified
 - [ ] WCAG AA compliance verified
@@ -50,6 +51,7 @@ history:
 ## Context & Constraints
 
 **Performance Goals** (from plan.md):
+
 - 피드 첫 로딩: <2초 (10개 독후감)
 - 무한 스크롤 추가 로딩: <3초
 - 스크롤 성능: 60fps 이상
@@ -64,6 +66,7 @@ history:
 ### Subtask T109 – Optimize image loading
 
 **Implementation**:
+
 ```typescript
 // 1. Add WebP support with fallback
 <picture>
@@ -92,6 +95,7 @@ history:
 ### Subtask T110 – Add ARIA labels and semantic HTML
 
 **Implementation**:
+
 ```typescript
 // ReviewCard.tsx - Add ARIA labels
 <article
@@ -101,7 +105,7 @@ history:
   onClick={handleCardClick}
 >
   <h3 id={`review-${review.id}-title`}>{review.book.title}</h3>
-  
+
   <Button
     aria-label={`${review.isLikedByMe ? '좋아요 취소' : '좋아요'} (${review.likeCount}개)`}
     onClick={handleLike}
@@ -130,6 +134,7 @@ history:
 ### Subtask T111 – Implement keyboard navigation
 
 **Implementation**:
+
 ```typescript
 // ReviewCard.tsx - Add keyboard support
 const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -163,6 +168,7 @@ const handleKeyDown = (e: React.KeyboardEvent) => {
 ### Subtask T112 – Add focus management
 
 **Implementation**:
+
 ```typescript
 // LoginPrompt.tsx - Focus trap in modal
 import { useEffect, useRef } from 'react';
@@ -198,6 +204,7 @@ export function LoginPrompt({ isOpen, onClose }: LoginPromptProps) {
 ### Subtask T113 – Optimize bundle size
 
 **Implementation**:
+
 ```typescript
 // 1. Code splitting with React.lazy()
 // packages/frontend/src/App.tsx
@@ -237,6 +244,7 @@ pnpm prune
 ### Subtask T114 – Add error boundaries
 
 **Implementation**:
+
 ```typescript
 // packages/frontend/src/components/ErrorBoundary.tsx
 import React from 'react';
@@ -297,6 +305,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 ### Subtask T115 – Implement retry logic
 
 **Implementation**:
+
 ```typescript
 // packages/frontend/src/utils/retry.ts
 export async function retryWithBackoff<T>(
@@ -311,9 +320,11 @@ export async function retryWithBackoff<T>(
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (i < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+        await new Promise((resolve) =>
+          setTimeout(resolve, delay * Math.pow(2, i))
+        );
       }
     }
   }
@@ -344,7 +355,9 @@ export const reviewsApi = {
 ### Subtask T117 – Validate performance targets
 
 **Steps**:
+
 1. Test feed first load:
+
    ```bash
    # Open DevTools Network tab
    # Throttle: Fast 3G
@@ -354,6 +367,7 @@ export const reviewsApi = {
    ```
 
 2. Test scroll performance:
+
    ```bash
    # Open DevTools Performance tab
    # Start recording
@@ -372,12 +386,14 @@ export const reviewsApi = {
 ### Subtask T118 – Run Lighthouse audit
 
 **Steps**:
+
 1. Open DevTools Lighthouse tab
 2. Generate report (Desktop, Production mode)
 3. Fix issues:
+
    ```typescript
    // Common fixes:
-   
+
    // 1. Add meta tags
    <head>
      <meta name="description" content="독후감 공유 플랫폼" />
@@ -386,9 +402,9 @@ export const reviewsApi = {
    </head>
 
    // 2. Optimize images (already done in T109)
-   
+
    // 3. Minimize CSS/JS (Vite does this automatically)
-   
+
    // 4. Add manifest.json
    {
      "name": "ReadZone",
@@ -409,6 +425,7 @@ export const reviewsApi = {
 ### Subtask T119 – Test on mobile devices
 
 **Steps**:
+
 1. Test on iOS Safari:
    - iPhone 12+ (real device or simulator)
    - Verify touch interactions
@@ -420,6 +437,7 @@ export const reviewsApi = {
    - Same verifications
 
 3. Fix mobile-specific issues:
+
    ```css
    /* Fix touch highlight */
    * {
@@ -435,7 +453,9 @@ export const reviewsApi = {
 ### Subtask T120 – Test with screen readers
 
 **Steps**:
+
 1. VoiceOver (macOS):
+
    ```
    Cmd+F5 to enable
    Navigate through feed
@@ -444,6 +464,7 @@ export const reviewsApi = {
    ```
 
 2. NVDA (Windows):
+
    ```
    Start NVDA
    Navigate with Tab key
@@ -452,6 +473,7 @@ export const reviewsApi = {
    ```
 
 3. Fix issues:
+
    ```typescript
    // Add visually hidden text for screen readers
    <span className="sr-only">
@@ -465,17 +487,20 @@ export const reviewsApi = {
 ## Test Strategy
 
 **Performance Tests**:
+
 - Lighthouse audit (>90 scores)
 - WebPageTest.org analysis
 - Bundle size analysis
 - Memory leak detection
 
 **Accessibility Tests**:
+
 - Automated: axe DevTools, Lighthouse
 - Manual: Keyboard navigation, screen reader
 - WCAG 2.1 AA compliance check
 
 **Browser Compatibility**:
+
 - Chrome, Firefox, Safari, Edge
 - Mobile browsers (iOS Safari, Android Chrome)
 - Responsive design (320px to 1920px)
@@ -483,14 +508,17 @@ export const reviewsApi = {
 ## Risks & Mitigations
 
 **Risk 1: Performance regression on low-end devices**
+
 - **Mitigation**: Test on throttled CPU/network, optimize critical assets
 - **Recovery**: Use Lighthouse CI, performance budgets
 
 **Risk 2: Accessibility issues undiscovered**
+
 - **Mitigation**: Use automated tools + manual testing
 - **Recovery**: Add a11y testing to CI/CD
 
 **Risk 3: Bundle size growth**
+
 - **Mitigation**: Bundle analyzer, code splitting, tree shaking
 - **Recovery**: Remove unused dependencies, lazy loading
 
@@ -516,6 +544,7 @@ export const reviewsApi = {
 ## Review Guidance
 
 **Reviewer Should Verify**:
+
 - [ ] Run Lighthouse - all scores >90
 - [ ] Test scroll performance - 60fps in DevTools
 - [ ] Test keyboard navigation - Tab through feed
@@ -535,6 +564,7 @@ export const reviewsApi = {
 ### Feature Complete!
 
 All 11 work packages implemented. The 독후감 메인 피드 feature is now complete with:
+
 - ✅ Backend API (Reviews, Books, Likes, Bookmarks)
 - ✅ Frontend feed with infinite scroll
 - ✅ Review card component
@@ -542,3 +572,4 @@ All 11 work packages implemented. The 독후감 메인 피드 feature is now com
 - ✅ Authentication integration
 - ✅ Performance optimization
 - ✅ Accessibility compliance
+- 2025-11-09T02:02:45Z – claude – shell_pid=93805 – lane=doing – Started WP11 implementation
