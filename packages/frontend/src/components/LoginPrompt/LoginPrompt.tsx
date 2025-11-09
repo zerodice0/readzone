@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,15 +19,24 @@ import { useLoginPromptStore } from '../../stores/loginPromptStore';
 export function LoginPrompt() {
   const navigate = useNavigate();
   const { isOpen, message, hide } = useLoginPromptStore();
+  // T112: Focus management for modal
+  const firstFocusRef = useRef<HTMLButtonElement>(null);
 
-  const handleLogin = () => {
+  // T112: Auto-focus on login button when modal opens
+  useEffect(() => {
+    if (isOpen && firstFocusRef.current) {
+      firstFocusRef.current.focus();
+    }
+  }, [isOpen]);
+
+  const handleLogin = (): void => {
     // T106: Store current URL for return after login
     sessionStorage.setItem('returnUrl', window.location.pathname);
     navigate('/login');
     hide();
   };
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     hide();
   };
 
@@ -41,7 +51,10 @@ export function LoginPrompt() {
           <Button variant="outline" onClick={handleClose}>
             취소
           </Button>
-          <Button onClick={handleLogin}>로그인</Button>
+          {/* T112: Focus on login button first */}
+          <Button ref={firstFocusRef} onClick={handleLogin}>
+            로그인
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
