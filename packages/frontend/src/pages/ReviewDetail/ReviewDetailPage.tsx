@@ -51,14 +51,30 @@ export function ReviewDetailPage() {
   };
 
   useEffect(() => {
-    if (!id) {
-      setError('잘못된 독후감 ID입니다');
-      setIsLoading(false);
-      return;
-    }
-    loadReview(id).catch(() => {
-      // Error already handled in loadReview
-    });
+    let isMounted = true;
+
+    const loadData = async () => {
+      if (!id) {
+        setError('잘못된 독후감 ID입니다');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        await loadReview(id);
+      } catch {
+        // Error already handled in loadReview
+        if (!isMounted) {
+          // Component unmounted, do nothing
+        }
+      }
+    };
+
+    void loadData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   const handleBack = (): void => {
@@ -68,27 +84,48 @@ export function ReviewDetailPage() {
   const handleLike = (): void => {
     if (!review) return;
 
+    // Optimistic update
+    const prevIsLiked = isLiked;
+    const prevLikeCount = likeCount;
+    setIsLiked(!isLiked);
+    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+
     likesService
       .toggleLike(review.id)
       .then((response) => {
         setIsLiked(response.data.isLiked);
         setLikeCount(response.data.likeCount);
       })
-      .catch(() => {
-        // Error silently handled - user can retry
+      .catch((err: unknown) => {
+        // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
+        alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+        // eslint-disable-next-line no-console
+        console.error('Toggle like failed:', err);
+        // Rollback to previous state
+        setIsLiked(prevIsLiked);
+        setLikeCount(prevLikeCount);
       });
   };
 
   const handleBookmark = (): void => {
     if (!review) return;
 
+    // Optimistic update
+    const prevIsBookmarked = isBookmarked;
+    setIsBookmarked(!isBookmarked);
+
     bookmarksService
       .toggleBookmark(review.id)
       .then((response) => {
         setIsBookmarked(response.data.isBookmarked);
       })
-      .catch(() => {
-        // Error silently handled - user can retry
+      .catch((err: unknown) => {
+        // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
+        alert('북마크 처리에 실패했습니다. 다시 시도해주세요.');
+        // eslint-disable-next-line no-console
+        console.error('Toggle bookmark failed:', err);
+        // Rollback to previous state
+        setIsBookmarked(prevIsBookmarked);
       });
   };
 
@@ -99,10 +136,22 @@ export function ReviewDetailPage() {
       'clipboard' in navigator &&
       typeof window !== 'undefined'
     ) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      const url = window.location.href;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      void navigator.clipboard.writeText(url);
+      navigator.clipboard
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .writeText(window.location.href)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .then(() => {
+          // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
+          alert('링크가 복사되었습니다');
+        })
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        .catch((err: unknown) => {
+          // eslint-disable-next-line no-alert, @typescript-eslint/no-unsafe-call
+          alert('링크 복사에 실패했습니다');
+          // eslint-disable-next-line no-console
+          console.error('Share failed:', err);
+        });
     }
   };
 
@@ -172,7 +221,7 @@ export function ReviewDetailPage() {
         <div className="flex items-center gap-3 mb-4">
           <img
             src={review.user.profileImage || '/default-avatar.png'}
-            alt={review.user.name}
+            alt={`${review.user.name}의 프로필 사진`}
             className="w-12 h-12 rounded-full object-cover"
           />
           <div>
@@ -224,7 +273,7 @@ export function ReviewDetailPage() {
         <div className="flex gap-4 flex-col sm:flex-row">
           <img
             src={review.book.coverImageUrl || '/placeholder-book.png'}
-            alt={review.book.title}
+            alt={`${review.book.title} 표지`}
             className="w-24 h-32 sm:w-32 sm:h-44 object-cover rounded shadow self-start"
             loading="lazy"
             onError={(e) => {
@@ -244,19 +293,30 @@ export function ReviewDetailPage() {
 
       {/* Action buttons */}
       <div className="flex gap-2 justify-center sm:justify-start flex-wrap">
-        <Button variant="outline" onClick={handleLike}>
+        <Button
+          variant="outline"
+          onClick={handleLike}
+          aria-label={isLiked ? '좋아요 취소' : '좋아요'}
+        >
           <Heart
             className={`w-4 h-4 mr-2 ${isLiked ? 'fill-current text-red-500' : ''}`}
           />
+          <span className="sr-only">좋아요</span>
           {likeCount}
         </Button>
-        <Button variant="outline" onClick={handleBookmark}>
+        <Button
+          variant="outline"
+          onClick={handleBookmark}
+          aria-label={isBookmarked ? '북마크 취소' : '북마크'}
+        >
           <Bookmark
             className={`w-4 h-4 ${isBookmarked ? 'fill-current text-blue-500' : ''}`}
           />
+          <span className="sr-only">북마크</span>
         </Button>
-        <Button variant="outline" onClick={handleShare}>
+        <Button variant="outline" onClick={handleShare} aria-label="링크 공유">
           <Share2 className="w-4 h-4" />
+          <span className="sr-only">공유</span>
         </Button>
       </div>
     </div>
