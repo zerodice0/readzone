@@ -35,7 +35,9 @@ function ResetPasswordPage() {
     confirmPassword: '',
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ResetPasswordFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ResetPasswordFormData, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -65,7 +67,8 @@ function ResetPasswordPage() {
     // Validate form data
     const result = resetPasswordSchema.safeParse(formData);
     if (!result.success) {
-      const fieldErrors: Partial<Record<keyof ResetPasswordFormData, string>> = {};
+      const fieldErrors: Partial<Record<keyof ResetPasswordFormData, string>> =
+        {};
       result.error.errors.forEach((err) => {
         if (err.path[0]) {
           fieldErrors[err.path[0] as keyof ResetPasswordFormData] = err.message;
@@ -83,7 +86,9 @@ function ResetPasswordPage() {
         newPassword: result.data.newPassword,
       });
 
-      setSuccessMessage('비밀번호가 성공적으로 재설정되었습니다. 로그인 페이지로 이동합니다.');
+      setSuccessMessage(
+        '비밀번호가 성공적으로 재설정되었습니다. 로그인 페이지로 이동합니다.'
+      );
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -91,7 +96,9 @@ function ResetPasswordPage() {
       }, 2000);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { message?: string } } };
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
         setApiError(
           axiosError.response?.data?.message || '비밀번호 재설정에 실패했습니다'
         );
@@ -141,7 +148,10 @@ function ResetPasswordPage() {
           <div className="rounded-md shadow-sm space-y-4">
             {/* New Password Field */}
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="newPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 새 비밀번호
               </label>
               <input
@@ -157,7 +167,9 @@ function ResetPasswordPage() {
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
                 placeholder="••••••••"
                 aria-invalid={!!errors.newPassword}
-                aria-describedby={errors.newPassword ? 'newPassword-error' : undefined}
+                aria-describedby={
+                  errors.newPassword ? 'newPassword-error' : undefined
+                }
               />
               {errors.newPassword && (
                 <p id="newPassword-error" className="mt-1 text-sm text-red-600">
@@ -190,10 +202,15 @@ function ResetPasswordPage() {
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm`}
                 placeholder="••••••••"
                 aria-invalid={!!errors.confirmPassword}
-                aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
+                aria-describedby={
+                  errors.confirmPassword ? 'confirmPassword-error' : undefined
+                }
               />
               {errors.confirmPassword && (
-                <p id="confirmPassword-error" className="mt-1 text-sm text-red-600">
+                <p
+                  id="confirmPassword-error"
+                  className="mt-1 text-sm text-red-600"
+                >
                   {errors.confirmPassword}
                 </p>
               )}
@@ -213,7 +230,10 @@ function ResetPasswordPage() {
 
           {/* Back to Login Link */}
           <div className="text-center">
-            <Link to="/login" className="text-sm font-medium text-primary-600 hover:text-primary-500">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-primary-600 hover:text-primary-500"
+            >
               로그인 페이지로 돌아가기
             </Link>
           </div>

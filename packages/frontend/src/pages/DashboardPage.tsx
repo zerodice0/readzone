@@ -30,7 +30,9 @@ function DashboardPage() {
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">ReadZone 대시보드</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            ReadZone 대시보드
+          </h1>
           <button
             onClick={handleLogout}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -51,15 +53,21 @@ function DashboardPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-700 mb-2">프로필 정보</h3>
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    프로필 정보
+                  </h3>
                   <dl className="space-y-2">
                     <div>
                       <dt className="text-sm text-gray-500">이메일</dt>
-                      <dd className="text-sm font-medium text-gray-900">{user?.email}</dd>
+                      <dd className="text-sm font-medium text-gray-900">
+                        {user?.email}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-sm text-gray-500">이름</dt>
-                      <dd className="text-sm font-medium text-gray-900">{user?.name}</dd>
+                      <dd className="text-sm font-medium text-gray-900">
+                        {user?.name}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-sm text-gray-500">역할</dt>
@@ -91,7 +99,9 @@ function DashboardPage() {
                 </div>
 
                 <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-700 mb-2">빠른 작업</h3>
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    빠른 작업
+                  </h3>
                   <div className="space-y-2">
                     <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700">
                       독후감 작성하기
@@ -124,7 +134,9 @@ function DashboardPage() {
 
             {/* Content Placeholder */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">최근 활동</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                최근 활동
+              </h3>
               <p className="text-gray-500 text-center py-8">
                 아직 활동 내역이 없습니다. 첫 독후감을 작성해보세요!
               </p>

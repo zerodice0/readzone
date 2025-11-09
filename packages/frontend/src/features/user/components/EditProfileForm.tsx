@@ -37,7 +37,9 @@ function EditProfileForm({ user, onCancel, onSuccess }: EditProfileFormProps) {
     name: user.name,
     email: user.email,
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ProfileFormData, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generalError, setGeneralError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -214,7 +216,10 @@ function EditProfileForm({ user, onCancel, onSuccess }: EditProfileFormProps) {
 
       {/* Name Field */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-700"
+        >
           이름
         </label>
         <input
@@ -238,7 +243,10 @@ function EditProfileForm({ user, onCancel, onSuccess }: EditProfileFormProps) {
 
       {/* Email Field */}
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700"
+        >
           이메일
         </label>
         <input

@@ -13,7 +13,9 @@ function OAuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const { setToken } = useAuth();
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
+    'loading'
+  );
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
@@ -76,7 +78,9 @@ function OAuthCallbackPage() {
           {status === 'loading' && (
             <>
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto" />
-              <h2 className="mt-6 text-2xl font-bold text-gray-900">로그인 처리 중...</h2>
+              <h2 className="mt-6 text-2xl font-bold text-gray-900">
+                로그인 처리 중...
+              </h2>
               <p className="mt-2 text-sm text-gray-600">잠시만 기다려주세요.</p>
             </>
           )}
@@ -97,7 +101,9 @@ function OAuthCallbackPage() {
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              <h2 className="mt-6 text-2xl font-bold text-gray-900">로그인 성공!</h2>
+              <h2 className="mt-6 text-2xl font-bold text-gray-900">
+                로그인 성공!
+              </h2>
               <p className="mt-2 text-sm text-gray-600">
                 대시보드로 이동합니다...
               </p>
@@ -120,7 +126,9 @@ function OAuthCallbackPage() {
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-              <h2 className="mt-6 text-2xl font-bold text-gray-900">로그인 실패</h2>
+              <h2 className="mt-6 text-2xl font-bold text-gray-900">
+                로그인 실패
+              </h2>
               <p className="mt-2 text-sm text-gray-600">{errorMessage}</p>
               <div className="mt-6">
                 <button
