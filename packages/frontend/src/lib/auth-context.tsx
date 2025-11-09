@@ -64,7 +64,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     };
 
-    loadUser();
+    void loadUser();
   }, []);
 
   const login = async (credentials: LoginRequest) => {
