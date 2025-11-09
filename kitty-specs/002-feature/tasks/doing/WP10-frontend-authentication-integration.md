@@ -10,10 +10,10 @@ subtasks:
   - 'T108'
 title: 'Frontend - Authentication Integration'
 phase: 'Phase 2 - Frontend'
-lane: 'planned'
+lane: 'doing'
 assignee: ''
-agent: ''
-shell_pid: ''
+agent: 'claude'
+shell_pid: '50827'
 history:
   - timestamp: '2025-11-08T17:52:47Z'
     lane: 'planned'
@@ -29,6 +29,7 @@ history:
 **Goal**: Integrate authentication state for like/bookmark actions; show login prompt for unauthenticated users.
 
 **Success Criteria**:
+
 - [ ] AuthStore created or updated with isAuthenticated check
 - [ ] isAuthenticated check in feedStore actions (toggleLike, toggleBookmark)
 - [ ] Login prompt modal/toast for unauthenticated interactions
@@ -41,15 +42,18 @@ history:
 ## Context & Constraints
 
 **Related Documents**:
+
 - Existing auth system (assumed to exist from WP01-002 context)
 - Authentication API endpoints
 
 **Constraints**:
+
 - Must preserve existing auth system
 - Non-breaking changes to feed functionality
 - Graceful degradation for non-authenticated users
 
 **Architectural Decisions**:
+
 - AuthStore for global auth state
 - Modal or toast for login prompts
 - sessionStorage for returnUrl preservation
@@ -59,6 +63,7 @@ history:
 ### Subtask T102 – Create or update authStore
 
 **Implementation**:
+
 ```typescript
 // packages/frontend/src/stores/authStore.ts
 import { create } from 'zustand';
@@ -95,13 +100,13 @@ export const useAuthStore = create<AuthStore>()(
           body: JSON.stringify({ email, password }),
         });
         const data = await response.json();
-        
+
         set({
           user: data.user,
           token: data.token,
           isAuthenticated: true,
         });
-        
+
         localStorage.setItem('auth_token', data.token);
       },
 
@@ -134,6 +139,7 @@ export const useAuthStore = create<AuthStore>()(
 ### Subtask T103 – Implement isAuthenticated check in feedStore
 
 **Implementation**:
+
 ```typescript
 // Update feedStore.ts
 import { useAuthStore } from './authStore';
@@ -162,6 +168,7 @@ toggleBookmark: async (reviewId: string) => {
 ### Subtask T104 – Create login prompt modal
 
 **Implementation**:
+
 ```typescript
 // packages/frontend/src/components/LoginPrompt.tsx
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
@@ -208,11 +215,13 @@ export function LoginPrompt({ isOpen, onClose, message }: LoginPromptProps) {
 ```
 
 Add shadcn/ui dialog:
+
 ```bash
 npx shadcn-ui@latest add dialog
 ```
 
 Update feedStore to use login prompt:
+
 ```typescript
 import { useLoginPromptStore } from './loginPromptStore';
 
@@ -228,6 +237,7 @@ toggleLike: async (reviewId: string) => {
 ### Subtask T105 – Update ReviewCard buttons
 
 **Implementation**:
+
 ```typescript
 // In ReviewCard.tsx
 import { useAuthStore } from '../../stores/authStore';
@@ -237,12 +247,12 @@ export function ReviewCard({ review }: ReviewCardProps) {
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!isAuthenticated) {
       // Show login prompt
       return;
     }
-    
+
     toggleLike(review.id);
   };
 
@@ -253,6 +263,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
 ### Subtask T106 – Redirect to login with returnUrl
 
 **Implementation**:
+
 ```typescript
 // In login page
 useEffect(() => {
@@ -271,6 +282,7 @@ useEffect(() => {
 ### Subtask T108 – Conditional rendering (optional)
 
 **Implementation**:
+
 ```typescript
 // Option 1: Hide buttons for non-authenticated users
 {isAuthenticated && (
@@ -280,7 +292,7 @@ useEffect(() => {
 )}
 
 // Option 2: Show but disable (better UX - shows features exist)
-<Button 
+<Button
   onClick={handleLike}
   disabled={!isAuthenticated}
   title={!isAuthenticated ? '로그인이 필요합니다' : undefined}
@@ -304,6 +316,7 @@ useEffect(() => {
 ## Review Guidance
 
 **Reviewer Should Verify**:
+
 - [ ] Log out, click like button - login prompt shows
 - [ ] Click login in prompt - redirects to login with returnUrl
 - [ ] Log in - redirects back to original page
@@ -319,3 +332,4 @@ useEffect(() => {
 ### Next Steps After Completion
 
 - **WP11**: Polish & Performance (final optimization)
+- 2025-11-09T01:49:05Z – claude – shell_pid=50827 – lane=doing – Started implementation
