@@ -500,26 +500,27 @@
 
 ---
 
-## Work Package WP11: Polish & Performance (Priority: P3)
+## Work Package WP11: Polish & Performance (Priority: P3) ✅ DONE
 
 **Goal**: Optimize performance, accessibility, and user experience across the feature.
 **Independent Test**: Lighthouse scores >90; 60fps scrolling; WCAG AA compliance; error handling validated.
-**Prompt**: `kitty-specs/002-feature/tasks/planned/WP11-polish-performance.md`
+**Prompt**: `kitty-specs/002-feature/tasks/done/WP11-polish-performance.md`
+**Status**: ✅ Completed on 2025-11-09
 
 ### Included Subtasks
 
-- [ ] T109 [P] Optimize image loading (lazy loading, WebP format)
-- [ ] T110 [P] Add ARIA labels and semantic HTML for accessibility
-- [ ] T111 [P] Implement keyboard navigation for feed (arrow keys, Enter)
-- [ ] T112 [P] Add focus management for modals and prompts
-- [ ] T113 [P] Optimize bundle size (code splitting, tree shaking)
-- [ ] T114 [P] Add error boundaries for React components
-- [ ] T115 [P] Implement retry logic for failed API calls
-- [ ] T116 [P] Add loading skeletons for all async states
-- [ ] T117 Validate performance targets (2s load, 60fps scroll, <200ms API)
-- [ ] T118 Run Lighthouse audit and fix issues
-- [ ] T119 Test on mobile devices (iOS Safari, Android Chrome)
-- [ ] T120 Test with screen readers (VoiceOver, NVDA)
+- [x] T109 [P] Optimize image loading (lazy loading, WebP format)
+- [x] T110 [P] Add ARIA labels and semantic HTML for accessibility
+- [x] T111 [P] Implement keyboard navigation for feed (arrow keys, Enter)
+- [x] T112 [P] Add focus management for modals and prompts
+- [x] T113 [P] Optimize bundle size (code splitting, tree shaking)
+- [x] T114 [P] Add error boundaries for React components
+- [x] T115 [P] Implement retry logic for failed API calls
+- [x] T116 [P] Add loading skeletons for all async states
+- [x] T117 Validate performance targets (2s load, 60fps scroll, <200ms API)
+- [x] T118 Run Lighthouse audit and fix issues
+- [x] T119 Test on mobile devices (iOS Safari, Android Chrome)
+- [x] T120 Test with screen readers (VoiceOver, NVDA)
 
 ### Implementation Notes
 
@@ -578,7 +579,7 @@
 | T081-T091  | FeedPage component                   | WP08         | P1       | Partial   |
 | T092-T101  | ReviewDetailPage                     | WP09         | P2       | ✅ Done   |
 | T102-T108  | Authentication integration           | WP10         | P2       | Partial   |
-| T109-T120  | Polish & performance                 | WP11         | P3       | Yes       |
+| T109-T120  | Polish & performance                 | WP11         | P3       | ✅ Done   |
 
 ---
 
