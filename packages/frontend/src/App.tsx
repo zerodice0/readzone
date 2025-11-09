@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, ScrollRestoration } from 'react-router-dom';
 import { AuthProvider } from './lib/auth-context';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -14,13 +14,16 @@ import ActiveSessionsPage from './features/user/pages/ActiveSessionsPage';
 import AccountSettingsPage from './features/user/pages/AccountSettingsPage';
 import MFASetupPage from './features/user/pages/MFASetupPage';
 import { FeedPage } from './pages/Feed';
+import { ReviewDetailPage } from './pages/ReviewDetail';
 
 function App() {
   return (
     <AuthProvider>
+      <ScrollRestoration />
       <Routes>
         {/* Public routes */}
         <Route path="/feed" element={<FeedPage />} />
+        <Route path="/reviews/:id" element={<ReviewDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
