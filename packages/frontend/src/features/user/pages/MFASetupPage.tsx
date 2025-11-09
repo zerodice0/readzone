@@ -20,7 +20,9 @@ interface MFAVerifyResponse {
 function MFASetupPage() {
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<'loading' | 'qrcode' | 'verify' | 'backup' | 'complete'>('loading');
+  const [step, setStep] = useState<
+    'loading' | 'qrcode' | 'verify' | 'backup' | 'complete'
+  >('loading');
   const [qrCode, setQrCode] = useState<string>('');
   const [secret, setSecret] = useState<string>('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
@@ -32,7 +34,9 @@ function MFASetupPage() {
     // T124, T125: Enable MFA and get QR code
     const enableMFA = async () => {
       try {
-        const response = await apiClient.post<MFAEnableResponse>('/api/v1/users/me/mfa/enable');
+        const response = await apiClient.post<MFAEnableResponse>(
+          '/api/v1/users/me/mfa/enable'
+        );
         setQrCode(response.data.qrCode);
         setSecret(response.data.secret);
         setStep('qrcode');
@@ -59,16 +63,23 @@ function MFASetupPage() {
 
     try {
       // T124: Verify TOTP code and complete MFA setup
-      const response = await apiClient.post<MFAVerifyResponse>('/api/v1/users/me/mfa/verify', {
-        token: totpCode,
-      });
+      const response = await apiClient.post<MFAVerifyResponse>(
+        '/api/v1/users/me/mfa/verify',
+        {
+          token: totpCode,
+        }
+      );
 
       setBackupCodes(response.data.backupCodes);
       setStep('backup');
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        setError(axiosError.response?.data?.message || '인증 코드가 올바르지 않습니다.');
+        const axiosError = err as {
+          response?: { data?: { message?: string } };
+        };
+        setError(
+          axiosError.response?.data?.message || '인증 코드가 올바르지 않습니다.'
+        );
       } else {
         setError('인증 코드 확인에 실패했습니다.');
       }
@@ -90,7 +101,9 @@ function MFASetupPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto" />
-          <p className="mt-4 text-sm text-gray-600">MFA 설정을 준비하는 중...</p>
+          <p className="mt-4 text-sm text-gray-600">
+            MFA 설정을 준비하는 중...
+          </p>
         </div>
       </div>
     );
@@ -113,7 +126,9 @@ function MFASetupPage() {
               d="M5 13l4 4L19 7"
             />
           </svg>
-          <h2 className="mt-6 text-2xl font-bold text-gray-900">MFA 설정 완료!</h2>
+          <h2 className="mt-6 text-2xl font-bold text-gray-900">
+            MFA 설정 완료!
+          </h2>
           <p className="mt-2 text-sm text-gray-600">
             다음 로그인부터 2단계 인증이 적용됩니다.
           </p>
@@ -149,12 +164,18 @@ function MFASetupPage() {
           <div className="space-y-6">
             {qrCode && (
               <div className="flex justify-center">
-                <img src={qrCode} alt="QR Code for MFA setup" className="border-2 border-gray-300 rounded" />
+                <img
+                  src={qrCode}
+                  alt="QR Code for MFA setup"
+                  className="border-2 border-gray-300 rounded"
+                />
               </div>
             )}
 
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <p className="text-sm text-blue-800 font-medium mb-2">수동 입력 코드:</p>
+              <p className="text-sm text-blue-800 font-medium mb-2">
+                수동 입력 코드:
+              </p>
               <code className="text-xs bg-white px-2 py-1 rounded border border-blue-300 break-all">
                 {secret}
               </code>
@@ -176,13 +197,19 @@ function MFASetupPage() {
         {step === 'verify' && (
           <form onSubmit={(e) => void handleVerify(e)} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded" role="alert">
+              <div
+                className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded"
+                role="alert"
+              >
                 <p className="text-sm">{error}</p>
               </div>
             )}
 
             <div>
-              <label htmlFor="totpCode" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="totpCode"
+                className="block text-sm font-medium text-gray-700"
+              >
                 인증 앱에 표시된 6자리 코드
               </label>
               <input

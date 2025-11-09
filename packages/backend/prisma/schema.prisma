@@ -247,7 +247,7 @@ model PasswordResetToken {
 }
 
 // ============================================
-// Book Entity
+// Book Entity (Feature: 002-feature)
 // ============================================
 
 model Book {
@@ -281,7 +281,7 @@ enum ExternalSource {
 }
 
 // ============================================
-// Review Entity
+// Review Entity (Feature: 002-feature)
 // ============================================
 
 model Review {
@@ -328,7 +328,7 @@ enum ReviewStatus {
 }
 
 // ============================================
-// Like Entity
+// Like Entity (Feature: 002-feature)
 // ============================================
 
 model Like {
@@ -347,7 +347,7 @@ model Like {
 }
 
 // ============================================
-// Bookmark Entity
+// Bookmark Entity (Feature: 002-feature)
 // ============================================
 
 model Bookmark {

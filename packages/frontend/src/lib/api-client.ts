@@ -25,16 +25,12 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor: Handle errors globally
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error: AxiosError) => {
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
@@ -130,8 +126,7 @@ export const authApi = {
   resetPassword: (data: ResetPasswordRequest) =>
     apiClient.post('/auth/reset-password', data),
 
-  verifyEmail: (token: string) =>
-    apiClient.get(`/auth/verify-email/${token}`),
+  verifyEmail: (token: string) => apiClient.get(`/auth/verify-email/${token}`),
 
   resendVerification: () => apiClient.post('/auth/resend-verification'),
 
