@@ -13,7 +13,7 @@ subtasks:
   - 'T101'
 title: 'Frontend - Review Detail Page'
 phase: 'Phase 2 - Frontend'
-lane: 'doing'
+lane: 'for_review'
 assignee: ''
 agent: 'claude'
 shell_pid: '88760'
@@ -369,3 +369,4 @@ import { BrowserRouter, ScrollRestoration } from 'react-router-dom';
 - **WP10**: Frontend - Authentication Integration
 - **WP11**: Polish & Performance
 - 2025-11-09T01:25:01Z – claude – shell_pid=88760 – lane=doing – Started implementation
+- 2025-11-09T01:31:31Z – claude – shell_pid=88760 – lane=for_review – Ready for review
