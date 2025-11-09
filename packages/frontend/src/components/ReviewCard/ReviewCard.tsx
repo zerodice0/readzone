@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
 import {
@@ -19,48 +19,48 @@ interface ReviewCardProps {
   review: Review;
 }
 
-export function ReviewCard({ review }: ReviewCardProps) {
+export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) {
   const navigate = useNavigate();
   const toggleLike = useFeedStore((state) => state.toggleLike);
   const toggleBookmark = useFeedStore((state) => state.toggleBookmark);
   const [imageError, setImageError] = useState(false);
   const { isAuthenticated } = useAuth();
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
     // Don't navigate if clicking on buttons
     if ((e.target as HTMLElement).closest('button')) return;
     navigate(`/reviews/${review.id}`);
-  };
+  }, [navigate, review.id]);
 
   // T111: Keyboard navigation support
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       navigate(`/reviews/${review.id}`);
     }
-  };
+  }, [navigate, review.id]);
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     void toggleLike(review.id);
-  };
+  }, [toggleLike, review.id]);
 
-  const handleBookmark = (e: React.MouseEvent) => {
+  const handleBookmark = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     void toggleBookmark(review.id);
-  };
+  }, [toggleBookmark, review.id]);
 
-  const handleShare = (e: React.MouseEvent): void => {
+  const handleShare = useCallback((e: React.MouseEvent): void => {
     e.stopPropagation();
     const url = `${window.location.origin}/reviews/${review.id}`;
     void navigator.clipboard.writeText(url);
     // TODO: Replace with toast notification
     // eslint-disable-next-line no-alert
     alert('링크가 복사되었습니다');
-  };
+  }, [review.id]);
 
-  const getDisplayTime = (publishedAt: string) => {
-    const date = new Date(publishedAt);
+  const displayTime = useMemo(() => {
+    const date = new Date(review.publishedAt);
     const now = new Date();
     const yearDiff = now.getFullYear() - date.getFullYear();
 
@@ -72,9 +72,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
       addSuffix: true,
       locale: ko,
     });
-  };
-
-  const displayTime = getDisplayTime(review.publishedAt);
+  }, [review.publishedAt]);
 
   return (
     <Card
@@ -232,4 +230,4 @@ export function ReviewCard({ review }: ReviewCardProps) {
       </CardFooter>
     </Card>
   );
-}
+});

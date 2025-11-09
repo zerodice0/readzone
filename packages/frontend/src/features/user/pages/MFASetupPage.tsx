@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../../lib/api-client';
 import BackupCodesDisplay from '../components/BackupCodesDisplay';
+import { extractErrorMessage } from '../../../utils/error';
 
 /**
  * T124: MFASetupPage
@@ -50,7 +51,7 @@ function MFASetupPage() {
     void enableMFA();
   }, []);
 
-  const handleVerify = async (e: React.FormEvent) => {
+  const handleVerify = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -73,28 +74,19 @@ function MFASetupPage() {
       setBackupCodes(response.data.backupCodes);
       setStep('backup');
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as {
-          response?: { data?: { message?: string } };
-        };
-        setError(
-          axiosError.response?.data?.message || '인증 코드가 올바르지 않습니다.'
-        );
-      } else {
-        setError('인증 코드 확인에 실패했습니다.');
-      }
+      setError(extractErrorMessage(err, '인증 코드가 올바르지 않습니다.'));
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [totpCode]);
 
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     setStep('complete');
     // Navigate to settings after a short delay
     setTimeout(() => {
       navigate('/settings');
     }, 2000);
-  };
+  }, [navigate]);
 
   if (step === 'loading') {
     return (

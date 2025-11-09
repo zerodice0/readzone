@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -34,7 +34,7 @@ export function ReviewDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
-  const loadReview = async (reviewId: string): Promise<void> => {
+  const loadReview = useCallback(async (reviewId: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
@@ -54,7 +54,7 @@ export function ReviewDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -81,13 +81,13 @@ export function ReviewDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, loadReview]);
 
-  const handleBack = (): void => {
+  const handleBack = useCallback((): void => {
     navigate('/feed');
-  };
+  }, [navigate]);
 
-  const handleLike = (): void => {
+  const handleLike = useCallback((): void => {
     if (!review) return;
 
     // T108: Check authentication before allowing like
@@ -115,9 +115,9 @@ export function ReviewDetailPage() {
         setIsLiked(prevIsLiked);
         setLikeCount(prevLikeCount);
       });
-  };
+  }, [review, isAuthenticated, isLiked, likeCount, showLoginPrompt]);
 
-  const handleBookmark = (): void => {
+  const handleBookmark = useCallback((): void => {
     if (!review) return;
 
     // T108: Check authentication before allowing bookmark
@@ -141,9 +141,9 @@ export function ReviewDetailPage() {
         // Rollback to previous state
         setIsBookmarked(prevIsBookmarked);
       });
-  };
+  }, [review, isAuthenticated, isBookmarked, showLoginPrompt]);
 
-  const handleShare = (): void => {
+  const handleShare = useCallback((): void => {
     // Check if clipboard API is available
     if (
       typeof navigator !== 'undefined' &&
@@ -165,7 +165,7 @@ export function ReviewDetailPage() {
           logError(err, 'Share failed');
         });
     }
-  };
+  }, []);
 
   // Loading state
   if (isLoading) {

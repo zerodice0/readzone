@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { FileText, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useFeedStore } from '../../stores/feedStore';
@@ -24,9 +24,17 @@ export function FeedPage() {
   }, [loadFeed, reset]);
 
   // Wrapper function for loadMore to handle Promise
-  const handleLoadMore = (): void => {
+  const handleLoadMore = useCallback((): void => {
     void loadMore();
-  };
+  }, [loadMore]);
+
+  const handleRetry = useCallback((): void => {
+    void loadFeed();
+  }, [loadFeed]);
+
+  const handleNavigateToNew = useCallback(() => {
+    navigate('/reviews/new');
+  }, [navigate]);
 
   return (
     <>
@@ -82,12 +90,7 @@ export function FeedPage() {
             독후감을 불러올 수 없습니다
           </h2>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <Button
-            onClick={() => {
-              void loadFeed();
-            }}
-            variant="outline"
-          >
+          <Button onClick={handleRetry} variant="outline">
             다시 시도
           </Button>
         </div>
@@ -103,7 +106,7 @@ export function FeedPage() {
           <p className="text-muted-foreground mb-6">
             첫 번째 독후감을 작성해 보세요!
           </p>
-          <Button onClick={() => navigate('/reviews/new')}>
+          <Button onClick={handleNavigateToNew}>
             독후감 작성하기
           </Button>
         </div>
