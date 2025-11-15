@@ -14,9 +14,10 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "convex/_generated/*": ["../../convex/_generated/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "../../convex/_generated"],
   "exclude": ["node_modules", "dist", "build"]
 }
