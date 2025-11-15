@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../lib/auth-context';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import EmailVerificationBanner from '../components/EmailVerificationBanner';
 import { logError } from '../utils/error';
 
@@ -9,24 +9,25 @@ import { logError } from '../utils/error';
  */
 
 function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useUser();
+  const clerk = useClerk();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await logout();
-      navigate('/login');
+      await clerk.signOut();
+      navigate('/');
     } catch (error) {
       logError(error, 'Logout failed');
-      // Even if logout fails, redirect to login
-      navigate('/login');
+      // Even if logout fails, redirect to home
+      navigate('/');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* T107: Email Verification Banner */}
-      {user && !user.emailVerified && <EmailVerificationBanner />}
+      {user && !user.primaryEmailAddress?.verification.status && <EmailVerificationBanner />}
 
       {/* Header */}
       <header className="bg-white shadow">
@@ -50,7 +51,7 @@ function DashboardPage() {
             {/* User Welcome */}
             <div className="bg-white shadow rounded-lg p-6 mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                환영합니다, {user?.name}님!
+                환영합니다, {user?.fullName || user?.firstName}님!
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4">
@@ -61,25 +62,25 @@ function DashboardPage() {
                     <div>
                       <dt className="text-sm text-gray-500">이메일</dt>
                       <dd className="text-sm font-medium text-gray-900">
-                        {user?.email}
+                        {user?.primaryEmailAddress?.emailAddress}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-sm text-gray-500">이름</dt>
                       <dd className="text-sm font-medium text-gray-900">
-                        {user?.name}
+                        {user?.fullName}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">역할</dt>
+                      <dt className="text-sm text-gray-500">사용자 ID</dt>
                       <dd className="text-sm font-medium text-gray-900">
-                        {user?.role === 'USER' ? '사용자' : user?.role}
+                        {user?.id}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-sm text-gray-500">이메일 인증</dt>
                       <dd className="text-sm font-medium">
-                        {user?.emailVerified ? (
+                        {user?.primaryEmailAddress?.verification.status === 'verified' ? (
                           <span className="text-green-600">✓ 인증 완료</span>
                         ) : (
                           <span className="text-yellow-600">✗ 미인증</span>
@@ -89,7 +90,7 @@ function DashboardPage() {
                     <div>
                       <dt className="text-sm text-gray-500">2단계 인증</dt>
                       <dd className="text-sm font-medium">
-                        {user?.mfaEnabled ? (
+                        {user?.twoFactorEnabled ? (
                           <span className="text-green-600">✓ 활성화</span>
                         ) : (
                           <span className="text-gray-500">✗ 비활성화</span>

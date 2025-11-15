@@ -1,40 +1,35 @@
-import { useEffect, useCallback } from 'react';
-import { FileText, AlertCircle } from 'lucide-react';
+import { useCallback } from 'react';
+import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useFeedStore } from '../../stores/feedStore';
+import { usePaginatedQuery } from 'convex/react';
+import { api } from 'convex/_generated/api';
+import { useUser } from '@clerk/clerk-react';
 import { ReviewCard } from '../../components/ReviewCard';
 import { InfiniteScroll } from '../../components/InfiniteScroll';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Button } from '../../components/ui/button';
 import { LoginPrompt } from '../../components/LoginPrompt';
 
+const ITEMS_PER_PAGE = 10;
+
 export function FeedPage() {
   const navigate = useNavigate();
-  const { reviews, isLoading, hasMore, error, loadFeed, loadMore, reset } =
-    useFeedStore();
+  const { user } = useUser();
 
-  useEffect(() => {
-    // Reset store on mount (clear previous state)
-    reset();
-
-    // Load initial feed
-    void loadFeed();
-
-    // No cleanup needed (store persists)
-  }, [loadFeed, reset]);
-
-  // Wrapper function for loadMore to handle Promise
-  const handleLoadMore = useCallback((): void => {
-    void loadMore();
-  }, [loadMore]);
-
-  const handleRetry = useCallback((): void => {
-    void loadFeed();
-  }, [loadFeed]);
+  // Use Convex's usePaginatedQuery hook
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.reviews.getFeed,
+    { userId: user?.id },
+    { initialNumItems: ITEMS_PER_PAGE }
+  );
 
   const handleNavigateToNew = useCallback(() => {
     navigate('/reviews/new');
   }, [navigate]);
+
+  const handleLoadMore = useCallback(() => {
+    loadMore(ITEMS_PER_PAGE);
+  }, [loadMore]);
 
   return (
     <>
@@ -60,7 +55,7 @@ export function FeedPage() {
         </h1>
 
       {/* Loading skeleton */}
-      {isLoading && reviews.length === 0 && (
+      {status === 'LoadingFirstPage' && (
         <div className="space-y-4 sm:space-y-6">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="border rounded-lg p-6 space-y-4">
@@ -82,22 +77,8 @@ export function FeedPage() {
         </div>
       )}
 
-      {/* Error state */}
-      {error && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <AlertCircle className="w-16 h-16 text-destructive mb-4" />
-          <h2 className="text-xl font-semibold mb-2">
-            독후감을 불러올 수 없습니다
-          </h2>
-          <p className="text-muted-foreground mb-6">{error}</p>
-          <Button onClick={handleRetry} variant="outline">
-            다시 시도
-          </Button>
-        </div>
-      )}
-
       {/* Empty state */}
-      {!isLoading && !error && reviews.length === 0 && (
+      {results.length === 0 && status !== 'LoadingFirstPage' && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <FileText className="w-16 h-16 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">
@@ -113,11 +94,11 @@ export function FeedPage() {
       )}
 
       {/* Review list */}
-      {!isLoading && !error && reviews.length > 0 && (
+      {results.length > 0 && (
         <>
           <div className="space-y-4 sm:space-y-6">
-            {reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} />
+            {results.map((review) => (
+              <ReviewCard key={review._id} review={review} />
             ))}
           </div>
 
@@ -125,8 +106,8 @@ export function FeedPage() {
           {/* T110: Add navigation landmark for pagination */}
           <nav aria-label="페이지네이션">
             <InfiniteScroll
-              isLoading={isLoading}
-              hasMore={hasMore}
+              isLoading={status === 'LoadingMore'}
+              hasMore={status === 'CanLoadMore'}
               onLoadMore={handleLoadMore}
             />
           </nav>
