@@ -3,6 +3,7 @@ src/components/ui/avatar.tsx
 src/components/ui/badge.tsx
 src/components/ui/separator.tsx
 src/components/ui/sonner.tsx
+src/components/ui/sheet.tsx
 
 # Pages with Convex type inference issues (temporary)
 src/components/ReviewCard/ReviewCard.tsx

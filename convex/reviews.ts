@@ -295,14 +295,30 @@ export const incrementViewCount = mutation({
 
 /**
  * 피드용 페이지네이션 리뷰 목록 (책 정보 + 사용자 상호작용 포함)
+ * 정렬 및 필터링 지원
  */
 export const getFeed = query({
   args: {
     paginationOpts: paginationOptsValidator,
     userId: v.optional(v.string()),
+    sortBy: v.optional(
+      v.union(v.literal('recent'), v.literal('popular'), v.literal('rating'))
+    ),
+    recommendFilter: v.optional(
+      v.union(
+        v.literal('all'),
+        v.literal('recommended'),
+        v.literal('not-recommended')
+      )
+    ),
   },
   handler: async (ctx, args) => {
-    const { paginationOpts, userId } = args;
+    const {
+      paginationOpts,
+      userId,
+      sortBy = 'recent',
+      recommendFilter = 'all',
+    } = args;
 
     // 페이지네이션 쿼리
     const result = await ctx.db
@@ -312,7 +328,7 @@ export const getFeed = query({
       .paginate(paginationOpts);
 
     // 각 리뷰에 대해 책 정보와 사용자 상호작용 정보 추가
-    const enrichedPage = await Promise.all(
+    let enrichedPage = await Promise.all(
       result.page.map(async (review) => {
         // 책 정보 가져오기
         const book = await ctx.db.get(review.bookId);
@@ -352,10 +368,108 @@ export const getFeed = query({
       })
     );
 
+    // 필터링: 추천 여부
+    if (recommendFilter === 'recommended') {
+      enrichedPage = enrichedPage.filter((review) => review.isRecommended);
+    } else if (recommendFilter === 'not-recommended') {
+      enrichedPage = enrichedPage.filter((review) => !review.isRecommended);
+    }
+
+    // 정렬
+    if (sortBy === 'popular') {
+      // 인기순: 좋아요 수 기준
+      enrichedPage.sort((a, b) => b.likeCount - a.likeCount);
+    } else if (sortBy === 'rating') {
+      // 평점순: 높은 평점 우선
+      enrichedPage.sort((a, b) => {
+        const ratingA = a.rating ?? 0;
+        const ratingB = b.rating ?? 0;
+        return ratingB - ratingA;
+      });
+    }
+    // 'recent'는 이미 기본 정렬(최신순)로 되어 있음
+
     return {
       ...result,
       page: enrichedPage,
     };
+  },
+});
+
+/**
+ * 리뷰 검색 (제목, 책 제목, 저자 검색)
+ */
+export const searchFeed = query({
+  args: {
+    searchQuery: v.string(),
+    userId: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { searchQuery, userId } = args;
+    const limit = args.limit ?? 50;
+
+    // 검색어가 비어있으면 빈 배열 반환
+    if (!searchQuery.trim()) {
+      return [];
+    }
+
+    const lowerQuery = searchQuery.toLowerCase().trim();
+
+    // 모든 발행된 리뷰 가져오기
+    const allReviews = await ctx.db
+      .query('reviews')
+      .withIndex('by_status', (q) => q.eq('status', 'PUBLISHED'))
+      .order('desc')
+      .take(limit);
+
+    // 각 리뷰에 책 정보 추가 및 검색 필터링
+    const enrichedReviews = await Promise.all(
+      allReviews.map(async (review) => {
+        const book = await ctx.db.get(review.bookId);
+        if (!book) return null;
+
+        // 검색어가 리뷰 제목, 책 제목, 저자에 포함되는지 확인
+        const matchesSearch =
+          (review.title?.toLowerCase().includes(lowerQuery) ?? false) ||
+          book.title.toLowerCase().includes(lowerQuery) ||
+          book.author.toLowerCase().includes(lowerQuery);
+
+        if (!matchesSearch) return null;
+
+        // 사용자 상호작용 정보
+        let hasLiked = false;
+        let hasBookmarked = false;
+
+        if (userId) {
+          const like = await ctx.db
+            .query('likes')
+            .withIndex('by_user_review', (q) =>
+              q.eq('userId', userId).eq('reviewId', review._id)
+            )
+            .first();
+          hasLiked = !!like;
+
+          const bookmark = await ctx.db
+            .query('bookmarks')
+            .withIndex('by_user_review', (q) =>
+              q.eq('userId', userId).eq('reviewId', review._id)
+            )
+            .first();
+          hasBookmarked = !!bookmark;
+        }
+
+        return {
+          ...review,
+          book,
+          hasLiked,
+          hasBookmarked,
+        };
+      })
+    );
+
+    // null 제거 (검색에 매치되지 않은 항목)
+    return enrichedReviews.filter((review) => review !== null);
   },
 });
 
