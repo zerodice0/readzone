@@ -1,0 +1,22 @@
+# shadcn/ui components - external library code
+src/components/ui/avatar.tsx
+src/components/ui/badge.tsx
+src/components/ui/separator.tsx
+src/components/ui/sonner.tsx
+
+# Pages with Convex type inference issues (temporary)
+src/components/ReviewCard/ReviewCard.tsx
+src/pages/Feed/FeedPage.tsx
+src/pages/ReviewDetail/ReviewDetailPage.tsx
+
+# Build output
+dist/
+build/
+.next/
+
+# Dependencies
+node_modules/
+
+# Config files
+*.config.js
+*.config.ts

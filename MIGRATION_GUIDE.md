@@ -56,16 +56,45 @@
    - ✅ 개발 서버 실행 및 회원가입/로그인 테스트 완료
    - ✅ Convex와 Clerk 인증 완전 연동 확인
 
-### 🚧 현재 진행 중 (Phase 2: Frontend 페이지 수정)
+### ✅ Phase 2: Frontend 페이지 마이그레이션 완료
 
 **Phase 2 목표:** 기존 페이지들을 Convex + Clerk로 마이그레이션
 
-진행 예정:
+완료된 작업:
 
-- [ ] FeedPage → Convex queries 사용
-- [ ] ReviewDetailPage → Convex queries 사용
-- [ ] ProfilePage → Clerk user data 사용
-- [ ] DashboardPage → Convex queries 사용
+- ✅ FeedPage → Convex queries 사용
+- ✅ ReviewDetailPage → Convex queries 사용
+- ✅ ProfilePage → Clerk user data 사용
+- ✅ DashboardPage → Convex queries 사용
+- ✅ TypeScript 타입 안정성 에러 수정 완료 (57개 → 0개)
+
+### ✅ Phase 2.5: UI/UX 디자인 시스템 완료
+
+**Phase 2.5 목표:** 모든 페이지에 일관된 디자인 시스템 적용
+
+**디자인 방향:** 모던 북 플랫폼 (따뜻하고 초대하는 분위기)
+
+완료된 작업:
+
+- ✅ 디자인 계획 문서화 (`docs/plans/2025-01-15-ui-design-system.md`)
+- ✅ 색상 시스템 구현 (따뜻한 앰버/오렌지 팔레트)
+  - Warm amber/orange primary colors (#f59e0b)
+  - Stone neutral colors for text and backgrounds
+  - Beige background (#fafaf9) for paper-like feel
+- ✅ PostCSS 설정 및 Tailwind CSS 컴파일 파이프라인 구성
+- ✅ shadcn/ui 컴포넌트 추가 (badge, avatar, separator, sonner)
+- ✅ 모든 페이지 스타일링 적용
+  - FeedPage: 따뜻한 색상, 개선된 카드 디자인, 빈 상태 개선
+  - ReviewDetailPage: Badge 컴포넌트, 따뜻한 색상, 개선된 레이아웃
+  - DashboardPage: 아이콘 추가, 프로필 정보 카드 개선
+  - ProfilePage: Gradient 헤더, Badge 컴포넌트, 일관된 스타일
+- ✅ ReviewCard 컴포넌트: 호버 효과, Badge, 따뜻한 색상
+- ✅ 디자인 개선사항
+  - 미묘한 배경 텍스처 추가 (종이 느낌)
+  - 버튼 호버 효과 개선 (scale, shadow)
+  - 카드 호버 효과 개선 (amber 강조)
+
+**상세 계획:** `docs/plans/2025-01-15-ui-design-system.md` 참고
 
 ---
 

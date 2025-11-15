@@ -1,6 +1,9 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser, useClerk } from '@clerk/clerk-react';
+import { FileText, User, Settings, Shield } from 'lucide-react';
 import EmailVerificationBanner from '../components/EmailVerificationBanner';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { logError } from '../utils/error';
 
 /**
@@ -25,109 +28,143 @@ function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* T107: Email Verification Banner */}
       {user && !user.primaryEmailAddress?.verification.status && <EmailVerificationBanner />}
 
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-stone-900">
             ReadZone 대시보드
           </h1>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          <Button
+            onClick={() => {
+              void handleLogout();
+            }}
+            variant="outline"
+            className="border-stone-300 text-stone-700 hover:bg-stone-100 hover:text-stone-900"
           >
             로그아웃
-          </button>
+          </Button>
         </div>
       </header>
 
       {/* Main Content */}
       <main>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             {/* User Welcome */}
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-6 sm:p-8 mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-6">
                 환영합니다, {user?.fullName || user?.firstName}님!
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-700 mb-2">
-                    프로필 정보
-                  </h3>
-                  <dl className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="border border-stone-200 rounded-xl p-6 bg-stone-50/50">
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="w-5 h-5 text-primary-500" />
+                    <h3 className="font-semibold text-stone-900">
+                      프로필 정보
+                    </h3>
+                  </div>
+                  <dl className="space-y-3">
                     <div>
-                      <dt className="text-sm text-gray-500">이메일</dt>
-                      <dd className="text-sm font-medium text-gray-900">
+                      <dt className="text-sm text-stone-600">이메일</dt>
+                      <dd className="text-sm font-medium text-stone-900 mt-1">
                         {user?.primaryEmailAddress?.emailAddress}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">이름</dt>
-                      <dd className="text-sm font-medium text-gray-900">
+                      <dt className="text-sm text-stone-600">이름</dt>
+                      <dd className="text-sm font-medium text-stone-900 mt-1">
                         {user?.fullName}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">사용자 ID</dt>
-                      <dd className="text-sm font-medium text-gray-900">
+                      <dt className="text-sm text-stone-600">사용자 ID</dt>
+                      <dd className="text-sm font-medium text-stone-900 mt-1 font-mono text-xs">
                         {user?.id}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">이메일 인증</dt>
+                      <dt className="text-sm text-stone-600 mb-2">이메일 인증</dt>
                       <dd className="text-sm font-medium">
                         {user?.primaryEmailAddress?.verification.status === 'verified' ? (
-                          <span className="text-green-600">✓ 인증 완료</span>
+                          <Badge className="bg-green-100 text-green-800 border-green-200">
+                            ✓ 인증 완료
+                          </Badge>
                         ) : (
-                          <span className="text-yellow-600">✗ 미인증</span>
+                          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                            ✗ 미인증
+                          </Badge>
                         )}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm text-gray-500">2단계 인증</dt>
+                      <dt className="text-sm text-stone-600 mb-2">2단계 인증</dt>
                       <dd className="text-sm font-medium">
                         {user?.twoFactorEnabled ? (
-                          <span className="text-green-600">✓ 활성화</span>
+                          <Badge className="bg-green-100 text-green-800 border-green-200">
+                            ✓ 활성화
+                          </Badge>
                         ) : (
-                          <span className="text-gray-500">✗ 비활성화</span>
+                          <Badge variant="secondary" className="bg-stone-100 text-stone-700 border-stone-200">
+                            ✗ 비활성화
+                          </Badge>
                         )}
                       </dd>
                     </div>
                   </dl>
                 </div>
 
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-700 mb-2">
-                    빠른 작업
-                  </h3>
+                <div className="border border-stone-200 rounded-xl p-6 bg-stone-50/50">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Settings className="w-5 h-5 text-primary-500" />
+                    <h3 className="font-semibold text-stone-900">
+                      빠른 작업
+                    </h3>
+                  </div>
                   <div className="space-y-2">
-                    <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-stone-700 hover:bg-stone-100 hover:text-stone-900"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
                       독후감 작성하기
-                    </button>
-                    <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700">
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-stone-700 hover:bg-stone-100 hover:text-stone-900"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
                       내 독후감 보기
-                    </button>
-                    <Link
-                      to="/profile"
-                      className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700"
-                    >
-                      프로필 설정
+                    </Button>
+                    <Link to="/profile" className="block">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-stone-700 hover:bg-stone-100 hover:text-stone-900"
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        프로필 설정
+                      </Button>
                     </Link>
-                    <Link
-                      to="/sessions"
-                      className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700"
-                    >
-                      활성 세션 관리
+                    <Link to="/sessions" className="block">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-stone-700 hover:bg-stone-100 hover:text-stone-900"
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        활성 세션 관리
+                      </Button>
                     </Link>
-                    <Link
-                      to="/settings"
-                      className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm text-gray-700"
-                    >
-                      계정 설정
+                    <Link to="/settings" className="block">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-stone-700 hover:bg-stone-100 hover:text-stone-900"
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        계정 설정
+                      </Button>
                     </Link>
                   </div>
                 </div>
@@ -135,13 +172,18 @@ function DashboardPage() {
             </div>
 
             {/* Content Placeholder */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-6 sm:p-8">
+              <h3 className="text-lg font-semibold text-stone-900 mb-6">
                 최근 활동
               </h3>
-              <p className="text-gray-500 text-center py-8">
-                아직 활동 내역이 없습니다. 첫 독후감을 작성해보세요!
-              </p>
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+                  <FileText className="w-8 h-8 text-stone-400" />
+                </div>
+                <p className="text-stone-600 text-center">
+                  아직 활동 내역이 없습니다. 첫 독후감을 작성해보세요!
+                </p>
+              </div>
             </div>
           </div>
         </div>
