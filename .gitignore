@@ -20,6 +20,7 @@ convex/*.js
 convex/*.js.map
 convex/*.d.ts
 convex/*.d.ts.map
+convex/_generated/
 
 # Testing
 coverage/
@@ -51,3 +52,7 @@ pnpm-debug.log*
 *.tmp
 *.temp
 .cache/
+
+# Serena MCP (local development context)
+.serena/memories/
+.serena/cache/
