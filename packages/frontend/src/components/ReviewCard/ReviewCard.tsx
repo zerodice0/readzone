@@ -1,12 +1,14 @@
 import { useState, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import {
   Heart,
   Bookmark,
   Share2,
   ThumbsUp,
   ThumbsDown,
+  Star,
 } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -53,24 +55,25 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
   const [imageError, setImageError] = useState(false);
 
   // Convex mutations
-  const toggleLike = useMutation(api.likes.toggle);
-  const toggleBookmark = useMutation(api.bookmarks.toggle);
+  const toggleLike = useMutation(api.likes.toggle) as (args: { reviewId: Id<'reviews'> }) => Promise<void>;
+  const toggleBookmark = useMutation(api.bookmarks.toggle) as (args: { reviewId: Id<'reviews'> }) => Promise<void>;
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
     // Don't navigate if clicking on buttons
-    if ((e.target as HTMLElement).closest('button')) return;
-    navigate(`/reviews/${review._id}`);
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) return;
+    navigate(`/reviews/${String(review._id)}`);
   }, [navigate, review._id]);
 
   // T111: Keyboard navigation support
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      navigate(`/reviews/${review._id}`);
+      navigate(`/reviews/${String(review._id)}`);
     }
   }, [navigate, review._id]);
 
-  const handleLike = useCallback(async (e: React.MouseEvent) => {
+  const handleLike = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
 
     if (!isSignedIn) {
@@ -78,15 +81,14 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
       return;
     }
 
-    try {
-      await toggleLike({ reviewId: review._id });
-    } catch (error) {
+    void toggleLike({ reviewId: review._id }).catch((error: unknown) => {
       console.error('Failed to toggle like:', error);
+      // eslint-disable-next-line no-alert
       alert('좋아요 처리에 실패했습니다.');
-    }
+    });
   }, [toggleLike, review._id, isSignedIn, showLoginPrompt]);
 
-  const handleBookmark = useCallback(async (e: React.MouseEvent) => {
+  const handleBookmark = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
 
     if (!isSignedIn) {
@@ -94,21 +96,21 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
       return;
     }
 
-    try {
-      await toggleBookmark({ reviewId: review._id });
-    } catch (error) {
+    void toggleBookmark({ reviewId: review._id }).catch((error: unknown) => {
       console.error('Failed to toggle bookmark:', error);
+      // eslint-disable-next-line no-alert
       alert('북마크 처리에 실패했습니다.');
-    }
+    });
   }, [toggleBookmark, review._id, isSignedIn, showLoginPrompt]);
 
   const handleShare = useCallback((e: React.MouseEvent): void => {
     e.stopPropagation();
-    const url = `${window.location.origin}/reviews/${review._id}`;
-    void navigator.clipboard.writeText(url);
+    const origin = (window as Window).location.origin;
+    const url = `${origin}/reviews/${String(review._id)}`;
+    void (navigator as Navigator).clipboard.writeText(url);
     // TODO: Replace with toast notification
     // eslint-disable-next-line no-alert
-    alert('링크가 복사되었습니다');
+    (alert as (message: string) => void)('링크가 복사되었습니다');
   }, [review._id]);
 
   const displayTime = useMemo(() => {
@@ -137,10 +139,10 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
       // T111: Keyboard navigation
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-[1.02] w-full max-w-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className="cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary-500/5 hover:scale-[1.01] hover:border-primary-200 w-full bg-white border-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-background shadow-sm"
       onClick={handleCardClick}
     >
-      <CardHeader className="flex flex-col sm:flex-row gap-4 space-y-0 p-4 sm:p-6">
+      <CardHeader className="flex flex-col sm:flex-row gap-4 sm:gap-6 space-y-0 p-6">
         {/* Book cover */}
         <div className="shrink-0 self-center sm:self-start">
           {/* T109: Image optimization with WebP and responsive images */}
@@ -161,12 +163,12 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
               }
               srcSet={
                 !imageError && review.book?.coverImageUrl
-                  ? `${review.book.coverImageUrl}?w=80 80w, ${review.book.coverImageUrl}?w=160 160w, ${review.book.coverImageUrl}?w=240 240w`
+                  ? `${review.book.coverImageUrl}?w=96 96w, ${review.book.coverImageUrl}?w=192 192w, ${review.book.coverImageUrl}?w=288 288w`
                   : undefined
               }
-              sizes="(max-width: 640px) 80px, 160px"
+              sizes="(max-width: 640px) 96px, 128px"
               alt={`${review.book?.title || '책'} 표지`}
-              className="w-20 h-28 sm:w-24 sm:h-32 object-cover rounded shadow-sm transition-transform hover:scale-105"
+              className="w-24 h-32 sm:w-32 sm:h-44 object-cover rounded-lg shadow-md ring-1 ring-stone-200 transition-all hover:shadow-lg hover:ring-primary-200"
               loading="lazy"
               onError={() => setImageError(true)}
             />
@@ -188,69 +190,72 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
           {/* Book title and author - T110: Add IDs for ARIA */}
           <h3
             id={`review-${review._id}-title`}
-            className="font-bold text-lg sm:text-xl mb-1"
+            className="font-bold text-xl sm:text-2xl mb-1 text-stone-900 leading-tight"
           >
             {review.book?.title || '제목 없음'}
           </h3>
-          <p className="text-sm sm:text-base text-muted-foreground mb-2">
+          <p className="text-sm sm:text-base text-stone-600 mb-3">
             {review.book?.author || '작가 미상'}
           </p>
 
           {/* Review title */}
           {review.title && (
-            <h4 className="font-semibold text-md mb-2">{review.title}</h4>
+            <h4 className="font-semibold text-base mb-2 text-stone-800">{review.title}</h4>
           )}
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className="px-6 pb-4 pt-0">
         {/* Review excerpt - T110: Add ID for ARIA */}
         <p
           id={`review-${review._id}-content`}
-          className="text-sm text-foreground line-clamp-3 mb-2"
+          className="text-sm text-stone-700 line-clamp-3 mb-4 leading-relaxed"
         >
-          {review.content.length > 150
-            ? review.content.substring(0, 150) + '...'
+          {review.content.length > 200
+            ? review.content.substring(0, 200) + '...'
             : review.content}
         </p>
 
-        {/* Recommend status */}
-        <div className="flex items-center gap-1 text-sm">
+        {/* Recommend status and rating */}
+        <div className="flex items-center gap-2 flex-wrap">
           {review.isRecommended ? (
-            <>
-              <ThumbsUp className="w-4 h-4 text-green-600" />
-              <span className="text-green-600 font-medium">추천</span>
-            </>
+            <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">
+              <ThumbsUp className="w-3 h-3 mr-1" />
+              추천
+            </Badge>
           ) : (
-            <>
-              <ThumbsDown className="w-4 h-4 text-red-600" />
-              <span className="text-red-600 font-medium">비추천</span>
-            </>
+            <Badge variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-200 border-red-200">
+              <ThumbsDown className="w-3 h-3 mr-1" />
+              비추천
+            </Badge>
           )}
           {review.rating && (
-            <span className="ml-2 text-muted-foreground">
-              ⭐ {review.rating}/5
-            </span>
+            <Badge variant="secondary" className="bg-amber-50 text-amber-900 border-amber-200">
+              <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />
+              {review.rating}/5
+            </Badge>
           )}
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-wrap justify-between items-center gap-2 p-4 sm:p-6">
+      <CardFooter className="flex flex-wrap justify-between items-center gap-2 px-6 py-4 bg-stone-50/50 border-t border-stone-100">
         <div className="flex gap-2">
           {/* Like button - T110: Add ARIA labels */}
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLike}
-            className={`transition-colors hover:bg-accent hover:text-accent-foreground ${review.hasLiked ? 'text-red-500' : ''}`}
+            className={`transition-all hover:bg-red-50 hover:text-red-600 ${
+              review.hasLiked ? 'text-red-600 bg-red-50' : 'text-stone-600'
+            }`}
             aria-label={`${review.hasLiked ? '좋아요 취소' : '좋아요'} (${review.likeCount}개)`}
             title={!isSignedIn ? '로그인이 필요합니다' : undefined}
           >
             <Heart
-              className={`w-4 h-4 mr-1 ${review.hasLiked ? 'fill-current' : ''}`}
+              className={`w-4 h-4 mr-1.5 ${review.hasLiked ? 'fill-current' : ''}`}
               aria-hidden="true"
             />
-            <span>{review.likeCount}</span>
+            <span className="font-medium">{review.likeCount}</span>
           </Button>
 
           {/* Bookmark button - T110: Add ARIA labels */}
@@ -258,7 +263,9 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
             variant="ghost"
             size="sm"
             onClick={handleBookmark}
-            className={`transition-colors hover:bg-accent hover:text-accent-foreground ${review.hasBookmarked ? 'text-blue-500' : ''}`}
+            className={`transition-all hover:bg-amber-50 hover:text-amber-700 ${
+              review.hasBookmarked ? 'text-amber-700 bg-amber-50' : 'text-stone-600'
+            }`}
             aria-label={`${review.hasBookmarked ? '북마크 취소' : '북마크 추가'}`}
             title={!isSignedIn ? '로그인이 필요합니다' : undefined}
           >
@@ -274,7 +281,7 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
           variant="ghost"
           size="sm"
           onClick={handleShare}
-          className="transition-colors hover:bg-accent hover:text-accent-foreground"
+          className="transition-all hover:bg-stone-100 text-stone-600 hover:text-stone-900"
           aria-label="링크 공유"
         >
           <Share2 className="w-4 h-4" aria-hidden="true" />

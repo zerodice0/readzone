@@ -1,4 +1,7 @@
 import { useUser } from '@clerk/clerk-react';
+import { Settings, Shield, Loader2 } from 'lucide-react';
+import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../components/ui/button';
 // import EditProfileForm from '../components/EditProfileForm';
 
 /**
@@ -12,111 +15,114 @@ function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">로딩 중...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+          <p className="text-stone-600">로딩 중...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">내 프로필</h1>
+          <h1 className="text-3xl font-bold text-stone-900">내 프로필</h1>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Profile Card */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="bg-white border border-stone-200 shadow-sm rounded-xl overflow-hidden">
             {/* Profile Header with Avatar */}
-            <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-8">
-              <div className="flex items-center space-x-4">
+            <div className="bg-gradient-to-r from-amber-500 to-primary-500 px-6 sm:px-8 py-10">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                 {/* Profile Image */}
                 {user?.imageUrl ? (
                   <img
                     src={user.imageUrl}
                     alt={user.fullName || 'Profile'}
-                    className="h-24 w-24 rounded-full shadow-lg"
+                    className="h-24 w-24 rounded-full shadow-lg ring-4 ring-white"
                   />
                 ) : (
-                  <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center text-primary-600 text-3xl font-bold shadow-lg">
+                  <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center text-primary-600 text-3xl font-bold shadow-lg ring-4 ring-white">
                     {(user?.fullName || user?.firstName || '?').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div className="text-white">
-                  <h2 className="text-2xl font-bold">{user?.fullName || user?.firstName}</h2>
-                  <p className="text-primary-100">{user?.primaryEmailAddress?.emailAddress}</p>
+                <div className="text-white text-center sm:text-left">
+                  <h2 className="text-2xl sm:text-3xl font-bold">{user?.fullName || user?.firstName}</h2>
+                  <p className="text-amber-100 mt-1">{user?.primaryEmailAddress?.emailAddress}</p>
                 </div>
               </div>
             </div>
 
             {/* Profile Details */}
-            <div className="px-6 py-6">
+            <div className="px-6 sm:px-8 py-8">
               {/* View Mode */}
-              <div className="space-y-6">
+              <div className="space-y-8">
                     {/* Basic Information Section */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
+                      <h3 className="text-lg font-semibold text-stone-900 mb-6 pb-3 border-b border-stone-200">
                         기본 정보
                       </h3>
-                      <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">
+                          <dt className="text-sm font-medium text-stone-600">
                             이메일
                           </dt>
-                          <dd className="mt-1 text-sm text-gray-900">
+                          <dd className="mt-1.5 text-sm text-stone-900 font-medium">
                             {user?.primaryEmailAddress?.emailAddress}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">
+                          <dt className="text-sm font-medium text-stone-600">
                             이름
                           </dt>
-                          <dd className="mt-1 text-sm text-gray-900">
+                          <dd className="mt-1.5 text-sm text-stone-900 font-medium">
                             {user?.fullName}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">
+                          <dt className="text-sm font-medium text-stone-600">
                             사용자 ID
                           </dt>
-                          <dd className="mt-1 text-sm text-gray-900">
+                          <dd className="mt-1.5 text-sm text-stone-900 font-medium font-mono text-xs">
                             {user?.id}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">
+                          <dt className="text-sm font-medium text-stone-600 mb-2">
                             이메일 인증 상태
                           </dt>
-                          <dd className="mt-1">
+                          <dd>
                             {user?.primaryEmailAddress?.verification.status === 'verified' ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <Badge className="bg-green-100 text-green-800 border-green-200">
                                 ✓ 인증 완료
-                              </span>
+                              </Badge>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
                                 ✗ 미인증
-                              </span>
+                              </Badge>
                             )}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-gray-500">
+                          <dt className="text-sm font-medium text-stone-600 mb-2">
                             2단계 인증
                           </dt>
-                          <dd className="mt-1">
+                          <dd>
                             {user?.twoFactorEnabled ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <Badge className="bg-green-100 text-green-800 border-green-200">
                                 ✓ 활성화
-                              </span>
+                              </Badge>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              <Badge variant="secondary" className="bg-stone-100 text-stone-700 border-stone-200">
                                 ✗ 비활성화
-                              </span>
+                              </Badge>
                             )}
                           </dd>
                         </div>
@@ -124,45 +130,56 @@ function ProfilePage() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex space-x-3 pt-4 border-t">
-                      <button
+                    <div className="flex gap-3 pt-6 border-t border-stone-200">
+                      <Button
                         disabled
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed"
+                        variant="outline"
+                        className="cursor-not-allowed opacity-50"
                       >
+                        <Settings className="w-4 h-4 mr-2" />
                         프로필 수정 (준비 중)
-                      </button>
+                      </Button>
                     </div>
                   </div>
             </div>
           </div>
 
           {/* Additional Info Cards */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Security Card */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                보안 설정
-              </h3>
-              <div className="space-y-3">
-                <a
-                  href="/settings"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition"
-                >
-                  계정 설정
+            <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Shield className="w-5 h-5 text-primary-500" />
+                <h3 className="text-lg font-semibold text-stone-900">
+                  보안 설정
+                </h3>
+              </div>
+              <div className="space-y-2">
+                <a href="/settings">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-stone-700 hover:bg-stone-100 hover:text-stone-900"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    계정 설정
+                  </Button>
                 </a>
-                <a
-                  href="/sessions"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition"
-                >
-                  활성 세션 관리
+                <a href="/sessions">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-stone-700 hover:bg-stone-100 hover:text-stone-900"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    활성 세션 관리
+                  </Button>
                 </a>
               </div>
             </div>
 
             {/* Activity Card */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">활동</h3>
-              <p className="text-sm text-gray-500">
+            <div className="bg-white border border-stone-200 shadow-sm rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-stone-900 mb-4">활동</h3>
+              <p className="text-sm text-stone-600">
                 최근 활동 내역이 여기에 표시됩니다.
               </p>
             </div>
