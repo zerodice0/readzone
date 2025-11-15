@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,138 +10,66 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from 'lucide-react';
-import { reviewsService } from '../../services/api/reviews';
-import { likesService } from '../../services/api/likes';
-import { bookmarksService } from '../../services/api/bookmarks';
-import { Review } from '../../types/review';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from 'convex/_generated/api';
+import { useUser } from '@clerk/clerk-react';
 import { Button } from '../../components/ui/button';
-import { useAuth } from '../../lib/auth-context';
 import { useLoginPromptStore } from '../../stores/loginPromptStore';
 import { LoginPrompt } from '../../components/LoginPrompt';
 import { logError } from '../../utils/error';
+import type { Id } from 'convex/_generated/dataModel';
 
 export function ReviewDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { user, isSignedIn } = useUser();
   const { show: showLoginPrompt } = useLoginPromptStore();
-  const [review, setReview] = useState<Review | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Local state for like/bookmark (independent from feed store)
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-
-  const loadReview = useCallback(async (reviewId: string): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await reviewsService.getReview(reviewId);
-      const reviewData = response.data;
-      setReview(reviewData);
-
-      // Initialize like/bookmark states
-      setIsLiked(reviewData.isLikedByMe ?? false);
-      setLikeCount(reviewData.likeCount);
-      setIsBookmarked(reviewData.isBookmarkedByMe ?? false);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : '독후감을 불러올 수 없습니다';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadData = async () => {
-      if (!id) {
-        setError('잘못된 독후감 ID입니다');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        await loadReview(id);
-      } catch {
-        // Error already handled in loadReview
-        if (!isMounted) {
-          // Component unmounted, do nothing
-        }
-      }
-    };
-
-    void loadData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [id, loadReview]);
+  // Convex queries and mutations
+  const review = useQuery(
+    api.reviews.getDetail,
+    id ? { id: id as Id<'reviews'>, userId: user?.id } : 'skip'
+  );
+  const toggleLike = useMutation(api.likes.toggle);
+  const toggleBookmark = useMutation(api.bookmarks.toggle);
 
   const handleBack = useCallback((): void => {
     navigate('/feed');
   }, [navigate]);
 
-  const handleLike = useCallback((): void => {
-    if (!review) return;
+  const handleLike = useCallback(async (): Promise<void> => {
+    if (!review || !id) return;
 
     // T108: Check authentication before allowing like
-    if (!isAuthenticated) {
+    if (!isSignedIn) {
       showLoginPrompt('좋아요를 누르려면 로그인이 필요합니다.');
       return;
     }
 
-    // Optimistic update
-    const prevIsLiked = isLiked;
-    const prevLikeCount = likeCount;
-    setIsLiked(!isLiked);
-    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+    try {
+      await toggleLike({ reviewId: id as Id<'reviews'> });
+    } catch (err: unknown) {
+      alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+      logError(err, 'Toggle like failed');
+    }
+  }, [review, id, isSignedIn, showLoginPrompt, toggleLike]);
 
-    likesService
-      .toggleLike(review.id)
-      .then((response) => {
-        setIsLiked(response.data.isLiked);
-        setLikeCount(response.data.likeCount);
-      })
-      .catch((err: unknown) => {
-        alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
-        logError(err, 'Toggle like failed');
-        // Rollback to previous state
-        setIsLiked(prevIsLiked);
-        setLikeCount(prevLikeCount);
-      });
-  }, [review, isAuthenticated, isLiked, likeCount, showLoginPrompt]);
-
-  const handleBookmark = useCallback((): void => {
-    if (!review) return;
+  const handleBookmark = useCallback(async (): Promise<void> => {
+    if (!review || !id) return;
 
     // T108: Check authentication before allowing bookmark
-    if (!isAuthenticated) {
+    if (!isSignedIn) {
       showLoginPrompt('북마크를 추가하려면 로그인이 필요합니다.');
       return;
     }
 
-    // Optimistic update
-    const prevIsBookmarked = isBookmarked;
-    setIsBookmarked(!isBookmarked);
-
-    bookmarksService
-      .toggleBookmark(review.id)
-      .then((response) => {
-        setIsBookmarked(response.data.isBookmarked);
-      })
-      .catch((err: unknown) => {
-        alert('북마크 처리에 실패했습니다. 다시 시도해주세요.');
-        logError(err, 'Toggle bookmark failed');
-        // Rollback to previous state
-        setIsBookmarked(prevIsBookmarked);
-      });
-  }, [review, isAuthenticated, isBookmarked, showLoginPrompt]);
+    try {
+      await toggleBookmark({ reviewId: id as Id<'reviews'> });
+    } catch (err: unknown) {
+      alert('북마크 처리에 실패했습니다. 다시 시도해주세요.');
+      logError(err, 'Toggle bookmark failed');
+    }
+  }, [review, id, isSignedIn, showLoginPrompt, toggleBookmark]);
 
   const handleShare = useCallback((): void => {
     // Check if clipboard API is available
@@ -168,7 +96,7 @@ export function ReviewDetailPage() {
   }, []);
 
   // Loading state
-  if (isLoading) {
+  if (review === undefined) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex justify-center items-center py-16">
@@ -179,34 +107,8 @@ export function ReviewDetailPage() {
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <AlertCircle className="w-16 h-16 text-destructive mb-4" />
-          <h2 className="text-xl font-semibold mb-2">
-            독후감을 불러올 수 없습니다
-          </h2>
-          <p className="text-muted-foreground mb-6">{error}</p>
-          <Button
-            onClick={() => {
-              if (id) {
-                loadReview(id).catch(() => {
-                  // Error already handled in loadReview
-                });
-              }
-            }}
-          >
-            다시 시도
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   // No review data
-  if (!review) {
+  if (!review || !id) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -235,19 +137,19 @@ export function ReviewDetailPage() {
 
         {/* User info */}
         <div className="flex items-center gap-3 mb-4">
-          <img
-            src={review.user.profileImage || '/default-avatar.png'}
-            alt={`${review.user.name}의 프로필 사진`}
-            className="w-12 h-12 rounded-full object-cover"
-          />
+          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold">
+            {review.userId.charAt(0).toUpperCase()}
+          </div>
           <div>
-            <p className="font-semibold">{review.user.name}</p>
+            <p className="font-semibold">사용자 {review.userId.slice(-4)}</p>
             <p className="text-sm text-muted-foreground">
-              {new Date(review.publishedAt).toLocaleDateString('ko-KR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+              {review.publishedAt
+                ? new Date(review.publishedAt).toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : '발행 일자 미정'}
             </p>
           </div>
         </div>
@@ -278,55 +180,57 @@ export function ReviewDetailPage() {
             <span className="font-medium">비추천</span>
           </div>
         )}
-        {review.rating !== null && (
+        {review.rating !== undefined && review.rating !== null && (
           <span className="text-muted-foreground">⭐ {review.rating}/5</span>
         )}
       </div>
 
       {/* Book information section */}
-      <div className="border rounded-lg p-4 sm:p-6 mb-8 bg-muted/50">
-        <h2 className="text-lg sm:text-xl font-semibold mb-4">책 정보</h2>
-        <div className="flex gap-4 flex-col sm:flex-row">
-          <img
-            src={review.book.coverImageUrl || '/placeholder-book.png'}
-            alt={`${review.book.title} 표지`}
-            className="w-24 h-32 sm:w-32 sm:h-44 object-cover rounded shadow self-start"
-            loading="lazy"
-            onError={(e) => {
-              e.currentTarget.src = '/placeholder-book.png';
-            }}
-          />
-          <div className="flex-1">
-            <h3 className="text-base sm:text-lg font-bold mb-2">
-              {review.book.title}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {review.book.author}
-            </p>
+      {review.book && (
+        <div className="border rounded-lg p-4 sm:p-6 mb-8 bg-muted/50">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">책 정보</h2>
+          <div className="flex gap-4 flex-col sm:flex-row">
+            <img
+              src={review.book.coverImageUrl || '/placeholder-book.png'}
+              alt={`${review.book.title} 표지`}
+              className="w-24 h-32 sm:w-32 sm:h-44 object-cover rounded shadow self-start"
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder-book.png';
+              }}
+            />
+            <div className="flex-1">
+              <h3 className="text-base sm:text-lg font-bold mb-2">
+                {review.book.title}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {review.book.author}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Action buttons */}
       <div className="flex gap-2 justify-center sm:justify-start flex-wrap">
         <Button
           variant="outline"
           onClick={handleLike}
-          aria-label={isLiked ? '좋아요 취소' : '좋아요'}
+          aria-label={review.hasLiked ? '좋아요 취소' : '좋아요'}
         >
           <Heart
-            className={`w-4 h-4 mr-2 ${isLiked ? 'fill-current text-red-500' : ''}`}
+            className={`w-4 h-4 mr-2 ${review.hasLiked ? 'fill-current text-red-500' : ''}`}
           />
           <span className="sr-only">좋아요</span>
-          {likeCount}
+          {review.likeCount}
         </Button>
         <Button
           variant="outline"
           onClick={handleBookmark}
-          aria-label={isBookmarked ? '북마크 취소' : '북마크'}
+          aria-label={review.hasBookmarked ? '북마크 취소' : '북마크'}
         >
           <Bookmark
-            className={`w-4 h-4 ${isBookmarked ? 'fill-current text-blue-500' : ''}`}
+            className={`w-4 h-4 ${review.hasBookmarked ? 'fill-current text-blue-500' : ''}`}
           />
           <span className="sr-only">북마크</span>
         </Button>

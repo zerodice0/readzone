@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { useAuth } from '../../../lib/auth-context';
-import EditProfileForm from '../components/EditProfileForm';
+import { useUser } from '@clerk/clerk-react';
+// import EditProfileForm from '../components/EditProfileForm';
 
 /**
  * T113: ProfilePage
@@ -8,8 +7,8 @@ import EditProfileForm from '../components/EditProfileForm';
  */
 
 function ProfilePage() {
-  const { user } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
+  const { user } = useUser();
+  // const [isEditing, setIsEditing] = useState(false);
 
   if (!user) {
     return (
@@ -37,22 +36,28 @@ function ProfilePage() {
             <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-8">
               <div className="flex items-center space-x-4">
                 {/* Profile Image */}
-                <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center text-primary-600 text-3xl font-bold shadow-lg">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                {user?.imageUrl ? (
+                  <img
+                    src={user.imageUrl}
+                    alt={user.fullName || 'Profile'}
+                    className="h-24 w-24 rounded-full shadow-lg"
+                  />
+                ) : (
+                  <div className="h-24 w-24 rounded-full bg-white flex items-center justify-center text-primary-600 text-3xl font-bold shadow-lg">
+                    {(user?.fullName || user?.firstName || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="text-white">
-                  <h2 className="text-2xl font-bold">{user.name}</h2>
-                  <p className="text-primary-100">{user.email}</p>
+                  <h2 className="text-2xl font-bold">{user?.fullName || user?.firstName}</h2>
+                  <p className="text-primary-100">{user?.primaryEmailAddress?.emailAddress}</p>
                 </div>
               </div>
             </div>
 
             {/* Profile Details */}
             <div className="px-6 py-6">
-              {!isEditing ? (
-                <>
-                  {/* View Mode */}
-                  <div className="space-y-6">
+              {/* View Mode */}
+              <div className="space-y-6">
                     {/* Basic Information Section */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
@@ -64,7 +69,7 @@ function ProfilePage() {
                             이메일
                           </dt>
                           <dd className="mt-1 text-sm text-gray-900">
-                            {user.email}
+                            {user?.primaryEmailAddress?.emailAddress}
                           </dd>
                         </div>
                         <div>
@@ -72,21 +77,15 @@ function ProfilePage() {
                             이름
                           </dt>
                           <dd className="mt-1 text-sm text-gray-900">
-                            {user.name}
+                            {user?.fullName}
                           </dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-gray-500">
-                            역할
+                            사용자 ID
                           </dt>
                           <dd className="mt-1 text-sm text-gray-900">
-                            {user.role === 'USER'
-                              ? '사용자'
-                              : user.role === 'MODERATOR'
-                                ? '모더레이터'
-                                : user.role === 'ADMIN'
-                                  ? '관리자'
-                                  : user.role}
+                            {user?.id}
                           </dd>
                         </div>
                         <div>
@@ -94,7 +93,7 @@ function ProfilePage() {
                             이메일 인증 상태
                           </dt>
                           <dd className="mt-1">
-                            {user.emailVerified ? (
+                            {user?.primaryEmailAddress?.verification.status === 'verified' ? (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 ✓ 인증 완료
                               </span>
@@ -110,7 +109,7 @@ function ProfilePage() {
                             2단계 인증
                           </dt>
                           <dd className="mt-1">
-                            {user.mfaEnabled ? (
+                            {user?.twoFactorEnabled ? (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 ✓ 활성화
                               </span>
@@ -127,24 +126,13 @@ function ProfilePage() {
                     {/* Action Buttons */}
                     <div className="flex space-x-3 pt-4 border-t">
                       <button
-                        onClick={() => setIsEditing(true)}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                        disabled
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed"
                       >
-                        프로필 수정
+                        프로필 수정 (준비 중)
                       </button>
                     </div>
                   </div>
-                </>
-              ) : (
-                <>
-                  {/* Edit Mode */}
-                  <EditProfileForm
-                    user={user}
-                    onCancel={() => setIsEditing(false)}
-                    onSuccess={() => setIsEditing(false)}
-                  />
-                </>
-              )}
             </div>
           </div>
 

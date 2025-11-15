@@ -7,7 +7,10 @@
       "Bash(pnpm info:*)",
       "Bash(pnpm lint:*)",
       "WebSearch",
-      "Skill(/sc:analyze)"
+      "Skill(/sc:analyze)",
+      "Skill(superpowers:systematic-debugging)",
+      "Bash(npx convex:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

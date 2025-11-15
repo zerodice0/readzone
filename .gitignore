@@ -13,6 +13,14 @@ build/
 .next/
 out/
 
+# Convex
+.convex/
+**/node_modules/.convex/
+convex/*.js
+convex/*.js.map
+convex/*.d.ts
+convex/*.d.ts.map
+
 # Testing
 coverage/
 .nyc_output/
