@@ -1,11 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 
-const rootElement = document.getElementById('root');
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+const rootElement: HTMLElement | null = document.getElementById('root');
 if (!rootElement) {
   throw new Error('Root element not found');
 }
@@ -14,9 +16,9 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     {/* T114: Wrap app in ErrorBoundary */}
     <ErrorBoundary>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <App>
+        <RouterProvider router={router} />
+      </App>
     </ErrorBoundary>
   </React.StrictMode>
 );
