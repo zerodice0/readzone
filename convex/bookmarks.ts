@@ -152,6 +152,61 @@ export const listReviewsByUser = query({
 });
 
 /**
+ * 북마크한 리뷰들의 상세 정보 + 책 정보 조회
+ * 정렬 옵션 지원 (최신순/인기순)
+ */
+export const listReviewsWithBooksByUser = query({
+  args: {
+    userId: v.string(),
+    limit: v.optional(v.number()),
+    sortBy: v.optional(v.union(v.literal('recent'), v.literal('popular'))),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 50;
+    const sortBy = args.sortBy ?? 'recent';
+
+    const bookmarks = await ctx.db
+      .query('bookmarks')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .order('desc')
+      .take(limit);
+
+    // 각 북마크의 리뷰 + 책 정보 가져오기
+    const reviewsWithBooks = await Promise.all(
+      bookmarks.map(async (bookmark) => {
+        const review = await ctx.db.get(bookmark.reviewId);
+        if (!review || review.status === 'DELETED') {
+          return null;
+        }
+
+        const book = await ctx.db.get(review.bookId);
+        if (!book) {
+          return null;
+        }
+
+        return {
+          ...review,
+          book,
+          bookmarkedAt: bookmark._creationTime,
+        };
+      })
+    );
+
+    // null 제거 (삭제된 리뷰/책)
+    const validReviews = reviewsWithBooks.filter((item) => item !== null);
+
+    // 정렬
+    if (sortBy === 'popular') {
+      // 인기순 (likeCount 기준)
+      validReviews.sort((a, b) => b.likeCount - a.likeCount);
+    }
+    // 'recent'는 이미 북마크 생성 시간 역순으로 정렬되어 있음
+
+    return validReviews;
+  },
+});
+
+/**
  * 북마크 제거 (ID로)
  */
 export const remove = mutation({

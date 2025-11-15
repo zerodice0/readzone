@@ -1,0 +1,229 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-misused-promises */
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Check } from 'lucide-react';
+import { useMutation } from 'convex/react';
+import { useUser } from '@clerk/clerk-react';
+import { api } from 'convex/_generated/api';
+import { Button } from '../../components/ui/button';
+import { BookSearch } from '../../components/review/BookSearch';
+import { ReviewForm } from '../../components/review/ReviewForm';
+import { logError } from '../../utils/error';
+import type { Id } from 'convex/_generated/dataModel';
+
+interface BookData {
+  _id: Id<'books'>;
+  title: string;
+  author: string;
+  publisher?: string;
+  publishedDate?: number;
+  coverImageUrl?: string;
+  description?: string;
+}
+
+interface ReviewFormData {
+  title: string;
+  content: string;
+  rating: number;
+  isRecommended: boolean;
+  readStatus: 'READING' | 'COMPLETED' | 'DROPPED';
+}
+
+export default function ReviewNewPage() {
+  const navigate = useNavigate();
+  const { user } = useUser();
+  const [step, setStep] = useState<1 | 2>(1);
+  const [selectedBook, setSelectedBook] = useState<BookData | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const createReview = useMutation(api.reviews.create);
+
+  const handleSelectBook = (book: BookData | null) => {
+    setSelectedBook(book);
+  };
+
+  const handleContinueToForm = () => {
+    if (selectedBook) {
+      setStep(2);
+    }
+  };
+
+  const handleBackToBookSelection = () => {
+    setStep(1);
+  };
+
+  const handleSubmitReview = async (
+    data: ReviewFormData,
+    status: 'DRAFT' | 'PUBLISHED'
+  ) => {
+    if (!selectedBook || !user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const reviewId = await createReview({
+        bookId: selectedBook._id,
+        title: data.title || undefined,
+        content: data.content,
+        rating: data.rating,
+        isRecommended: data.isRecommended,
+        readStatus: data.readStatus,
+        status,
+      });
+
+      // Navigate to the created review
+      navigate(`/reviews/${reviewId}`);
+    } catch (error) {
+      logError(error, 'Failed to create review');
+      alert('독후감 작성에 실패했습니다. 다시 시도해주세요.');
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
+      {/* Header */}
+      <div className="mb-8">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/feed')}
+          className="mb-4 text-stone-600 hover:text-stone-900"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          피드로 돌아가기
+        </Button>
+
+        <h1 className="text-3xl font-bold text-stone-900 mb-2">
+          독후감 작성하기
+        </h1>
+        <p className="text-stone-600">
+          책을 선택하고 당신의 생각을 공유해보세요
+        </p>
+      </div>
+
+      {/* Progress indicator */}
+      <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              step >= 1
+                ? 'bg-primary-600 text-white'
+                : 'bg-stone-200 text-stone-600'
+            }`}
+          >
+            {step > 1 ? <Check className="w-5 h-5" /> : '1'}
+          </div>
+          <span
+            className={`font-medium ${
+              step === 1 ? 'text-stone-900' : 'text-stone-600'
+            }`}
+          >
+            책 선택
+          </span>
+        </div>
+
+        <div className="flex-1 h-0.5 bg-stone-200">
+          <div
+            className={`h-full transition-all duration-300 ${
+              step >= 2 ? 'bg-primary-600 w-full' : 'bg-stone-200 w-0'
+            }`}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              step >= 2
+                ? 'bg-primary-600 text-white'
+                : 'bg-stone-200 text-stone-600'
+            }`}
+          >
+            2
+          </div>
+          <span
+            className={`font-medium ${
+              step === 2 ? 'text-stone-900' : 'text-stone-600'
+            }`}
+          >
+            독후감 작성
+          </span>
+        </div>
+      </div>
+
+      {/* Step 1: Book selection */}
+      {step === 1 && (
+        <div className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm">
+          <h2 className="text-xl font-semibold text-stone-900 mb-6">
+            독후감을 작성할 책을 선택하세요
+          </h2>
+
+          <BookSearch
+            onSelectBook={handleSelectBook}
+            selectedBook={selectedBook}
+          />
+
+          {selectedBook && (
+            <div className="mt-6 pt-6 border-t border-stone-200">
+              <Button
+                onClick={handleContinueToForm}
+                className="w-full bg-primary-600 hover:bg-primary-700"
+                size="lg"
+              >
+                계속하기
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Step 2: Review form */}
+      {step === 2 && selectedBook && (
+        <div className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-stone-900">
+              독후감 작성
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToBookSelection}
+              className="text-stone-600 hover:text-stone-900"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />책 다시 선택
+            </Button>
+          </div>
+
+          {/* Selected book summary */}
+          <div className="bg-stone-50 rounded-lg p-4 mb-6 flex items-center gap-4">
+            {selectedBook.coverImageUrl && (
+              <img
+                src={selectedBook.coverImageUrl}
+                alt={`${selectedBook.title} 표지`}
+                className="w-16 h-22 object-cover rounded shadow-sm"
+              />
+            )}
+            <div>
+              <h3 className="font-semibold text-stone-900">
+                {selectedBook.title}
+              </h3>
+              <p className="text-sm text-stone-600">{selectedBook.author}</p>
+            </div>
+          </div>
+
+          {/* Review form */}
+          <ReviewForm
+            onSubmit={handleSubmitReview}
+            isSubmitting={isSubmitting}
+          />
+        </div>
+      )}
+    </div>
+  );
+}

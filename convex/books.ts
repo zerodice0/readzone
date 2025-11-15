@@ -20,6 +20,52 @@ export const list = query({
 });
 
 /**
+ * 책 목록 + 리뷰 통계 조회
+ * 페이지네이션 지원
+ */
+export const listWithStats = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 20;
+
+    const books = await ctx.db.query('books').order('desc').take(limit);
+
+    // 각 책의 리뷰 통계 계산
+    const booksWithStats = await Promise.all(
+      books.map(async (book) => {
+        const reviews = await ctx.db
+          .query('reviews')
+          .withIndex('by_book', (q) =>
+            q.eq('bookId', book._id).eq('status', 'PUBLISHED')
+          )
+          .collect();
+
+        const reviewCount = reviews.length;
+        const averageRating =
+          reviewCount > 0
+            ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount
+            : 0;
+
+        const recommendedCount = reviews.filter((r) => r.isRecommended).length;
+        const recommendationRate =
+          reviewCount > 0 ? (recommendedCount / reviewCount) * 100 : 0;
+
+        return {
+          ...book,
+          reviewCount,
+          averageRating: Math.round(averageRating * 10) / 10, // 소수점 1자리
+          recommendationRate: Math.round(recommendationRate),
+        };
+      })
+    );
+
+    return booksWithStats;
+  },
+});
+
+/**
  * 책 ID로 특정 책 조회
  */
 export const get = query({

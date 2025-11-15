@@ -10,7 +10,9 @@
       "Skill(/sc:analyze)",
       "Skill(superpowers:systematic-debugging)",
       "Bash(npx convex:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__new_page"
     ],
     "deny": [],
     "ask": []
