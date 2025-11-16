@@ -50,14 +50,7 @@ export function FeedPage() {
           recommendFilter,
         },
     { initialNumItems: ITEMS_PER_PAGE }
-  ) as {
-    results: Array<{
-      _id: string;
-      [key: string]: unknown;
-    }>;
-    status: 'LoadingFirstPage' | 'CanLoadMore' | 'LoadingMore' | 'Exhausted';
-    loadMore: (numItems: number) => void;
-  };
+  );
 
   // Determine which results to show
   const isSearching = debouncedSearchQuery.trim().length > 0;

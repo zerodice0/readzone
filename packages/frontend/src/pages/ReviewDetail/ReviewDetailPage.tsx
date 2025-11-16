@@ -64,12 +64,8 @@ export function ReviewDetailPage() {
     api.reviews.getDetail,
     id ? { id: id as Id<'reviews'>, userId: user?.id } : 'skip'
   ) as ReviewDetail | undefined;
-  const toggleLike = useMutation(api.likes.toggle) as (args: {
-    reviewId: Id<'reviews'>;
-  }) => Promise<void>;
-  const toggleBookmark = useMutation(api.bookmarks.toggle) as (args: {
-    reviewId: Id<'reviews'>;
-  }) => Promise<void>;
+  const toggleLike = useMutation(api.likes.toggle);
+  const toggleBookmark = useMutation(api.bookmarks.toggle);
   const deleteReview = useMutation(api.reviews.remove);
 
   const handleBack = useCallback((): void => {
@@ -118,7 +114,7 @@ export function ReviewDetailPage() {
       typeof window !== 'undefined'
     ) {
       const href = (window as Window).location.href;
-      void (navigator as Navigator).clipboard
+      void navigator.clipboard
         .writeText(href)
         .then(() => {
           // eslint-disable-next-line no-alert

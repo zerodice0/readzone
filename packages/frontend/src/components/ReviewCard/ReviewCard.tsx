@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useState, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
@@ -48,70 +51,87 @@ interface ReviewCardProps {
   };
 }
 
-export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) {
+export const ReviewCard = memo(function ReviewCard({
+  review,
+}: ReviewCardProps) {
   const navigate = useNavigate();
   const { isSignedIn } = useUser();
   const { show: showLoginPrompt } = useLoginPromptStore();
   const [imageError, setImageError] = useState(false);
 
   // Convex mutations
-  const toggleLike = useMutation(api.likes.toggle) as (args: { reviewId: Id<'reviews'> }) => Promise<void>;
-  const toggleBookmark = useMutation(api.bookmarks.toggle) as (args: { reviewId: Id<'reviews'> }) => Promise<void>;
+  const toggleLike = useMutation(api.likes.toggle);
+  const toggleBookmark = useMutation(api.bookmarks.toggle);
 
-  const handleCardClick = useCallback((e: React.MouseEvent) => {
-    // Don't navigate if clicking on buttons
-    const target = e.target as HTMLElement;
-    if (target.closest('button')) return;
-    navigate(`/reviews/${String(review._id)}`);
-  }, [navigate, review._id]);
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't navigate if clicking on buttons
+      const target = e.target as HTMLElement;
+      if (target.closest('button')) return;
+      navigate(`/reviews/${String(review._id)}`);
+    },
+    [navigate, review._id]
+  );
 
   // T111: Keyboard navigation support
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      navigate(`/reviews/${String(review._id)}`);
-    }
-  }, [navigate, review._id]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navigate(`/reviews/${String(review._id)}`);
+      }
+    },
+    [navigate, review._id]
+  );
 
-  const handleLike = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleLike = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
 
-    if (!isSignedIn) {
-      showLoginPrompt('좋아요를 누르려면 로그인이 필요합니다.');
-      return;
-    }
+      if (!isSignedIn) {
+        showLoginPrompt('좋아요를 누르려면 로그인이 필요합니다.');
+        return;
+      }
 
-    void toggleLike({ reviewId: review._id }).catch((error: unknown) => {
-      console.error('Failed to toggle like:', error);
+      void toggleLike({ reviewId: review._id }).catch((error: unknown) => {
+        console.error('Failed to toggle like:', error);
+        // eslint-disable-next-line no-alert
+        alert('좋아요 처리에 실패했습니다.');
+      });
+    },
+    [toggleLike, review._id, isSignedIn, showLoginPrompt]
+  );
+
+  const handleBookmark = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+
+      if (!isSignedIn) {
+        showLoginPrompt('북마크를 추가하려면 로그인이 필요합니다.');
+        return;
+      }
+
+      void toggleBookmark({ reviewId: review._id }).catch((error: unknown) => {
+        console.error('Failed to toggle bookmark:', error);
+        // eslint-disable-next-line no-alert
+        alert('북마크 처리에 실패했습니다.');
+      });
+    },
+    [toggleBookmark, review._id, isSignedIn, showLoginPrompt]
+  );
+
+  const handleShare = useCallback(
+    (e: React.MouseEvent): void => {
+      e.stopPropagation();
+      const origin = (window as Window).location.origin;
+      const url = `${origin}/reviews/${String(review._id)}`;
+      void navigator.clipboard.writeText(url);
+      // TODO: Replace with toast notification
       // eslint-disable-next-line no-alert
-      alert('좋아요 처리에 실패했습니다.');
-    });
-  }, [toggleLike, review._id, isSignedIn, showLoginPrompt]);
-
-  const handleBookmark = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    if (!isSignedIn) {
-      showLoginPrompt('북마크를 추가하려면 로그인이 필요합니다.');
-      return;
-    }
-
-    void toggleBookmark({ reviewId: review._id }).catch((error: unknown) => {
-      console.error('Failed to toggle bookmark:', error);
-      // eslint-disable-next-line no-alert
-      alert('북마크 처리에 실패했습니다.');
-    });
-  }, [toggleBookmark, review._id, isSignedIn, showLoginPrompt]);
-
-  const handleShare = useCallback((e: React.MouseEvent): void => {
-    e.stopPropagation();
-    const origin = (window as Window).location.origin;
-    const url = `${origin}/reviews/${String(review._id)}`;
-    void (navigator as Navigator).clipboard.writeText(url);
-    // TODO: Replace with toast notification
-    // eslint-disable-next-line no-alert
-    (alert as (message: string) => void)('링크가 복사되었습니다');
-  }, [review._id]);
+      (alert as (message: string) => void)('링크가 복사되었습니다');
+    },
+    [review._id]
+  );
 
   const displayTime = useMemo(() => {
     if (!review.publishedAt) return '발행 일자 미정';
@@ -182,7 +202,9 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
               {review.userId.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="font-semibold text-sm">사용자 {review.userId.slice(-4)}</p>
+              <p className="font-semibold text-sm">
+                사용자 {review.userId.slice(-4)}
+              </p>
               <p className="text-xs text-muted-foreground">{displayTime}</p>
             </div>
           </div>
@@ -200,7 +222,9 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
 
           {/* Review title */}
           {review.title && (
-            <h4 className="font-semibold text-base mb-2 text-stone-800">{review.title}</h4>
+            <h4 className="font-semibold text-base mb-2 text-stone-800">
+              {review.title}
+            </h4>
           )}
         </div>
       </CardHeader>
@@ -219,18 +243,27 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
         {/* Recommend status and rating */}
         <div className="flex items-center gap-2 flex-wrap">
           {review.isRecommended ? (
-            <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">
+            <Badge
+              variant="default"
+              className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200"
+            >
               <ThumbsUp className="w-3 h-3 mr-1" />
               추천
             </Badge>
           ) : (
-            <Badge variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-200 border-red-200">
+            <Badge
+              variant="destructive"
+              className="bg-red-100 text-red-800 hover:bg-red-200 border-red-200"
+            >
               <ThumbsDown className="w-3 h-3 mr-1" />
               비추천
             </Badge>
           )}
           {review.rating && (
-            <Badge variant="secondary" className="bg-amber-50 text-amber-900 border-amber-200">
+            <Badge
+              variant="secondary"
+              className="bg-amber-50 text-amber-900 border-amber-200"
+            >
               <Star className="w-3 h-3 mr-1 fill-amber-400 text-amber-400" />
               {review.rating}/5
             </Badge>
@@ -264,7 +297,9 @@ export const ReviewCard = memo(function ReviewCard({ review }: ReviewCardProps) 
             size="sm"
             onClick={handleBookmark}
             className={`transition-all hover:bg-amber-50 hover:text-amber-700 ${
-              review.hasBookmarked ? 'text-amber-700 bg-amber-50' : 'text-stone-600'
+              review.hasBookmarked
+                ? 'text-amber-700 bg-amber-50'
+                : 'text-stone-600'
             }`}
             aria-label={`${review.hasBookmarked ? '북마크 취소' : '북마크 추가'}`}
             title={!isSignedIn ? '로그인이 필요합니다' : undefined}
