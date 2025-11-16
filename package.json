@@ -8,7 +8,6 @@
   ],
   "scripts": {
     "dev": "concurrently --kill-others-on-fail --names \"convex,frontend\" -c \"blue,green\" \"npx convex dev\" \"pnpm --filter @readzone/frontend dev\"",
-    "dev:all": "concurrently --kill-others-on-fail --names \"convex,backend,frontend\" -c \"blue,red,green\" \"npx convex dev\" \"pnpm --parallel --filter './packages/*' dev\"",
     "build": "pnpm --filter \"./packages/*\" --sequential build",
     "lint": "pnpm --parallel --filter \"./packages/*\" lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",

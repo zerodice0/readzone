@@ -253,7 +253,7 @@ export default function BookDetailPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {reviews!.map((review) => (
+              {reviews.map((review) => (
                 <Link
                   key={review._id}
                   to={`/reviews/${review._id}`}
