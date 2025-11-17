@@ -1,5 +1,5 @@
 import { Clock, TrendingUp, Star, ThumbsUp, ThumbsDown } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Button } from '../ui/button';
 
 export type SortOption = 'recent' | 'popular' | 'rating';
@@ -19,7 +19,7 @@ export function FeedFilters({
   onRecommendFilterChange,
 }: FeedFiltersProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -29,57 +29,57 @@ export function FeedFilters({
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-stone-700 mb-2">정렬</h3>
         <div className="flex flex-wrap gap-2">
-          <motion.div whileTap={{ scale: 0.95 }}>
+          <m.div whileTap={{ scale: 0.95 }}>
             <Button
               variant={sortBy === 'recent' ? 'default' : 'outline'}
               size="sm"
               onClick={() => onSortChange('recent')}
               className="gap-2"
             >
-              <motion.div
+              <m.div
                 animate={{ rotate: sortBy === 'recent' ? 360 : 0 }}
                 transition={{ duration: 0.5 }}
               >
                 <Clock className="w-4 h-4" />
-              </motion.div>
+              </m.div>
               최신순
             </Button>
-          </motion.div>
-          <motion.div whileTap={{ scale: 0.95 }}>
+          </m.div>
+          <m.div whileTap={{ scale: 0.95 }}>
             <Button
               variant={sortBy === 'popular' ? 'default' : 'outline'}
               size="sm"
               onClick={() => onSortChange('popular')}
               className="gap-2"
             >
-              <motion.div
+              <m.div
                 animate={{ rotate: sortBy === 'popular' ? 360 : 0 }}
                 transition={{ duration: 0.5 }}
               >
                 <TrendingUp className="w-4 h-4" />
-              </motion.div>
+              </m.div>
               인기순
             </Button>
-          </motion.div>
-          <motion.div whileTap={{ scale: 0.95 }}>
+          </m.div>
+          <m.div whileTap={{ scale: 0.95 }}>
             <Button
               variant={sortBy === 'rating' ? 'default' : 'outline'}
               size="sm"
               onClick={() => onSortChange('rating')}
               className="gap-2"
             >
-              <motion.div
+              <m.div
                 animate={{
                   rotate: sortBy === 'rating' ? [0, -10, 10, -10, 0] : 0,
-                  scale: sortBy === 'rating' ? [1, 1.2, 1] : 1
+                  scale: sortBy === 'rating' ? [1, 1.2, 1] : 1,
                 }}
                 transition={{ duration: 0.6 }}
               >
                 <Star className="w-4 h-4" />
-              </motion.div>
+              </m.div>
               평점순
             </Button>
-          </motion.div>
+          </m.div>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export function FeedFilters({
       <div>
         <h3 className="text-sm font-semibold text-stone-700 mb-2">추천 여부</h3>
         <div className="flex flex-wrap gap-2">
-          <motion.div whileTap={{ scale: 0.95 }}>
+          <m.div whileTap={{ scale: 0.95 }}>
             <Button
               variant={recommendFilter === 'all' ? 'default' : 'outline'}
               size="sm"
@@ -95,27 +95,29 @@ export function FeedFilters({
             >
               전체
             </Button>
-          </motion.div>
-          <motion.div whileTap={{ scale: 0.95 }}>
+          </m.div>
+          <m.div whileTap={{ scale: 0.95 }}>
             <Button
-              variant={recommendFilter === 'recommended' ? 'default' : 'outline'}
+              variant={
+                recommendFilter === 'recommended' ? 'default' : 'outline'
+              }
               size="sm"
               onClick={() => onRecommendFilterChange('recommended')}
               className="gap-2"
             >
-              <motion.div
+              <m.div
                 animate={{
                   rotate: recommendFilter === 'recommended' ? 360 : 0,
-                  scale: recommendFilter === 'recommended' ? [1, 1.2, 1] : 1
+                  scale: recommendFilter === 'recommended' ? [1, 1.2, 1] : 1,
                 }}
                 transition={{ duration: 0.5 }}
               >
                 <ThumbsUp className="w-4 h-4" />
-              </motion.div>
+              </m.div>
               추천
             </Button>
-          </motion.div>
-          <motion.div whileTap={{ scale: 0.95 }}>
+          </m.div>
+          <m.div whileTap={{ scale: 0.95 }}>
             <Button
               variant={
                 recommendFilter === 'not-recommended' ? 'default' : 'outline'
@@ -124,20 +126,21 @@ export function FeedFilters({
               onClick={() => onRecommendFilterChange('not-recommended')}
               className="gap-2"
             >
-              <motion.div
+              <m.div
                 animate={{
                   rotate: recommendFilter === 'not-recommended' ? -360 : 0,
-                  scale: recommendFilter === 'not-recommended' ? [1, 1.2, 1] : 1
+                  scale:
+                    recommendFilter === 'not-recommended' ? [1, 1.2, 1] : 1,
                 }}
                 transition={{ duration: 0.5 }}
               >
                 <ThumbsDown className="w-4 h-4" />
-              </motion.div>
+              </m.div>
               비추천
             </Button>
-          </motion.div>
+          </m.div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

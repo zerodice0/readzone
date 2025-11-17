@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Save, Send } from 'lucide-react';
 import { Button } from '../ui/button';

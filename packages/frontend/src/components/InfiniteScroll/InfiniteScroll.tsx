@@ -25,13 +25,13 @@ export function InfiniteScroll({
     if (isLoading || !hasMore) return undefined;
 
     // T080: Browser compatibility check - use IntersectionObserver
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
     const observer = new IntersectionObserver(
       (entries: IntersectionObserverEntry[]) => {
         // If sentinel is visible, load more
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         const entry = entries[0];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
         if (entry?.isIntersecting) {
           onLoadMore();
         }
@@ -42,12 +42,10 @@ export function InfiniteScroll({
       }
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     observer.observe(sentinel);
 
     // T079: Cleanup - disconnect observer on unmount
     return (): void => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       observer.disconnect();
     };
   }, [isLoading, hasMore, onLoadMore]);

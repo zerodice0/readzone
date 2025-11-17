@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useState } from 'react';
 import { Search, Loader2, BookPlus, X } from 'lucide-react';
 import { useQuery } from 'convex/react';

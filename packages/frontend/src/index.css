@@ -148,4 +148,46 @@ code {
   html {
     -webkit-text-size-adjust: 100%;
   }
+
+  /* Reduced motion support for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Performance optimization: will-change for animated elements */
+  .animate-on-hover {
+    will-change: transform;
+  }
+
+  .animate-on-hover:not(:hover) {
+    will-change: auto;
+  }
+
+  /* Smooth scrolling for browsers that support it */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Shimmer animation for skeleton loaders */
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+  }
 }

@@ -1,8 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useState, useCallback, useMemo, memo } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { m, useMotionValue, useTransform } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -170,7 +167,7 @@ export const ReviewCard = memo(function ReviewCard({
   }, [review.publishedAt]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
@@ -193,14 +190,16 @@ export const ReviewCard = memo(function ReviewCard({
         className="cursor-pointer w-full bg-white border-stone-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-background overflow-hidden relative group"
         onClick={handleCardClick}
         style={{
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          boxShadow:
+            '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         }}
       >
         {/* Warm gradient glow - appears on hover */}
         <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
           style={{
-            background: 'radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.08) 0%, transparent 70%)',
+            background:
+              'radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.08) 0%, transparent 70%)',
           }}
         />
 
@@ -209,13 +208,13 @@ export const ReviewCard = memo(function ReviewCard({
 
         <CardHeader className="flex flex-col sm:flex-row gap-4 sm:gap-6 space-y-0 p-6 relative z-10">
           {/* Book cover with 3D effect */}
-          <motion.div
+          <m.div
             className="shrink-0 self-center sm:self-start"
             whileHover={{
               rotateY: 5,
               rotateX: -5,
               scale: 1.05,
-              transition: { duration: 0.3 }
+              transition: { duration: 0.3 },
             }}
             style={{ transformStyle: 'preserve-3d' }}
           >
@@ -245,11 +244,12 @@ export const ReviewCard = memo(function ReviewCard({
                 loading="lazy"
                 onError={() => setImageError(true)}
                 style={{
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  boxShadow:
+                    '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
                 }}
               />
             </picture>
-          </motion.div>
+          </m.div>
 
           <div className="flex-1 text-center sm:text-left">
             {/* User info */}
@@ -330,7 +330,7 @@ export const ReviewCard = memo(function ReviewCard({
         <CardFooter className="flex flex-wrap justify-between items-center gap-2 px-6 py-4 bg-gradient-to-b from-stone-50/80 to-stone-100/50 border-t border-stone-100 relative z-10">
           <div className="flex gap-2">
             {/* Like button with heart animation */}
-            <motion.div
+            <m.div
               variants={likeVariants}
               initial="rest"
               animate={review.hasLiked ? 'liked' : 'rest'}
@@ -351,10 +351,10 @@ export const ReviewCard = memo(function ReviewCard({
                 />
                 <span className="font-medium">{review.likeCount}</span>
               </Button>
-            </motion.div>
+            </m.div>
 
             {/* Bookmark button with bounce animation */}
-            <motion.div
+            <m.div
               variants={bookmarkVariants}
               initial="rest"
               animate={review.hasBookmarked ? 'bookmarked' : 'rest'}
@@ -376,7 +376,7 @@ export const ReviewCard = memo(function ReviewCard({
                   aria-hidden="true"
                 />
               </Button>
-            </motion.div>
+            </m.div>
           </div>
 
           {/* Share button */}
@@ -391,6 +391,6 @@ export const ReviewCard = memo(function ReviewCard({
           </Button>
         </CardFooter>
       </Card>
-    </motion.div>
+    </m.div>
   );
 });

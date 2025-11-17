@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
 import { Menu, PenSquare } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Button } from '../ui/button';
 import {
   Sheet,
@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from '../ui/sheet';
 import { useLoginPromptStore } from '../../stores/loginPromptStore';
+import { getAnimationProps } from '../../lib/motion';
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -28,35 +29,49 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-stone-200 shadow-sm">
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-primary focus:text-white focus:px-4 focus:py-2 focus:rounded-md focus:font-medium"
+      >
+        본문으로 건너뛰기
+      </a>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* 로고 */}
         <Link
           to="/feed"
           className="text-xl font-bold text-primary-600 hover:text-primary-700 transition-colors"
         >
-          <motion.span
-            whileHover={{
-              scale: 1.05,
-              rotateZ: [0, -2, 2, -2, 0],
-              transition: { duration: 0.5 }
-            }}
-            whileTap={{ scale: 0.95 }}
+          <m.span
+            {...getAnimationProps({
+              whileHover: {
+                scale: 1.05,
+                rotateZ: [0, -2, 2, -2, 0],
+              },
+              whileTap: { scale: 0.95 },
+              transition: { duration: 0.5 },
+            })}
             className="inline-block"
           >
             ReadZone
-          </motion.span>
+          </m.span>
         </Link>
 
         {/* 데스크톱 네비게이션 */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav
+          className="hidden md:flex items-center gap-6"
+          aria-label="주요 네비게이션"
+        >
           {navLinks.map((link, index) => (
-            <motion.div
+            <m.div
               key={link.to}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.3 }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.95 }}
+              {...getAnimationProps({
+                initial: { opacity: 0, y: -10 },
+                animate: { opacity: 1, y: 0 },
+                transition: { delay: index * 0.1, duration: 0.3 },
+                whileHover: { y: -2 },
+                whileTap: { scale: 0.95 },
+              })}
             >
               <Link
                 to={link.to}
@@ -64,7 +79,7 @@ export function Header() {
               >
                 {link.label}
               </Link>
-            </motion.div>
+            </m.div>
           ))}
         </nav>
 

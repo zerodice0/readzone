@@ -1,13 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
 import { BookSearch } from '../../components/review/BookSearch';
@@ -90,7 +86,7 @@ export default function ReviewNewPage() {
   };
 
   return (
-    <motion.div
+    <m.div
       variants={pageVariants}
       initial="initial"
       animate="animate"
@@ -118,7 +114,7 @@ export default function ReviewNewPage() {
       </div>
 
       {/* Progress indicator */}
-      <motion.div
+      <m.div
         variants={fadeInUpVariants}
         initial="hidden"
         animate="visible"
@@ -169,11 +165,11 @@ export default function ReviewNewPage() {
             독후감 작성
           </span>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Step 1: Book selection */}
       {step === 1 && (
-        <motion.div
+        <m.div
           variants={fadeInUpVariants}
           initial="hidden"
           animate="visible"
@@ -199,12 +195,12 @@ export default function ReviewNewPage() {
               </Button>
             </div>
           )}
-        </motion.div>
+        </m.div>
       )}
 
       {/* Step 2: Review form */}
       {step === 2 && selectedBook && (
-        <motion.div
+        <m.div
           variants={fadeInUpVariants}
           initial="hidden"
           animate="visible"
@@ -246,8 +242,8 @@ export default function ReviewNewPage() {
             onSubmit={handleSubmitReview}
             isSubmitting={isSubmitting}
           />
-        </motion.div>
+        </m.div>
       )}
-    </motion.div>
+    </m.div>
   );
 }
