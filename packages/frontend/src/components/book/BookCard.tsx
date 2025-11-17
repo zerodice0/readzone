@@ -59,7 +59,7 @@ export function BookCard({ book }: BookCardProps) {
       {/* Book info */}
       <div className="p-4">
         {/* Title */}
-        <h3 className="font-bold text-stone-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors">
+        <h3 className="font-serif font-bold text-stone-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors">
           {book.title}
         </h3>
 

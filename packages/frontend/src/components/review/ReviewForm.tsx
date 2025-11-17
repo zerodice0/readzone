@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Save, Send } from 'lucide-react';
 import { Button } from '../ui/button';
 import { StarRating } from './StarRating';
+import { toast } from '../../utils/toast';
 
 interface ReviewFormData {
   title: string;
@@ -35,7 +36,7 @@ export function ReviewForm({
   const handleSubmit = (status: 'DRAFT' | 'PUBLISHED') => {
     // Validate required fields
     if (!formData.content.trim()) {
-      alert('독후감 내용을 입력해주세요.');
+      toast.warning('독후감 내용을 입력해주세요');
       return;
     }
 

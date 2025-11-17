@@ -4,6 +4,10 @@ export default {
     content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
   	extend: {
+  		fontFamily: {
+  			serif: ['Crimson Text', 'Georgia', 'serif'],
+  			sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+  		},
   		colors: {
   			// Warm amber/orange palette (primary)
   			primary: {

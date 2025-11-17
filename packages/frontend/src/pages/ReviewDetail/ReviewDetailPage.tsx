@@ -19,11 +19,14 @@ import {
 import { useQuery, useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { useUser } from '@clerk/clerk-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { useLoginPromptStore } from '../../stores/loginPromptStore';
 import { LoginPrompt } from '../../components/LoginPrompt';
 import { logError } from '../../utils/error';
+import { toast } from '../../utils/toast';
+import { pageVariants, fadeInUpVariants, scaleInVariants, modalVariants, backdropVariants } from '../../utils/animations';
 import type { Id } from 'convex/_generated/dataModel';
 
 interface ReviewDetail {
@@ -82,8 +85,7 @@ export function ReviewDetailPage() {
     }
 
     void toggleLike({ reviewId: id as Id<'reviews'> }).catch((err: unknown) => {
-      // eslint-disable-next-line no-alert
-      alert('좋아요 처리에 실패했습니다. 다시 시도해주세요.');
+      toast.error('좋아요 처리에 실패했습니다', '다시 시도해주세요.');
       logError(err, 'Toggle like failed');
     });
   }, [review, id, isSignedIn, showLoginPrompt, toggleLike]);
@@ -99,8 +101,7 @@ export function ReviewDetailPage() {
 
     void toggleBookmark({ reviewId: id as Id<'reviews'> }).catch(
       (err: unknown) => {
-        // eslint-disable-next-line no-alert
-        alert('북마크 처리에 실패했습니다. 다시 시도해주세요.');
+        toast.error('북마크 처리에 실패했습니다', '다시 시도해주세요.');
         logError(err, 'Toggle bookmark failed');
       }
     );
@@ -117,12 +118,10 @@ export function ReviewDetailPage() {
       void navigator.clipboard
         .writeText(href)
         .then(() => {
-          // eslint-disable-next-line no-alert
-          (alert as (message: string) => void)('링크가 복사되었습니다');
+          toast.success('링크가 복사되었습니다');
         })
         .catch((err: unknown) => {
-          // eslint-disable-next-line no-alert
-          (alert as (message: string) => void)('링크 복사에 실패했습니다');
+          toast.error('링크 복사에 실패했습니다');
           logError(err, 'Share failed');
         });
     }
@@ -146,8 +145,7 @@ export function ReviewDetailPage() {
         navigate('/feed');
       })
       .catch((err: unknown) => {
-        // eslint-disable-next-line no-alert
-        alert('독후감 삭제에 실패했습니다. 다시 시도해주세요.');
+        toast.error('독후감 삭제에 실패했습니다', '다시 시도해주세요.');
         logError(err, 'Delete review failed');
         setShowDeleteModal(false);
       });
@@ -196,7 +194,13 @@ export function ReviewDetailPage() {
       {/* T108: Login prompt for unauthenticated users */}
       <LoginPrompt />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl"
+      >
         {/* Header with back button */}
         <div className="mb-8">
           <Button
@@ -259,17 +263,27 @@ export function ReviewDetailPage() {
 
         {/* Review title */}
         {review.title && (
-          <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-stone-900">
+          <motion.h1
+            variants={fadeInUpVariants}
+            initial="hidden"
+            animate="visible"
+            className="text-2xl sm:text-3xl font-bold mb-6 text-stone-900"
+          >
             {review.title}
-          </h1>
+          </motion.h1>
         )}
 
         {/* Full review content */}
-        <div className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 mb-8 shadow-sm">
+        <motion.div
+          variants={fadeInUpVariants}
+          initial="hidden"
+          animate="visible"
+          className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 mb-8 shadow-sm"
+        >
           <p className="whitespace-pre-wrap text-base leading-relaxed text-stone-700">
             {review.content}
           </p>
-        </div>
+        </motion.div>
 
         {/* Recommend status and rating */}
         <div className="flex items-center gap-3 mb-8 flex-wrap">
@@ -303,22 +317,27 @@ export function ReviewDetailPage() {
 
         {/* Book information section */}
         {review.book && (
-          <div className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 mb-8 shadow-sm">
+          <motion.div
+            variants={scaleInVariants}
+            initial="hidden"
+            animate="visible"
+            className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 mb-8 shadow-sm"
+          >
             <h2 className="text-lg sm:text-xl font-semibold mb-6 text-stone-900">
               책 정보
             </h2>
             <div className="flex gap-6 flex-col sm:flex-row">
               <img
-                src={review.book.coverImageUrl || '/placeholder-book.png'}
+                src={review.book.coverImageUrl || '/placeholder-book.svg'}
                 alt={`${review.book.title} 표지`}
                 className="w-24 h-32 sm:w-32 sm:h-44 object-cover rounded-lg shadow-md ring-1 ring-stone-200 self-start"
                 loading="lazy"
                 onError={(e) => {
-                  e.currentTarget.src = '/placeholder-book.png';
+                  e.currentTarget.src = '/placeholder-book.svg';
                 }}
               />
               <div className="flex-1">
-                <h3 className="text-base sm:text-lg font-bold mb-2 text-stone-900">
+                <h3 className="font-serif text-base sm:text-lg font-bold mb-2 text-stone-900">
                   {review.book.title}
                 </h3>
                 <p className="text-sm text-stone-600 mb-4">
@@ -326,11 +345,16 @@ export function ReviewDetailPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-3 justify-center sm:justify-start flex-wrap">
+        <motion.div
+          variants={fadeInUpVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex gap-3 justify-center sm:justify-start flex-wrap"
+        >
           <Button
             variant="ghost"
             size="default"
@@ -373,47 +397,63 @@ export function ReviewDetailPage() {
           >
             <Share2 className="w-4 h-4" aria-hidden="true" />
           </Button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Delete confirmation modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="w-6 h-6 text-red-600" />
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-stone-900 mb-2">
+                    독후감 삭제
+                  </h3>
+                  <p className="text-sm text-stone-600">
+                    정말로 이 독후감을 삭제하시겠습니까?
+                    <br />
+                    삭제된 독후감은 복구할 수 없습니다.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-stone-900 mb-2">
-                  독후감 삭제
-                </h3>
-                <p className="text-sm text-stone-600">
-                  정말로 이 독후감을 삭제하시겠습니까?
-                  <br />
-                  삭제된 독후감은 복구할 수 없습니다.
-                </p>
-              </div>
-            </div>
 
-            <div className="flex gap-3 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteModal(false)}
-              >
-                취소
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmDelete}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                삭제
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  취소
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  삭제
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

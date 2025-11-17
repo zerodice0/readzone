@@ -58,7 +58,7 @@ export function BookSearchResult({
 
       {/* Book info */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-stone-900 mb-1 truncate">
+        <h3 className="font-serif font-semibold text-stone-900 mb-1 truncate">
           {book.title}
         </h3>
         <p className="text-sm text-stone-600 mb-1">{book.author}</p>

@@ -7,11 +7,14 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
+import { motion } from 'framer-motion';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
 import { BookSearch } from '../../components/review/BookSearch';
 import { ReviewForm } from '../../components/review/ReviewForm';
 import { logError } from '../../utils/error';
+import { toast } from '../../utils/toast';
+import { pageVariants, fadeInUpVariants } from '../../utils/animations';
 import type { Id } from 'convex/_generated/dataModel';
 
 interface BookData {
@@ -60,7 +63,7 @@ export default function ReviewNewPage() {
     status: 'DRAFT' | 'PUBLISHED'
   ) => {
     if (!selectedBook || !user) {
-      alert('로그인이 필요합니다.');
+      toast.error('로그인이 필요합니다');
       return;
     }
 
@@ -81,13 +84,19 @@ export default function ReviewNewPage() {
       navigate(`/reviews/${reviewId}`);
     } catch (error) {
       logError(error, 'Failed to create review');
-      alert('독후감 작성에 실패했습니다. 다시 시도해주세요.');
+      toast.error('독후감 작성에 실패했습니다', '다시 시도해주세요.');
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl"
+    >
       {/* Header */}
       <div className="mb-8">
         <Button
@@ -109,7 +118,12 @@ export default function ReviewNewPage() {
       </div>
 
       {/* Progress indicator */}
-      <div className="flex items-center gap-4 mb-8">
+      <motion.div
+        variants={fadeInUpVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex items-center gap-4 mb-8"
+      >
         <div className="flex items-center gap-2">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -155,11 +169,16 @@ export default function ReviewNewPage() {
             독후감 작성
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Step 1: Book selection */}
       {step === 1 && (
-        <div className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm">
+        <motion.div
+          variants={fadeInUpVariants}
+          initial="hidden"
+          animate="visible"
+          className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm"
+        >
           <h2 className="text-xl font-semibold text-stone-900 mb-6">
             독후감을 작성할 책을 선택하세요
           </h2>
@@ -180,12 +199,17 @@ export default function ReviewNewPage() {
               </Button>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Step 2: Review form */}
       {step === 2 && selectedBook && (
-        <div className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm">
+        <motion.div
+          variants={fadeInUpVariants}
+          initial="hidden"
+          animate="visible"
+          className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm"
+        >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-stone-900">
               독후감 작성
@@ -222,8 +246,8 @@ export default function ReviewNewPage() {
             onSubmit={handleSubmitReview}
             isSubmitting={isSubmitting}
           />
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

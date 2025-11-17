@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
 import { Menu, PenSquare } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '../ui/button';
 import {
   Sheet,
@@ -33,19 +34,37 @@ export function Header() {
           to="/feed"
           className="text-xl font-bold text-primary-600 hover:text-primary-700 transition-colors"
         >
-          ReadZone
+          <motion.span
+            whileHover={{
+              scale: 1.05,
+              rotateZ: [0, -2, 2, -2, 0],
+              transition: { duration: 0.5 }
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-block"
+          >
+            ReadZone
+          </motion.span>
         </Link>
 
         {/* 데스크톱 네비게이션 */}
         <nav className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link
+          {navLinks.map((link, index) => (
+            <motion.div
               key={link.to}
-              to={link.to}
-              className="text-stone-700 hover:text-primary-600 font-medium transition-colors"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {link.label}
-            </Link>
+              <Link
+                to={link.to}
+                className="text-stone-700 hover:text-primary-600 font-medium transition-colors"
+              >
+                {link.label}
+              </Link>
+            </motion.div>
           ))}
         </nav>
 
