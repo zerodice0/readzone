@@ -18,7 +18,6 @@ const reviewsApi = axios.create({
 reviewsApi.interceptors.request.use((config) => {
   const token = storage.getItem('authToken');
   if (token && config.headers) {
-    // eslint-disable-next-line no-param-reassign
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

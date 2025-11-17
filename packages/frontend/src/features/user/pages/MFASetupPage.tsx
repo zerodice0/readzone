@@ -41,7 +41,7 @@ function MFASetupPage() {
         setQrCode(response.data.qrCode);
         setSecret(response.data.secret);
         setStep('qrcode');
-      } catch (err) {
+      } catch {
         // Error handling for MFA setup
         setError('MFA 설정을 시작할 수 없습니다. 다시 시도해주세요.');
         setStep('qrcode'); // Show error but allow retry
@@ -51,34 +51,37 @@ function MFASetupPage() {
     void enableMFA();
   }, []);
 
-  const handleVerify = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const handleVerify = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError('');
 
-    if (totpCode.length !== 6) {
-      setError('6자리 인증 코드를 입력하세요.');
-      return;
-    }
+      if (totpCode.length !== 6) {
+        setError('6자리 인증 코드를 입력하세요.');
+        return;
+      }
 
-    setIsSubmitting(true);
+      setIsSubmitting(true);
 
-    try {
-      // T124: Verify TOTP code and complete MFA setup
-      const response = await apiClient.post<MFAVerifyResponse>(
-        '/api/v1/users/me/mfa/verify',
-        {
-          token: totpCode,
-        }
-      );
+      try {
+        // T124: Verify TOTP code and complete MFA setup
+        const response = await apiClient.post<MFAVerifyResponse>(
+          '/api/v1/users/me/mfa/verify',
+          {
+            token: totpCode,
+          }
+        );
 
-      setBackupCodes(response.data.backupCodes);
-      setStep('backup');
-    } catch (err: unknown) {
-      setError(extractErrorMessage(err, '인증 코드가 올바르지 않습니다.'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [totpCode]);
+        setBackupCodes(response.data.backupCodes);
+        setStep('backup');
+      } catch (err: unknown) {
+        setError(extractErrorMessage(err, '인증 코드가 올바르지 않습니다.'));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [totpCode]
+  );
 
   const handleComplete = useCallback(() => {
     setStep('complete');

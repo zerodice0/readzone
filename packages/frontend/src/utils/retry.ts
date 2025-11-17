@@ -28,10 +28,8 @@ export async function retryWithBackoff<T>(
   let lastError: Error;
   let attempt = 0;
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
-      // eslint-disable-next-line no-await-in-loop
       return await fn();
     } catch (error) {
       lastError = error as Error;
@@ -50,7 +48,7 @@ export async function retryWithBackoff<T>(
 
       // Wait with exponential backoff
       const backoffDelay = delay * 2 ** (attempt - 1);
-      // eslint-disable-next-line no-await-in-loop
+
       await new Promise<void>((resolve) => {
         setTimeout(() => {
           resolve();

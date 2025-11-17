@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Link } from 'react-router-dom';
 import { Star, MessageSquare, ThumbsUp, Book } from 'lucide-react';
 import { Badge } from '../ui/badge';

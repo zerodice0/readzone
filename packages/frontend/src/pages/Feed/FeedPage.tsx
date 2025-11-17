@@ -1,14 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { useCallback, useState } from 'react';
 import { FileText, Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePaginatedQuery, useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { useUser } from '@clerk/clerk-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ReviewCard } from '../../components/ReviewCard';
 import { InfiniteScroll } from '../../components/InfiniteScroll';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -79,7 +75,7 @@ export function FeedPage() {
       <LoginPrompt />
 
       {/* Main content */}
-      <motion.main
+      <m.main
         variants={pageVariants}
         initial="initial"
         animate="animate"
@@ -96,7 +92,7 @@ export function FeedPage() {
         </div>
 
         {/* Search bar */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -105,38 +101,35 @@ export function FeedPage() {
           <label htmlFor="search-input" className="sr-only">
             독후감 검색
           </label>
-          <motion.div
+          <m.div
             className="relative"
             whileFocus={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
-            <motion.div
+            <m.div
               animate={{
                 rotate: isSearching ? 360 : 0,
-                scale: isSearching ? [1, 1.2, 1] : 1
+                scale: isSearching ? [1, 1.2, 1] : 1,
               }}
               transition={{ duration: 0.5 }}
               className="absolute left-4 top-1/2 transform -translate-y-1/2"
             >
-              <Search
-                className="w-5 h-5 text-stone-400"
-                aria-hidden="true"
-              />
-            </motion.div>
-            <motion.input
+              <Search className="w-5 h-5 text-stone-400" aria-hidden="true" />
+            </m.div>
+            <m.input
               id="search-input"
               type="search"
               placeholder="제목, 책 이름, 저자로 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               whileFocus={{
-                boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
+                boxShadow: '0 0 0 3px rgba(245, 158, 11, 0.1)',
               }}
               className="w-full pl-12 pr-12 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
               aria-label="독후감 검색"
             />
             {searchQuery && (
-              <motion.button
+              <m.button
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0 }}
@@ -148,11 +141,11 @@ export function FeedPage() {
                 type="button"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
-              </motion.button>
+              </m.button>
             )}
-          </motion.div>
+          </m.div>
           {isSearching && (
-            <motion.p
+            <m.p
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -161,9 +154,9 @@ export function FeedPage() {
               aria-live="polite"
             >
               "{debouncedSearchQuery}" 검색 결과: {displayResults.length}개
-            </motion.p>
+            </m.p>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Filters (only show when not searching) */}
         {!isSearching && (
@@ -236,7 +229,7 @@ export function FeedPage() {
         {/* Review list */}
         {displayResults.length > 0 && (
           <>
-            <motion.div
+            <m.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -245,7 +238,7 @@ export function FeedPage() {
               {displayResults.map((review) => (
                 <ReviewCard key={review._id} review={review} />
               ))}
-            </motion.div>
+            </m.div>
 
             {/* Infinite scroll (only for non-search mode) */}
             {!isSearching && (
@@ -259,7 +252,7 @@ export function FeedPage() {
             )}
           </>
         )}
-      </motion.main>
+      </m.main>
     </>
   );
 }

@@ -3,10 +3,37 @@ import { Variants } from 'framer-motion';
 /**
  * ReadZone Animation System
  * Warm, elegant animations inspired by turning pages and reading lights
+ * Respects user's prefers-reduced-motion setting
  */
 
+/**
+ * Check if user prefers reduced motion
+ */
+const prefersReducedMotion = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
+/**
+ * Wrap variants to respect reduced motion preference
+ */
+const withReducedMotion = (variants: Variants): Variants => {
+  if (prefersReducedMotion()) {
+    // Return simplified variants with instant transitions
+    const reducedVariants: Variants = {};
+    Object.keys(variants).forEach((key) => {
+      reducedVariants[key] = {
+        ...(typeof variants[key] === 'object' ? variants[key] : {}),
+        transition: { duration: 0.01 },
+      };
+    });
+    return reducedVariants;
+  }
+  return variants;
+};
+
 // Page transition animations - like turning a page
-export const pageVariants: Variants = {
+const _pageVariants: Variants = {
   initial: {
     opacity: 0,
     y: 20,
@@ -27,9 +54,10 @@ export const pageVariants: Variants = {
     },
   },
 };
+export const pageVariants = withReducedMotion(_pageVariants);
 
 // Staggered list animations - cards appearing one by one
-export const containerVariants: Variants = {
+const _containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -39,8 +67,9 @@ export const containerVariants: Variants = {
     },
   },
 };
+export const containerVariants = withReducedMotion(_containerVariants);
 
-export const cardVariants: Variants = {
+const _cardVariants: Variants = {
   hidden: {
     opacity: 0,
     y: 30,
@@ -56,6 +85,7 @@ export const cardVariants: Variants = {
     },
   },
 };
+export const cardVariants = withReducedMotion(_cardVariants);
 
 // 3D hover effect for cards - like lifting a book
 export const card3DHoverVariants: Variants = {
@@ -82,7 +112,8 @@ export const card3DHoverVariants: Variants = {
 // Glow effect on hover - warm reading light
 export const glowVariants: Variants = {
   rest: {
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    boxShadow:
+      '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
   },
   hover: {
     boxShadow: `
@@ -147,7 +178,7 @@ export const scaleInVariants: Variants = {
 };
 
 // Like button animation - heart beat
-export const likeVariants: Variants = {
+const _likeVariants: Variants = {
   rest: { scale: 1 },
   liked: {
     scale: [1, 1.3, 0.9, 1.1, 1],
@@ -157,9 +188,10 @@ export const likeVariants: Variants = {
     },
   },
 };
+export const likeVariants = withReducedMotion(_likeVariants);
 
 // Bookmark animation - gentle bounce
-export const bookmarkVariants: Variants = {
+const _bookmarkVariants: Variants = {
   rest: { y: 0 },
   bookmarked: {
     y: [0, -8, 2, -4, 0],
@@ -169,6 +201,7 @@ export const bookmarkVariants: Variants = {
     },
   },
 };
+export const bookmarkVariants = withReducedMotion(_bookmarkVariants);
 
 // Shimmer loading effect
 export const shimmerVariants: Variants = {

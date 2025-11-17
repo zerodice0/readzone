@@ -8,7 +8,9 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {children}
+      <main id="main-content" role="main">
+        {children}
+      </main>
     </div>
   );
 }

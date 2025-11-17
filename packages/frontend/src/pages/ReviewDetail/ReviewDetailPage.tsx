@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -19,14 +16,20 @@ import {
 import { useQuery, useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { useUser } from '@clerk/clerk-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { useLoginPromptStore } from '../../stores/loginPromptStore';
 import { LoginPrompt } from '../../components/LoginPrompt';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
-import { pageVariants, fadeInUpVariants, scaleInVariants, modalVariants, backdropVariants } from '../../utils/animations';
+import {
+  pageVariants,
+  fadeInUpVariants,
+  scaleInVariants,
+  modalVariants,
+  backdropVariants,
+} from '../../utils/animations';
 import type { Id } from 'convex/_generated/dataModel';
 
 interface ReviewDetail {
@@ -194,7 +197,7 @@ export function ReviewDetailPage() {
       {/* T108: Login prompt for unauthenticated users */}
       <LoginPrompt />
 
-      <motion.div
+      <m.div
         variants={pageVariants}
         initial="initial"
         animate="animate"
@@ -263,18 +266,18 @@ export function ReviewDetailPage() {
 
         {/* Review title */}
         {review.title && (
-          <motion.h1
+          <m.h1
             variants={fadeInUpVariants}
             initial="hidden"
             animate="visible"
             className="text-2xl sm:text-3xl font-bold mb-6 text-stone-900"
           >
             {review.title}
-          </motion.h1>
+          </m.h1>
         )}
 
         {/* Full review content */}
-        <motion.div
+        <m.div
           variants={fadeInUpVariants}
           initial="hidden"
           animate="visible"
@@ -283,7 +286,7 @@ export function ReviewDetailPage() {
           <p className="whitespace-pre-wrap text-base leading-relaxed text-stone-700">
             {review.content}
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Recommend status and rating */}
         <div className="flex items-center gap-3 mb-8 flex-wrap">
@@ -317,7 +320,7 @@ export function ReviewDetailPage() {
 
         {/* Book information section */}
         {review.book && (
-          <motion.div
+          <m.div
             variants={scaleInVariants}
             initial="hidden"
             animate="visible"
@@ -345,11 +348,11 @@ export function ReviewDetailPage() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Action buttons */}
-        <motion.div
+        <m.div
           variants={fadeInUpVariants}
           initial="hidden"
           animate="visible"
@@ -397,13 +400,13 @@ export function ReviewDetailPage() {
           >
             <Share2 className="w-4 h-4" aria-hidden="true" />
           </Button>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
 
       {/* Delete confirmation modal */}
       <AnimatePresence>
         {showDeleteModal && (
-          <motion.div
+          <m.div
             variants={backdropVariants}
             initial="hidden"
             animate="visible"
@@ -411,7 +414,7 @@ export function ReviewDetailPage() {
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
             onClick={() => setShowDeleteModal(false)}
           >
-            <motion.div
+            <m.div
               variants={modalVariants}
               initial="hidden"
               animate="visible"
@@ -450,8 +453,8 @@ export function ReviewDetailPage() {
                   삭제
                 </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Book, Check } from 'lucide-react';
 import { Button } from '../ui/button';
 import type { Id } from 'convex/_generated/dataModel';

@@ -38,7 +38,7 @@ function SessionListItem({
     setIsLoggingOut(true);
     try {
       await onLogout(session.id);
-    } catch (error) {
+    } catch {
       // Error is handled by parent component
     } finally {
       setIsLoggingOut(false);
