@@ -84,11 +84,8 @@ export function EmptyState({
 
       {/* Decorative element */}
       <div className="mt-12 flex justify-center gap-1.5 opacity-30">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="w-1.5 h-1.5 rounded-full bg-primary-400"
-          />
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary-400" />
         ))}
       </div>
     </div>

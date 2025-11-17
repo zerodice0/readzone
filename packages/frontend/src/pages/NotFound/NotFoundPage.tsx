@@ -16,7 +16,10 @@ export function NotFoundPage() {
           {/* Floating book icon */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center shadow-xl animate-bounce">
-              <BookOpen className="w-12 h-12 sm:w-16 sm:h-16 text-white" strokeWidth={2} />
+              <BookOpen
+                className="w-12 h-12 sm:w-16 sm:h-16 text-white"
+                strokeWidth={2}
+              />
             </div>
           </div>
         </div>
@@ -56,7 +59,7 @@ export function NotFoundPage() {
 
         {/* Decorative element */}
         <div className="mt-16 flex justify-center gap-2 opacity-40">
-          {[...Array(5)].map((_, i) => (
+          {Array.from({ length: 5 }, (_, i) => (
             <div
               key={i}
               className="w-2 h-2 rounded-full bg-primary-400"
