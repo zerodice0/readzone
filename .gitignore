@@ -58,3 +58,6 @@ pnpm-debug.log*
 .serena/memories/
 .serena/cache/
 .vercel
+
+# Claude Code local settings
+.claude/*.local.json
