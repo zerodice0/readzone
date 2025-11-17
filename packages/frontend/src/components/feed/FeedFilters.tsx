@@ -1,8 +1,8 @@
-import { Clock, TrendingUp, Star, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Clock, TrendingUp, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Button } from '../ui/button';
 
-export type SortOption = 'recent' | 'popular' | 'rating';
+export type SortOption = 'recent' | 'popular';
 export type RecommendFilter = 'all' | 'recommended' | 'not-recommended';
 
 interface FeedFiltersProps {
@@ -59,25 +59,6 @@ export function FeedFilters({
                 <TrendingUp className="w-4 h-4" />
               </m.div>
               인기순
-            </Button>
-          </m.div>
-          <m.div whileTap={{ scale: 0.95 }}>
-            <Button
-              variant={sortBy === 'rating' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onSortChange('rating')}
-              className="gap-2"
-            >
-              <m.div
-                animate={{
-                  rotate: sortBy === 'rating' ? [0, -10, 10, -10, 0] : 0,
-                  scale: sortBy === 'rating' ? [1, 1.2, 1] : 1,
-                }}
-                transition={{ duration: 0.6 }}
-              >
-                <Star className="w-4 h-4" />
-              </m.div>
-              평점순
             </Button>
           </m.div>
         </div>

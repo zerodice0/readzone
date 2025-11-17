@@ -3,7 +3,6 @@ import { useQuery } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import {
   ArrowLeft,
-  Star,
   MessageSquare,
   ThumbsUp,
   ThumbsDown,
@@ -38,10 +37,6 @@ export default function BookDetailPage() {
 
   // Calculate stats
   const reviewCount = reviews?.length || 0;
-  const averageRating =
-    reviewCount > 0
-      ? reviews!.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount
-      : 0;
   const recommendedCount = reviews?.filter((r) => r.isRecommended).length || 0;
   const recommendationRate =
     reviewCount > 0 ? (recommendedCount / reviewCount) * 100 : 0;
@@ -182,18 +177,7 @@ export default function BookDetailPage() {
             리뷰 통계
           </h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-            {/* Average rating */}
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Star className="w-8 h-8 fill-amber-400 text-amber-400" />
-              </div>
-              <p className="text-2xl font-bold text-stone-900">
-                {averageRating > 0 ? averageRating.toFixed(1) : '-'}
-              </p>
-              <p className="text-sm text-stone-600">평균 평점</p>
-            </div>
-
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
             {/* Review count */}
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
@@ -281,12 +265,6 @@ export default function BookDetailPage() {
                   </div>
 
                   <div className="flex items-center gap-3 text-sm text-stone-500">
-                    {review.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                        <span>{review.rating}</span>
-                      </div>
-                    )}
                     <span>사용자 {review.userId.slice(-4)}</span>
                     {review.publishedAt && (
                       <span>

@@ -26,7 +26,6 @@ interface BookData {
 interface ReviewFormData {
   title: string;
   content: string;
-  rating: number;
   isRecommended: boolean;
   readStatus: 'READING' | 'COMPLETED' | 'DROPPED';
 }
@@ -70,7 +69,6 @@ export default function ReviewNewPage() {
         bookId: selectedBook._id,
         title: data.title || undefined,
         content: data.content,
-        rating: data.rating,
         isRecommended: data.isRecommended,
         readStatus: data.readStatus,
         status,

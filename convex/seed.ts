@@ -149,21 +149,18 @@ const reviewTemplates = {
       title: '인생 책으로 추천합니다',
       contentTemplate: (bookTitle: string) =>
         `${bookTitle}을(를) 읽고 정말 많은 것을 느꼈습니다. 작가의 통찰력 있는 시선과 깊이 있는 메시지가 오랫동안 기억에 남을 것 같습니다. 특히 현대 사회를 살아가는 우리에게 시사하는 바가 크다고 생각합니다.\n\n책을 읽는 내내 몰입감이 대단했고, 마지막 장을 덮고 나서도 여운이 길게 남았습니다. 많은 분들께 강력히 추천합니다.`,
-      rating: 5,
       isRecommended: true,
     },
     {
       title: '다시 읽고 싶은 책',
       contentTemplate: (bookTitle: string) =>
         `${bookTitle}은(는) 읽을 때마다 새로운 의미를 발견하게 되는 책입니다. 처음 읽었을 때는 단순히 흥미로운 이야기로만 느껴졌지만, 다시 읽으면서 작가가 전달하고자 했던 깊은 메시지를 이해할 수 있었습니다.\n\n문장 하나하나가 아름답고, 등장인물들의 심리 묘사가 매우 섬세합니다. 시간이 지나도 색바래지 않을 명작이라고 생각합니다.`,
-      rating: 5,
       isRecommended: true,
     },
     {
       title: '기대 이상이었습니다',
       contentTemplate: (bookTitle: string) =>
         `${bookTitle}을(를) 우연히 접하게 되었는데, 기대 이상으로 좋았습니다. 이야기 전개가 자연스럽고 인물들이 매우 입체적으로 그려져 있어 공감하면서 읽었습니다.\n\n특히 중반부 이후의 전개는 정말 손에서 책을 놓을 수 없을 정도로 긴장감 넘쳤습니다. 마지막까지 몰입해서 단숨에 읽었습니다. 강추!`,
-      rating: 4,
       isRecommended: true,
     },
   ],
@@ -172,14 +169,12 @@ const reviewTemplates = {
       title: '좋았지만 아쉬운 부분도',
       contentTemplate: (bookTitle: string) =>
         `${bookTitle}은(는) 전반적으로 좋은 책이었지만, 몇 가지 아쉬운 점도 있었습니다. 주제 의식은 명확하고 작가의 메시지도 잘 전달되었으나, 중간에 이야기 전개가 다소 느려지는 부분이 있어 집중력이 떨어졌습니다.\n\n그럼에도 불구하고 전체적인 완성도는 높았고, 읽을 만한 가치가 있는 책이라고 생각합니다.`,
-      rating: 3,
       isRecommended: true,
     },
     {
       title: '호불호가 갈릴 것 같아요',
       contentTemplate: (bookTitle: string) =>
         `${bookTitle}을(를) 읽고 나서 많은 생각을 하게 되었습니다. 작가의 독특한 문체와 서술 방식이 인상적이었지만, 동시에 호불호가 갈릴 수 있을 것 같습니다.\n\n개인적으로는 흥미롭게 읽었지만, 모든 사람에게 추천하기는 어려울 것 같습니다. 이런 스타일을 좋아하시는 분들께는 좋을 것 같아요.`,
-      rating: 3,
       isRecommended: false,
     },
   ],
@@ -229,7 +224,6 @@ async function performSeed(ctx: MutationCtx) {
         bookId: book.id,
         title: template.title,
         content: template.contentTemplate(book.title),
-        rating: template.rating,
         isRecommended: template.isRecommended,
         readStatus: 'COMPLETED',
         status: 'PUBLISHED',

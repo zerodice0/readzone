@@ -11,11 +11,7 @@ import type {
   ToggleLikeResponse,
   ToggleBookmarkResponse,
 } from '../types/review';
-import type {
-  Book,
-  BookSearchResult,
-  BookSearchResponse,
-} from '../types/book';
+import type { Book, BookSearchResult, BookSearchResponse } from '../types/book';
 
 /**
  * Type guard for UserSummary
@@ -91,7 +87,6 @@ export function isReview(value: unknown): value is Review {
     (review.title === null || typeof review.title === 'string') &&
     typeof review.content === 'string' &&
     typeof review.isRecommended === 'boolean' &&
-    (review.rating === null || typeof review.rating === 'number') &&
     isValidReadStatus(review.readStatus) &&
     isValidReviewStatus(review.status) &&
     typeof review.likeCount === 'number' &&
@@ -116,10 +111,7 @@ export function isFeedResponse(value: unknown): value is FeedResponse {
   const response = value as Record<string, unknown>;
 
   // Validate meta object
-  if (
-    typeof response.meta !== 'object' ||
-    response.meta === null
-  ) {
+  if (typeof response.meta !== 'object' || response.meta === null) {
     return false;
   }
 
@@ -164,8 +156,7 @@ export function isToggleLikeResponse(
   const data = response.data as Record<string, unknown>;
 
   const hasValidData =
-    typeof data.isLiked === 'boolean' &&
-    typeof data.likeCount === 'number';
+    typeof data.isLiked === 'boolean' && typeof data.likeCount === 'number';
 
   if (!hasValidData) {
     return false;
@@ -327,7 +318,9 @@ export function isObject(value: unknown): value is Record<string, unknown> {
  * Type guard for checking if a value is a string array
  */
 export function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
 }
 
 /**

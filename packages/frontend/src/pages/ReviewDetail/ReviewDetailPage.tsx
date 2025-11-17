@@ -9,7 +9,6 @@ import {
   AlertCircle,
   ThumbsUp,
   ThumbsDown,
-  Star,
   Edit,
   Trash2,
 } from 'lucide-react';
@@ -305,15 +304,6 @@ export function ReviewDetailPage() {
             >
               <ThumbsDown className="w-4 h-4 mr-1.5" />
               비추천
-            </Badge>
-          )}
-          {review.rating !== undefined && review.rating !== null && (
-            <Badge
-              variant="secondary"
-              className="bg-amber-50 text-amber-900 border-amber-200 text-sm py-1.5 px-3"
-            >
-              <Star className="w-4 h-4 mr-1.5 fill-amber-400 text-amber-400" />
-              {review.rating}/5
             </Badge>
           )}
         </div>

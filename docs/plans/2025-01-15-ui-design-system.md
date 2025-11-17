@@ -7,6 +7,7 @@
 ## Design Philosophy
 
 ReadZone aims to create a warm, inviting reading environment that:
+
 - Showcases book covers prominently
 - Ensures excellent text readability for long reviews
 - Provides a comfortable, library-like atmosphere
@@ -19,14 +20,14 @@ ReadZone aims to create a warm, inviting reading environment that:
 Inspired by reading lights and cozy libraries, our primary color evokes warmth and focus.
 
 ```css
---primary-50: #fffbeb   /* Very light cream - backgrounds */
---primary-100: #fef3c7  /* Light beige - hover states */
---primary-200: #fde68a  /* Soft yellow - subtle accents */
---primary-300: #fcd34d  /* Warm gold - borders */
---primary-400: #fbbf24  /* Amber - secondary actions */
---primary-500: #f59e0b  /* Main orange - primary actions, links */
---primary-600: #d97706  /* Deep orange - hover on primary */
---primary-700: #b45309  /* Dark amber - pressed states */
+--primary-50: #fffbeb /* Very light cream - backgrounds */
+  --primary-100: #fef3c7 /* Light beige - hover states */ --primary-200: #fde68a
+  /* Soft yellow - subtle accents */ --primary-300: #fcd34d
+  /* Warm gold - borders */ --primary-400: #fbbf24
+  /* Amber - secondary actions */ --primary-500: #f59e0b
+  /* Main orange - primary actions, links */ --primary-600: #d97706
+  /* Deep orange - hover on primary */ --primary-700: #b45309
+  /* Dark amber - pressed states */;
 ```
 
 ### Background Colors (Warm Neutral)
@@ -34,9 +35,9 @@ Inspired by reading lights and cozy libraries, our primary color evokes warmth a
 Creating a paper-like reading environment:
 
 ```css
---background: #fafaf9      /* Main background (warm off-white) */
---surface: #ffffff         /* Card backgrounds (pure white) */
---surface-dim: #f5f5f4    /* Subtle separators */
+--background: #fafaf9 /* Main background (warm off-white) */ --surface: #ffffff
+  /* Card backgrounds (pure white) */ --surface-dim: #f5f5f4
+  /* Subtle separators */;
 ```
 
 ### Text Colors (Dark Brown Scale)
@@ -44,18 +45,17 @@ Creating a paper-like reading environment:
 Softer than pure black for reduced eye strain:
 
 ```css
---text-primary: #1c1917    /* Headings, body text (dark brown) */
---text-secondary: #57534e  /* Subheadings (medium gray) */
---text-tertiary: #a8a29e   /* Meta information (light gray) */
+--text-primary: #1c1917 /* Headings, body text (dark brown) */
+  --text-secondary: #57534e /* Subheadings (medium gray) */
+  --text-tertiary: #a8a29e /* Meta information (light gray) */;
 ```
 
 ### Semantic Colors
 
 ```css
---success: #10b981   /* Green for positive actions */
---warning: #f59e0b   /* Amber for warnings (reuse primary) */
---error: #ef4444     /* Red for errors */
---info: #3b82f6      /* Blue for informational */
+--success: #10b981 /* Green for positive actions */ --warning: #f59e0b
+  /* Amber for warnings (reuse primary) */ --error: #ef4444 /* Red for errors */
+  --info: #3b82f6 /* Blue for informational */;
 ```
 
 ## Typography
@@ -63,8 +63,9 @@ Softer than pure black for reduced eye strain:
 ### Font Families
 
 ```css
---font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+--font-sans:
+  -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+  'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 
 --font-serif: 'Georgia', 'Cambria', 'Times New Roman', serif;
 --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
@@ -73,14 +74,11 @@ Softer than pure black for reduced eye strain:
 ### Scale
 
 ```css
---text-xs: 0.75rem     /* 12px - small labels */
---text-sm: 0.875rem    /* 14px - secondary text */
---text-base: 1rem      /* 16px - body text */
---text-lg: 1.125rem    /* 18px - large body */
---text-xl: 1.25rem     /* 20px - h4 */
---text-2xl: 1.5rem     /* 24px - h3 */
---text-3xl: 1.875rem   /* 30px - h2 */
---text-4xl: 2.25rem    /* 36px - h1 */
+--text-xs: 0.75rem /* 12px - small labels */ --text-sm: 0.875rem
+  /* 14px - secondary text */ --text-base: 1rem /* 16px - body text */
+  --text-lg: 1.125rem /* 18px - large body */ --text-xl: 1.25rem /* 20px - h4 */
+  --text-2xl: 1.5rem /* 24px - h3 */ --text-3xl: 1.875rem /* 30px - h2 */
+  --text-4xl: 2.25rem /* 36px - h1 */;
 ```
 
 ### Usage
@@ -99,6 +97,7 @@ Using 4px base unit (Tailwind default):
 ```
 
 **Common patterns:**
+
 - Card padding: 24px (p-6)
 - Section gaps: 32px (gap-8)
 - Container max-width: 1280px (max-w-7xl)
@@ -109,6 +108,7 @@ Using 4px base unit (Tailwind default):
 ### ReviewCard
 
 **Layout:**
+
 - White card on warm background
 - Book cover: 80x112px (mobile), 96x128px (desktop)
 - Border radius: 12px
@@ -117,14 +117,16 @@ Using 4px base unit (Tailwind default):
 - Hover: lift effect (scale-102, shadow-lg)
 
 **Content hierarchy:**
+
 1. Book cover (left, visual anchor)
 2. Book title (serif, text-xl, bold)
 3. Author name (text-sm, secondary)
 4. Review excerpt (line-clamp-3)
-5. Meta info (rating, recommend badge)
+5. Meta info (recommend/not-recommend badge)
 6. Actions (like, bookmark, share)
 
 **Interactive states:**
+
 - Hover: scale + shadow increase
 - Focus: 2px primary ring
 - Active like: red fill
@@ -159,13 +161,15 @@ Using 4px base unit (Tailwind default):
 ├─────────────────────────────────────┤
 │  Book info card (horizontal)        │
 │  ┌────┐                             │
-│  │img │ Title, Author, Rating       │
+│  │img │ Title, Author               │
 │  └────┘                             │
 ├─────────────────────────────────────┤
 │  Review content (prose styling)     │
 │  - Max width: 65ch                  │
 │  - Line height: 1.7                 │
 │  - Serif font option for readability│
+├─────────────────────────────────────┤
+│  Recommend/Not-recommend badge      │
 ├─────────────────────────────────────┤
 │  Actions (like, bookmark, share)    │
 └─────────────────────────────────────┘
@@ -174,12 +178,14 @@ Using 4px base unit (Tailwind default):
 ## Required shadcn/ui Components
 
 Currently installed:
+
 - ✅ button
 - ✅ card
 - ✅ dialog
 - ✅ skeleton
 
 Need to add:
+
 - [ ] badge (for status, tags)
 - [ ] avatar (for user profiles)
 - [ ] separator (for visual division)
@@ -189,18 +195,21 @@ Need to add:
 ## Implementation Plan
 
 ### Phase 1: Foundation (30min)
+
 1. Update `index.css` with new color variables
 2. Update `tailwind.config.js` with warm palette
 3. Test light/dark mode compatibility
 
 ### Phase 2: Component Library (1h)
+
 1. Install missing shadcn/ui components
 2. Create custom components:
    - `BookCover` - image with fallback
-   - `ReviewMeta` - rating + recommend badge
+   - `ReviewMeta` - recommend/not-recommend badge
    - `UserAvatar` - consistent user display
 
 ### Phase 3: Page Styling (2-3h)
+
 1. **FeedPage**
    - Update ReviewCard with new design
    - Improve spacing and layout
@@ -222,6 +231,7 @@ Need to add:
    - Settings sections
 
 ### Phase 4: Polish (1h)
+
 1. Loading states (skeletons)
 2. Error states
 3. Empty states
@@ -241,6 +251,7 @@ Need to add:
 ## Design Decisions Log
 
 **2025-01-15:**
+
 - Chose warm amber/orange as primary color (reading light metaphor)
 - Warm off-white background instead of pure white (reduced eye strain)
 - Dark brown text instead of pure black (softer, more book-like)

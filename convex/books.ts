@@ -43,10 +43,6 @@ export const listWithStats = query({
           .collect();
 
         const reviewCount = reviews.length;
-        const averageRating =
-          reviewCount > 0
-            ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount
-            : 0;
 
         const recommendedCount = reviews.filter((r) => r.isRecommended).length;
         const recommendationRate =
@@ -55,7 +51,6 @@ export const listWithStats = query({
         return {
           ...book,
           reviewCount,
-          averageRating: Math.round(averageRating * 10) / 10, // 소수점 1자리
           recommendationRate: Math.round(recommendationRate),
         };
       })

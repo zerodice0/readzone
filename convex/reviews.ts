@@ -118,7 +118,6 @@ export const create = mutation({
     bookId: v.id('books'),
     title: v.optional(v.string()),
     content: v.string(),
-    rating: v.optional(v.number()),
     isRecommended: v.boolean(),
     readStatus: v.union(
       v.literal('READING'),
@@ -153,18 +152,12 @@ export const create = mutation({
       throw new Error('You have already written a review for this book');
     }
 
-    // Rating 유효성 검사
-    if (args.rating !== undefined && (args.rating < 1 || args.rating > 5)) {
-      throw new Error('Rating must be between 1 and 5');
-    }
-
     const status = args.status ?? 'PUBLISHED';
     const reviewId = await ctx.db.insert('reviews', {
       userId,
       bookId: args.bookId,
       title: args.title,
       content: args.content,
-      rating: args.rating,
       isRecommended: args.isRecommended,
       readStatus: args.readStatus,
       status,
@@ -186,7 +179,6 @@ export const update = mutation({
     id: v.id('reviews'),
     title: v.optional(v.string()),
     content: v.optional(v.string()),
-    rating: v.optional(v.number()),
     isRecommended: v.optional(v.boolean()),
     readStatus: v.optional(
       v.union(
@@ -216,14 +208,6 @@ export const update = mutation({
     }
 
     const { id, ...updates } = args;
-
-    // Rating 유효성 검사
-    if (
-      updates.rating !== undefined &&
-      (updates.rating < 1 || updates.rating > 5)
-    ) {
-      throw new Error('Rating must be between 1 and 5');
-    }
 
     // DRAFT → PUBLISHED 변경 시 publishedAt 설정
     if (updates.status === 'PUBLISHED' && review.status === 'DRAFT') {
@@ -301,9 +285,7 @@ export const getFeed = query({
   args: {
     paginationOpts: paginationOptsValidator,
     userId: v.optional(v.string()),
-    sortBy: v.optional(
-      v.union(v.literal('recent'), v.literal('popular'), v.literal('rating'))
-    ),
+    sortBy: v.optional(v.union(v.literal('recent'), v.literal('popular'))),
     recommendFilter: v.optional(
       v.union(
         v.literal('all'),
@@ -379,13 +361,6 @@ export const getFeed = query({
     if (sortBy === 'popular') {
       // 인기순: 좋아요 수 기준
       enrichedPage.sort((a, b) => b.likeCount - a.likeCount);
-    } else if (sortBy === 'rating') {
-      // 평점순: 높은 평점 우선
-      enrichedPage.sort((a, b) => {
-        const ratingA = a.rating ?? 0;
-        const ratingB = b.rating ?? 0;
-        return ratingB - ratingA;
-      });
     }
     // 'recent'는 이미 기본 정렬(최신순)로 되어 있음
 

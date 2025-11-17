@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Star, MessageSquare, ThumbsUp, Book } from 'lucide-react';
+import { MessageSquare, ThumbsUp, Book } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import type { Id } from 'convex/_generated/dataModel';
 
@@ -11,7 +11,6 @@ interface BookCardProps {
     coverImageUrl?: string;
     publishedDate?: number;
     reviewCount: number;
-    averageRating: number;
     recommendationRate: number;
   };
 }
@@ -67,14 +66,6 @@ export function BookCard({ book }: BookCardProps) {
 
         {/* Stats */}
         <div className="flex items-center gap-3 text-sm">
-          {/* Average rating */}
-          {book.averageRating > 0 && (
-            <div className="flex items-center gap-1 text-amber-600">
-              <Star className="w-4 h-4 fill-current" />
-              <span className="font-medium">{book.averageRating}</span>
-            </div>
-          )}
-
           {/* Review count */}
           <div className="flex items-center gap-1 text-stone-600">
             <MessageSquare className="w-4 h-4" />

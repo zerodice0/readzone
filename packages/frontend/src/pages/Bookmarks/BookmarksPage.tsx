@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import {
-  Star,
   Heart,
   Bookmark,
   ThumbsUp,
@@ -124,12 +123,6 @@ export default function BookmarksPage() {
 
                       {/* Metadata */}
                       <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
-                        {item.rating && (
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                            <span>{item.rating}</span>
-                          </div>
-                        )}
                         {item.isRecommended ? (
                           <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
                             <ThumbsUp className="w-3 h-3 mr-1" />

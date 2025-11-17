@@ -48,7 +48,6 @@ export default defineSchema({
     bookId: v.id('books'),
     title: v.optional(v.string()),
     content: v.string(),
-    rating: v.optional(v.number()), // 1-5
     isRecommended: v.boolean(),
     readStatus: v.union(
       v.literal('READING'),

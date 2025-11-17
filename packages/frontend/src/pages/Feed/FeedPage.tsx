@@ -112,7 +112,7 @@ export function FeedPage() {
                 scale: isSearching ? [1, 1.2, 1] : 1,
               }}
               transition={{ duration: 0.5 }}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2"
+              className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center"
             >
               <Search className="w-5 h-5 text-stone-400" aria-hidden="true" />
             </m.div>

@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Save, Send } from 'lucide-react';
 import { Button } from '../ui/button';
-import { StarRating } from './StarRating';
 import { toast } from '../../utils/toast';
 
 interface ReviewFormData {
   title: string;
   content: string;
-  rating: number;
   isRecommended: boolean;
   readStatus: 'READING' | 'COMPLETED' | 'DROPPED';
 }
@@ -26,7 +24,6 @@ export function ReviewForm({
   const [formData, setFormData] = useState<ReviewFormData>({
     title: initialData?.title || '',
     content: initialData?.content || '',
-    rating: initialData?.rating || 5,
     isRecommended: initialData?.isRecommended ?? true,
     readStatus: initialData?.readStatus || 'COMPLETED',
   });
@@ -95,24 +92,6 @@ export function ReviewForm({
           </span>
           <span className="text-sm text-stone-500">
             {contentLength.toLocaleString()}자
-          </span>
-        </div>
-      </div>
-
-      {/* Rating */}
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-2">
-          평점
-        </label>
-        <div className="flex items-center gap-3">
-          <StarRating
-            rating={formData.rating}
-            onRatingChange={(rating) => setFormData({ ...formData, rating })}
-            readonly={isSubmitting}
-            size="lg"
-          />
-          <span className="text-lg font-semibold text-stone-700">
-            {formData.rating}.0
           </span>
         </div>
       </div>
