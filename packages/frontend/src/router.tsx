@@ -14,6 +14,7 @@ import { Layout } from './components/layout/Layout';
 // Public pages - Eager loaded (most frequently accessed)
 import { FeedPage } from './pages/Feed';
 import { ReviewDetailPage } from './pages/ReviewDetail';
+import { NotFoundPage } from './pages/NotFound/NotFoundPage';
 
 // Clerk components for auth
 import { SignIn, SignUp } from '@clerk/clerk-react';
@@ -175,7 +176,7 @@ const routes: RouteObject[] = [
           },
           {
             path: '*',
-            element: <Navigate to="/feed" replace />,
+            element: <NotFoundPage />,
           },
         ],
       },

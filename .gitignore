@@ -56,3 +56,4 @@ pnpm-debug.log*
 # Serena MCP (local development context)
 .serena/memories/
 .serena/cache/
+.vercel

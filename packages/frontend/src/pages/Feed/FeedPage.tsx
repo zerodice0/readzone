@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePaginatedQuery, useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { useUser } from '@clerk/clerk-react';
+import { motion } from 'framer-motion';
 import { ReviewCard } from '../../components/ReviewCard';
 import { InfiniteScroll } from '../../components/InfiniteScroll';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -19,6 +20,7 @@ import {
   type SortOption,
   type RecommendFilter,
 } from '../../components/feed/FeedFilters';
+import { pageVariants, containerVariants } from '../../utils/animations';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -77,7 +79,13 @@ export function FeedPage() {
       <LoginPrompt />
 
       {/* Main content */}
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-3xl">
+      <motion.main
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-3xl"
+      >
         <div className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-stone-900">
             독후감 피드
@@ -88,45 +96,74 @@ export function FeedPage() {
         </div>
 
         {/* Search bar */}
-        <div className="mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
           <label htmlFor="search-input" className="sr-only">
             독후감 검색
           </label>
-          <div className="relative">
-            <Search
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400"
-              aria-hidden="true"
-            />
-            <input
+          <motion.div
+            className="relative"
+            whileFocus={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              animate={{
+                rotate: isSearching ? 360 : 0,
+                scale: isSearching ? [1, 1.2, 1] : 1
+              }}
+              transition={{ duration: 0.5 }}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2"
+            >
+              <Search
+                className="w-5 h-5 text-stone-400"
+                aria-hidden="true"
+              />
+            </motion.div>
+            <motion.input
               id="search-input"
               type="search"
               placeholder="제목, 책 이름, 저자로 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-12 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              whileFocus={{
+                boxShadow: "0 0 0 3px rgba(245, 158, 11, 0.1)"
+              }}
+              className="w-full pl-12 pr-12 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
               aria-label="독후감 검색"
             />
             {searchQuery && (
-              <button
+              <motion.button
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={handleClearSearch}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-stone-400 hover:text-stone-600"
                 aria-label="검색어 지우기"
                 type="button"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
-              </button>
+              </motion.button>
             )}
-          </div>
+          </motion.div>
           {isSearching && (
-            <p
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
               className="mt-2 text-sm text-stone-600"
               role="status"
               aria-live="polite"
             >
               "{debouncedSearchQuery}" 검색 결과: {displayResults.length}개
-            </p>
+            </motion.p>
           )}
-        </div>
+        </motion.div>
 
         {/* Filters (only show when not searching) */}
         {!isSearching && (
@@ -199,11 +236,16 @@ export function FeedPage() {
         {/* Review list */}
         {displayResults.length > 0 && (
           <>
-            <div className="space-y-6">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-6"
+            >
               {displayResults.map((review) => (
                 <ReviewCard key={review._id} review={review} />
               ))}
-            </div>
+            </motion.div>
 
             {/* Infinite scroll (only for non-search mode) */}
             {!isSearching && (
@@ -217,7 +259,7 @@ export function FeedPage() {
             )}
           </>
         )}
-      </main>
+      </motion.main>
     </>
   );
 }

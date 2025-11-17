@@ -11,6 +11,7 @@ import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
 import { ReviewForm } from '../../components/review/ReviewForm';
 import { logError } from '../../utils/error';
+import { toast } from '../../utils/toast';
 import type { Id } from 'convex/_generated/dataModel';
 
 interface ReviewFormData {
@@ -42,7 +43,7 @@ export default function ReviewEditPage() {
   useEffect(() => {
     // Redirect if not authorized
     if (review && user && review.userId !== user.id) {
-      alert('이 독후감을 수정할 권한이 없습니다.');
+      toast.error('이 독후감을 수정할 권한이 없습니다');
       navigate(`/reviews/${id}`);
     }
   }, [review, user, id, navigate]);
@@ -72,7 +73,7 @@ export default function ReviewEditPage() {
       navigate(`/reviews/${id}`);
     } catch (error) {
       logError(error, 'Failed to update review');
-      alert('독후감 수정에 실패했습니다. 다시 시도해주세요.');
+      toast.error('독후감 수정에 실패했습니다', '다시 시도해주세요.');
       setIsSubmitting(false);
     }
   };
