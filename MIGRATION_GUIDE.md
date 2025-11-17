@@ -94,6 +94,36 @@
   - 버튼 호버 효과 개선 (scale, shadow)
   - 카드 호버 효과 개선 (amber 강조)
 
+**Phase 3.4-3.6: 애니메이션 시스템 및 마이크로 인터랙션 (2025-01-17)**
+
+- ✅ **Phase 3.4: 페이지 전환 애니메이션**
+  - `animations.ts` 파일 생성 (15+ 프로페셔널 애니메이션 variants)
+  - pageVariants, fadeInUpVariants, scaleInVariants 구현
+  - FeedPage, ReviewNewPage, ReviewDetailPage 페이지 전환 적용
+  - 모달/백드롭 애니메이션 (modalVariants, backdropVariants)
+  - AnimatePresence를 활용한 exit 애니메이션
+
+- ✅ **Phase 3.5: 마이크로 인터랙션**
+  - Like 버튼: Heart beat 애니메이션 (likeVariants)
+  - Bookmark 버튼: Bounce 애니메이션 (bookmarkVariants)
+  - FeedFilters: 버튼 press 효과 및 아이콘 회전/스케일
+  - Header: 로고 wiggle 애니메이션 (hover 시)
+  - 검색 바: 아이콘 360도 회전 및 스케일 효과
+  - 네비게이션 링크: 순차적 fade-in 및 hover lift
+  - ReviewCard: 3D tilt 효과 (preserve-3d, perspective 1000)
+
+- ✅ **Phase 3.6: 디자인 시스템 문서화**
+  - DESIGN_SYSTEM.md 종합 문서 작성
+  - 색상 팔레트, 타이포그래피, 간격, 애니메이션 가이드 포함
+
+**애니메이션 기술 스택:**
+
+- Framer Motion 12.23.24
+- Motion values & transforms (useMotionValue, useTransform)
+- Custom easing: `[0.25, 0.1, 0.25, 1]` (smooth, professional feel)
+- Staggered animations with delayChildren
+- 3D CSS transforms (rotateX, rotateY, perspective)
+
 **상세 계획:** `docs/plans/2025-01-15-ui-design-system.md` 참고
 
 ### ✅ Phase 3-8 완료 (2025-01-16)

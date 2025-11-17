@@ -61,7 +61,7 @@ export function LoadingState({
 
       {/* Decorative dots */}
       <div className="flex gap-1.5 mt-2">
-        {[...Array(3)].map((_, i) => (
+        {Array.from({ length: 3 }, (_, i) => (
           <div
             key={i}
             className="w-1.5 h-1.5 rounded-full bg-primary-400"
