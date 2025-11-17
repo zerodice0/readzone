@@ -3,7 +3,6 @@ export interface Review {
   title: string | null;
   content: string;
   isRecommended: boolean;
-  rating: number | null;
   readStatus: 'READING' | 'COMPLETED' | 'DROPPED';
   status: 'DRAFT' | 'PUBLISHED' | 'DELETED';
   likeCount: number;

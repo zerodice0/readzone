@@ -3,14 +3,7 @@ import { m, useMotionValue, useTransform } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import {
-  Heart,
-  Bookmark,
-  Share2,
-  ThumbsUp,
-  ThumbsDown,
-  Star,
-} from 'lucide-react';
+import { Heart, Bookmark, Share2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { useUser } from '@clerk/clerk-react';
@@ -31,7 +24,6 @@ interface ReviewCardProps {
     bookId: Id<'books'>;
     title?: string;
     content: string;
-    rating?: number;
     isRecommended: boolean;
     readStatus: 'READING' | 'COMPLETED' | 'DROPPED';
     status: 'DRAFT' | 'PUBLISHED' | 'DELETED';
@@ -313,15 +305,6 @@ export const ReviewCard = memo(function ReviewCard({
               >
                 <ThumbsDown className="w-3 h-3 mr-1" />
                 비추천
-              </Badge>
-            )}
-            {review.rating && (
-              <Badge
-                variant="secondary"
-                className="bg-gradient-to-r from-amber-400 to-amber-500 text-white border-0 shadow-sm"
-              >
-                <Star className="w-3 h-3 mr-1 fill-white text-white" />
-                {review.rating}/5
               </Badge>
             )}
           </div>

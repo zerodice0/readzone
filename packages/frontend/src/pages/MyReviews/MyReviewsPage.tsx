@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import {
-  Star,
   Heart,
   Bookmark,
   ThumbsUp,
@@ -44,11 +43,6 @@ export default function MyReviewsPage() {
     const draftReviews = allReviews.filter((r) => r.status === 'DRAFT');
 
     const totalReviews = allReviews.length;
-    const averageRating =
-      publishedReviews.length > 0
-        ? publishedReviews.reduce((sum, r) => sum + (r.rating || 0), 0) /
-          publishedReviews.length
-        : 0;
     const recommendedCount = publishedReviews.filter(
       (r) => r.isRecommended
     ).length;
@@ -61,7 +55,6 @@ export default function MyReviewsPage() {
       totalReviews,
       publishedCount: publishedReviews.length,
       draftCount: draftReviews.length,
-      averageRating: Math.round(averageRating * 10) / 10,
       recommendationRate: Math.round(recommendationRate),
     };
   }, [allReviews]);
@@ -95,13 +88,6 @@ export default function MyReviewsPage() {
                 {stats.totalReviews}
               </p>
               <p className="text-sm text-stone-600">총 독후감</p>
-            </div>
-            <div className="bg-white border border-stone-200 rounded-xl p-4 text-center">
-              <Star className="w-6 h-6 text-amber-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-stone-900">
-                {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '-'}
-              </p>
-              <p className="text-sm text-stone-600">평균 평점</p>
             </div>
             <div className="bg-white border border-stone-200 rounded-xl p-4 text-center">
               <ThumbsUp className="w-6 h-6 text-green-500 mx-auto mb-2" />
@@ -179,12 +165,6 @@ export default function MyReviewsPage() {
 
                       {/* Metadata */}
                       <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
-                        {review.rating && (
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                            <span>{review.rating}</span>
-                          </div>
-                        )}
                         {review.isRecommended ? (
                           <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
                             <ThumbsUp className="w-3 h-3 mr-1" />

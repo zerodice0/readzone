@@ -13,7 +13,6 @@ import type { Id } from 'convex/_generated/dataModel';
 interface ReviewFormData {
   title: string;
   content: string;
-  rating: number;
   isRecommended: boolean;
   readStatus: 'READING' | 'COMPLETED' | 'DROPPED';
 }
@@ -59,7 +58,6 @@ export default function ReviewEditPage() {
         id: id as Id<'reviews'>,
         title: data.title || undefined,
         content: data.content,
-        rating: data.rating,
         isRecommended: data.isRecommended,
         readStatus: data.readStatus,
         status,
@@ -141,7 +139,6 @@ export default function ReviewEditPage() {
           initialData={{
             title: review.title || '',
             content: review.content,
-            rating: review.rating || 5,
             isRecommended: review.isRecommended,
             readStatus: review.readStatus,
           }}
