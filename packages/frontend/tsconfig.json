@@ -15,9 +15,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "convex/_generated/*": ["../../convex/_generated/*"]
+      "convex/_generated/*": ["../backend/convex/_generated/*"]
     }
   },
-  "include": ["src", "../../convex/_generated"],
+  "include": ["src", "../backend/convex/_generated"],
   "exclude": ["node_modules", "dist", "build"]
 }
