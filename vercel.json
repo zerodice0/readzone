@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd packages/frontend && pnpm install && pnpm build",
-  "outputDirectory": "packages/frontend/dist",
-  "installCommand": "pnpm install",
-  "framework": "vite"
-}
