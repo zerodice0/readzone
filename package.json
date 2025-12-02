@@ -7,12 +7,13 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently --kill-others-on-fail --names \"convex,frontend\" -c \"blue,green\" \"npx convex dev\" \"pnpm --filter @readzone/frontend dev\"",
-    "build": "pnpm --filter \"./packages/*\" --sequential build",
-    "lint": "pnpm --parallel --filter \"./packages/*\" lint",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "test": "turbo test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "type-check": "pnpm --parallel --filter \"./packages/*\" type-check",
     "prepare": "husky install"
   },
   "lint-staged": {
@@ -36,9 +37,10 @@
     "husky": "^9.0.10",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
+    "turbo": "^2.6.1",
     "typescript": "^5.6.3"
   },
-  "packageManager": "pnpm@8.15.3",
+  "packageManager": "pnpm@10.24.0",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"

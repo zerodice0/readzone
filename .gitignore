@@ -14,14 +14,18 @@ build/
 .next/
 out/
 
+# Turborepo
+.turbo/
+
 # Convex
 .convex/
+/convex/
 **/node_modules/.convex/
-convex/*.js
-convex/*.js.map
-convex/*.d.ts
-convex/*.d.ts.map
-convex/_generated/
+**/convex/*.js
+**/convex/*.js.map
+**/convex/*.d.ts
+**/convex/*.d.ts.map
+**/convex/_generated/
 
 # Testing
 coverage/

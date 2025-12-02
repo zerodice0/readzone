@@ -1,4 +1,6 @@
-/* ReadZone Design System - Warm & Inviting Book Platform */
+/* ReadZone Design System - Modern Minimalist */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,85 +12,99 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Outfit', sans-serif;
 }
 
-
+code {
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
 
 @layer base {
   :root {
-    /* Warm background colors - paper-like reading environment */
-    --background: 24 10% 98%;        /* #fafaf9 - warm off-white */
-    --foreground: 24 20% 10%;        /* #1c1917 - dark brown */
-    --card: 0 0% 100%;               /* #ffffff - pure white cards */
-    --card-foreground: 24 20% 10%;   /* #1c1917 - dark brown */
+    /* Modern Minimalist - Clean & Airy */
+    --background: 210 40% 98%;       /* #f8fafc - slate-50 */
+    --foreground: 222 47% 11%;       /* #0f172a - slate-900 */
+    --card: 0 0% 100%;               /* #ffffff */
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 24 20% 10%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Primary colors - warm amber/orange (reading light) */
-    --primary: 38 92% 50%;           /* #f59e0b - main orange */
-    --primary-foreground: 0 0% 100%; /* white text on orange */
+    /* Primary - Soft Indigo */
+    --primary: 239 84% 67%;          /* #6366f1 - indigo-500 */
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary colors - warm neutrals */
-    --secondary: 24 6% 97%;          /* #f5f5f4 - surface dim */
-    --secondary-foreground: 24 10% 35%; /* #57534e - medium gray */
+    /* Secondary - Slate */
+    --secondary: 210 40% 96.1%;      /* #f1f5f9 - slate-100 */
+    --secondary-foreground: 222 47% 11%;
 
-    /* Muted colors - for less important text */
-    --muted: 24 6% 97%;              /* #f5f5f4 */
-    --muted-foreground: 24 6% 66%;   /* #a8a29e - light gray */
+    /* Muted */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    /* Accent colors - for highlights */
-    --accent: 45 93% 47%;            /* #fbbf24 - lighter amber */
-    --accent-foreground: 24 20% 10%;
+    /* Accent - Subtle Indigo Tint */
+    --accent: 226 100% 97%;          /* #e0e7ff - indigo-100 */
+    --accent-foreground: 239 84% 67%;
 
-    /* Semantic colors */
-    --destructive: 0 84.2% 60.2%;    /* #ef4444 - red */
-    --destructive-foreground: 0 0% 98%;
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    /* Borders and inputs */
-    --border: 24 6% 90%;             /* warm gray border */
-    --input: 24 6% 90%;
-    --ring: 38 92% 50%;              /* primary color for focus rings */
+    /* Borders */
+    --border: 214.3 31.8% 91.4%;     /* slate-200 */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 239 84% 67%;
 
-    /* Charts - warm palette */
-    --chart-1: 38 92% 50%;   /* amber */
+    /* Charts - Calm & Professional */
+    --chart-1: 239 84% 67%;  /* indigo */
     --chart-2: 173 58% 39%;  /* teal */
-    --chart-3: 197 37% 24%;  /* dark blue */
+    --chart-3: 197 37% 24%;  /* blue */
     --chart-4: 43 96% 56%;   /* yellow */
     --chart-5: 27 87% 67%;   /* orange */
 
-    --radius: 0.75rem;       /* 12px - slightly more rounded */
+    --radius: 1rem;          /* 16px - modern rounded */
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    /* Modern Dark - Deep Slate */
+    --background: 222 47% 11%;       /* #0f172a */
+    --foreground: 210 40% 98%;
+    --card: 217 33% 17%;             /* #1e293b */
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217 19% 27%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 19% 27%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217 19% 27%;
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 239 84% 67%;
+
+    --chart-1: 239 84% 67%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
@@ -96,18 +112,13 @@ code {
   }
 }
 
-
-
 @layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
-    /* Subtle paper-like texture */
-    background-image:
-      radial-gradient(circle at 20% 50%, rgba(251, 191, 36, 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.02) 0%, transparent 50%);
+    /* Clean Background - No Mesh */
   }
 
   /* T112: Focus visible styles for accessibility */
