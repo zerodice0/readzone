@@ -186,7 +186,11 @@ const routes: RouteObject[] = [
         path: '/sign-in/*',
         element: (
           <div className="flex items-center justify-center min-h-screen">
-            <SignIn routing="path" path="/sign-in" />
+            <SignIn
+              routing="path"
+              path="/sign-in"
+              fallbackRedirectUrl="/feed"
+            />
           </div>
         ),
       },
@@ -194,7 +198,11 @@ const routes: RouteObject[] = [
         path: '/sign-up/*',
         element: (
           <div className="flex items-center justify-center min-h-screen">
-            <SignUp routing="path" path="/sign-up" />
+            <SignUp
+              routing="path"
+              path="/sign-up"
+              fallbackRedirectUrl="/feed"
+            />
           </div>
         ),
       },

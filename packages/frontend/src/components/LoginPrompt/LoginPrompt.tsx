@@ -30,9 +30,9 @@ export function LoginPrompt() {
   }, [isOpen]);
 
   const handleLogin = useCallback((): void => {
-    // T106: Store current URL for return after login
-    sessionStorage.setItem('returnUrl', window.location.pathname);
-    navigate('/login');
+    // Clerk의 redirect_url 파라미터를 사용하여 로그인 후 원래 페이지로 복귀
+    const returnUrl = window.location.pathname;
+    navigate(`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`);
     hide();
   }, [navigate, hide]);
 
