@@ -8,11 +8,14 @@
  * @module
  */
 
+import type * as aladin from '../aladin.js';
 import type * as bookmarks from '../bookmarks.js';
 import type * as books from '../books.js';
+import type * as http from '../http.js';
 import type * as likes from '../likes.js';
 import type * as reviews from '../reviews.js';
 import type * as seed from '../seed.js';
+import type * as users from '../users.js';
 
 import type {
   ApiFromModules,
@@ -21,11 +24,14 @@ import type {
 } from 'convex/server';
 
 declare const fullApi: ApiFromModules<{
+  aladin: typeof aladin;
   bookmarks: typeof bookmarks;
   books: typeof books;
+  http: typeof http;
   likes: typeof likes;
   reviews: typeof reviews;
   seed: typeof seed;
+  users: typeof users;
 }>;
 
 /**

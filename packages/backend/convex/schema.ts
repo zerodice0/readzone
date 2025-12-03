@@ -11,6 +11,19 @@ import { v } from 'convex/values';
 
 export default defineSchema({
   /**
+   * Users Table
+   * Clerk 사용자 정보 저장 (Webhook으로 동기화)
+   */
+  users: defineTable({
+    clerkUserId: v.string(), // Clerk subject ID
+    name: v.optional(v.string()), // 표시 이름
+    imageUrl: v.optional(v.string()), // 프로필 이미지 URL
+    email: v.optional(v.string()), // 이메일
+    username: v.optional(v.string()), // Clerk username
+    updatedAt: v.number(), // 마지막 업데이트 시간
+  }).index('by_clerk_id', ['clerkUserId']),
+
+  /**
    * Books Table
    * 책 정보 저장
    */
