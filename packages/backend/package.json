@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "cd ../.. && convex dev",
     "build": "convex deploy --cmd 'echo Convex deployed'",
+    "codegen": "convex codegen",
     "type-check": "tsc --noEmit",
     "lint": "eslint convex/ --ignore-pattern '_generated/'"
   },
