@@ -25,7 +25,7 @@ out/
 **/convex/*.js.map
 **/convex/*.d.ts
 **/convex/*.d.ts.map
-**/convex/_generated/
+# Note: _generated/ is NOT ignored - needed for frontend build on CI/CD
 
 # Testing
 coverage/
