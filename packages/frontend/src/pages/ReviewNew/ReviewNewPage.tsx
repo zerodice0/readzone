@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import { m } from 'framer-motion';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import { BookSearch } from '../../components/review/BookSearch';
 import { ReviewForm } from '../../components/review/ReviewForm';
 import { logError } from '../../utils/error';
@@ -36,21 +44,43 @@ export default function ReviewNewPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedBook, setSelectedBook] = useState<BookData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showExistingReviewDialog, setShowExistingReviewDialog] =
+    useState(false);
 
   const createReview = useMutation(api.reviews.create);
+
+  // 책 선택 시 해당 책에 대한 기존 리뷰 조회
+  const existingReview = useQuery(
+    api.reviews.getByUserAndBook,
+    selectedBook && user
+      ? { userId: user.id, bookId: selectedBook._id }
+      : 'skip'
+  );
 
   const handleSelectBook = (book: BookData | null) => {
     setSelectedBook(book);
   };
 
   const handleContinueToForm = () => {
-    if (selectedBook) {
-      setStep(2);
+    if (!selectedBook) return;
+
+    // 기존 리뷰가 있고 삭제된 상태가 아니면 모달 표시
+    if (existingReview && existingReview.status !== 'DELETED') {
+      setShowExistingReviewDialog(true);
+      return;
     }
+
+    setStep(2);
   };
 
   const handleBackToBookSelection = () => {
     setStep(1);
+  };
+
+  const handleEditExistingReview = () => {
+    if (existingReview) {
+      navigate(`/reviews/${existingReview._id}/edit`);
+    }
   };
 
   const handleSubmitReview = async (
@@ -242,6 +272,50 @@ export default function ReviewNewPage() {
           />
         </m.div>
       )}
+
+      {/* 기존 리뷰 존재 시 안내 다이얼로그 */}
+      <Dialog
+        open={showExistingReviewDialog}
+        onOpenChange={setShowExistingReviewDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>이미 작성한 리뷰가 있습니다</DialogTitle>
+            <DialogDescription>
+              이 책에 대한 리뷰를 이미 작성하셨습니다. 기존 리뷰를
+              수정하시겠습니까?
+            </DialogDescription>
+          </DialogHeader>
+          {existingReview && (
+            <div className="bg-stone-50 rounded-lg p-4 my-4 space-y-1">
+              <p className="font-medium text-stone-900">
+                {existingReview.readStatus === 'READING'
+                  ? '읽는 중'
+                  : existingReview.readStatus === 'COMPLETED'
+                    ? '완독'
+                    : '중단'}
+              </p>
+              <p className="text-sm text-stone-500">
+                {existingReview.publishedAt
+                  ? new Date(existingReview.publishedAt).toLocaleDateString(
+                      'ko-KR'
+                    )
+                  : '초안'}{' '}
+                · {existingReview.status === 'DRAFT' ? '미발행' : '발행됨'}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowExistingReviewDialog(false)}
+            >
+              취소
+            </Button>
+            <Button onClick={handleEditExistingReview}>기존 리뷰 수정</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </m.div>
   );
 }

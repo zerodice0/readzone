@@ -2,6 +2,7 @@ import { ClerkProvider, useAuth } from '@clerk/clerk-react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexReactClient } from 'convex/react';
 import { LazyMotion, domAnimation } from 'framer-motion';
+import { UserSync } from './components/UserSync';
 
 // Initialize Convex client
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
@@ -18,6 +19,7 @@ function App({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider publishableKey={clerkPubKey}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <UserSync />
         <LazyMotion features={domAnimation} strict>
           {children}
         </LazyMotion>
