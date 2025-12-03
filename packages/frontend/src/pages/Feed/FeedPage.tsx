@@ -102,7 +102,7 @@ export function FeedPage() {
             독후감 검색
           </label>
           <m.div
-            className="relative"
+            className="relative flex items-center border border-stone-300 rounded-xl focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all"
             whileFocus={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
@@ -112,7 +112,7 @@ export function FeedPage() {
                 scale: isSearching ? [1, 1.2, 1] : 1,
               }}
               transition={{ duration: 0.5 }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center"
+              className="pl-4 flex items-center"
             >
               <Search className="w-5 h-5 text-stone-400" aria-hidden="true" />
             </m.div>
@@ -123,9 +123,9 @@ export function FeedPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               whileFocus={{
-                boxShadow: '0 0 0 3px rgba(245, 158, 11, 0.1)',
+                boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
               }}
-              className="w-full pl-12 pr-12 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              className="flex-1 pl-3 pr-12 py-3 bg-transparent focus:outline-none"
               aria-label="독후감 검색"
             />
             {searchQuery && (
@@ -136,7 +136,7 @@ export function FeedPage() {
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={handleClearSearch}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                className="absolute right-4 flex items-center text-stone-400 hover:text-stone-600"
                 aria-label="검색어 지우기"
                 type="button"
               >
