@@ -1,10 +1,13 @@
-import { useState } from 'react';
-import { Search, Loader2, BookPlus, X } from 'lucide-react';
-import { useQuery } from 'convex/react';
-import { api } from 'convex/_generated/api';
+import { useState, useEffect } from 'react';
+import { Search, Loader2, BookPlus, X, Globe, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { BookSearchResult } from './BookSearchResult';
-import { useDebounce } from '../../hooks/useDebounce';
+import { AladinBookResult } from './AladinBookResult';
+import {
+  useBookSearch,
+  type LocalBook,
+  type AladinBook,
+} from '../../hooks/useBookSearch';
 import type { Id } from 'convex/_generated/dataModel';
 
 interface BookData {
@@ -24,26 +27,71 @@ interface BookSearchProps {
 
 export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAddBookModal, setShowAddBookModal] = useState(false);
+  const [savingBookId, setSavingBookId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Debounce search query
-  const debouncedQuery = useDebounce(searchQuery, 500);
+  const {
+    isSearchingLocal,
+    isSearchingAladin,
+    localResults,
+    aladinResults,
+    aladinError,
+    triggerAladinSearch,
+    selectAladinBook,
+    clearAladinResults,
+    hasLocalResults,
+    hasAladinResults,
+    hasSearched,
+  } = useBookSearch(searchQuery);
 
-  // Search books using Convex query
-  const searchResults = useQuery(
-    api.books.search,
-    debouncedQuery.trim().length >= 2
-      ? { query: debouncedQuery.trim(), limit: 10 }
-      : 'skip'
-  ) as BookData[] | undefined;
+  // 검색어 변경 시 알라딘 결과 초기화
+  useEffect(() => {
+    clearAladinResults();
+  }, [searchQuery, clearAladinResults]);
 
-  const isSearching =
-    searchQuery.trim().length >= 2 && searchResults === undefined;
-  const hasResults = Array.isArray(searchResults) && searchResults.length > 0;
-  const showNoResults =
-    debouncedQuery.trim().length >= 2 &&
-    Array.isArray(searchResults) &&
-    searchResults.length === 0;
+  const showNoLocalResults =
+    searchQuery.trim().length >= 2 && !isSearchingLocal && !hasLocalResults;
+
+  const canSearchAladin = searchQuery.trim().length >= 2;
+
+  // 알라딘 책 선택 핸들러
+  const handleSelectAladinBook = async (book: AladinBook) => {
+    setSavingBookId(book.externalId);
+    setSaveError(null);
+    try {
+      const bookId = await selectAladinBook(book);
+
+      // 저장된 책을 BookData 형태로 변환하여 전달
+      const savedBook: BookData = {
+        _id: bookId,
+        title: book.title,
+        author: book.author,
+        publisher: book.publisher || undefined,
+        publishedDate: book.publishedDate || undefined,
+        coverImageUrl: book.coverImageUrl || undefined,
+        description: book.description || undefined,
+      };
+
+      onSelectBook(savedBook);
+      setSearchQuery('');
+    } catch (error) {
+      console.error('Failed to save book:', error);
+      const message =
+        error instanceof Error ? error.message : '책 저장에 실패했습니다';
+      if (message.includes('Unauthorized') || message.includes('logged in')) {
+        setSaveError('로그인이 필요합니다. 다시 로그인해주세요.');
+      } else {
+        setSaveError(message);
+      }
+    } finally {
+      setSavingBookId(null);
+    }
+  };
+
+  // 로컬 책 선택 핸들러
+  const handleSelectLocalBook = (book: LocalBook) => {
+    onSelectBook(book as BookData);
+  };
 
   return (
     <div className="space-y-4">
@@ -69,43 +117,135 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
         )}
       </div>
 
-      {/* Loading state */}
-      {isSearching && (
+      {/* Loading state - Local */}
+      {isSearchingLocal && (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-primary-500 mr-2" />
           <span className="text-stone-600">검색 중...</span>
         </div>
       )}
 
-      {/* Search results */}
-      {hasResults && (
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {searchResults.map((book) => (
-            <BookSearchResult
-              key={book._id}
-              book={book}
-              isSelected={selectedBook?._id === book._id}
-              onSelect={onSelectBook}
-            />
-          ))}
+      {/* Local search results */}
+      {hasLocalResults && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-stone-500 px-1">
+            내 서재에서 찾음
+          </h4>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {localResults.map((book) => (
+              <BookSearchResult
+                key={book._id}
+                book={book}
+                isSelected={selectedBook?._id === book._id}
+                onSelect={handleSelectLocalBook}
+              />
+            ))}
+          </div>
         </div>
       )}
 
-      {/* No results */}
-      {showNoResults && (
-        <div className="text-center py-8">
-          <p className="text-stone-600 mb-4">
-            &quot;{debouncedQuery}&quot;에 대한 검색 결과가 없습니다
-          </p>
+      {/* Aladin search button */}
+      {canSearchAladin && !isSearchingLocal && (
+        <div className="border-t border-stone-200 pt-4">
+          {!hasSearched ? (
+            <Button
+              variant="outline"
+              onClick={triggerAladinSearch}
+              disabled={isSearchingAladin}
+              className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300"
+            >
+              {isSearchingAladin ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  알라딘에서 검색 중...
+                </>
+              ) : (
+                <>
+                  <Globe className="w-4 h-4" />
+                  알라딘에서 검색
+                </>
+              )}
+            </Button>
+          ) : isSearchingAladin ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
+              <span className="text-stone-600">알라딘에서 검색 중...</span>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* Aladin error */}
+      {aladinError && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm">{aladinError}</span>
           <Button
-            variant="outline"
-            onClick={() => setShowAddBookModal(true)}
-            className="gap-2"
+            variant="ghost"
+            size="sm"
+            onClick={triggerAladinSearch}
+            className="ml-auto text-red-700 hover:text-red-800 hover:bg-red-100"
           >
-            <BookPlus className="w-4 h-4" />책 직접 추가하기
+            다시 시도
           </Button>
         </div>
       )}
+
+      {/* Save error */}
+      {saveError && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm">{saveError}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSaveError(null)}
+            className="ml-auto text-red-700 hover:text-red-800 hover:bg-red-100"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Aladin search results */}
+      {hasAladinResults && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-blue-600 px-1">
+            알라딘 검색 결과
+          </h4>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {aladinResults.map((book) => (
+              <AladinBookResult
+                key={book.externalId}
+                book={book}
+                onSelect={() => handleSelectAladinBook(book)}
+                isLoading={savingBookId === book.externalId}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No results at all */}
+      {showNoLocalResults &&
+        hasSearched &&
+        !hasAladinResults &&
+        !isSearchingAladin &&
+        !aladinError && (
+          <div className="text-center py-6">
+            <p className="text-stone-600 mb-4">
+              &quot;{searchQuery}&quot;에 대한 검색 결과가 없습니다
+            </p>
+            <Button
+              variant="outline"
+              onClick={triggerAladinSearch}
+              className="gap-2"
+            >
+              <BookPlus className="w-4 h-4" />
+              알라딘에서 다시 검색
+            </Button>
+          </div>
+        )}
 
       {/* Initial state hint */}
       {!searchQuery && !selectedBook && (
@@ -162,24 +302,6 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
                 </p>
               )}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add book modal - to be implemented */}
-      {showAddBookModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">책 추가하기</h3>
-            <p className="text-stone-600 mb-4">
-              책 직접 추가 기능은 곧 구현될 예정입니다.
-            </p>
-            <Button
-              onClick={() => setShowAddBookModal(false)}
-              className="w-full"
-            >
-              닫기
-            </Button>
           </div>
         </div>
       )}
