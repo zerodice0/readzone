@@ -246,6 +246,73 @@ export const update = mutation({
 });
 
 /**
+ * 알라딘 검색 결과를 DB에 저장 (책 선택 시)
+ * 이미 존재하는 책이면 기존 ID 반환, 없으면 새로 생성
+ */
+export const saveFromAladin = mutation({
+  args: {
+    externalId: v.string(),
+    isbn: v.optional(v.string()),
+    title: v.string(),
+    author: v.string(),
+    publisher: v.optional(v.string()),
+    publishedDate: v.optional(v.number()),
+    coverImageUrl: v.optional(v.string()),
+    description: v.optional(v.string()),
+    pageCount: v.optional(v.number()),
+    language: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 인증 확인
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Unauthorized: Must be logged in');
+    }
+
+    // 이미 저장된 책인지 확인 (externalId 기준)
+    const existingByExternal = await ctx.db
+      .query('books')
+      .withIndex('by_external', (q) =>
+        q.eq('externalSource', 'ALADIN').eq('externalId', args.externalId)
+      )
+      .unique();
+
+    if (existingByExternal) {
+      return existingByExternal._id;
+    }
+
+    // ISBN 중복 체크 (다른 소스에서 같은 책이 있을 수 있음)
+    if (args.isbn) {
+      const existingByIsbn = await ctx.db
+        .query('books')
+        .withIndex('by_isbn', (q) => q.eq('isbn', args.isbn))
+        .unique();
+
+      if (existingByIsbn) {
+        return existingByIsbn._id;
+      }
+    }
+
+    // 새 책 저장
+    const bookId = await ctx.db.insert('books', {
+      externalId: args.externalId,
+      externalSource: 'ALADIN',
+      isbn: args.isbn,
+      title: args.title,
+      author: args.author,
+      publisher: args.publisher,
+      publishedDate: args.publishedDate,
+      coverImageUrl: args.coverImageUrl,
+      description: args.description,
+      pageCount: args.pageCount,
+      language: args.language,
+    });
+
+    return bookId;
+  },
+});
+
+/**
  * 책 삭제
  * 인증 필요 (관리자만 가능하도록 확장 가능)
  */
