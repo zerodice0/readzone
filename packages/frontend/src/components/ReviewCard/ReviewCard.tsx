@@ -38,6 +38,10 @@ interface ReviewCardProps {
       author: string;
       coverImageUrl?: string;
     } | null;
+    author: {
+      name?: string;
+      imageUrl?: string;
+    } | null;
     hasLiked: boolean;
     hasBookmarked: boolean;
   };
@@ -246,12 +250,23 @@ export const ReviewCard = memo(function ReviewCard({
           <div className="flex-1 text-center sm:text-left">
             {/* User info */}
             <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
-                {review.userId.charAt(0).toUpperCase()}
-              </div>
+              {review.author?.imageUrl ? (
+                <img
+                  src={review.author.imageUrl}
+                  alt={review.author.name || '작성자'}
+                  className="w-8 h-8 rounded-full object-cover shadow-md ring-2 ring-white"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                  {(review.author?.name || review.userId)
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+              )}
               <div>
                 <p className="font-semibold text-sm">
-                  사용자 {review.userId.slice(-4)}
+                  {review.author?.name || `사용자 ${review.userId.slice(-4)}`}
                 </p>
                 <p className="text-xs text-muted-foreground">{displayTime}</p>
               </div>

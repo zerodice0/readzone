@@ -53,6 +53,10 @@ interface ReviewDetail {
     author: string;
     coverImageUrl?: string;
   } | null;
+  author: {
+    name?: string;
+    imageUrl?: string;
+  } | null;
   hasLiked: boolean;
   hasBookmarked: boolean;
 }
@@ -218,12 +222,23 @@ export function ReviewDetailPage() {
           {/* User info */}
           <div className="flex items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-lg">
-                {review.userId.charAt(0).toUpperCase()}
-              </div>
+              {review.author?.imageUrl ? (
+                <img
+                  src={review.author.imageUrl}
+                  alt={review.author.name || '작성자'}
+                  className="w-12 h-12 rounded-full object-cover shadow-md ring-2 ring-white"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                  {(review.author?.name || review.userId)
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+              )}
               <div>
                 <p className="font-semibold text-stone-900">
-                  사용자 {review.userId.slice(-4)}
+                  {review.author?.name || `사용자 ${review.userId.slice(-4)}`}
                 </p>
                 <p className="text-sm text-stone-600">
                   {review.publishedAt
