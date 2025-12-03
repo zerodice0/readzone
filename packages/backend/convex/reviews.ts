@@ -1,6 +1,56 @@
 import { v } from 'convex/values';
-import { query, mutation } from './_generated/server';
+import { query, mutation, QueryCtx } from './_generated/server';
 import { paginationOptsValidator } from 'convex/server';
+
+/**
+ * 사용자 정보를 users 테이블에서 조회하는 헬퍼 함수
+ */
+async function getAuthorInfo(ctx: QueryCtx, userId: string) {
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerk_id', (q) => q.eq('clerkUserId', userId))
+    .unique();
+
+  return user ? { name: user.name, imageUrl: user.imageUrl } : null;
+}
+
+/**
+ * 여러 사용자 정보를 일괄 조회하는 헬퍼 함수 (N+1 방지)
+ */
+async function getAuthorInfoBatch(
+  ctx: QueryCtx,
+  userIds: string[]
+): Promise<Map<string, { name?: string; imageUrl?: string }>> {
+  const uniqueUserIds = [...new Set(userIds)];
+
+  const users = await Promise.all(
+    uniqueUserIds.map(async (userId) => {
+      const user = await ctx.db
+        .query('users')
+        .withIndex('by_clerk_id', (q) => q.eq('clerkUserId', userId))
+        .unique();
+      return user
+        ? {
+            clerkUserId: user.clerkUserId,
+            name: user.name,
+            imageUrl: user.imageUrl,
+          }
+        : null;
+    })
+  );
+
+  const userMap = new Map<string, { name?: string; imageUrl?: string }>();
+  users.forEach((user) => {
+    if (user) {
+      userMap.set(user.clerkUserId, {
+        name: user.name,
+        imageUrl: user.imageUrl,
+      });
+    }
+  });
+
+  return userMap;
+}
 
 /**
  * 특정 책의 모든 리뷰 조회
@@ -133,6 +183,42 @@ export const create = mutation({
     }
 
     const userId = identity.subject;
+
+    // 사용자 정보 upsert (users 테이블에 저장)
+    const existingUser = await ctx.db
+      .query('users')
+      .withIndex('by_clerk_id', (q) => q.eq('clerkUserId', userId))
+      .unique();
+
+    if (existingUser) {
+      // 기존 사용자 정보 업데이트
+      const name = identity.name ?? identity.nickname ?? undefined;
+      const imageUrl = identity.pictureUrl ?? undefined;
+      const email = identity.email ?? undefined;
+
+      if (
+        existingUser.name !== name ||
+        existingUser.imageUrl !== imageUrl ||
+        existingUser.email !== email
+      ) {
+        await ctx.db.patch(existingUser._id, {
+          name,
+          imageUrl,
+          email,
+          updatedAt: Date.now(),
+        });
+      }
+    } else {
+      // 새 사용자 생성
+      await ctx.db.insert('users', {
+        clerkUserId: userId,
+        name: identity.name ?? identity.nickname ?? undefined,
+        imageUrl: identity.pictureUrl ?? undefined,
+        email: identity.email ?? undefined,
+        username: identity.nickname ?? undefined,
+        updatedAt: Date.now(),
+      });
+    }
 
     // 책이 존재하는지 확인
     const book = await ctx.db.get(args.bookId);
@@ -278,7 +364,7 @@ export const incrementViewCount = mutation({
 });
 
 /**
- * 피드용 페이지네이션 리뷰 목록 (책 정보 + 사용자 상호작용 포함)
+ * 피드용 페이지네이션 리뷰 목록 (책 정보 + 작성자 정보 + 사용자 상호작용 포함)
  * 정렬 및 필터링 지원
  */
 export const getFeed = query({
@@ -309,11 +395,18 @@ export const getFeed = query({
       .order('desc')
       .paginate(paginationOpts);
 
+    // 작성자 정보 일괄 조회 (N+1 방지)
+    const authorUserIds = result.page.map((review) => review.userId);
+    const authorMap = await getAuthorInfoBatch(ctx, authorUserIds);
+
     // 각 리뷰에 대해 책 정보와 사용자 상호작용 정보 추가
     let enrichedPage = await Promise.all(
       result.page.map(async (review) => {
         // 책 정보 가져오기
         const book = await ctx.db.get(review.bookId);
+
+        // 작성자 정보 가져오기
+        const author = authorMap.get(review.userId) ?? null;
 
         // 사용자가 로그인한 경우에만 상호작용 정보 조회
         let hasLiked = false;
@@ -344,6 +437,7 @@ export const getFeed = query({
         return {
           ...review,
           book,
+          author,
           hasLiked,
           hasBookmarked,
         };
@@ -398,6 +492,10 @@ export const searchFeed = query({
       .order('desc')
       .take(limit);
 
+    // 작성자 정보 일괄 조회 (N+1 방지)
+    const authorUserIds = allReviews.map((review) => review.userId);
+    const authorMap = await getAuthorInfoBatch(ctx, authorUserIds);
+
     // 각 리뷰에 책 정보 추가 및 검색 필터링
     const enrichedReviews = await Promise.all(
       allReviews.map(async (review) => {
@@ -411,6 +509,9 @@ export const searchFeed = query({
           book.author.toLowerCase().includes(lowerQuery);
 
         if (!matchesSearch) return null;
+
+        // 작성자 정보 가져오기
+        const author = authorMap.get(review.userId) ?? null;
 
         // 사용자 상호작용 정보
         let hasLiked = false;
@@ -437,6 +538,7 @@ export const searchFeed = query({
         return {
           ...review,
           book,
+          author,
           hasLiked,
           hasBookmarked,
         };
@@ -449,7 +551,7 @@ export const searchFeed = query({
 });
 
 /**
- * 리뷰 상세 정보 조회 (책 정보 + 사용자 상호작용 포함)
+ * 리뷰 상세 정보 조회 (책 정보 + 작성자 정보 + 사용자 상호작용 포함)
  */
 export const getDetail = query({
   args: {
@@ -464,6 +566,9 @@ export const getDetail = query({
 
     // 책 정보 가져오기
     const book = await ctx.db.get(review.bookId);
+
+    // 작성자 정보 가져오기
+    const author = await getAuthorInfo(ctx, review.userId);
 
     // 사용자가 로그인한 경우에만 상호작용 정보 조회
     let hasLiked = false;
@@ -493,6 +598,7 @@ export const getDetail = query({
     return {
       ...review,
       book,
+      author,
       hasLiked,
       hasBookmarked,
     };
