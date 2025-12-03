@@ -1,0 +1,15 @@
+# Cloudflare Workers + Static Assets Configuration
+# https://developers.cloudflare.com/workers/static-assets/
+
+name = "readzone"
+compatibility_date = "2024-09-19"
+
+# Static Assets 설정 - React SPA 배포용
+[assets]
+directory = "./packages/frontend/dist"
+
+# SPA 라우팅: 404 대신 index.html 반환
+not_found_handling = "single-page-application"
+
+# HTML 파일 처리
+html_handling = "auto-trailing-slash"
