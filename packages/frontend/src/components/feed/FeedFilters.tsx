@@ -23,11 +23,11 @@ export function FeedFilters({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white border border-stone-200 rounded-xl p-4 mb-6"
+      className="bg-white border border-stone-200 rounded-xl p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-center gap-6 md:gap-10"
     >
       {/* Sorting options */}
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold text-stone-700 mb-2">정렬</h3>
+      <div className="flex items-center gap-3">
+        <h3 className="text-sm font-semibold text-stone-700 shrink-0">정렬</h3>
         <div className="flex flex-wrap gap-2">
           <m.div whileTap={{ scale: 0.95 }}>
             <Button
@@ -64,9 +64,14 @@ export function FeedFilters({
         </div>
       </div>
 
+      {/* Divider for desktop */}
+      <div className="hidden md:block w-px h-8 bg-stone-200" />
+
       {/* Recommendation filter */}
-      <div>
-        <h3 className="text-sm font-semibold text-stone-700 mb-2">추천 여부</h3>
+      <div className="flex items-center gap-3">
+        <h3 className="text-sm font-semibold text-stone-700 shrink-0">
+          추천 여부
+        </h3>
         <div className="flex flex-wrap gap-2">
           <m.div whileTap={{ scale: 0.95 }}>
             <Button

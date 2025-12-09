@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { FileText, Search, X } from 'lucide-react';
+import { FileText, Search, X, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePaginatedQuery, useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -18,7 +18,7 @@ import {
 } from '../../components/feed/FeedFilters';
 import { pageVariants, containerVariants } from '../../utils/animations';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 12; // Increased for grid layout
 
 export function FeedPage() {
   const navigate = useNavigate();
@@ -70,125 +70,107 @@ export function FeedPage() {
   }, []);
 
   return (
-    <>
-      {/* T104: Global login prompt modal */}
+    <div className="min-h-screen bg-[#FAFAF9]">
       <LoginPrompt />
 
-      {/* Main content */}
       <m.main
         variants={pageVariants}
         initial="initial"
         animate="animate"
         exit="exit"
-        className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-3xl"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-7xl"
       >
-        <div className="mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-stone-900">
-            독후감 피드
-          </h1>
-          <p className="text-stone-600 text-base sm:text-lg">
-            다양한 책에 대한 독자들의 생생한 후기를 만나보세요
-          </p>
+        {/* Header Section */}
+        <div className="text-center mb-16 relative">
+          <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-gradient-to-r from-primary-100/40 via-purple-100/40 to-orange-100/40 blur-3xl rounded-[100%] z-0 pointer-events-none" />
+
+          <div className="relative z-10">
+            <m.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-sm mb-6"
+            >
+              <BookOpen className="w-8 h-8 text-primary-600" />
+            </m.div>
+
+            <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-stone-900 font-serif tracking-tight">
+              ReadZone Feed
+            </h1>
+            <p className="text-stone-500 text-lg max-w-2xl mx-auto leading-relaxed">
+              책을 사랑하는 사람들의 솔직한 이야기.
+              <br className="hidden sm:block" />
+              새로운 영감을 발견하고 당신의 생각도 나눠보세요.
+            </p>
+          </div>
         </div>
 
-        {/* Search bar */}
-        <m.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6"
-        >
-          <label htmlFor="search-input" className="sr-only">
-            독후감 검색
-          </label>
+        {/* Search & Filter Section */}
+        <div className="max-w-4xl mx-auto mb-12 space-y-6">
+          {/* Search Bar */}
           <m.div
-            className="relative flex items-center border border-stone-300 rounded-xl focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-all"
-            whileFocus={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="group relative"
           >
-            <m.div
-              animate={{
-                rotate: isSearching ? 360 : 0,
-                scale: isSearching ? [1, 1.2, 1] : 1,
-              }}
-              transition={{ duration: 0.5 }}
-              className="pl-4 flex items-center"
-            >
-              <Search className="w-5 h-5 text-stone-400" aria-hidden="true" />
-            </m.div>
-            <m.input
-              id="search-input"
-              type="search"
-              placeholder="제목, 책 이름, 저자로 검색..."
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search
+                className={`w-5 h-5 transition-colors duration-300 ${isSearching ? 'text-primary-500' : 'text-stone-400 group-focus-within:text-primary-500'}`}
+              />
+            </div>
+            <input
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              whileFocus={{
-                boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.1)',
-              }}
-              className="flex-1 pl-3 pr-12 py-3 bg-transparent focus:outline-none"
-              aria-label="독후감 검색"
+              placeholder="책 제목, 저자, 독후감 제목으로 검색..."
+              className="w-full pl-12 pr-12 py-4 bg-white border border-stone-200 rounded-2xl shadow-sm text-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-stone-400"
             />
             {searchQuery && (
-              <m.button
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0 }}
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={handleClearSearch}
-                className="absolute right-4 flex items-center text-stone-400 hover:text-stone-600"
-                aria-label="검색어 지우기"
-                type="button"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-stone-400 hover:text-stone-600"
               >
-                <X className="w-5 h-5" aria-hidden="true" />
-              </m.button>
+                <X className="w-5 h-5" />
+              </button>
             )}
           </m.div>
-          {isSearching && (
-            <m.p
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2 text-sm text-stone-600"
-              role="status"
-              aria-live="polite"
-            >
-              "{debouncedSearchQuery}" 검색 결과: {displayResults.length}개
-            </m.p>
-          )}
-        </m.div>
 
-        {/* Filters (only show when not searching) */}
-        {!isSearching && (
-          <FeedFilters
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-            recommendFilter={recommendFilter}
-            onRecommendFilterChange={setRecommendFilter}
-          />
-        )}
+          {/* Filters */}
+          {!isSearching && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <FeedFilters
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                recommendFilter={recommendFilter}
+                onRecommendFilterChange={setRecommendFilter}
+              />
+              <div className="hidden sm:block text-sm text-stone-400">
+                {/* Optional: Add result count or other meta info here */}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Loading skeleton */}
         {isLoading && (
-          <div className="space-y-6">
-            {Array.from({ length: 3 }).map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+            {Array.from({ length: 9 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-white border border-stone-200 rounded-xl p-6 space-y-4 shadow-sm"
+                className="bg-white border border-stone-200 rounded-xl p-6 space-y-4 shadow-sm h-full"
               >
-                <div className="flex gap-6">
-                  <Skeleton className="w-24 h-32 sm:w-32 sm:h-44 rounded-lg" />
-                  <div className="flex-1 space-y-3">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-6 w-full max-w-md" />
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-4 w-48" />
+                <div className="flex gap-4">
+                  <Skeleton className="w-20 h-28 rounded-md shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
                   </div>
                 </div>
                 <Skeleton className="h-16 w-full" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                  <Skeleton className="h-6 w-20 rounded-full" />
+                <div className="flex justify-between pt-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
                 </div>
               </div>
             ))}
@@ -197,28 +179,29 @@ export function FeedPage() {
 
         {/* Empty state */}
         {displayResults.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white border border-stone-200 rounded-xl">
-            <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center mb-6">
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-24 h-24 rounded-full bg-stone-100 flex items-center justify-center mb-6">
               {isSearching ? (
                 <Search className="w-10 h-10 text-stone-400" />
               ) : (
                 <FileText className="w-10 h-10 text-stone-400" />
               )}
             </div>
-            <h2 className="text-2xl font-bold mb-2 text-stone-900">
+            <h2 className="text-2xl font-bold mb-3 text-stone-900">
               {isSearching
                 ? '검색 결과가 없습니다'
                 : '아직 작성된 독후감이 없습니다'}
             </h2>
-            <p className="text-stone-600 mb-8 text-lg">
+            <p className="text-stone-500 mb-8 text-lg max-w-sm mx-auto">
               {isSearching
-                ? '다른 검색어로 시도해보세요'
-                : '첫 번째 독후감을 작성해 보세요!'}
+                ? '단어의 철자가 정확한지 확인하거나, 다른 검색어로 시도해보세요.'
+                : '첫 번째 독후감을 작성하여 커뮤니티의 시작을 함께해주세요!'}
             </p>
             {!isSearching && (
               <Button
                 onClick={handleNavigateToNew}
-                className="bg-primary-500 hover:bg-primary-600 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                size="lg"
+                className="bg-primary-600 hover:bg-primary-700 font-medium px-8"
               >
                 독후감 작성하기
               </Button>
@@ -226,14 +209,14 @@ export function FeedPage() {
           </div>
         )}
 
-        {/* Review list */}
+        {/* Review Grid */}
         {displayResults.length > 0 && (
           <>
             <m.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="space-y-6"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8"
             >
               {displayResults.map((review) => (
                 <ReviewCard key={review._id} review={review} />
@@ -242,17 +225,17 @@ export function FeedPage() {
 
             {/* Infinite scroll (only for non-search mode) */}
             {!isSearching && (
-              <nav aria-label="페이지네이션" className="mt-8">
+              <div className="mt-16 flex justify-center">
                 <InfiniteScroll
                   isLoading={status === 'LoadingMore'}
                   hasMore={status === 'CanLoadMore'}
                   onLoadMore={handleLoadMore}
                 />
-              </nav>
+              </div>
             )}
           </>
         )}
       </m.main>
-    </>
+    </div>
   );
 }
