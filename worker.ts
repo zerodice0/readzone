@@ -91,6 +91,9 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
 
   // OG 이미지: 책 표지 또는 기본 이미지
   const ogImage = meta.image || `${siteUrl}/og-default.png`;
+  const ogImageAlt = bookTitle
+    ? `『${bookTitle}』 표지`
+    : 'ReadZone - 독후감 공유 플랫폼';
 
   // 구조화된 설명
   const fullDescription = bookTitle
@@ -115,6 +118,7 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${fullDescription}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
+  <meta property="og:image:alt" content="${ogImageAlt}">
   <meta property="og:site_name" content="ReadZone">
   <meta property="og:locale" content="ko_KR">
   <meta property="article:author" content="${authorName}">
@@ -125,6 +129,7 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${fullDescription}">
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
+  <meta name="twitter:image:alt" content="${ogImageAlt}">
 
   <!-- Canonical URL -->
   <link rel="canonical" href="${escapeHtml(url)}">
