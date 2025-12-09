@@ -105,7 +105,7 @@ async function validateClerkWebhook(
  * 소셜 미디어 크롤러가 리뷰 공유 시 썸네일/설명을 가져갈 수 있도록 제공
  */
 http.route({
-  path: '/og/reviews/{reviewId}',
+  pathPrefix: '/og/reviews/',
   method: 'GET',
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
