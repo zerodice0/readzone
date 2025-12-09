@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Search, Loader2, BookPlus, X, Globe, AlertCircle } from 'lucide-react';
+import {
+  Search,
+  Loader2,
+  BookPlus,
+  X,
+  Globe,
+  AlertCircle,
+  Check,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { BookSearchResult } from './BookSearchResult';
 import { AladinBookResult } from './AladinBookResult';
@@ -94,23 +102,23 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Search input */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+      <div className="relative group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 group-focus-within:text-primary-500 transition-colors" />
         <input
           type="text"
-          placeholder="책 제목 또는 저자로 검색..."
+          placeholder="책 제목, 저자명으로 검색해보세요"
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setSearchQuery(e.target.value)
           }
-          className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full pl-12 pr-12 py-4 bg-white border border-stone-200 rounded-xl text-lg shadow-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -119,19 +127,22 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
 
       {/* Loading state - Local */}
       {isSearchingLocal && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-primary-500 mr-2" />
-          <span className="text-stone-600">검색 중...</span>
+        <div className="flex flex-col items-center justify-center py-12 text-stone-500">
+          <Loader2 className="w-8 h-8 animate-spin text-primary-500 mb-3" />
+          <span className="text-sm font-medium">
+            내 서재를 검색하고 있습니다...
+          </span>
         </div>
       )}
 
       {/* Local search results */}
       {hasLocalResults && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-stone-500 px-1">
-            내 서재에서 찾음
-          </h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+            <h4 className="text-sm font-bold text-stone-700">검색 결과</h4>
+          </div>
+          <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
             {localResults.map((book) => (
               <BookSearchResult
                 key={book._id}
@@ -146,30 +157,30 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
 
       {/* Aladin search button */}
       {canSearchAladin && !isSearchingLocal && (
-        <div className="border-t border-stone-200 pt-4">
+        <div className="border-t border-dashed border-stone-200 pt-6 mt-2">
           {!hasSearched ? (
             <Button
               variant="outline"
               onClick={triggerAladinSearch}
               disabled={isSearchingAladin}
-              className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300"
+              className="w-full h-12 gap-2 border-blue-100 bg-blue-50/50 text-blue-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all"
             >
               {isSearchingAladin ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  알라딘에서 검색 중...
+                  알라딘 데이터베이스 검색 중...
                 </>
               ) : (
                 <>
                   <Globe className="w-4 h-4" />
-                  알라딘에서 검색
+                  알라딘에서 더 찾아보기
                 </>
               )}
             </Button>
           ) : isSearchingAladin ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-500 mr-2" />
-              <span className="text-stone-600">알라딘에서 검색 중...</span>
+            <div className="flex flex-col items-center justify-center py-8 text-blue-600/80">
+              <Loader2 className="w-6 h-6 animate-spin mb-2" />
+              <span className="text-sm">알라딘에서 책을 찾고 있습니다...</span>
             </div>
           ) : null}
         </div>
@@ -177,14 +188,14 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
 
       {/* Aladin error */}
       {aladinError && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="flex items-center gap-3 p-4 bg-red-50/50 border border-red-100 rounded-xl text-red-600">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span className="text-sm">{aladinError}</span>
+          <span className="text-sm font-medium">{aladinError}</span>
           <Button
             variant="ghost"
             size="sm"
             onClick={triggerAladinSearch}
-            className="ml-auto text-red-700 hover:text-red-800 hover:bg-red-100"
+            className="ml-auto text-red-600 hover:text-red-700 hover:bg-red-100"
           >
             다시 시도
           </Button>
@@ -193,14 +204,14 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
 
       {/* Save error */}
       {saveError && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+        <div className="flex items-center gap-3 p-4 bg-red-50/50 border border-red-100 rounded-xl text-red-600">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span className="text-sm">{saveError}</span>
+          <span className="text-sm font-medium">{saveError}</span>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setSaveError(null)}
-            className="ml-auto text-red-700 hover:text-red-800 hover:bg-red-100"
+            className="ml-auto text-red-600 hover:text-red-700 hover:bg-red-100"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -209,11 +220,14 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
 
       {/* Aladin search results */}
       {hasAladinResults && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium text-blue-600 px-1">
-            알라딘 검색 결과
-          </h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+        <div className="space-y-3 mt-4">
+          <div className="flex items-center gap-2 px-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            <h4 className="text-sm font-bold text-blue-700">
+              알라딘 검색 결과
+            </h4>
+          </div>
+          <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
             {aladinResults.map((book) => (
               <AladinBookResult
                 key={book.externalId}
@@ -232,9 +246,15 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
         !hasAladinResults &&
         !isSearchingAladin &&
         !aladinError && (
-          <div className="text-center py-6">
-            <p className="text-stone-600 mb-4">
-              &quot;{searchQuery}&quot;에 대한 검색 결과가 없습니다
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4 text-stone-400">
+              <Search className="w-8 h-8" />
+            </div>
+            <p className="text-stone-900 font-medium mb-1">
+              &quot;{searchQuery}&quot;에 대한 결과가 없습니다
+            </p>
+            <p className="text-stone-500 text-sm mb-6">
+              검색어 스펠링을 확인하거나 다른 키워드로 시도해보세요.
             </p>
             <Button
               variant="outline"
@@ -249,55 +269,67 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
 
       {/* Initial state hint */}
       {!searchQuery && !selectedBook && (
-        <div className="text-center py-8 text-stone-500">
-          <p className="mb-2">독후감을 작성할 책을 검색해주세요</p>
-          <p className="text-sm">
-            책 제목 또는 저자명을 입력하면 검색 결과가 표시됩니다
+        <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50">
+          <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 ring-1 ring-stone-900/5">
+            <BookPlus className="w-8 h-8 text-primary-500" />
+          </div>
+          <h3 className="text-lg font-bold text-stone-900 mb-2">
+            어떤 책을 기록할까요?
+          </h3>
+          <p className="text-stone-500 text-sm max-w-xs mx-auto">
+            책 제목이나 저자 이름을 입력하여 독후감을 작성할 책을 선택해주세요.
           </p>
         </div>
       )}
 
       {/* Selected book display */}
       {selectedBook && !searchQuery && (
-        <div className="border-2 border-primary-500 rounded-lg p-4 bg-primary-50">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-20 h-28 bg-white rounded overflow-hidden shadow-sm">
+        <div className="relative group overflow-hidden border border-primary-200 bg-primary-50/30 rounded-2xl p-6 transition-all hover:bg-primary-50/50 hover:border-primary-300">
+          <div className="flex items-start gap-6">
+            <div className="flex-shrink-0 w-24 h-36 bg-white rounded-lg shadow-sm overflow-hidden ring-1 ring-stone-900/5">
               {selectedBook.coverImageUrl ? (
                 <img
                   src={selectedBook.coverImageUrl}
                   alt={`${selectedBook.title} 표지`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <BookPlus className="w-8 h-8 text-stone-400" />
+                <div className="w-full h-full flex items-center justify-center bg-stone-50">
+                  <BookPlus className="w-8 h-8 text-stone-300" />
                 </div>
               )}
             </div>
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-2">
+
+            <div className="flex-1 py-1">
+              <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-bold text-stone-900 mb-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-primary-100 text-primary-700 text-xs font-bold mb-3 shadow-sm">
+                    <Check className="w-3 h-3" />
+                    선택된 도서
+                  </div>
+                  <h3 className="font-serif font-bold text-xl text-stone-900 mb-2 leading-tight">
                     {selectedBook.title}
                   </h3>
-                  <p className="text-sm text-stone-700">
+                  <p className="text-stone-600 font-medium">
                     {selectedBook.author}
                   </p>
                 </div>
+
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => {
                     onSelectBook(null as unknown as BookData);
                     setSearchQuery('');
                   }}
-                  className="text-stone-600 hover:text-stone-900"
+                  className="text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-full w-10 h-10 -mr-2 -mt-2"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
+
               {selectedBook.description && (
-                <p className="text-sm text-stone-600 line-clamp-2">
+                <p className="text-sm text-stone-500 line-clamp-2 mt-4 leading-relaxed">
                   {selectedBook.description}
                 </p>
               )}
