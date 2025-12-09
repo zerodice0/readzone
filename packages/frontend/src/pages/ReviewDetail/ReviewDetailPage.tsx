@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Heart,
@@ -11,6 +11,10 @@ import {
   ThumbsDown,
   Edit,
   Trash2,
+  ShoppingCart,
+  Tablet,
+  ExternalLink,
+  BookOpen,
 } from 'lucide-react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -52,6 +56,9 @@ interface ReviewDetail {
     title: string;
     author: string;
     coverImageUrl?: string;
+    aladinUrl?: string;
+    ebookUrl?: string;
+    reviewCount?: number;
   } | null;
   author: {
     name?: string;
@@ -160,10 +167,12 @@ export function ReviewDetailPage() {
   // Loading state
   if (review === undefined) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-4xl">
-        <div className="flex justify-center items-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin mr-2 text-primary-500" />
-          <span className="text-stone-700">독후감을 불러오는 중...</span>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+          <span className="text-stone-500 font-medium">
+            독후감을 불러오는 중...
+          </span>
         </div>
       </div>
     );
@@ -172,20 +181,20 @@ export function ReviewDetailPage() {
   // No review data
   if (!review || !id) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-4xl">
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-white border border-stone-200 rounded-xl shadow-sm">
-          <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center mb-6">
-            <AlertCircle className="w-10 h-10 text-stone-400" />
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-stone-100">
+          <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-stone-400" />
           </div>
-          <h2 className="text-2xl font-bold mb-2 text-stone-900">
+          <h2 className="text-xl font-bold text-stone-900 mb-2">
             독후감을 찾을 수 없습니다
           </h2>
-          <p className="text-stone-600 mb-8">
-            요청하신 독후감이 존재하지 않거나 삭제되었습니다
+          <p className="text-stone-500 mb-6">
+            요청하신 독후감이 존재하지 않거나 삭제되었습니다.
           </p>
           <Button
             onClick={handleBack}
-            className="bg-primary-500 hover:bg-primary-600"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             피드로 돌아가기
@@ -196,7 +205,7 @@ export function ReviewDetailPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-[#FAFAF9]">
       {/* T108: Login prompt for unauthenticated users */}
       <LoginPrompt />
 
@@ -205,207 +214,293 @@ export function ReviewDetailPage() {
         initial="initial"
         animate="animate"
         exit="exit"
-        className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
       >
-        {/* Header with back button */}
-        <div className="mb-8">
+        {/* Navigation Bar */}
+        <nav className="flex items-center justify-between mb-8 sticky top-0 z-10 bg-[#FAFAF9]/80 backdrop-blur-md py-4 -mx-4 px-4 sm:mx-0 sm:px-0">
           <Button
             variant="ghost"
-            size="sm"
             onClick={handleBack}
-            className="mb-6 text-stone-600 hover:text-stone-900 hover:bg-stone-100"
+            className="text-stone-600 hover:text-stone-900 hover:bg-stone-100 -ml-2 transition-colors duration-200"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            피드로 돌아가기
+            <ArrowLeft className="w-5 h-5 mr-1" />
+            <span className="font-medium">돌아가기</span>
           </Button>
 
-          {/* User info */}
-          <div className="flex items-center justify-between gap-3 mb-6">
-            <div className="flex items-center gap-3">
-              {review.author?.imageUrl ? (
-                <img
-                  src={review.author.imageUrl}
-                  alt={review.author.name || '작성자'}
-                  className="w-12 h-12 rounded-full object-cover shadow-md ring-2 ring-white"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                  {(review.author?.name || review.userId)
-                    .charAt(0)
-                    .toUpperCase()}
-                </div>
-              )}
-              <div>
-                <p className="font-semibold text-stone-900">
-                  {review.author?.name || `사용자 ${review.userId.slice(-4)}`}
-                </p>
-                <p className="text-sm text-stone-600">
+          {/* Mobile Action Buttons (Edit/Delete) - visible only for author */}
+          {user && review.userId === user.id && (
+            <div className="sm:hidden flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleEdit}
+                className="text-stone-600 hover:text-stone-900 hover:bg-stone-100"
+              >
+                <Edit className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDelete}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </div>
+          )}
+        </nav>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Main Content Area */}
+          <main className="lg:col-span-8 space-y-8">
+            {/* Header: Title & Author */}
+            <header className="space-y-6">
+              <div className="flex items-center gap-3 text-sm text-stone-500 font-medium">
+                <span className="bg-stone-100 px-2 py-1 rounded-md text-stone-600">
                   {review.publishedAt
                     ? new Date(review.publishedAt).toLocaleDateString('ko-KR', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
                       })
-                    : '발행 일자 미정'}
-                </p>
+                    : '임시저장'}
+                </span>
+                {review.isRecommended ? (
+                  <span className="flex items-center text-green-600 bg-green-50 px-2 py-1 rounded-md">
+                    <ThumbsUp className="w-3.5 h-3.5 mr-1" /> 추천
+                  </span>
+                ) : (
+                  <span className="flex items-center text-red-600 bg-red-50 px-2 py-1 rounded-md">
+                    <ThumbsDown className="w-3.5 h-3.5 mr-1" /> 비추천
+                  </span>
+                )}
               </div>
-            </div>
 
-            {/* Edit/Delete buttons (only for author) */}
-            {user && review.userId === user.id && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEdit}
-                  className="gap-2"
+              {review.title && (
+                <m.h1
+                  variants={fadeInUpVariants}
+                  className="text-3xl sm:text-4xl lg:text-5xl font-bold text-stone-900 leading-tight tracking-tight font-serif"
                 >
-                  <Edit className="w-4 h-4" />
-                  수정
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDelete}
-                  className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  삭제
-                </Button>
+                  {review.title}
+                </m.h1>
+              )}
+
+              <div className="flex items-center justify-between border-b border-stone-200 pb-6">
+                <div className="flex items-center gap-4">
+                  {review.author?.imageUrl ? (
+                    <img
+                      src={review.author.imageUrl}
+                      alt={review.author.name || '작성자'}
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-stone-100"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-lg ring-2 ring-stone-100">
+                      {(review.author?.name || review.userId)
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-stone-900 text-lg">
+                      {review.author?.name ||
+                        `사용자 ${review.userId.slice(-4)}`}
+                    </p>
+                    <p className="text-sm text-stone-500">
+                      View {review.viewCount.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Desktop Action Buttons (Edit/Delete) */}
+                {user && review.userId === user.id && (
+                  <div className="hidden sm:flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEdit}
+                      className="text-stone-600 hover:text-primary-600 hover:border-primary-200"
+                    >
+                      <Edit className="w-4 h-4 mr-1.5" />
+                      수정
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDelete}
+                      className="text-stone-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1.5" />
+                      삭제
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </header>
 
-        {/* Review title */}
-        {review.title && (
-          <m.h1
-            variants={fadeInUpVariants}
-            initial="hidden"
-            animate="visible"
-            className="text-2xl sm:text-3xl font-bold mb-6 text-stone-900"
-          >
-            {review.title}
-          </m.h1>
-        )}
-
-        {/* Full review content */}
-        <m.div
-          variants={fadeInUpVariants}
-          initial="hidden"
-          animate="visible"
-          className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 mb-8 shadow-sm"
-        >
-          <p className="whitespace-pre-wrap text-base leading-relaxed text-stone-700">
-            {review.content}
-          </p>
-        </m.div>
-
-        {/* Recommend status and rating */}
-        <div className="flex items-center gap-3 mb-8 flex-wrap">
-          {review.isRecommended ? (
-            <Badge
-              variant="default"
-              className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200 text-sm py-1.5 px-3"
+            {/* Review Content */}
+            <m.article
+              variants={fadeInUpVariants}
+              className="prose prose-stone prose-lg max-w-none"
             >
-              <ThumbsUp className="w-4 h-4 mr-1.5" />
-              추천
-            </Badge>
-          ) : (
-            <Badge
-              variant="destructive"
-              className="bg-red-100 text-red-800 hover:bg-red-200 border-red-200 text-sm py-1.5 px-3"
-            >
-              <ThumbsDown className="w-4 h-4 mr-1.5" />
-              비추천
-            </Badge>
-          )}
-        </div>
-
-        {/* Book information section */}
-        {review.book && (
-          <m.div
-            variants={scaleInVariants}
-            initial="hidden"
-            animate="visible"
-            className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 mb-8 shadow-sm"
-          >
-            <h2 className="text-lg sm:text-xl font-semibold mb-6 text-stone-900">
-              책 정보
-            </h2>
-            <div className="flex gap-6 flex-col sm:flex-row">
-              <img
-                src={review.book.coverImageUrl || '/placeholder-book.svg'}
-                alt={`${review.book.title} 표지`}
-                className="w-24 h-32 sm:w-32 sm:h-44 object-cover rounded-lg shadow-md ring-1 ring-stone-200 self-start"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder-book.svg';
-                }}
-              />
-              <div className="flex-1">
-                <h3 className="font-serif text-base sm:text-lg font-bold mb-2 text-stone-900">
-                  {review.book.title}
-                </h3>
-                <p className="text-sm text-stone-600 mb-4">
-                  {review.book.author}
-                </p>
+              <div className="whitespace-pre-wrap leading-relaxed text-stone-800 font-serif">
+                {review.content}
               </div>
+            </m.article>
+
+            {/* Interaction Bar */}
+            <div className="flex items-center justify-center gap-6 py-8 border-t border-stone-200 mt-12">
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={handleLike}
+                className={`flex flex-col gap-1 h-auto py-3 px-6 rounded-xl transition-all duration-300 ${
+                  review.hasLiked
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900'
+                }`}
+              >
+                <Heart
+                  className={`w-8 h-8 ${review.hasLiked ? 'fill-current' : ''}`}
+                />
+                <span className="text-xs font-medium">{review.likeCount}</span>
+              </Button>
+
+              <div className="w-px h-12 bg-stone-200" />
+
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={handleBookmark}
+                className={`flex flex-col gap-1 h-auto py-3 px-6 rounded-xl transition-all duration-300 ${
+                  review.hasBookmarked
+                    ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                    : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900'
+                }`}
+              >
+                <Bookmark
+                  className={`w-8 h-8 ${review.hasBookmarked ? 'fill-current' : ''}`}
+                />
+                <span className="text-xs font-medium">저장</span>
+              </Button>
+
+              <div className="w-px h-12 bg-stone-200" />
+
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={handleShare}
+                className="flex flex-col gap-1 h-auto py-3 px-6 rounded-xl text-stone-500 hover:bg-stone-100 hover:text-primary-600 transition-all duration-300"
+              >
+                <Share2 className="w-8 h-8" />
+                <span className="text-xs font-medium">공유</span>
+              </Button>
             </div>
-          </m.div>
-        )}
+          </main>
 
-        {/* Action buttons */}
-        <m.div
-          variants={fadeInUpVariants}
-          initial="hidden"
-          animate="visible"
-          className="flex gap-3 justify-center sm:justify-start flex-wrap"
-        >
-          <Button
-            variant="ghost"
-            size="default"
-            onClick={() => handleLike()}
-            aria-label={review.hasLiked ? '좋아요 취소' : '좋아요'}
-            className={`transition-all hover:bg-red-50 hover:text-red-600 ${
-              review.hasLiked ? 'text-red-600 bg-red-50' : 'text-stone-600'
-            }`}
-            title={!isSignedIn ? '로그인이 필요합니다' : undefined}
-          >
-            <Heart
-              className={`w-4 h-4 mr-2 ${review.hasLiked ? 'fill-current' : ''}`}
-              aria-hidden="true"
-            />
-            <span className="font-medium">{review.likeCount}</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="default"
-            onClick={() => handleBookmark()}
-            aria-label={review.hasBookmarked ? '북마크 취소' : '북마크 추가'}
-            className={`transition-all hover:bg-amber-50 hover:text-amber-700 ${
-              review.hasBookmarked
-                ? 'text-amber-700 bg-amber-50'
-                : 'text-stone-600'
-            }`}
-            title={!isSignedIn ? '로그인이 필요합니다' : undefined}
-          >
-            <Bookmark
-              className={`w-4 h-4 ${review.hasBookmarked ? 'fill-current' : ''}`}
-              aria-hidden="true"
-            />
-          </Button>
-          <Button
-            variant="ghost"
-            size="default"
-            onClick={() => handleShare()}
-            aria-label="링크 공유"
-            className="transition-all hover:bg-stone-100 text-stone-600 hover:text-stone-900"
-          >
-            <Share2 className="w-4 h-4" aria-hidden="true" />
-          </Button>
-        </m.div>
+          {/* Sidebar: Book Info */}
+          <aside className="lg:col-span-4">
+            <div className="sticky top-24 space-y-6">
+              {review.book && (
+                <m.div
+                  variants={scaleInVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden"
+                >
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-stone-900 mb-6 flex items-center gap-2">
+                      책 정보
+                    </h3>
+
+                    <div className="flex flex-col items-center text-center">
+                      <Link
+                        to={`/books/${review.book._id}`}
+                        className="block mb-6 relative group"
+                      >
+                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
+                        <img
+                          src={
+                            review.book.coverImageUrl || '/placeholder-book.svg'
+                          }
+                          alt={review.book.title}
+                          className="w-32 h-auto shadow-xl rounded-lg transform group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder-book.svg';
+                          }}
+                        />
+                      </Link>
+
+                      <Link
+                        to={`/books/${review.book._id}`}
+                        className="hover:text-primary-600 transition-colors"
+                      >
+                        <h4 className="font-bold text-xl text-stone-900 mb-2 font-serif">
+                          {review.book.title}
+                        </h4>
+                      </Link>
+                      <p className="text-stone-600 mb-6">
+                        {review.book.author}
+                      </p>
+
+                      {review.book.reviewCount !== undefined &&
+                        review.book.reviewCount > 0 && (
+                          <Link
+                            to={`/books/${review.book._id}`}
+                            className="mb-6"
+                          >
+                            <Badge
+                              variant="secondary"
+                              className="hover:bg-stone-200 transition-colors cursor-pointer"
+                            >
+                              <BookOpen className="w-3 h-3 mr-1" />이 책의 다른
+                              리뷰 {review.book.reviewCount}개
+                            </Badge>
+                          </Link>
+                        )}
+
+                      <div className="w-full space-y-3">
+                        {review.book.aladinUrl && (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="w-full border-stone-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                          >
+                            <a
+                              href={review.book.aladinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ShoppingCart className="w-4 h-4 mr-2" />
+                              종이책 구매하기
+                              <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
+                            </a>
+                          </Button>
+                        )}
+                        {review.book.ebookUrl && (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="w-full border-stone-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                          >
+                            <a
+                              href={review.book.ebookUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Tablet className="w-4 h-4 mr-2" />
+                              전자책 구매하기
+                              <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </m.div>
+              )}
+            </div>
+          </aside>
+        </div>
       </m.div>
 
       {/* Delete confirmation modal */}
@@ -416,7 +511,7 @@ export function ReviewDetailPage() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setShowDeleteModal(false)}
           >
             <m.div
@@ -424,44 +519,43 @@ export function ReviewDetailPage() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
+              className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl scale-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-red-600" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-stone-900 mb-2">
-                    독후감 삭제
-                  </h3>
-                  <p className="text-sm text-stone-600">
-                    정말로 이 독후감을 삭제하시겠습니까?
-                    <br />
-                    삭제된 독후감은 복구할 수 없습니다.
-                  </p>
-                </div>
+                <h3 className="text-xl font-bold text-stone-900 mb-2">
+                  독후감을 삭제하시겠습니까?
+                </h3>
+                <p className="text-stone-500">
+                  삭제된 독후감은 복구할 수 없습니다.
+                  <br />
+                  정말로 삭제하시겠습니까?
+                </p>
               </div>
 
-              <div className="flex gap-3 justify-end">
+              <div className="flex gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 py-6 text-base"
                 >
                   취소
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={confirmDelete}
-                  className="bg-red-600 hover:bg-red-700"
+                  className="flex-1 py-6 text-base bg-red-600 hover:bg-red-700"
                 >
-                  삭제
+                  삭제하기
                 </Button>
               </div>
             </m.div>
           </m.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

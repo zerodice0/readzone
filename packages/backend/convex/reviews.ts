@@ -608,6 +608,15 @@ export const getDetail = query({
     // 책 정보 가져오기
     const book = await ctx.db.get(review.bookId);
 
+    // 같은 책의 발행된 독후감 개수 조회
+    const reviewsForBook = await ctx.db
+      .query('reviews')
+      .withIndex('by_book', (q) =>
+        q.eq('bookId', review.bookId).eq('status', 'PUBLISHED')
+      )
+      .collect();
+    const reviewCount = reviewsForBook.length;
+
     // 작성자 정보 가져오기
     const author = await getAuthorInfo(ctx, review.userId);
 
@@ -638,7 +647,12 @@ export const getDetail = query({
 
     return {
       ...review,
-      book,
+      book: book
+        ? {
+            ...book,
+            reviewCount,
+          }
+        : null,
       author,
       hasLiked,
       hasBookmarked,
