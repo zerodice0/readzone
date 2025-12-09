@@ -10,6 +10,9 @@ import {
   AlertCircle,
   PenSquare,
   Book as BookIcon,
+  ShoppingCart,
+  Tablet,
+  ExternalLink,
 } from 'lucide-react';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
@@ -160,6 +163,47 @@ export default function BookDetailPage() {
                 </p>
               )}
 
+              {/* 알라딘 구매 버튼 */}
+              {book.aladinUrl && (
+                <div className="flex flex-wrap gap-3 mb-4">
+                  {/* 종이책 구매 버튼 */}
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 hover:text-orange-700 gap-2"
+                  >
+                    <a
+                      href={book.aladinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      종이책 구매
+                      <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                    </a>
+                  </Button>
+
+                  {/* 전자책 구매 버튼 (있는 경우만) */}
+                  {book.ebookUrl && (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400 gap-2"
+                    >
+                      <a
+                        href={book.ebookUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Tablet className="w-4 h-4" />
+                        전자책 구매
+                        <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              )}
+
               {/* Write review CTA */}
               <Button
                 onClick={handleWriteReview}
@@ -265,7 +309,17 @@ export default function BookDetailPage() {
                   </div>
 
                   <div className="flex items-center gap-3 text-sm text-stone-500">
-                    <span>사용자 {review.userId.slice(-4)}</span>
+                    {review.author?.imageUrl && (
+                      <img
+                        src={review.author.imageUrl}
+                        alt=""
+                        className="w-5 h-5 rounded-full object-cover"
+                      />
+                    )}
+                    <span>
+                      {review.author?.name ??
+                        `사용자 ${review.userId.slice(-4)}`}
+                    </span>
                     {review.publishedAt && (
                       <span>
                         {new Date(review.publishedAt).toLocaleDateString(

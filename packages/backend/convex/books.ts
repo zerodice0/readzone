@@ -1,5 +1,10 @@
 import { v } from 'convex/values';
-import { query, mutation } from './_generated/server';
+import {
+  query,
+  mutation,
+  internalQuery,
+  internalMutation,
+} from './_generated/server';
 
 /**
  * 모든 책 목록 조회
@@ -261,6 +266,8 @@ export const saveFromAladin = mutation({
     description: v.optional(v.string()),
     pageCount: v.optional(v.number()),
     language: v.optional(v.string()),
+    aladinUrl: v.optional(v.string()), // 알라딘 종이책 구매 URL
+    ebookUrl: v.optional(v.string()), // 알라딘 전자책 구매 URL
   },
   handler: async (ctx, args) => {
     // 인증 확인
@@ -306,6 +313,8 @@ export const saveFromAladin = mutation({
       description: args.description,
       pageCount: args.pageCount,
       language: args.language,
+      aladinUrl: args.aladinUrl,
+      ebookUrl: args.ebookUrl,
     });
 
     return bookId;
@@ -341,5 +350,35 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
 
     return { success: true };
+  },
+});
+
+/**
+ * [Internal] 마이그레이션용: aladinUrl이 없는 ALADIN 소스 책 조회
+ */
+export const getBooksNeedingMigration = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const allBooks = await ctx.db.query('books').collect();
+    return allBooks.filter(
+      (book) => book.externalSource === 'ALADIN' && book.isbn && !book.aladinUrl
+    );
+  },
+});
+
+/**
+ * [Internal] 마이그레이션용: 책의 알라딘 URL 업데이트
+ */
+export const updateBookAladinUrls = internalMutation({
+  args: {
+    bookId: v.id('books'),
+    aladinUrl: v.union(v.string(), v.null()),
+    ebookUrl: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.bookId, {
+      aladinUrl: args.aladinUrl ?? undefined,
+      ebookUrl: args.ebookUrl ?? undefined,
+    });
   },
 });
