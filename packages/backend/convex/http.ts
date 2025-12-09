@@ -100,4 +100,51 @@ async function validateClerkWebhook(
   }
 }
 
+/**
+ * OG 메타데이터 API 엔드포인트
+ * 소셜 미디어 크롤러가 리뷰 공유 시 썸네일/설명을 가져갈 수 있도록 제공
+ */
+http.route({
+  path: '/og/reviews/{reviewId}',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const reviewId = pathParts[pathParts.length - 1];
+
+    if (!reviewId) {
+      return new Response(JSON.stringify({ error: 'Review ID is required' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
+    const ogMeta = await ctx.runQuery(internal.reviews.getForOg, {
+      id: reviewId,
+    });
+
+    if (!ogMeta) {
+      return new Response(JSON.stringify({ error: 'Review not found' }), {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
+    return new Response(JSON.stringify(ogMeta), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=3600', // 1시간 캐싱
+      },
+    });
+  }),
+});
+
 export default http;

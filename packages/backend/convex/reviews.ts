@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
-import { query, mutation, QueryCtx } from './_generated/server';
+import { query, mutation, internalQuery, QueryCtx } from './_generated/server';
 import { paginationOptsValidator } from 'convex/server';
+import { Id } from './_generated/dataModel';
 
 /**
  * 사용자 정보를 users 테이블에서 조회하는 헬퍼 함수
@@ -656,6 +657,55 @@ export const getDetail = query({
       author,
       hasLiked,
       hasBookmarked,
+    };
+  },
+});
+
+/**
+ * OG 메타데이터용 리뷰 정보 조회 (내부 쿼리)
+ * HTTP 엔드포인트에서 호출하여 소셜 미디어 크롤러에 메타데이터 제공
+ */
+export const getForOg = internalQuery({
+  args: {
+    id: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // 문자열 ID를 Convex ID로 변환 시도
+    let reviewId: Id<'reviews'>;
+    try {
+      reviewId = args.id as Id<'reviews'>;
+    } catch {
+      return null;
+    }
+
+    const review = await ctx.db.get(reviewId);
+    if (!review || review.status !== 'PUBLISHED') {
+      return null;
+    }
+
+    // 책 정보 가져오기
+    const book = await ctx.db.get(review.bookId);
+
+    // 작성자 정보 가져오기
+    const author = await getAuthorInfo(ctx, review.userId);
+
+    // 리뷰 제목 생성: 사용자 지정 제목 또는 "《책제목》 독후감"
+    const title =
+      review.title || (book ? `《${book.title}》 독후감` : '독후감');
+
+    // 설명: 리뷰 내용 앞부분 (150자)
+    const description = review.content
+      .replace(/<[^>]*>/g, '') // HTML 태그 제거
+      .slice(0, 150)
+      .trim();
+
+    return {
+      title,
+      description: description + (review.content.length > 150 ? '...' : ''),
+      image: book?.coverImageUrl || null,
+      bookTitle: book?.title || null,
+      bookAuthor: book?.author || null,
+      authorName: author?.name || '익명',
     };
   },
 });

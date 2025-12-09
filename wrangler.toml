@@ -2,13 +2,21 @@
 # https://developers.cloudflare.com/workers/static-assets/
 
 name = "readzone"
+main = "worker.ts"
 compatibility_date = "2024-09-19"
+compatibility_flags = ["nodejs_compat"]
+
+# 환경 변수
+[vars]
+# CONVEX_URL은 wrangler secret 또는 Cloudflare 대시보드에서 설정
+# 예: https://your-deployment.convex.cloud
+# wrangler secret put CONVEX_URL
 
 # Static Assets 설정 - React SPA 배포용
 [assets]
 directory = "./packages/frontend/dist"
 
-# SPA 라우팅: 404 대신 index.html 반환
+# SPA 라우팅: 404 대신 index.html 반환 (Worker가 처리하지 않는 경우)
 not_found_handling = "single-page-application"
 
 # HTML 파일 처리
