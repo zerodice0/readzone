@@ -63,6 +63,39 @@ export const listByBook = query({
     ),
     limit: v.optional(v.number()),
   },
+  returns: v.array(
+    v.object({
+      _id: v.id('reviews'),
+      _creationTime: v.number(),
+      userId: v.string(),
+      bookId: v.id('books'),
+      title: v.optional(v.string()),
+      content: v.string(),
+      isRecommended: v.boolean(),
+      readStatus: v.union(
+        v.literal('READING'),
+        v.literal('COMPLETED'),
+        v.literal('DROPPED')
+      ),
+      status: v.union(
+        v.literal('DRAFT'),
+        v.literal('PUBLISHED'),
+        v.literal('DELETED')
+      ),
+      likeCount: v.number(),
+      bookmarkCount: v.number(),
+      viewCount: v.number(),
+      publishedAt: v.optional(v.number()),
+      deletedAt: v.optional(v.number()),
+      author: v.union(
+        v.object({
+          name: v.optional(v.string()),
+          imageUrl: v.optional(v.string()),
+        }),
+        v.null()
+      ),
+    })
+  ),
   handler: async (ctx, args) => {
     const limit = args.limit ?? 20;
     const status = args.status ?? 'PUBLISHED';
@@ -75,7 +108,15 @@ export const listByBook = query({
       .order('desc')
       .take(limit);
 
-    return reviews;
+    // 작성자 정보 일괄 조회 (N+1 방지)
+    const authorUserIds = reviews.map((review) => review.userId);
+    const authorMap = await getAuthorInfoBatch(ctx, authorUserIds);
+
+    // 각 리뷰에 작성자 정보 추가
+    return reviews.map((review) => ({
+      ...review,
+      author: authorMap.get(review.userId) ?? null,
+    }));
   },
 });
 
