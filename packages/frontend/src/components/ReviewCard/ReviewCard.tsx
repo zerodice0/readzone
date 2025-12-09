@@ -14,6 +14,7 @@ import type { Id } from 'convex/_generated/dataModel';
 import { useLoginPromptStore } from '../../stores/loginPromptStore';
 import { toast } from '../../utils/toast';
 import { likeVariants, bookmarkVariants } from '../../utils/animations';
+import { useShare } from '../../hooks/useShare';
 
 // Convex data structure from getFeed query
 interface ReviewCardProps {
@@ -58,6 +59,7 @@ export const ReviewCard = memo(function ReviewCard({
   // Convex mutations
   const toggleLike = useMutation(api.likes.toggle);
   const toggleBookmark = useMutation(api.bookmarks.toggle);
+  const { share } = useShare();
 
   const handleCardClick = useCallback(
     (e: React.MouseEvent) => {
@@ -115,53 +117,19 @@ export const ReviewCard = memo(function ReviewCard({
   );
 
   const handleShare = useCallback(
-    async (e: React.MouseEvent): Promise<void> => {
+    (e: React.MouseEvent): void => {
       e.stopPropagation();
       const url = `${window.location.origin}/reviews/${String(review._id)}`;
+      const title = review.title || '독후감';
+      const bookTitle = review.book?.title || '책';
 
-      // 1. 모바일에서 Web Share API 지원 시 네이티브 공유 UI 사용
-      if (navigator.share) {
-        try {
-          await navigator.share({ url });
-          return;
-        } catch (err) {
-          // 사용자가 취소한 경우 조용히 처리
-          if ((err as Error).name === 'AbortError') return;
-          // 그 외 에러는 clipboard fallback으로 진행
-        }
-      }
-
-      // 2. Clipboard API 시도
-      if (navigator.clipboard?.writeText) {
-        try {
-          await navigator.clipboard.writeText(url);
-          toast.success('링크가 복사되었습니다');
-          return;
-        } catch {
-          // Fallback으로 진행
-        }
-      }
-
-      // 3. Legacy fallback (execCommand)
-      try {
-        const textArea = document.createElement('textarea');
-        textArea.value = url;
-        textArea.style.cssText = 'position:fixed;left:-9999px;top:0';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const success = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        if (success) {
-          toast.success('링크가 복사되었습니다');
-        } else {
-          toast.error('링크 복사에 실패했습니다');
-        }
-      } catch {
-        toast.error('링크 복사에 실패했습니다');
-      }
+      void share({
+        title,
+        text: `${title} - "${bookTitle}"에 대한 독후감`,
+        url,
+      });
     },
-    [review._id]
+    [review._id, review.title, review.book?.title, share]
   );
 
   const displayTime = useMemo(() => {
