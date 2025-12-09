@@ -15,6 +15,7 @@ compatibility_flags = ["nodejs_compat"]
 # Static Assets 설정 - React SPA 배포용
 [assets]
 directory = "./packages/frontend/dist"
+binding = "ASSETS"
 
 # SPA 라우팅: 404 대신 index.html 반환 (Worker가 처리하지 않는 경우)
 not_found_handling = "single-page-application"
