@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Amber Background (Rounded Square) -->
+  <rect x="0" y="0" width="64" height="64" rx="16" fill="#f59e0b"/>
+  
+  <!-- White Book Icon -->
+  <g fill="white">
+    <!-- Left Page -->
+    <path d="M31 18V44C31 44 26 46 20 46C14 46 10 44.5 10 44.5V18.5C10 18.5 14 20 20 20C26 20 31 18 31 18Z"/>
+    <!-- Right Page -->
+    <path d="M33 18V44C33 44 38 46 44 46C50 46 54 44.5 54 44.5V18.5C54 18.5 50 20 44 20C38 20 33 18 33 18Z"/>
+  </g>
+  
+  <!-- Subtle Spine Shadow (Optional detail) -->
+  <path d="M31 18V44C31 44 32 44.5 32 45C32 44.5 33 44 33 44V18C33 18 32 18.5 32 19C32 18.5 31 18 31 18Z" fill="#d97706" opacity="0.3"/>
+</svg>
