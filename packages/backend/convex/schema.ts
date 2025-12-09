@@ -45,6 +45,9 @@ export default defineSchema({
         v.literal('MANUAL')
       )
     ),
+    // 알라딘 구매 링크
+    aladinUrl: v.optional(v.string()), // 종이책 구매 URL
+    ebookUrl: v.optional(v.string()), // 전자책 구매 URL
   })
     .index('by_isbn', ['isbn'])
     .index('by_title', ['title'])

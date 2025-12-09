@@ -30,6 +30,8 @@ export interface AladinBook {
   description: string | null;
   pageCount: number | null;
   language: string | null;
+  aladinUrl: string | null; // 알라딘 종이책 구매 URL
+  ebookUrl: string | null; // 알라딘 전자책 구매 URL
 }
 
 interface UseBookSearchResult {
@@ -129,6 +131,8 @@ export function useBookSearch(query: string): UseBookSearchResult {
         description: book.description || undefined,
         pageCount: book.pageCount || undefined,
         language: book.language || undefined,
+        aladinUrl: book.aladinUrl || undefined,
+        ebookUrl: book.ebookUrl || undefined,
       });
 
       return bookId;

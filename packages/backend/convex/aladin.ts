@@ -1,6 +1,8 @@
 'use node';
 import { v } from 'convex/values';
 import { action } from './_generated/server';
+import { internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
 
 // 알라딘 API 응답 타입 정의
 interface AladinSearchItem {
@@ -15,6 +17,20 @@ interface AladinSearchItem {
   isbn: string; // ISBN10
   categoryName: string;
   customerReviewRank: number;
+  link: string; // 알라딘 상품 페이지 URL
+}
+
+// 전자책 정보 타입
+interface AladinEbookItem {
+  itemId: number;
+  link: string;
+}
+
+// ItemLookUp API 응답용 확장 타입 (ebookList 포함)
+interface AladinLookupItem extends AladinSearchItem {
+  subInfo?: {
+    ebookList?: AladinEbookItem[];
+  };
 }
 
 interface AladinSearchResponse {
@@ -23,13 +39,13 @@ interface AladinSearchResponse {
   totalResults: number;
   startIndex: number;
   itemsPerPage: number;
-  item: AladinSearchItem[];
+  item: AladinLookupItem[]; // AladinLookupItem으로 변경 (ebookList 포함 가능)
   errorCode?: number;
   errorMessage?: string;
 }
 
 // 알라딘 API 응답을 ReadZone Book 모델로 변환
-function transformAladinToBook(item: AladinSearchItem) {
+function transformAladinToBook(item: AladinLookupItem) {
   // 출판일 파싱 (YYYY-MM-DD 또는 YYYY 형식)
   let publishedDate: number | null = null;
   if (item.pubDate) {
@@ -38,6 +54,9 @@ function transformAladinToBook(item: AladinSearchItem) {
       publishedDate = parsed;
     }
   }
+
+  // 전자책 URL 추출 (subInfo.ebookList가 있는 경우)
+  const ebookUrl = item.subInfo?.ebookList?.[0]?.link || null;
 
   return {
     externalId: String(item.itemId),
@@ -51,6 +70,8 @@ function transformAladinToBook(item: AladinSearchItem) {
     description: item.description || null,
     pageCount: null, // 알라딘 검색 API에서는 페이지 수 미제공
     language: 'ko', // 알라딘은 한국어 도서 기본
+    aladinUrl: item.link || null, // 알라딘 종이책 구매 URL
+    ebookUrl, // 전자책 구매 URL
   };
 }
 
@@ -156,6 +177,7 @@ export const lookupByIsbn = action({
       output: 'js',
       Version: '20131101',
       Cover: 'Big',
+      OptResult: 'ebookList', // 전자책 정보 포함 요청
     });
 
     const url = `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?${params.toString()}`;
@@ -180,5 +202,101 @@ export const lookupByIsbn = action({
       console.error('알라딘 ISBN 조회 실패:', error);
       return null;
     }
+  },
+});
+
+interface MigrationBook {
+  _id: Id<'books'>;
+  isbn?: string;
+}
+
+interface MigrationResults {
+  total: number;
+  updated: number;
+  failed: number;
+  skipped: number;
+}
+
+/**
+ * 기존 ALADIN 소스 책들의 aladinUrl, ebookUrl 필드 마이그레이션
+ * ISBN이 있는 책에 대해 알라딘 API로 URL 정보를 조회하여 업데이트
+ */
+export const migrateAladinUrls = action({
+  args: {},
+  handler: async (ctx): Promise<MigrationResults> => {
+    const ttbKey = process.env.ALADIN_TTB_KEY;
+    if (!ttbKey) {
+      throw new Error('ALADIN_TTB_KEY 환경변수가 설정되지 않았습니다');
+    }
+
+    // aladinUrl이 없는 ALADIN 소스 책들 조회
+    const books: MigrationBook[] = await ctx.runQuery(
+      internal.books.getBooksNeedingMigration
+    );
+
+    const results: MigrationResults = {
+      total: books.length,
+      updated: 0,
+      failed: 0,
+      skipped: 0,
+    };
+
+    for (const book of books) {
+      try {
+        // ISBN이 없는 책은 스킵
+        if (!book.isbn) {
+          results.skipped++;
+          continue;
+        }
+
+        // ISBN으로 알라딘 API 조회
+        const itemIdType = book.isbn.length === 13 ? 'ISBN13' : 'ISBN';
+        const params = new URLSearchParams({
+          ttbkey: ttbKey,
+          itemIdType,
+          ItemId: book.isbn,
+          output: 'js',
+          Version: '20131101',
+          OptResult: 'ebookList',
+        });
+
+        const url = `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?${params.toString()}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          results.failed++;
+          continue;
+        }
+
+        const text = await response.text();
+        const data = JSON.parse(text) as AladinSearchResponse;
+
+        if (data.errorCode || !data.item || data.item.length === 0) {
+          results.skipped++;
+          continue;
+        }
+
+        const item = data.item[0];
+        const aladinUrl = item.link || null;
+        const ebookUrl = item.subInfo?.ebookList?.[0]?.link || null;
+
+        // DB 업데이트
+        await ctx.runMutation(internal.books.updateBookAladinUrls, {
+          bookId: book._id,
+          aladinUrl,
+          ebookUrl,
+        });
+
+        results.updated++;
+
+        // API 호출 제한 방지를 위한 딜레이 (100ms)
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`책 ${book._id} 마이그레이션 실패:`, error);
+        results.failed++;
+      }
+    }
+
+    return results;
   },
 });
