@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -84,7 +84,48 @@ export function ReviewDetailPage() {
   const toggleLike = useMutation(api.likes.toggle);
   const toggleBookmark = useMutation(api.bookmarks.toggle);
   const deleteReview = useMutation(api.reviews.remove);
+  const incrementViewCount = useMutation(api.reviews.incrementViewCount);
   const { share } = useShare();
+  const hasIncrementedViewCount = useRef(false);
+
+  // Increment view count on page load (hybrid approach)
+  // - Skip if user is viewing their own review
+  // - Skip if already viewed in this session
+  useEffect(() => {
+    if (!review || !id || hasIncrementedViewCount.current) return;
+
+    // Skip if this is the author viewing their own review
+    if (user?.id && review.userId === user.id) {
+      return;
+    }
+
+    // Check sessionStorage for duplicate prevention
+    const viewedReviewsKey = 'readzone_viewed_reviews';
+    const storedViews = sessionStorage.getItem(viewedReviewsKey);
+    const viewedReviews = (
+      storedViews ? JSON.parse(storedViews) : []
+    ) as string[];
+
+    if (viewedReviews.includes(id)) {
+      return;
+    }
+
+    // Mark as incremented to prevent duplicate calls in StrictMode
+    hasIncrementedViewCount.current = true;
+
+    // Increment view count
+    void incrementViewCount({ id: id as Id<'reviews'> })
+      .then(() => {
+        // Add to viewed list in sessionStorage
+        const updatedViewed = [...viewedReviews, id];
+        sessionStorage.setItem(viewedReviewsKey, JSON.stringify(updatedViewed));
+      })
+      .catch((err: unknown) => {
+        // Reset flag on error so it can retry on next render
+        hasIncrementedViewCount.current = false;
+        logError(err, 'Increment view count failed');
+      });
+  }, [review, id, user?.id, incrementViewCount]);
 
   const handleBack = useCallback((): void => {
     navigate('/feed');
