@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { ThumbsUp, ThumbsDown, Save, Send } from 'lucide-react';
+import {
+  ThumbsUp,
+  ThumbsDown,
+  Save,
+  Send,
+  BookOpen,
+  PenLine,
+} from 'lucide-react';
+import { m } from 'framer-motion';
 import { Button } from '../ui/button';
 import { toast } from '../../utils/toast';
 
@@ -43,141 +51,183 @@ export function ReviewForm({
   const isContentValid = contentLength >= minLength;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 bg-white p-6 md:p-8 rounded-2xl border border-stone-100 shadow-sm">
       {/* Title (optional) */}
-      <div>
+      <div className="space-y-3">
         <label
           htmlFor="review-title"
-          className="block text-sm font-medium text-stone-700 mb-2"
+          className="block text-sm font-semibold text-stone-700 flex items-center gap-2"
         >
-          제목 <span className="text-stone-400">(선택)</span>
+          <PenLine className="w-4 h-4 text-primary-500" />
+          제목{' '}
+          <span className="text-stone-400 font-normal text-xs">(선택)</span>
         </label>
-        <input
-          id="review-title"
-          type="text"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="독후감 제목을 입력하세요"
-          className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          disabled={isSubmitting}
-        />
+        <div className="relative group">
+          <input
+            id="review-title"
+            type="text"
+            value={formData.title}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
+            placeholder="독후감의 멋진 제목을 지어주세요"
+            className="w-full px-5 py-4 bg-stone-50 border border-stone-200 rounded-xl text-lg font-medium placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all group-hover:bg-white"
+            disabled={isSubmitting}
+          />
+        </div>
       </div>
 
       {/* Content (required) */}
-      <div>
+      <div className="space-y-3">
         <label
           htmlFor="review-content"
-          className="block text-sm font-medium text-stone-700 mb-2"
+          className="block text-sm font-semibold text-stone-700 flex items-center gap-2"
         >
-          내용 <span className="text-red-500">*</span>
+          <BookOpen className="w-4 h-4 text-primary-500" />
+          내용 <span className="text-red-500 font-bold">*</span>
         </label>
-        <textarea
-          id="review-content"
-          value={formData.content}
-          onChange={(e) =>
-            setFormData({ ...formData, content: e.target.value })
-          }
-          placeholder="책에 대한 생각을 자유롭게 작성해주세요"
-          rows={12}
-          className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-          disabled={isSubmitting}
-        />
-        <div className="flex justify-between mt-2">
-          <span
-            className={`text-sm ${
-              isContentValid ? 'text-stone-500' : 'text-red-500'
-            }`}
-          >
-            {contentLength} / {minLength}자 이상
-          </span>
-          <span className="text-sm text-stone-500">
-            {contentLength.toLocaleString()}자
-          </span>
-        </div>
-      </div>
-
-      {/* Recommendation */}
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
-          추천 여부 <span className="text-red-500">*</span>
-        </label>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, isRecommended: true })}
+        <div className="relative">
+          <textarea
+            id="review-content"
+            value={formData.content}
+            onChange={(e) =>
+              setFormData({ ...formData, content: e.target.value })
+            }
+            placeholder="이 책을 읽고 어떤 생각이 드셨나요? 인상 깊었던 구절이나 느낌을 자유롭게 기록해보세요."
+            rows={15}
+            className="w-full px-5 py-4 bg-stone-50 border border-stone-200 rounded-xl text-base leading-relaxed placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none hover:bg-white"
             disabled={isSubmitting}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
-              formData.isRecommended
-                ? 'border-green-500 bg-green-50 text-green-700'
-                : 'border-stone-200 hover:border-green-300 text-stone-600'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <ThumbsUp className="w-5 h-5" />
-            <span className="font-medium">추천</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, isRecommended: false })}
-            disabled={isSubmitting}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
-              !formData.isRecommended
-                ? 'border-red-500 bg-red-50 text-red-700'
-                : 'border-stone-200 hover:border-red-300 text-stone-600'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <ThumbsDown className="w-5 h-5" />
-            <span className="font-medium">비추천</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Read status */}
-      <div>
-        <label className="block text-sm font-medium text-stone-700 mb-3">
-          읽기 상태 <span className="text-red-500">*</span>
-        </label>
-        <div className="flex gap-2">
-          {[
-            { value: 'READING' as const, label: '읽는 중' },
-            { value: 'COMPLETED' as const, label: '완독' },
-            { value: 'DROPPED' as const, label: '중단' },
-          ].map((status) => (
-            <button
-              key={status.value}
-              type="button"
-              onClick={() =>
-                setFormData({ ...formData, readStatus: status.value })
-              }
-              disabled={isSubmitting}
-              className={`flex-1 px-4 py-2 rounded-lg border-2 transition-all ${
-                formData.readStatus === status.value
-                  ? 'border-primary-500 bg-primary-50 text-primary-700 font-medium'
-                  : 'border-stone-200 hover:border-primary-300 text-stone-600'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+          />
+          <div className="absolute bottom-4 right-4 flex items-center gap-3">
+            <span
+              className={`text-xs font-medium px-2 py-1 rounded-md transition-colors ${
+                isContentValid
+                  ? 'bg-green-50 text-green-600'
+                  : 'bg-stone-100 text-stone-500'
+              }`}
             >
-              {status.label}
+              {isContentValid ? '작성 완료' : `${minLength}자 이상 필요`}
+            </span>
+            <span className="text-xs text-stone-400 font-mono">
+              {contentLength.toLocaleString()}자
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+        {/* Recommendation */}
+        <div className="space-y-3">
+          <label className="block text-sm font-semibold text-stone-700">
+            추천 여부 <span className="text-red-500">*</span>
+          </label>
+          <div className="flex bg-stone-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, isRecommended: true })}
+              disabled={isSubmitting}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all relative ${
+                formData.isRecommended
+                  ? 'text-green-700 shadow-sm'
+                  : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              {formData.isRecommended && (
+                <m.div
+                  layoutId="recommend-bg"
+                  className="absolute inset-0 bg-white rounded-lg border border-green-200"
+                  transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <ThumbsUp
+                  className={`w-4 h-4 ${formData.isRecommended ? 'fill-current' : ''}`}
+                />
+                추천해요
+              </span>
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, isRecommended: false })}
+              disabled={isSubmitting}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all relative ${
+                !formData.isRecommended
+                  ? 'text-red-700 shadow-sm'
+                  : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              {!formData.isRecommended && (
+                <m.div
+                  layoutId="recommend-bg"
+                  className="absolute inset-0 bg-white rounded-lg border border-red-200"
+                  transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <ThumbsDown
+                  className={`w-4 h-4 ${!formData.isRecommended ? 'fill-current' : ''}`}
+                />
+                아쉬워요
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Read status */}
+        <div className="space-y-3">
+          <label className="block text-sm font-semibold text-stone-700">
+            읽기 상태 <span className="text-red-500">*</span>
+          </label>
+          <div className="flex bg-stone-100 p-1 rounded-xl">
+            {[
+              { value: 'READING' as const, label: '읽는 중' },
+              { value: 'COMPLETED' as const, label: '완독' },
+              { value: 'DROPPED' as const, label: '중단' },
+            ].map((status) => (
+              <button
+                key={status.value}
+                type="button"
+                onClick={() =>
+                  setFormData({ ...formData, readStatus: status.value })
+                }
+                disabled={isSubmitting}
+                className={`flex-1 py-3 rounded-lg text-sm font-medium transition-all relative ${
+                  formData.readStatus === status.value
+                    ? 'text-primary-700 shadow-sm'
+                    : 'text-stone-500 hover:text-stone-700'
+                }`}
+              >
+                {formData.readStatus === status.value && (
+                  <m.div
+                    layoutId="status-bg"
+                    className="absolute inset-0 bg-white rounded-lg border border-primary-200"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10">{status.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-3 pt-4 border-t border-stone-200">
+      <div className="flex gap-4 pt-6 border-t border-stone-100">
         <Button
           variant="outline"
           onClick={() => handleSubmit('DRAFT')}
           disabled={isSubmitting || !isContentValid}
-          className="flex-1 gap-2"
+          className="flex-1 h-12 text-base rounded-xl border-stone-200 hover:bg-stone-50 hover:border-stone-300"
         >
-          <Save className="w-4 h-4" />
+          <Save className="w-4 h-4 mr-2" />
           초안 저장
         </Button>
         <Button
           onClick={() => handleSubmit('PUBLISHED')}
           disabled={isSubmitting || !isContentValid}
-          className="flex-1 gap-2 bg-primary-600 hover:bg-primary-700"
+          className="flex-[2] h-12 text-base rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 shadow-lg shadow-primary-500/20"
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-4 h-4 mr-2" />
           발행하기
         </Button>
       </div>

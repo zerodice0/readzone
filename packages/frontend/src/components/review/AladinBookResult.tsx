@@ -22,14 +22,14 @@ export function AladinBookResult({
     : null;
 
   return (
-    <div className="flex gap-4 p-4 rounded-lg border border-blue-200 bg-blue-50/50 hover:border-blue-400 hover:shadow-md transition-all">
+    <div className="group flex gap-4 p-4 rounded-xl border border-blue-100 bg-blue-50/20 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/40 transition-all">
       {/* Book cover */}
-      <div className="flex-shrink-0 w-16 h-24 bg-white rounded overflow-hidden shadow-sm">
+      <div className="flex-shrink-0 w-16 h-24 bg-white rounded-lg overflow-hidden shadow-sm group-hover:shadow transition-shadow">
         {book.coverImageUrl ? (
           <img
             src={book.coverImageUrl}
             alt={`${book.title} 표지`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).style.display = 'none';
@@ -43,21 +43,22 @@ export function AladinBookResult({
       </div>
 
       {/* Book info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start gap-1.5 mb-1">
-          <h3 className="font-serif font-semibold text-stone-900 truncate">
+      <div className="flex-1 min-w-0 flex flex-col justify-center">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-serif font-bold text-lg text-stone-900 truncate">
             {book.title}
           </h3>
-          <ExternalLink className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <ExternalLink className="w-3 h-3 text-blue-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
-        <p className="text-sm text-stone-600 mb-1">{book.author}</p>
-        {book.publisher && (
-          <p className="text-xs text-stone-500">
+
+        <p className="text-sm text-stone-600 font-medium mb-1">{book.author}</p>
+
+        <div className="flex items-center mt-auto">
+          <p className="text-xs text-stone-500 flex items-center gap-1">
             {book.publisher}
-            {publishYear && ` · ${publishYear}`}
+            {publishYear && ` • ${publishYear}`}
           </p>
-        )}
-        <p className="text-xs text-blue-600 font-medium mt-1.5">알라딘</p>
+        </div>
       </div>
 
       {/* Select button */}
@@ -67,7 +68,7 @@ export function AladinBookResult({
           size="sm"
           onClick={onSelect}
           disabled={isLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow active:scale-95 transition-all"
         >
           {isLoading ? (
             <>
