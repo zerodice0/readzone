@@ -60,6 +60,7 @@ interface ReviewDetail {
     aladinUrl?: string;
     ebookUrl?: string;
     reviewCount?: number;
+    isbn?: string;
   } | null;
   author: {
     name?: string;
@@ -535,6 +536,44 @@ export function ReviewDetailPage() {
                   </div>
                 </m.div>
               )}
+
+              {/* 쿠팡 파트너스 배너 */}
+              <m.div
+                variants={scaleInVariants}
+                initial="hidden"
+                animate="visible"
+                className="mt-6 bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden"
+              >
+                <div className="p-5 flex flex-col items-center text-center">
+                  <p className="text-xs font-medium text-stone-500 mb-4 leading-relaxed">
+                    쿠팡에서 구매하시면
+                    <br />
+                    <span className="text-primary-600">ReadZone</span> 운영에 큰
+                    힘이 됩니다
+                  </p>
+                  <div className="mb-4 transition-transform hover:scale-105 duration-300">
+                    <a
+                      href="https://link.coupang.com/a/dcLR9h"
+                      target="_blank"
+                      referrerPolicy="unsafe-url"
+                      className="block"
+                    >
+                      <img
+                        src="https://ads-partners.coupang.com/banners/949280?subId=&traceId=V0-301-f5c692db558def48-I949280&w=150&h=60"
+                        alt="쿠팡에서 구매하기"
+                        width={150}
+                        height={60}
+                        className="rounded-lg shadow-sm"
+                      />
+                    </a>
+                  </div>
+                  <p className="text-[10px] text-stone-400 leading-tight max-w-[200px]">
+                    이 포스팅은 쿠팡 파트너스 활동의 일환으로,
+                    <br />
+                    이에 따른 일정액의 수수료를 제공받습니다.
+                  </p>
+                </div>
+              </m.div>
             </div>
           </aside>
         </div>
