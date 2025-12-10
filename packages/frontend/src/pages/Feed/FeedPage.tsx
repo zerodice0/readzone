@@ -94,7 +94,7 @@ export function FeedPage() {
             </m.div>
 
             <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-stone-900 font-serif tracking-tight">
-              ReadZone Feed
+              ReadZone
             </h1>
             <p className="text-stone-500 text-lg max-w-2xl mx-auto leading-relaxed">
               책을 사랑하는 사람들의 솔직한 이야기.
