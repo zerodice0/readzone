@@ -65,4 +65,4 @@ pnpm-debug.log*
 .vercel
 
 # Claude Code local settings
-.claude/*.local.json
+.claude/
