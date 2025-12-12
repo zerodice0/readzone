@@ -11,11 +11,11 @@
     "lint": "eslint convex/ --ignore-pattern '_generated/'"
   },
   "dependencies": {
-    "@clerk/backend": "^2.25.0",
-    "convex": "^1.29.1",
+    "@clerk/backend": "^2.27.0",
+    "convex": "^1.30.0",
     "svix": "^1.82.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   }
 }
