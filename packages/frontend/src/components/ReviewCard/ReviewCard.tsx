@@ -66,7 +66,7 @@ export const ReviewCard = memo(function ReviewCard({
       // Don't navigate if clicking on buttons
       const target = e.target as HTMLElement;
       if (target.closest('button')) return;
-      navigate(`/reviews/${String(review._id)}`);
+      void navigate(`/reviews/${String(review._id)}`);
     },
     [navigate, review._id]
   );
@@ -76,7 +76,7 @@ export const ReviewCard = memo(function ReviewCard({
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        navigate(`/reviews/${String(review._id)}`);
+        void navigate(`/reviews/${String(review._id)}`);
       }
     },
     [navigate, review._id]

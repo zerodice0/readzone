@@ -62,7 +62,7 @@ export function FeedPage() {
     : status === 'LoadingFirstPage';
 
   const handleNavigateToNew = useCallback(() => {
-    navigate('/reviews/new');
+    void navigate('/reviews/new');
   }, [navigate]);
 
   const handleLoadMore = useCallback(() => {

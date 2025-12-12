@@ -66,7 +66,7 @@ function RegisterPage() {
     const result = registerSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof RegisterFormData, string>> = {};
-      result.error.errors.forEach((err) => {
+      result.error.issues.forEach((err) => {
         if (err.path[0]) {
           fieldErrors[err.path[0] as keyof RegisterFormData] = err.message;
         }
@@ -78,7 +78,8 @@ function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const { confirmPassword: _confirmPassword, ...registerData } = result.data;
+      const { confirmPassword: _confirmPassword, ...registerData } =
+        result.data;
       await authApi.register(registerData);
 
       setSuccessMessage(
@@ -87,7 +88,7 @@ function RegisterPage() {
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
-        navigate('/login');
+        void navigate('/login');
       }, 2000);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {

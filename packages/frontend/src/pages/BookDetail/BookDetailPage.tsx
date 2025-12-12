@@ -57,7 +57,7 @@ export default function BookDetailPage() {
       showLoginPrompt('독후감을 작성하려면 로그인이 필요합니다.');
       return;
     }
-    navigate('/reviews/new');
+    void navigate('/reviews/new');
   };
 
   // Loading state

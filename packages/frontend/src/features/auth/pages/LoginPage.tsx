@@ -68,7 +68,7 @@ function LoginPage() {
     const result = loginSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof LoginFormData, string>> = {};
-      result.error.errors.forEach((err) => {
+      result.error.issues.forEach((err) => {
         if (err.path[0]) {
           fieldErrors[err.path[0] as keyof LoginFormData] = err.message;
         }
@@ -83,7 +83,7 @@ function LoginPage() {
       await login(result.data);
       // T107: Clear returnUrl from sessionStorage after successful login
       sessionStorage.removeItem('returnUrl');
-      navigate(from, { replace: true });
+      void navigate(from, { replace: true });
     } catch (error: unknown) {
       // T127: Check if MFA is required
       if (error && typeof error === 'object' && 'response' in error) {
@@ -140,7 +140,7 @@ function LoginPage() {
       localStorage.setItem('auth_token', response.data.accessToken);
       // T107: Clear returnUrl from sessionStorage after successful MFA verification
       sessionStorage.removeItem('returnUrl');
-      navigate(from, { replace: true });
+      void navigate(from, { replace: true });
       // Reload to update auth context
       setTimeout(() => {
         window.location.reload();

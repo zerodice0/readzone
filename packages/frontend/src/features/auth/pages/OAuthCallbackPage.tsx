@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../lib/auth-context';
 
@@ -12,6 +12,10 @@ function OAuthCallbackPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { setToken } = useAuth();
+
+  const handleNavigateToLogin = useCallback(() => {
+    void navigate('/login');
+  }, [navigate]);
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
     'loading'
@@ -53,8 +57,8 @@ function OAuthCallbackPage() {
           setStatus('success');
 
           // 잠시 후 대시보드로 이동
-          void setTimeout(() => {
-            navigate('/dashboard', { replace: true });
+          setTimeout(() => {
+            void navigate('/dashboard', { replace: true });
           }, 1000);
         } else {
           // 토큰이 없으면 에러
@@ -132,7 +136,7 @@ function OAuthCallbackPage() {
               <p className="mt-2 text-sm text-gray-600">{errorMessage}</p>
               <div className="mt-6">
                 <button
-                  onClick={() => navigate('/login')}
+                  onClick={handleNavigateToLogin}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                   로그인 페이지로 돌아가기

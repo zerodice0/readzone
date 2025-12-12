@@ -15,6 +15,7 @@ import {
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { UserLayout } from '../../components/layout/UserLayout';
 
 type StatusFilter = 'ALL' | 'PUBLISHED' | 'DRAFT';
 
@@ -63,10 +64,12 @@ export default function MyReviewsPage() {
   const hasReviews = filteredReviews && filteredReviews.length > 0;
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-5xl">
+    <UserLayout title="내 독후감">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">내 독후감</h1>
+        <h1 className="text-3xl font-bold text-stone-900 mb-2 hidden lg:block">
+          내 독후감
+        </h1>
         <p className="text-stone-600">작성한 독후감을 관리하고 확인하세요</p>
       </div>
 
@@ -237,6 +240,6 @@ export default function MyReviewsPage() {
           )}
         </>
       )}
-    </div>
+    </UserLayout>
   );
 }

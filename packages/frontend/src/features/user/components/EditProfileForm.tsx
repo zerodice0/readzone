@@ -93,7 +93,7 @@ function EditProfileForm({ user, onCancel, onSuccess }: EditProfileFormProps) {
     const result = profileSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ProfileFormData, string>> = {};
-      result.error.errors.forEach((error) => {
+      result.error.issues.forEach((error) => {
         const field = error.path[0] as keyof ProfileFormData;
         fieldErrors[field] = error.message;
       });

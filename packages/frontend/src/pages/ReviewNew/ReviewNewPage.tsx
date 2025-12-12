@@ -79,7 +79,7 @@ export default function ReviewNewPage() {
 
   const handleEditExistingReview = () => {
     if (existingReview) {
-      navigate(`/reviews/${existingReview._id}/edit`);
+      void navigate(`/reviews/${existingReview._id}/edit`);
     }
   };
 
@@ -105,7 +105,7 @@ export default function ReviewNewPage() {
       });
 
       // Navigate to the created review
-      navigate(`/reviews/${reviewId}`);
+      void navigate(`/reviews/${reviewId}`);
     } catch (error) {
       logError(error, 'Failed to create review');
       toast.error('독후감 작성에 실패했습니다', '다시 시도해주세요.');

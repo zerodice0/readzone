@@ -24,14 +24,7 @@ const BooksPage = lazy(() => import('./pages/Books/BooksPage'));
 const BookDetailPage = lazy(() => import('./pages/BookDetail/BookDetailPage'));
 
 // Protected pages - Lazy loaded
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const ProfilePage = lazy(() => import('./features/user/pages/ProfilePage'));
-const ActiveSessionsPage = lazy(
-  () => import('./features/user/pages/ActiveSessionsPage')
-);
-const AccountSettingsPage = lazy(
-  () => import('./features/user/pages/AccountSettingsPage')
-);
 const ReviewNewPage = lazy(() => import('./pages/ReviewNew/ReviewNewPage'));
 const ReviewEditPage = lazy(() => import('./pages/ReviewEdit/ReviewEditPage'));
 const MyReviewsPage = lazy(() => import('./pages/MyReviews/MyReviewsPage'));
@@ -137,14 +130,6 @@ const routes: RouteObject[] = [
             ),
           },
           {
-            path: '/dashboard',
-            element: (
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
             path: '/profile',
             element: (
               <ProtectedRoute>
@@ -152,21 +137,26 @@ const routes: RouteObject[] = [
               </ProtectedRoute>
             ),
           },
+          // Legacy routes - redirect to /profile
+          {
+            path: '/dashboard',
+            element: <Navigate to="/profile" replace />,
+          },
+          {
+            path: '/account',
+            element: <Navigate to="/profile" replace />,
+          },
           {
             path: '/sessions',
-            element: (
-              <ProtectedRoute>
-                <ActiveSessionsPage />
-              </ProtectedRoute>
-            ),
+            element: <Navigate to="/profile" replace />,
           },
           {
             path: '/settings',
-            element: (
-              <ProtectedRoute>
-                <AccountSettingsPage />
-              </ProtectedRoute>
-            ),
+            element: <Navigate to="/profile" replace />,
+          },
+          {
+            path: '/settings/mfa/setup',
+            element: <Navigate to="/profile" replace />,
           },
 
           // Default redirect
