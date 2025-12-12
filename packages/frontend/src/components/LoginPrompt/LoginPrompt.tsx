@@ -32,7 +32,7 @@ export function LoginPrompt() {
   const handleLogin = useCallback((): void => {
     // Clerk의 redirect_url 파라미터를 사용하여 로그인 후 원래 페이지로 복귀
     const returnUrl = window.location.pathname;
-    navigate(`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`);
+    void navigate(`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`);
     hide();
   }, [navigate, hide]);
 

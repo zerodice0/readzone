@@ -69,7 +69,7 @@ function ResetPasswordPage() {
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ResetPasswordFormData, string>> =
         {};
-      result.error.errors.forEach((err) => {
+      result.error.issues.forEach((err) => {
         if (err.path[0]) {
           fieldErrors[err.path[0] as keyof ResetPasswordFormData] = err.message;
         }
@@ -92,7 +92,7 @@ function ResetPasswordPage() {
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
-        navigate('/login');
+        void navigate('/login');
       }, 2000);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {

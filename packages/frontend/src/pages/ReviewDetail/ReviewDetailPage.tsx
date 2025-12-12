@@ -129,7 +129,7 @@ export function ReviewDetailPage() {
   }, [review, id, user?.id, incrementViewCount]);
 
   const handleBack = useCallback((): void => {
-    navigate('/feed');
+    void navigate('/feed');
   }, [navigate]);
 
   const handleLike = useCallback((): void => {
@@ -180,7 +180,7 @@ export function ReviewDetailPage() {
 
   const handleEdit = useCallback((): void => {
     if (id) {
-      navigate(`/reviews/${id}/edit`);
+      void navigate(`/reviews/${id}/edit`);
     }
   }, [id, navigate]);
 
@@ -193,7 +193,7 @@ export function ReviewDetailPage() {
 
     void deleteReview({ id: id as Id<'reviews'> })
       .then(() => {
-        navigate('/feed');
+        void navigate('/feed');
       })
       .catch((err: unknown) => {
         toast.error('독후감 삭제에 실패했습니다', '다시 시도해주세요.');

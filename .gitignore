@@ -66,3 +66,4 @@ pnpm-debug.log*
 
 # Claude Code local settings
 .claude/
+.gemini-clipboard/

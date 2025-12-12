@@ -39,7 +39,7 @@ export default function ReviewEditPage() {
     // Redirect if not authorized
     if (review && user && review.userId !== user.id) {
       toast.error('이 독후감을 수정할 권한이 없습니다');
-      navigate(`/reviews/${id}`);
+      void navigate(`/reviews/${id}`);
     }
   }, [review, user, id, navigate]);
 
@@ -64,7 +64,7 @@ export default function ReviewEditPage() {
       });
 
       // Navigate back to the review detail page
-      navigate(`/reviews/${id}`);
+      void navigate(`/reviews/${id}`);
     } catch (error) {
       logError(error, 'Failed to update review');
       toast.error('독후감 수정에 실패했습니다', '다시 시도해주세요.');
