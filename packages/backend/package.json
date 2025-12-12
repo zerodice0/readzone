@@ -8,7 +8,7 @@
     "build": "convex deploy --cmd 'echo Convex deployed'",
     "codegen": "convex codegen",
     "type-check": "tsc --noEmit",
-    "lint": "eslint convex/ --ignore-pattern '_generated/'"
+    "lint": "eslint convex/"
   },
   "dependencies": {
     "@clerk/backend": "^2.27.0",
