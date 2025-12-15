@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
-import { Menu, PenSquare, FileText, Bookmark, User } from 'lucide-react';
+import { Menu, PenSquare, LayoutDashboard } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Button } from '../ui/button';
 import {
@@ -18,26 +18,15 @@ interface MobileNavLinksProps {
 }
 
 function MobileNavLinks({ onNavigate }: MobileNavLinksProps) {
-  const userNavLinks = [
-    { to: '/profile', label: '프로필', icon: User },
-    { to: '/my-reviews', label: '내 독후감', icon: FileText },
-    { to: '/bookmarks', label: '북마크', icon: Bookmark },
-  ];
-
   return (
-    <div className="flex flex-col gap-1">
-      {userNavLinks.map((link) => (
-        <Link
-          key={link.to}
-          to={link.to}
-          onClick={onNavigate}
-          className="flex items-center gap-3 text-stone-700 hover:text-primary-600 font-medium py-2 px-3 rounded-md hover:bg-stone-50 transition-colors"
-        >
-          <link.icon className="w-4 h-4" />
-          {link.label}
-        </Link>
-      ))}
-    </div>
+    <Link
+      to="/dashboard"
+      onClick={onNavigate}
+      className="flex items-center gap-3 text-stone-700 hover:text-primary-600 font-medium py-2 px-3 rounded-md hover:bg-stone-50 transition-colors"
+    >
+      <LayoutDashboard className="w-4 h-4" />
+      대시보드
+    </Link>
   );
 }
 
@@ -52,7 +41,11 @@ function DesktopUserAvatar() {
     '사용자';
 
   return (
-    <Link to="/profile" className="relative group" aria-label="프로필로 이동">
+    <Link
+      to="/dashboard"
+      className="relative group"
+      aria-label="대시보드로 이동"
+    >
       {user?.imageUrl ? (
         <img
           src={user.imageUrl}
@@ -87,7 +80,7 @@ function MobileUserInfo({ onNavigate }: { onNavigate: () => void }) {
 
   return (
     <Link
-      to="/profile"
+      to="/dashboard"
       onClick={onNavigate}
       className="flex items-center gap-3 p-2 rounded-lg hover:bg-stone-50 transition-colors"
     >
