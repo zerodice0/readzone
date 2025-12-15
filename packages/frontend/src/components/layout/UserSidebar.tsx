@@ -1,12 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useClerk, useUser } from '@clerk/clerk-react';
-import { User, FileText, Bookmark, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, Bookmark, LogOut } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { logError } from '../../utils/error';
 
 const navItems = [
-  { to: '/profile', label: '프로필', icon: User },
+  { to: '/dashboard', label: '대시보드', icon: LayoutDashboard },
   { to: '/my-reviews', label: '내 독후감', icon: FileText },
   { to: '/bookmarks', label: '북마크', icon: Bookmark },
 ];

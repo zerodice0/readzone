@@ -24,11 +24,10 @@ const BooksPage = lazy(() => import('./pages/Books/BooksPage'));
 const BookDetailPage = lazy(() => import('./pages/BookDetail/BookDetailPage'));
 
 // Protected pages - Lazy loaded
-const ProfilePage = lazy(() => import('./features/user/pages/ProfilePage'));
+const DashboardPage = lazy(() => import('./pages/Dashboard/DashboardPage'));
 const ReviewNewPage = lazy(() => import('./pages/ReviewNew/ReviewNewPage'));
 const ReviewEditPage = lazy(() => import('./pages/ReviewEdit/ReviewEditPage'));
-const MyReviewsPage = lazy(() => import('./pages/MyReviews/MyReviewsPage'));
-const BookmarksPage = lazy(() => import('./pages/Bookmarks/BookmarksPage'));
+// Note: MyReviewsPage and BookmarksPage are now integrated into DashboardPage as tabs
 
 // T113: Loading fallback component
 function PageLoader() {
@@ -114,49 +113,41 @@ const routes: RouteObject[] = [
             ),
           },
           {
-            path: '/my-reviews',
+            path: '/dashboard',
             element: (
               <ProtectedRoute>
-                <MyReviewsPage />
+                <DashboardPage />
               </ProtectedRoute>
             ),
+          },
+          // Legacy routes - redirect to /dashboard
+          {
+            path: '/profile',
+            element: <Navigate to="/dashboard" replace />,
+          },
+          {
+            path: '/my-reviews',
+            element: <Navigate to="/dashboard" replace />,
           },
           {
             path: '/bookmarks',
-            element: (
-              <ProtectedRoute>
-                <BookmarksPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: '/profile',
-            element: (
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            ),
-          },
-          // Legacy routes - redirect to /profile
-          {
-            path: '/dashboard',
-            element: <Navigate to="/profile" replace />,
+            element: <Navigate to="/dashboard" replace />,
           },
           {
             path: '/account',
-            element: <Navigate to="/profile" replace />,
+            element: <Navigate to="/dashboard" replace />,
           },
           {
             path: '/sessions',
-            element: <Navigate to="/profile" replace />,
+            element: <Navigate to="/dashboard" replace />,
           },
           {
             path: '/settings',
-            element: <Navigate to="/profile" replace />,
+            element: <Navigate to="/dashboard" replace />,
           },
           {
             path: '/settings/mfa/setup',
-            element: <Navigate to="/profile" replace />,
+            element: <Navigate to="/dashboard" replace />,
           },
 
           // Default redirect
