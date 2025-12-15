@@ -48,11 +48,14 @@ export default defineSchema({
     // 알라딘 구매 링크
     aladinUrl: v.optional(v.string()), // 종이책 구매 URL
     ebookUrl: v.optional(v.string()), // 전자책 구매 URL
+    // 장르/카테고리 (알라딘: "국내도서>소설/시/희곡>한국소설" 형식)
+    category: v.optional(v.string()), // 원본 카테고리 문자열
   })
     .index('by_isbn', ['isbn'])
     .index('by_title', ['title'])
     .index('by_author', ['author'])
-    .index('by_external', ['externalSource', 'externalId']),
+    .index('by_external', ['externalSource', 'externalId'])
+    .index('by_category', ['category']),
 
   /**
    * Reviews Table
