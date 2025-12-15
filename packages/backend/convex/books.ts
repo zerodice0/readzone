@@ -268,6 +268,7 @@ export const saveFromAladin = mutation({
     language: v.optional(v.string()),
     aladinUrl: v.optional(v.string()), // 알라딘 종이책 구매 URL
     ebookUrl: v.optional(v.string()), // 알라딘 전자책 구매 URL
+    category: v.optional(v.string()), // 장르 카테고리
   },
   handler: async (ctx, args) => {
     // 인증 확인
@@ -315,6 +316,7 @@ export const saveFromAladin = mutation({
       language: args.language,
       aladinUrl: args.aladinUrl,
       ebookUrl: args.ebookUrl,
+      category: args.category,
     });
 
     return bookId;
@@ -379,6 +381,34 @@ export const updateBookAladinUrls = internalMutation({
     await ctx.db.patch(args.bookId, {
       aladinUrl: args.aladinUrl ?? undefined,
       ebookUrl: args.ebookUrl ?? undefined,
+    });
+  },
+});
+
+/**
+ * [Internal] 마이그레이션용: category가 없는 ALADIN 소스 책 조회
+ */
+export const getBooksNeedingCategoryMigration = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const allBooks = await ctx.db.query('books').collect();
+    return allBooks.filter(
+      (book) => book.externalSource === 'ALADIN' && book.isbn && !book.category
+    );
+  },
+});
+
+/**
+ * [Internal] 마이그레이션용: 책의 category 업데이트
+ */
+export const updateBookCategory = internalMutation({
+  args: {
+    bookId: v.id('books'),
+    category: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.bookId, {
+      category: args.category ?? undefined,
     });
   },
 });

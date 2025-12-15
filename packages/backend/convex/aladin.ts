@@ -72,6 +72,7 @@ function transformAladinToBook(item: AladinLookupItem) {
     language: 'ko', // 알라딘은 한국어 도서 기본
     aladinUrl: item.link || null, // 알라딘 종이책 구매 URL
     ebookUrl, // 전자책 구매 URL
+    category: item.categoryName || null, // 장르 카테고리 (예: "국내도서>소설/시/희곡>한국소설")
   };
 }
 
@@ -297,6 +298,93 @@ export const migrateAladinUrls = action({
       }
     }
 
+    return results;
+  },
+});
+
+/**
+ * 기존 ALADIN 소스 책들의 category 필드 마이그레이션
+ * ISBN이 있는 책에 대해 알라딘 API로 categoryName을 조회하여 업데이트
+ */
+export const migrateCategories = action({
+  args: {},
+  handler: async (ctx): Promise<MigrationResults> => {
+    const ttbKey = process.env.ALADIN_TTB_KEY;
+    if (!ttbKey) {
+      throw new Error('ALADIN_TTB_KEY 환경변수가 설정되지 않았습니다');
+    }
+
+    // category가 없는 ALADIN 소스 책들 조회
+    const books: MigrationBook[] = await ctx.runQuery(
+      internal.books.getBooksNeedingCategoryMigration
+    );
+
+    const results: MigrationResults = {
+      total: books.length,
+      updated: 0,
+      failed: 0,
+      skipped: 0,
+    };
+
+    console.log(`마이그레이션 시작: ${books.length}개 책 대상`);
+
+    for (const book of books) {
+      try {
+        // ISBN이 없는 책은 스킵
+        if (!book.isbn) {
+          results.skipped++;
+          continue;
+        }
+
+        // ISBN으로 알라딘 API 조회
+        const itemIdType = book.isbn.length === 13 ? 'ISBN13' : 'ISBN';
+        const params = new URLSearchParams({
+          ttbkey: ttbKey,
+          itemIdType,
+          ItemId: book.isbn,
+          output: 'js',
+          Version: '20131101',
+        });
+
+        const url = `http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?${params.toString()}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          console.error(`API 호출 실패 (${book._id}): HTTP ${response.status}`);
+          results.failed++;
+          continue;
+        }
+
+        const text = await response.text();
+        const data = JSON.parse(text) as AladinSearchResponse;
+
+        if (data.errorCode || !data.item || data.item.length === 0) {
+          console.log(`API 응답 없음 (${book._id}): 스킵`);
+          results.skipped++;
+          continue;
+        }
+
+        const item = data.item[0];
+        const category = item.categoryName || null;
+
+        // DB 업데이트
+        await ctx.runMutation(internal.books.updateBookCategory, {
+          bookId: book._id,
+          category,
+        });
+
+        console.log(`업데이트 완료 (${book._id}): ${category}`);
+        results.updated++;
+
+        // API 호출 제한 방지를 위한 딜레이 (100ms)
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`책 ${book._id} 마이그레이션 실패:`, error);
+        results.failed++;
+      }
+    }
+
+    console.log(`마이그레이션 완료:`, results);
     return results;
   },
 });
