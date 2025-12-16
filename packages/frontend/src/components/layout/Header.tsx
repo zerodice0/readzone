@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
-import { Menu, PenSquare, LayoutDashboard } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { SignedIn, SignedOut, useClerk, useUser, UserButton } from '@clerk/clerk-react';
+import { Menu, PenSquare, LayoutDashboard, LogOut } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Button } from '../ui/button';
 import {
@@ -30,36 +30,43 @@ function MobileNavLinks({ onNavigate }: MobileNavLinksProps) {
   );
 }
 
-function DesktopUserAvatar() {
-  const { user } = useUser();
-
-  const displayName =
-    user?.fullName ||
-    user?.firstName ||
-    user?.username ||
-    user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
-    '사용자';
-
+function DesktopDashboardButton() {
   return (
     <Link
       to="/dashboard"
-      className="relative group"
+      className="p-2 rounded-lg text-stone-600 hover:text-primary-600 hover:bg-stone-50 transition-colors"
       aria-label="대시보드로 이동"
     >
-      {user?.imageUrl ? (
-        <img
-          src={user.imageUrl}
-          alt={displayName}
-          className="w-9 h-9 rounded-full border-2 border-stone-200 group-hover:border-primary-300 transition-colors"
-        />
-      ) : (
-        <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center group-hover:bg-primary-200 transition-colors">
-          <span className="text-primary-600 font-medium">
-            {displayName.charAt(0).toUpperCase()}
-          </span>
-        </div>
-      )}
+      <LayoutDashboard className="w-5 h-5" />
     </Link>
+  );
+}
+
+function MobileLogoutButton({ onLogout }: { onLogout: () => void }) {
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      onLogout();
+      void navigate('/');
+    } catch {
+      void navigate('/');
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      className="w-full justify-start text-stone-600 hover:text-red-600 hover:bg-red-50"
+      onClick={() => {
+        handleLogout().catch(() => {});
+      }}
+    >
+      <LogOut className="w-5 h-5 mr-3" />
+      로그아웃
+    </Button>
   );
 }
 
@@ -187,7 +194,14 @@ export function Header() {
                   독후감 작성
                 </Link>
               </Button>
-              <DesktopUserAvatar />
+              <DesktopDashboardButton />
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-9 h-9',
+                  },
+                }}
+              />
             </SignedIn>
           </div>
 
@@ -273,6 +287,10 @@ export function Header() {
                   {/* 사용자 정보 및 계정 관리 */}
                   <MobileUserInfo
                     onNavigate={() => setIsMobileMenuOpen(false)}
+                  />
+                  {/* 로그아웃 버튼 */}
+                  <MobileLogoutButton
+                    onLogout={() => setIsMobileMenuOpen(false)}
                   />
                 </div>
               </SignedIn>
