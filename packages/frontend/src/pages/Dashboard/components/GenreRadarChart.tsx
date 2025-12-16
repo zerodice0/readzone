@@ -32,33 +32,68 @@ export function GenreRadarChart({ data }: GenreRadarChartProps) {
       keys={['독서량']}
       indexBy="genre"
       maxValue="auto"
-      margin={{ top: 40, right: 60, bottom: 40, left: 60 }}
+      margin={{ top: 40, right: 80, bottom: 40, left: 80 }}
       curve="linearClosed"
-      borderWidth={2}
-      borderColor={{ from: 'color', modifiers: [] }}
+      borderWidth={3}
+      borderColor={{ from: 'color' }}
       gridLevels={5}
       gridShape="circular"
-      gridLabelOffset={16}
+      gridLabelOffset={24}
       enableDots={true}
-      dotSize={8}
-      dotColor={{ theme: 'background' }}
+      dotSize={10}
+      dotColor="#ffffff"
       dotBorderWidth={2}
-      dotBorderColor={{ from: 'color', modifiers: [] }}
-      colors={{ scheme: 'set2' }}
+      dotBorderColor={{ from: 'color' }}
+      enableDotLabel={true}
+      dotLabel="value"
+      dotLabelYOffset={-12}
+      colors={['#8b5cf6']}
       fillOpacity={0.25}
       blendMode="multiply"
       animate={true}
       motionConfig="gentle"
       isInteractive={true}
+      theme={{
+        axis: {
+          ticks: {
+            text: {
+              fontSize: 12,
+              fill: '#78716c', // stone-500
+              fontFamily: 'var(--font-sans, sans-serif)',
+            },
+          },
+        },
+        grid: {
+          line: {
+            stroke: '#e7e5e4', // stone-200
+            strokeWidth: 1,
+            strokeDasharray: '4 4',
+          },
+        },
+        dots: {
+          text: {
+            fontSize: 11,
+            fill: '#78716c', // stone-500
+            fontFamily: 'var(--font-sans, sans-serif)',
+          },
+        },
+      }}
       sliceTooltip={({ index, data }) => (
-        <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-stone-200">
-          <strong className="text-stone-900">{index}</strong>
-          <div className="text-sm text-stone-600">
-            {data[0].value}권 (
-            {Math.round(
-              (data[0].value / data.reduce((sum, d) => sum + d.value, 0)) * 100
-            )}
-            %)
+        <div className="bg-white/95 backdrop-blur-sm px-4 py-3 shadow-xl rounded-xl border border-stone-100 ring-1 ring-black/5">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full bg-violet-500" />
+            <strong className="text-stone-900 font-semibold">{index}</strong>
+          </div>
+          <div className="text-sm text-stone-600 pl-4">
+            <span className="font-medium text-stone-900">{data[0].value}</span>
+            권<span className="text-stone-400 mx-1">•</span>
+            <span className="text-stone-500">
+              {Math.round(
+                (data[0].value / data.reduce((sum, d) => sum + d.value, 0)) *
+                  100
+              )}
+              %
+            </span>
           </div>
         </div>
       )}

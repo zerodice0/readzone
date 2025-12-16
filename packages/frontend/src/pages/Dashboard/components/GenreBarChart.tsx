@@ -57,43 +57,79 @@ export function GenreBarChart({ data }: GenreBarChartProps) {
       data={barData}
       keys={['count']}
       indexBy="genre"
-      margin={{ top: 10, right: 20, bottom: 50, left: 100 }}
+      margin={{ top: 10, right: 30, bottom: 50, left: 100 }}
       padding={0.3}
       layout="horizontal"
       valueScale={{ type: 'linear' }}
       indexScale={{ type: 'band', round: true }}
-      colors={{ scheme: 'set2' }}
+      colors={['#8b5cf6']}
+      borderRadius={4}
       borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
       axisTop={null}
       axisRight={null}
       axisBottom={{
-        tickSize: 5,
-        tickPadding: 5,
+        tickSize: 0,
+        tickPadding: 16,
         tickRotation: 0,
-        legend: '권수',
+        legend: '읽은 권수',
         legendPosition: 'middle',
         legendOffset: 40,
         tickValues: tickValues,
         format: (v) => Math.floor(Number(v)).toString(),
       }}
       axisLeft={{
-        tickSize: 5,
-        tickPadding: 5,
+        tickSize: 0,
+        tickPadding: 16,
         tickRotation: 0,
         truncateTickAt: 12,
       }}
       enableLabel={true}
-      label={(d) => `${d.value}권`}
-      labelSkipWidth={12}
+      label={(d) => `${d.value}`}
+      labelSkipWidth={20}
       labelSkipHeight={12}
-      labelTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+      labelTextColor="#ffffff"
+      enableGridX={true}
+      gridXValues={tickValues}
+      enableGridY={false}
+      theme={{
+        axis: {
+          ticks: {
+            text: {
+              fontSize: 12,
+              fill: '#78716c',
+              fontFamily: 'var(--font-sans, sans-serif)',
+            },
+          },
+          legend: {
+            text: {
+              fontSize: 13,
+              fill: '#57534e',
+              fontWeight: 500,
+              fontFamily: 'var(--font-sans, sans-serif)',
+            },
+          },
+        },
+        grid: {
+          line: {
+            stroke: '#f5f5f4',
+            strokeWidth: 1,
+          },
+        },
+      }}
       animate={true}
       motionConfig="gentle"
       tooltip={({ indexValue, value, data }) => (
-        <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-stone-200">
-          <strong className="text-stone-900">{indexValue}</strong>
-          <div className="text-sm text-stone-600">
-            {value}권 ({data.percentage}%)
+        <div className="bg-white/95 backdrop-blur-sm px-4 py-3 shadow-xl rounded-xl border border-stone-100 ring-1 ring-black/5">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full bg-violet-500" />
+            <strong className="text-stone-900 font-semibold">
+              {indexValue}
+            </strong>
+          </div>
+          <div className="text-sm text-stone-600 pl-4">
+            <span className="font-medium text-stone-900">{value}</span>권
+            <span className="text-stone-400 mx-1">•</span>
+            <span className="text-stone-500">{data.percentage}%</span>
           </div>
         </div>
       )}

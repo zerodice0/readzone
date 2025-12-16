@@ -73,65 +73,71 @@ export function ReadingStatsSection() {
     <div className="space-y-6">
       {/* 요약 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary-100 rounded-lg">
-                <BookOpen className="w-5 h-5 text-primary-600" />
+        <Card className="border-stone-100 shadow-sm hover:shadow-md transition-all duration-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-violet-50 rounded-xl">
+                <BookOpen className="w-6 h-6 text-violet-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-stone-900">
+                <p className="text-2xl font-bold text-stone-900 tracking-tight">
                   {summary?.totalReviews ?? 0}
                 </p>
-                <p className="text-sm text-stone-500">독후감</p>
+                <p className="text-sm font-medium text-stone-500">
+                  작성한 독후감
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
+        <Card className="border-stone-100 shadow-sm hover:shadow-md transition-all duration-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-50 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-stone-900">
+                <p className="text-2xl font-bold text-stone-900 tracking-tight">
                   {summary?.totalBooks ?? 0}
                 </p>
-                <p className="text-sm text-stone-500">읽은 책</p>
+                <p className="text-sm font-medium text-stone-500">읽은 책</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Heart className="w-5 h-5 text-red-600" />
+        <Card className="border-stone-100 shadow-sm hover:shadow-md transition-all duration-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-rose-50 rounded-xl">
+                <Heart className="w-6 h-6 text-rose-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-stone-900">
+                <p className="text-2xl font-bold text-stone-900 tracking-tight">
                   {summary?.totalLikes ?? 0}
                 </p>
-                <p className="text-sm text-stone-500">받은 좋아요</p>
+                <p className="text-sm font-medium text-stone-500">
+                  받은 좋아요
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Bookmark className="w-5 h-5 text-yellow-600" />
+        <Card className="border-stone-100 shadow-sm hover:shadow-md transition-all duration-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-amber-50 rounded-xl">
+                <Bookmark className="w-6 h-6 text-amber-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-stone-900">
+                <p className="text-2xl font-bold text-stone-900 tracking-tight">
                   {summary?.totalBookmarks ?? 0}
                 </p>
-                <p className="text-sm text-stone-500">받은 북마크</p>
+                <p className="text-sm font-medium text-stone-500">
+                  받은 북마크
+                </p>
               </div>
             </div>
           </CardContent>
@@ -139,43 +145,54 @@ export function ReadingStatsSection() {
       </div>
 
       {/* 기간 필터 */}
-      <Card>
-        <CardHeader className="pb-2">
+      <Card className="border-stone-100 shadow-sm">
+        <CardHeader className="pb-2 border-b border-stone-100/50">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">장르별 독서 현황</CardTitle>
+            <CardTitle className="text-lg font-semibold text-stone-800">
+              장르별 독서 현황
+            </CardTitle>
             <PeriodFilter
               selectedPeriod={selectedPeriod}
               onPeriodChange={setSelectedPeriod}
             />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {!hasData ? (
-            <div className="text-center py-12 text-stone-500">
-              <BookOpen className="w-12 h-12 mx-auto mb-4 text-stone-300" />
-              <p className="text-lg font-medium">아직 독후감이 없습니다</p>
-              <p className="text-sm mt-1">
-                첫 번째 독후감을 작성하면 독서 통계를 확인할 수 있어요!
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mb-4">
+                <BookOpen className="w-8 h-8 text-stone-300" />
+              </div>
+              <h3 className="text-lg font-semibold text-stone-900 mb-1">
+                아직 데이터가 충분하지 않아요
+              </h3>
+              <p className="text-stone-500 max-w-sm mx-auto">
+                첫 번째 독후감을 작성하고 나만의 독서 취향을 분석해보세요.
               </p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-8">
               {/* 레이더 차트 */}
-              <div>
-                <h3 className="text-sm font-medium text-stone-700 mb-3">
+              <div className="bg-stone-50/50 rounded-2xl p-4 border border-stone-100">
+                <h3 className="text-sm font-semibold text-stone-500 mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
                   독서 프로필
                 </h3>
-                <div className="h-[300px]">
+                <div className="h-[320px]">
                   <GenreRadarChart data={genreStats.topGenres} />
                 </div>
               </div>
 
               {/* 바 차트 */}
-              <div>
-                <h3 className="text-sm font-medium text-stone-700 mb-3">
-                  장르별 상세 ({genreStats.allGenres.length}개 장르)
+              <div className="bg-stone-50/50 rounded-2xl p-4 border border-stone-100">
+                <h3 className="text-sm font-semibold text-stone-500 mb-4 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+                  장르별 상세{' '}
+                  <span className="text-stone-400 font-normal">
+                    ({genreStats.allGenres.length}개)
+                  </span>
                 </h3>
-                <div className="h-[300px]">
+                <div className="h-[320px]">
                   <GenreBarChart data={genreStats.allGenres} />
                 </div>
               </div>
