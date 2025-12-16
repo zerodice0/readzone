@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run lint and type-check first
-pnpm lint && pnpm type-check && npx lint-staged
+# Run lint for frontend only (type-check requires Convex codegen)
+pnpm --filter @readzone/frontend lint && npx lint-staged
