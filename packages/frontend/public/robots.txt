@@ -1,0 +1,12 @@
+# ReadZone - 독후감 공유 플랫폼
+# https://readzone.org
+
+User-agent: *
+Allow: /
+
+# 인증 관련 페이지는 크롤링 불필요
+Disallow: /sign-in*
+Disallow: /sign-up*
+
+# Sitemap 위치
+Sitemap: https://readzone.org/sitemap.xml
