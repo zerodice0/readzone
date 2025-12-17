@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { SignedIn, SignedOut, useClerk, useUser, UserButton } from '@clerk/clerk-react';
+import {
+  SignedIn,
+  SignedOut,
+  useClerk,
+  useUser,
+  UserButton,
+} from '@clerk/clerk-react';
 import { Menu, PenSquare, LayoutDashboard, LogOut } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Button } from '../ui/button';
@@ -49,9 +55,8 @@ function MobileLogoutButton({ onLogout }: { onLogout: () => void }) {
   const handleLogout = async () => {
     try {
       await signOut();
+    } finally {
       onLogout();
-      void navigate('/');
-    } catch {
       void navigate('/');
     }
   };
