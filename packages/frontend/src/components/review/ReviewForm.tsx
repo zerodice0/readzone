@@ -86,7 +86,7 @@ export function ReviewForm({
           <BookOpen className="w-4 h-4 text-primary-500" />
           내용 <span className="text-red-500 font-bold">*</span>
         </label>
-        <div className="relative">
+        <div className="space-y-2">
           <textarea
             id="review-content"
             value={formData.content}
@@ -98,7 +98,7 @@ export function ReviewForm({
             className="w-full px-5 py-4 bg-stone-50 border border-stone-200 rounded-xl text-base leading-relaxed placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none hover:bg-white"
             disabled={isSubmitting}
           />
-          <div className="absolute bottom-4 right-4 flex items-center gap-3">
+          <div className="flex justify-end items-center gap-3">
             <span
               className={`text-xs font-medium px-2 py-1 rounded-md transition-colors ${
                 isContentValid
