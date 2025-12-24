@@ -27,6 +27,7 @@ import {
   fadeInUpVariants,
   scaleInVariants,
 } from '../../utils/animations';
+import { extractMiddleCategory } from '../../utils/category';
 import type { Id } from 'convex/_generated/dataModel';
 
 export default function BookDetailPage() {
@@ -171,14 +172,24 @@ export default function BookDetailPage() {
             {/* Right: Book Details */}
             <div className="md:col-span-7 lg:col-span-8 p-8 md:p-10 flex flex-col justify-center">
               <m.div variants={fadeInUpVariants}>
-                {publishYear && (
+                {(publishYear || book.category) && (
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge
-                      variant="outline"
-                      className="text-stone-500 border-stone-200"
-                    >
-                      {publishYear}년
-                    </Badge>
+                    {publishYear && (
+                      <Badge
+                        variant="outline"
+                        className="text-stone-500 border-stone-200"
+                      >
+                        {publishYear}년
+                      </Badge>
+                    )}
+                    {book.category && extractMiddleCategory(book.category) && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-violet-50 text-violet-700 border-violet-200"
+                      >
+                        {extractMiddleCategory(book.category)}
+                      </Badge>
+                    )}
                   </div>
                 )}
 

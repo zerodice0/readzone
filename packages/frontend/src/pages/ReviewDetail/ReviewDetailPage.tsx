@@ -26,6 +26,7 @@ import { useLoginPromptStore } from '../../stores/loginPromptStore';
 import { LoginPrompt } from '../../components/LoginPrompt';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
+import { extractMiddleCategory } from '../../utils/category';
 import { useShare } from '../../hooks/useShare';
 import {
   pageVariants,
@@ -61,6 +62,7 @@ interface ReviewDetail {
     ebookUrl?: string;
     reviewCount?: number;
     isbn?: string;
+    category?: string;
   } | null;
   author: {
     name?: string;
@@ -476,9 +478,20 @@ export function ReviewDetailPage() {
                           {review.book.title}
                         </h4>
                       </Link>
-                      <p className="text-stone-600 mb-6">
+                      <p className="text-stone-600 mb-4">
                         {review.book.author}
                       </p>
+
+                      {/* 장르 배지 */}
+                      {review.book.category &&
+                        extractMiddleCategory(review.book.category) && (
+                          <Badge
+                            variant="secondary"
+                            className="mb-4 bg-violet-50 text-violet-700 hover:bg-violet-100"
+                          >
+                            {extractMiddleCategory(review.book.category)}
+                          </Badge>
+                        )}
 
                       {review.book.reviewCount !== undefined &&
                         review.book.reviewCount > 0 && (

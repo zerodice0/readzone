@@ -113,6 +113,7 @@ export const searchBooks = action({
       output: 'js', // JSON 응답
       Version: '20131101',
       Cover: 'Big', // 큰 표지 이미지
+      OptResult: 'ebookList', // 전자책 정보 포함
     });
 
     const url = `http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?${params.toString()}`;
