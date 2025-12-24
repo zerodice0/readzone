@@ -356,14 +356,17 @@ export const remove = mutation({
 });
 
 /**
- * [Internal] 마이그레이션용: aladinUrl이 없는 ALADIN 소스 책 조회
+ * [Internal] 마이그레이션용: aladinUrl 또는 ebookUrl이 없는 ALADIN 소스 책 조회
  */
 export const getBooksNeedingMigration = internalQuery({
   args: {},
   handler: async (ctx) => {
     const allBooks = await ctx.db.query('books').collect();
     return allBooks.filter(
-      (book) => book.externalSource === 'ALADIN' && book.isbn && !book.aladinUrl
+      (book) =>
+        book.externalSource === 'ALADIN' &&
+        book.isbn &&
+        (!book.aladinUrl || !book.ebookUrl)
     );
   },
 });
