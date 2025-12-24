@@ -1,6 +1,8 @@
 import { Book, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import type { AladinBook } from '../../hooks/useBookSearch';
+import { extractMiddleCategory } from '../../utils/category';
 
 interface AladinBookResultProps {
   book: AladinBook;
@@ -20,6 +22,7 @@ export function AladinBookResult({
   const publishYear = book.publishedDate
     ? new Date(book.publishedDate).getFullYear()
     : null;
+  const categoryDisplay = extractMiddleCategory(book.category);
 
   return (
     <div className="group flex gap-4 p-4 rounded-xl border border-blue-100 bg-blue-50/20 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/40 transition-all">
@@ -53,11 +56,19 @@ export function AladinBookResult({
 
         <p className="text-sm text-stone-600 font-medium mb-1">{book.author}</p>
 
-        <div className="flex items-center mt-auto">
+        <div className="flex items-center gap-2 mt-auto flex-wrap">
           <p className="text-xs text-stone-500 flex items-center gap-1">
             {book.publisher}
             {publishYear && ` • ${publishYear}`}
           </p>
+          {categoryDisplay && (
+            <Badge
+              variant="secondary"
+              className="bg-violet-50 text-violet-700 text-xs"
+            >
+              {categoryDisplay}
+            </Badge>
+          )}
         </div>
       </div>
 
