@@ -163,6 +163,7 @@ export const create = mutation({
         v.literal('MANUAL')
       )
     ),
+    category: v.optional(v.string()), // 장르 카테고리
   },
   handler: async (ctx, args) => {
     // Clerk 인증 확인
@@ -213,6 +214,7 @@ export const create = mutation({
       language: args.language,
       externalId: args.externalId,
       externalSource: args.externalSource,
+      category: args.category,
     });
 
     return bookId;

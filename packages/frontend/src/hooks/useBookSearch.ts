@@ -32,6 +32,7 @@ export interface AladinBook {
   language: string | null;
   aladinUrl: string | null; // 알라딘 종이책 구매 URL
   ebookUrl: string | null; // 알라딘 전자책 구매 URL
+  category: string | null; // 장르 카테고리 (예: "국내도서>소설/시/희곡>한국소설")
 }
 
 interface UseBookSearchResult {
@@ -133,6 +134,7 @@ export function useBookSearch(query: string): UseBookSearchResult {
         language: book.language || undefined,
         aladinUrl: book.aladinUrl || undefined,
         ebookUrl: book.ebookUrl || undefined,
+        category: book.category || undefined,
       });
 
       return bookId;
