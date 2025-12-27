@@ -709,3 +709,23 @@ export const getForOg = internalQuery({
     };
   },
 });
+
+/**
+ * 사이트맵용 리뷰 목록 조회
+ * PUBLISHED 상태인 모든 리뷰의 ID와 수정 시간 반환
+ */
+export const listForSitemap = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const reviews = await ctx.db
+      .query('reviews')
+      .filter((q) => q.eq(q.field('status'), 'PUBLISHED'))
+      .order('desc')
+      .collect();
+
+    return reviews.map((review) => ({
+      id: review._id,
+      lastmod: review.publishedAt || review._creationTime,
+    }));
+  },
+});

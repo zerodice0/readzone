@@ -147,4 +147,78 @@ http.route({
   }),
 });
 
+/**
+ * 동적 사이트맵 생성 엔드포인트
+ * 정적 페이지 + 모든 PUBLISHED 리뷰 + 모든 책 페이지 포함
+ */
+http.route({
+  path: '/sitemap.xml',
+  method: 'GET',
+  handler: httpAction(async (ctx) => {
+    const siteUrl = 'https://readzone.org';
+    const now = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+
+    // 정적 페이지
+    const staticPages = [
+      { loc: '/', priority: '1.0', changefreq: 'daily' },
+      { loc: '/feed', priority: '0.9', changefreq: 'daily' },
+      { loc: '/explore', priority: '0.8', changefreq: 'daily' },
+      { loc: '/search', priority: '0.7', changefreq: 'weekly' },
+    ];
+
+    // 동적 페이지: 리뷰
+    const reviews = await ctx.runQuery(internal.reviews.listForSitemap, {});
+
+    // 동적 페이지: 책
+    const books = await ctx.runQuery(internal.books.listForSitemap, {});
+
+    // XML 생성
+    const urlEntries = [
+      // 정적 페이지
+      ...staticPages.map(
+        (page) => `
+  <url>
+    <loc>${siteUrl}${page.loc}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`
+      ),
+      // 리뷰 페이지
+      ...reviews.map(
+        (review) => `
+  <url>
+    <loc>${siteUrl}/reviews/${review.id}</loc>
+    <lastmod>${new Date(review.lastmod).toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>`
+      ),
+      // 책 페이지
+      ...books.map(
+        (book) => `
+  <url>
+    <loc>${siteUrl}/books/${book.id}</loc>
+    <lastmod>${new Date(book.lastmod).toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>`
+      ),
+    ];
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urlEntries.join('')}
+</urlset>`;
+
+    return new Response(sitemap, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600', // 1시간 캐싱
+      },
+    });
+  }),
+});
+
 export default http;
