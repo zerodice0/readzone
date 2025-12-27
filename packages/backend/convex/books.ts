@@ -417,3 +417,19 @@ export const updateBookCategory = internalMutation({
     });
   },
 });
+
+/**
+ * 사이트맵용 책 목록 조회
+ * 모든 책의 ID와 수정 시간 반환
+ */
+export const listForSitemap = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const books = await ctx.db.query('books').order('desc').collect();
+
+    return books.map((book) => ({
+      id: book._id,
+      lastmod: book._creationTime,
+    }));
+  },
+});

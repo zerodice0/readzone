@@ -81,6 +81,7 @@ function escapeHtml(str: string): string {
 
 /**
  * OG 메타 태그가 포함된 HTML 생성
+ * 봇에게 완전한 콘텐츠를 제공하여 SEO 최적화
  */
 function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
   const title = escapeHtml(meta.title);
@@ -99,6 +100,16 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
   const fullDescription = bookTitle
     ? `${description} - 『${bookTitle}』 by ${bookAuthor}`
     : description;
+
+  // 책 정보 HTML (있는 경우에만)
+  const bookInfoHtml = bookTitle
+    ? `
+      <section class="book-info">
+        <h2>책 정보</h2>
+        <p><strong>제목:</strong> ${bookTitle}</p>
+        ${bookAuthor ? `<p><strong>저자:</strong> ${bookAuthor}</p>` : ''}
+      </section>`
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -134,29 +145,71 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
   <!-- Canonical URL -->
   <link rel="canonical" href="${escapeHtml(url)}">
 
-  <!-- Redirect to SPA after metadata is parsed -->
-  <meta http-equiv="refresh" content="0;url=${escapeHtml(url)}">
-
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background: #f5f5f5;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      background: #fafafa;
+      color: #333;
     }
-    .loading {
-      text-align: center;
+    header { margin-bottom: 2rem; }
+    h1 { font-size: 1.75rem; color: #1a1a1a; margin-bottom: 0.5rem; }
+    .meta { color: #666; font-size: 0.875rem; margin-bottom: 1rem; }
+    .book-info {
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .book-info h2 { font-size: 1rem; margin: 0 0 0.5rem 0; }
+    .book-info p { margin: 0.25rem 0; font-size: 0.875rem; }
+    article { margin-bottom: 2rem; }
+    .description { font-size: 1rem; color: #444; }
+    .cta {
+      display: inline-block;
+      background: #4f46e5;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .cta:hover { background: #4338ca; }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e5e5;
+      font-size: 0.875rem;
       color: #666;
     }
+    footer a { color: #4f46e5; }
   </style>
 </head>
 <body>
-  <div class="loading">
-    <p>ReadZone으로 이동 중...</p>
-  </div>
+  <header>
+    <h1>${title}</h1>
+    <p class="meta">작성자: ${authorName}</p>
+  </header>
+
+  ${bookInfoHtml}
+
+  <article>
+    <p class="description">${description}</p>
+  </article>
+
+  <a href="${escapeHtml(url)}" class="cta">전체 리뷰 보기</a>
+
+  <footer>
+    <p><a href="${siteUrl}">ReadZone</a> - 독후감을 공유하고 다른 독자들의 생각을 확인하세요</p>
+  </footer>
+
+  <noscript>
+    <p>이 페이지의 전체 내용을 보려면 <a href="${escapeHtml(url)}">여기를 클릭</a>하세요.</p>
+  </noscript>
 </body>
 </html>`;
 }
@@ -183,10 +236,25 @@ function generateDefaultOgHtml(url: string, siteUrl: string): string {
   <meta name="twitter:title" content="ReadZone - 독후감 공유 플랫폼">
   <meta name="twitter:description" content="독후감을 공유하고 다른 독자들의 생각을 확인하세요">
 
-  <meta http-equiv="refresh" content="0;url=${escapeHtml(url)}">
+  <link rel="canonical" href="${escapeHtml(url)}">
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 { color: #1a1a1a; }
+    p { color: #666; }
+    a { color: #4f46e5; }
+  </style>
 </head>
 <body>
-  <p>ReadZone으로 이동 중...</p>
+  <h1>ReadZone</h1>
+  <p>독후감을 공유하고 다른 독자들의 생각을 확인하세요</p>
+  <p><a href="${siteUrl}">ReadZone 홈으로 이동</a></p>
 </body>
 </html>`;
 }
@@ -196,6 +264,33 @@ export default {
     const url = new URL(request.url);
     const userAgent = request.headers.get('user-agent') || '';
     const siteUrl = `${url.protocol}//${url.host}`;
+
+    // sitemap.xml 요청은 Convex HTTP API로 프록시
+    if (url.pathname === '/sitemap.xml') {
+      try {
+        const sitemapResponse = await fetch(`${env.CONVEX_URL}/sitemap.xml`, {
+          headers: {
+            Accept: 'application/xml',
+          },
+        });
+
+        if (sitemapResponse.ok) {
+          const sitemap = await sitemapResponse.text();
+          return new Response(sitemap, {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/xml; charset=utf-8',
+              'Cache-Control': 'public, max-age=3600', // 1시간 캐싱
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch sitemap:', error);
+      }
+
+      // Convex에서 실패하면 정적 자산으로 폴백
+      return env.ASSETS.fetch(request);
+    }
 
     // 봇이고 리뷰 페이지인 경우에만 OG HTML 반환
     if (isBot(userAgent) && isReviewPage(url.pathname)) {
