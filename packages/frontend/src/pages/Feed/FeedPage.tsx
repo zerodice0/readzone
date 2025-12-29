@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FileText, Search, X, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePaginatedQuery, useQuery } from 'convex/react';
@@ -16,11 +16,7 @@ import {
   type SortOption,
   type RecommendFilter,
 } from '../../components/feed/FeedFilters';
-import {
-  pageVariants,
-  containerVariants,
-  fadeInUpVariants,
-} from '../../utils/animations';
+import { pageVariants, containerVariants } from '../../utils/animations';
 
 const ITEMS_PER_PAGE = 12; // Increased for grid layout
 
@@ -222,56 +218,8 @@ export function FeedPage() {
               animate="visible"
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8"
             >
-              {displayResults.map((review, index) => (
-                <React.Fragment key={review._id}>
-                  <ReviewCard review={review} />
-                  {/* 쿠팡 파트너스 배너: 6번째 카드 뒤에 노출 (총 6개 이상일 때만) */}
-                  {index === 5 && displayResults.length >= 6 && (
-                    <m.a
-                      variants={fadeInUpVariants}
-                      href="https://link.coupang.com/a/dcL7bX"
-                      target="_blank"
-                      referrerPolicy="unsafe-url"
-                      className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md hover:border-primary-200 hover:ring-1 hover:ring-primary-100 transition-all duration-300 flex flex-col group h-full"
-                    >
-                      {/* 상단: 이미지 배너 영역 */}
-                      <div className="relative h-48 bg-stone-50 overflow-hidden border-b border-stone-100 flex items-center justify-center p-6">
-                        <div className="absolute top-3 right-3 z-10">
-                          <span className="text-[10px] font-bold text-stone-400 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-stone-100">
-                            AD
-                          </span>
-                        </div>
-                        <img
-                          src="https://ads-partners.coupang.com/banners/949275?subId=&traceId=V0-301-f5c692db558def48-I949275&w=600&h=900"
-                          alt="쿠팡에서 도서 구매하기"
-                          className="h-full w-auto object-contain drop-shadow-md transform group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-
-                      {/* 하단: 텍스트 콘텐츠 */}
-                      <div className="p-5 flex flex-col flex-1">
-                        <h3 className="font-bold text-lg text-stone-900 mb-2 font-serif line-clamp-1 group-hover:text-primary-600 transition-colors">
-                          원하는 책을 찾고 계신가요?
-                        </h3>
-
-                        <p className="text-sm text-stone-600 leading-relaxed mb-4 flex-1">
-                          쿠팡에서 도서를 구매하시면{' '}
-                          <span className="text-primary-600 font-medium bg-primary-50 px-1 rounded">
-                            ReadZone
-                          </span>{' '}
-                          운영에 힘이 됩니다.
-                        </p>
-
-                        <div className="pt-3 border-t border-stone-100">
-                          <p className="text-[10px] text-stone-400 leading-tight">
-                            쿠팡 파트너스 활동의 일환으로, 일정액의 수수료를
-                            제공받습니다.
-                          </p>
-                        </div>
-                      </div>
-                    </m.a>
-                  )}
-                </React.Fragment>
+              {displayResults.map((review) => (
+                <ReviewCard key={review._id} review={review} />
               ))}
             </m.div>
 

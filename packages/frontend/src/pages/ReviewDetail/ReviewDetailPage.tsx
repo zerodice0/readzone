@@ -549,57 +549,6 @@ export function ReviewDetailPage() {
                   </div>
                 </m.div>
               )}
-
-              {/* 쿠팡 파트너스 배너 */}
-              <m.a
-                variants={scaleInVariants}
-                initial="hidden"
-                animate="visible"
-                href="https://link.coupang.com/a/dcMgu4"
-                target="_blank"
-                referrerPolicy="unsafe-url"
-                className="block mt-6 bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md hover:border-primary-200 hover:ring-1 hover:ring-primary-100 transition-all duration-300 group"
-              >
-                {/* 상단: 이미지 배너 영역 */}
-                <div className="relative bg-stone-50 border-b border-stone-100 flex items-center justify-center py-6 px-4">
-                  <div className="absolute top-2 right-2 z-10">
-                    <span className="text-[10px] font-bold text-stone-400 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-stone-100">
-                      AD
-                    </span>
-                  </div>
-                  <img
-                    src="https://ads-partners.coupang.com/banners/949277?subId=&traceId=V0-301-f5c692db558def48-I949277&w=320&h=100"
-                    alt="쿠팡에서 구매하기"
-                    width={320}
-                    height={100}
-                    className="w-full h-auto object-contain drop-shadow-sm transform group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-
-                {/* 하단: 텍스트 콘텐츠 */}
-                <div className="p-5 text-center">
-                  <h3 className="font-bold text-stone-900 mb-2 font-serif group-hover:text-primary-600 transition-colors">
-                    도서를 구매하실 계획이신가요?
-                  </h3>
-
-                  <p className="text-sm text-stone-600 leading-relaxed mb-4">
-                    쿠팡에서 도서를 구매하시면
-                    <br />
-                    <span className="text-primary-600 font-medium bg-primary-50 px-1 rounded">
-                      ReadZone
-                    </span>{' '}
-                    운영에 힘이 됩니다.
-                  </p>
-
-                  <div className="pt-3 border-t border-stone-100">
-                    <p className="text-[10px] text-stone-400 leading-tight">
-                      이 포스팅은 쿠팡 파트너스 활동의 일환으로,
-                      <br />
-                      이에 따른 일정액의 수수료를 제공받습니다.
-                    </p>
-                  </div>
-                </div>
-              </m.a>
             </div>
           </aside>
         </div>
