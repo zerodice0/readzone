@@ -59,6 +59,9 @@ pnpm-debug.log*
 *.temp
 .cache/
 
+# Backup files (production data exports)
+/backups/
+
 # Serena MCP (local development context)
 .serena/memories/
 .serena/cache/
