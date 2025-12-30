@@ -14,7 +14,10 @@
     "test": "turbo test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "backup:prod-to-dev": "bash scripts/backup-prod-to-dev.sh",
+    "backup:export-prod": "npx convex export --path ./backups/prod-backup.zip --prod --include-file-storage",
+    "backup:import-dev": "npx convex import ./backups/prod-backup.zip --replace-all"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,md}": [
