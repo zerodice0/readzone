@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   SignedIn,
   SignedOut,
+  useAuth,
   useClerk,
   useUser,
   UserButton,
@@ -10,6 +11,7 @@ import {
 import { Menu, PenSquare, LayoutDashboard, LogOut } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Button } from '../ui/button';
+import { Skeleton } from '../ui/skeleton';
 import {
   Sheet,
   SheetContent,
@@ -116,6 +118,49 @@ function MobileUserInfo({ onNavigate }: { onNavigate: () => void }) {
   );
 }
 
+function DesktopAuthMenu() {
+  const { isLoaded } = useAuth();
+
+  // Clerk 로딩 중일 때 skeleton 표시
+  if (!isLoaded) {
+    return (
+      <div className="hidden lg:flex items-center gap-3">
+        <Skeleton className="h-9 w-16 rounded-md" />
+        <Skeleton className="h-9 w-20 rounded-md" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="hidden lg:flex items-center gap-3">
+      <SignedOut>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/sign-in">로그인</Link>
+        </Button>
+        <Button size="sm" asChild>
+          <Link to="/sign-up">회원가입</Link>
+        </Button>
+      </SignedOut>
+      <SignedIn>
+        <Button variant="default" size="sm" asChild className="gap-2">
+          <Link to="/reviews/new">
+            <PenSquare className="w-4 h-4" />
+            독후감 작성
+          </Link>
+        </Button>
+        <DesktopDashboardButton />
+        <UserButton
+          appearance={{
+            elements: {
+              avatarBox: 'w-9 h-9',
+            },
+          }}
+        />
+      </SignedIn>
+    </div>
+  );
+}
+
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -156,7 +201,7 @@ export function Header() {
 
         {/* 데스크톱 네비게이션 */}
         <nav
-          className="hidden md:flex items-center gap-6"
+          className="hidden lg:flex items-center gap-6"
           aria-label="주요 네비게이션"
         >
           {navLinks.map((link, index) => (
@@ -183,37 +228,12 @@ export function Header() {
         {/* 우측 메뉴 */}
         <div className="flex items-center gap-3">
           {/* 데스크톱: 독후감 작성 버튼 */}
-          <div className="hidden md:flex items-center gap-3">
-            <SignedOut>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/sign-in">로그인</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/sign-up">회원가입</Link>
-              </Button>
-            </SignedOut>
-            <SignedIn>
-              <Button variant="default" size="sm" asChild className="gap-2">
-                <Link to="/reviews/new">
-                  <PenSquare className="w-4 h-4" />
-                  독후감 작성
-                </Link>
-              </Button>
-              <DesktopDashboardButton />
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: 'w-9 h-9',
-                  },
-                }}
-              />
-            </SignedIn>
-          </div>
+          <DesktopAuthMenu />
 
-          {/* 모바일: 햄버거 메뉴 */}
+          {/* 모바일/태블릿: 햄버거 메뉴 */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="md:hidden">
+              <Button variant="ghost" size="sm" className="lg:hidden">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">메뉴 열기</span>
               </Button>
