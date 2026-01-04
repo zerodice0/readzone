@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   SignedIn,
   SignedOut,
+  useAuth,
   useClerk,
   useUser,
   UserButton,
@@ -118,11 +119,20 @@ function MobileUserInfo({ onNavigate }: { onNavigate: () => void }) {
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isSignedIn } = useAuth();
 
-  const navLinks = [
-    { to: '/feed', label: '피드' },
-    { to: '/books', label: '책 목록' },
-  ];
+  const navLinks = useMemo(() => {
+    const baseLinks = [
+      { to: '/feed', label: '피드' },
+      { to: '/books', label: '책 목록' },
+    ];
+
+    if (isSignedIn) {
+      baseLinks.push({ to: '/reading-diary', label: '독서 일기' });
+    }
+
+    return baseLinks;
+  }, [isSignedIn]);
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-stone-200 shadow-sm">
