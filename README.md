@@ -1,343 +1,257 @@
-# ReadZone - Book Review Platform
+# ReadZone - 독후감 공유 플랫폼
 
-ReadZone is a modern book review and reading management platform with comprehensive user authentication.
+ReadZone은 책을 읽고 독후감을 기록하고 공유하는 현대적인 독서 관리 플랫폼입니다.
 
-## 📋 Prerequisites
+## 주요 기능
 
-Before you begin, ensure you have the following installed:
+- **독후감 작성 & 공유**: 책을 검색하고 독후감을 작성하여 공유
+- **독서 일기**: 캘린더 기반의 일별 독서 기록
+- **독서 통계**: 장르별 독서 패턴, 월별 통계 시각화
+- **소셜 기능**: 좋아요, 북마크, 피드 탐색
+- **도서 검색**: 알라딘 API 연동 실시간 도서 검색
 
-- **Node.js** 20.x or higher ([Download](https://nodejs.org/))
-- **pnpm** 8.x or higher (`npm install -g pnpm@8`)
-- **Docker** and **Docker Compose** ([Get Docker](https://docs.docker.com/get-docker/))
+## 기술 스택
 
-## 🚀 Quick Start
+### Backend (Serverless)
 
-### 1. Clone and Setup
+| 기술           | 용도                                |
+| -------------- | ----------------------------------- |
+| **Convex**     | 실시간 데이터베이스 + 서버리스 함수 |
+| **Clerk**      | 인증 (OAuth, Email, MFA)            |
+| **알라딘 API** | 도서 검색                           |
+
+### Frontend
+
+| 기술              | 버전 | 용도              |
+| ----------------- | ---- | ----------------- |
+| **React**         | 19   | UI 프레임워크     |
+| **TypeScript**    | 5.9  | 타입 안전성       |
+| **Vite**          | 7    | 빌드 도구         |
+| **Tailwind CSS**  | 4    | 스타일링          |
+| **React Router**  | 7    | 라우팅            |
+| **Zustand**       | 5    | 상태 관리         |
+| **Framer Motion** | 12   | 애니메이션        |
+| **Radix UI**      | -    | 접근성 컴포넌트   |
+| **Nivo**          | -    | 차트 (Bar, Radar) |
+
+### 개발 도구
+
+| 도구                  | 용도          |
+| --------------------- | ------------- |
+| **pnpm**              | 패키지 매니저 |
+| **Turbo**             | 모노레포 빌드 |
+| **ESLint + Prettier** | 코드 품질     |
+| **Husky**             | Git hooks     |
+| **Vitest**            | 테스트        |
+
+## 시작하기
+
+### 사전 요구사항
+
+- **Node.js** 20.x 이상
+- **pnpm** 8.x 이상
+
+### 1. 저장소 클론 및 의존성 설치
 
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd readzone
-
-# Install dependencies
 pnpm install
 ```
 
-### 2. Configure Environment
+### 2. 환경 변수 설정
 
 ```bash
-# Copy environment template
 cp .env.example .env
-
-# Edit .env with your actual values
-# At minimum, update:
-# - JWT_SECRET (generate with: openssl rand -base64 32)
-# - SESSION_SECRET (generate with: openssl rand -base64 32)
-# - OAuth credentials (Google, GitHub)
-# - SMTP credentials (SendGrid)
 ```
 
-### 3. Start Development Services
+`.env` 파일을 열고 다음 값들을 설정합니다:
 
 ```bash
-# Start PostgreSQL and Redis
-docker-compose up -d
+# Convex (https://dashboard.convex.dev)
+CONVEX_DEPLOYMENT=your-deployment-name
+VITE_CONVEX_URL=https://your-deployment.convex.cloud
 
-# Verify services are running
-docker-compose ps
-
-# Check health
-docker-compose exec postgres pg_isready
-docker-compose exec redis redis-cli ping
+# Clerk (https://dashboard.clerk.com)
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
+CLERK_SECRET_KEY=sk_test_xxxxx
+CLERK_ISSUER_DOMAIN=https://your-domain.clerk.accounts.dev
 ```
 
-### 4. Setup Database
+### 3. Convex 설정
 
 ```bash
-# Run Prisma migrations
-pnpm --filter @readzone/backend migrate
+# Convex CLI 로그인 (처음 한 번만)
+npx convex login
 
-# Seed database with test data (optional)
-pnpm --filter @readzone/backend db:seed
+# 개발 서버 시작 (새 프로젝트 자동 생성)
+npx convex dev
 ```
 
-### 5. Start Development Servers
+### 4. 개발 서버 실행
 
 ```bash
-# Start all services (backend + frontend)
+# 터미널 1: Convex 개발 서버
+npx convex dev
+
+# 터미널 2: Frontend 개발 서버
 pnpm dev
-
-# Backend will run on: http://localhost:3000
-# Frontend will run on: http://localhost:5173
 ```
 
-## 📦 Project Structure
+- Frontend: http://localhost:5173
+- Convex Dashboard: https://dashboard.convex.dev
+
+## 프로젝트 구조
 
 ```
 readzone/
 ├── packages/
-│   ├── backend/          # Fastify API server
-│   │   ├── src/
-│   │   │   ├── server.ts         # Entry point
-│   │   │   ├── app.ts            # Fastify app config
-│   │   │   ├── modules/          # Feature modules
-│   │   │   └── common/           # Shared utilities
-│   │   └── prisma/               # Database schema & migrations
+│   ├── backend/
+│   │   └── convex/           # Convex 함수 및 스키마
+│   │       ├── schema.ts     # 데이터베이스 스키마
+│   │       ├── reviews.ts    # 리뷰 CRUD
+│   │       ├── books.ts      # 도서 관리
+│   │       ├── bookmarks.ts  # 북마크
+│   │       ├── likes.ts      # 좋아요
+│   │       ├── readingDiaries.ts  # 독서 일기
+│   │       ├── stats.ts      # 통계
+│   │       ├── aladin.ts     # 알라딘 API 연동
+│   │       └── http.ts       # HTTP 엔드포인트 (Webhook)
 │   │
-│   ├── frontend/         # React + Vite application
+│   ├── frontend/
 │   │   ├── src/
-│   │   │   ├── features/         # Feature-based components
-│   │   │   ├── lib/              # Auth context, API client
-│   │   │   └── pages/            # Page components
-│   │   └── public/               # Static assets
+│   │   │   ├── components/   # 재사용 컴포넌트
+│   │   │   ├── pages/        # 페이지 컴포넌트
+│   │   │   ├── hooks/        # 커스텀 훅
+│   │   │   ├── stores/       # Zustand 스토어
+│   │   │   ├── utils/        # 유틸리티
+│   │   │   └── lib/          # 라이브러리 설정
+│   │   └── public/           # 정적 파일
 │   │
-│   └── shared/           # Shared types and utilities
-│       └── src/
-│           └── types/            # TypeScript type definitions
+│   └── shared/               # 공유 타입 (예정)
 │
-├── docker-compose.yml    # PostgreSQL + Redis setup
-├── .env.example          # Environment template
-└── README.md             # This file
+├── convex.json               # Convex 설정
+├── turbo.json                # Turbo 설정
+└── pnpm-workspace.yaml       # pnpm 워크스페이스
 ```
 
-## 📜 Available Scripts
+## 주요 스크립트
 
-### Root Level
+### 루트
 
 ```bash
-pnpm dev              # Start all packages in development mode
-pnpm build            # Build all packages
-pnpm lint             # Run ESLint on all packages
-pnpm format           # Format all files with Prettier
-pnpm format:check     # Check formatting without changes
-pnpm type-check       # Run TypeScript type checking
+pnpm dev              # 전체 개발 서버 실행
+pnpm build            # 전체 빌드
+pnpm lint             # 린트 검사
+pnpm format           # 코드 포맷팅
+pnpm type-check       # 타입 검사
 ```
 
-### Backend
+### Convex
 
 ```bash
-pnpm --filter @readzone/backend dev           # Start backend dev server
-pnpm --filter @readzone/backend build         # Build backend
-pnpm --filter @readzone/backend migrate       # Run Prisma migrations
-pnpm --filter @readzone/backend db:seed       # Seed database
-pnpm --filter @readzone/backend test          # Run tests
+npx convex dev        # 개발 서버 (스키마 자동 동기화)
+npx convex deploy     # 프로덕션 배포
+npx convex dashboard  # 대시보드 열기
 ```
 
-### Frontend
+### 데이터 백업
 
 ```bash
-pnpm --filter @readzone/frontend dev          # Start frontend dev server
-pnpm --filter @readzone/frontend build        # Build frontend for production
-pnpm --filter @readzone/frontend preview      # Preview production build
-pnpm --filter @readzone/frontend test         # Run tests
+pnpm backup:prod-to-dev    # 프로덕션 → 개발 환경 복사
+pnpm backup:export-prod    # 프로덕션 데이터 내보내기
+pnpm backup:import-dev     # 개발 환경에 데이터 가져오기
 ```
 
-## 🧰 Tech Stack
+## 인증 기능 (Clerk)
 
-### Backend
-- **Framework**: Fastify 4.x
-- **Database**: PostgreSQL 16 with Prisma ORM
-- **Cache/Sessions**: Redis 7
-- **Authentication**: JWT + @fastify/jwt, OAuth 2.0, MFA (TOTP)
-- **Validation**: Zod
-- **Password Hashing**: Argon2
-- **Email**: SendGrid / AWS SES
+ReadZone은 Clerk를 통해 다양한 인증 방식을 지원합니다:
 
-### Frontend
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite 5
-- **Routing**: React Router v6
-- **HTTP Client**: Axios
-- **Styling**: Tailwind CSS (to be configured)
-- **State Management**: React Context API
+- **이메일 인증**: 이메일 + 비밀번호 로그인
+- **소셜 로그인**: Google, GitHub OAuth
+- **MFA**: 선택적 2단계 인증
+- **세션 관리**: 자동 토큰 갱신
 
-### Development Tools
-- **Monorepo**: pnpm workspaces
-- **Linting**: ESLint (Airbnb TypeScript config)
-- **Formatting**: Prettier
-- **Pre-commit**: Husky + lint-staged
-- **Testing**: Vitest
-- **Type Safety**: TypeScript 5.3 (strict mode)
+### Clerk 설정
 
-## 🔐 Authentication Features
+1. [Clerk Dashboard](https://dashboard.clerk.com)에서 앱 생성
+2. OAuth 제공자 설정 (Google, GitHub)
+3. JWT Template 설정 (Convex 연동용)
+4. 환경 변수 복사
 
-- Email-based registration with verification
-- Social login (Google, GitHub OAuth)
-- Password reset via email
-- Session management with "remember me"
-- Multi-factor authentication (TOTP)
-- Active session monitoring
-- Rate limiting and brute-force protection
-- Audit logging
+## 배포
 
-## 🛠️ Development Workflow
-
-### Code Quality
-
-All code must pass:
-- TypeScript strict mode compilation (no `any` types)
-- ESLint checks (Airbnb TypeScript config)
-- Prettier formatting
-- Pre-commit hooks (automatic)
-
-### Database Changes
+### Convex 배포
 
 ```bash
-# Create a new migration
-pnpm --filter @readzone/backend prisma migrate dev --name <migration-name>
-
-# Apply migrations
-pnpm --filter @readzone/backend prisma migrate deploy
-
-# Reset database (WARNING: deletes all data)
-pnpm --filter @readzone/backend prisma migrate reset
+npx convex deploy --prod
 ```
 
-### Docker Commands
+### Frontend 배포 (Vercel 권장)
 
 ```bash
-# Start services
-docker-compose up -d
+# Vercel CLI
+vercel --prod
 
-# Stop services
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# Reset volumes (WARNING: deletes all data)
-docker-compose down -v
+# 또는 GitHub 연동으로 자동 배포
 ```
 
-## 🐛 Troubleshooting
+**환경 변수 설정** (Vercel Dashboard):
 
-### Port Conflicts
+- `VITE_CONVEX_URL`: 프로덕션 Convex URL
+- `VITE_CLERK_PUBLISHABLE_KEY`: 프로덕션 Clerk 키
 
-If ports 5432 (PostgreSQL) or 6379 (Redis) are already in use:
+## 트러블슈팅
 
-```yaml
-# Edit docker-compose.yml and change ports:
-services:
-  postgres:
-    ports:
-      - '5433:5432'  # Use different host port
-  redis:
-    ports:
-      - '6380:6379'  # Use different host port
-```
+### Convex 관련
 
-Then update `DATABASE_URL` and `REDIS_URL` in `.env`:
+**"Convex deployment not found"**
 
 ```bash
-DATABASE_URL=postgresql://readzone:readzone_dev_password@localhost:5433/readzone
-REDIS_URL=redis://:readzone_dev_redis_password@localhost:6380/0
+# 환경 변수 확인
+echo $CONVEX_DEPLOYMENT
+
+# 다시 로그인
+npx convex logout && npx convex login
 ```
 
-### pnpm Installation Issues
+**스키마 동기화 오류**
 
 ```bash
-# Clear pnpm cache
+# 개발 서버 재시작
+npx convex dev
+```
+
+### Clerk 관련
+
+**"Invalid publishable key"**
+
+- `.env` 파일의 `VITE_CLERK_PUBLISHABLE_KEY` 확인
+- 개발/프로덕션 키 구분 확인
+
+**OAuth 리디렉션 오류**
+
+- Clerk Dashboard에서 Redirect URLs 설정 확인
+- `http://localhost:5173` (개발), `https://your-domain.com` (프로덕션)
+
+### 일반
+
+**pnpm 설치 오류**
+
+```bash
 pnpm store prune
-
-# Reinstall dependencies
 rm -rf node_modules packages/*/node_modules
 pnpm install
 ```
 
-### Prisma Issues
+## 문서
 
-```bash
-# Regenerate Prisma Client
-pnpm --filter @readzone/backend prisma generate
+- [구현 계획서](./IMPLEMENTATION_PLAN.md)
+- [디자인 개선 사항](./DESIGN_IMPROVEMENTS.md)
+- [프로젝트 원칙](./PROJECT_CONSTITUTION.md)
+- [접근성 가이드](./ACCESSIBILITY.md)
 
-# Reset database and migrations
-pnpm --filter @readzone/backend prisma migrate reset
-```
-
-## 🔒 Security
-
-ReadZone implements comprehensive security measures to protect user data and prevent abuse:
-
-### Rate Limiting
-
-**Global Rate Limits**:
-- **Anonymous users**: 100 requests per minute per IP address
-- **Authenticated users**: 1,000 requests per minute per user
-
-**Endpoint-Specific Rate Limits**:
-- **Login** (`POST /api/v1/auth/login`): 5 requests per 5 minutes
-- **Registration** (`POST /api/v1/auth/register`): 3 requests per hour
-- **Password Reset** (`POST /api/v1/auth/password-reset/request`): 3 requests per hour
-
-Rate limits are enforced using Redis-backed storage for distributed environments.
-
-### Security Headers
-
-All responses include comprehensive security headers via Helmet:
-
-- **Content-Security-Policy (CSP)**: Restricts resource loading to trusted sources
-- **HTTP Strict Transport Security (HSTS)**: Forces HTTPS connections with 1-year max-age
-- **X-Frame-Options**: Prevents clickjacking attacks by denying iframe embedding
-- **X-Content-Type-Options**: Prevents MIME-type sniffing
-- **X-XSS-Protection**: Enables browser XSS filtering
-- **Referrer-Policy**: Controls referrer information sent with requests
-
-### Authentication & Authorization
-
-- **JWT Tokens**: Short-lived access tokens (1 hour expiration)
-- **Session Management**: Database-backed sessions with device tracking
-- **Password Security**: Argon2 hashing with strong complexity requirements
-- **OAuth 2.0**: Secure third-party authentication (Google, GitHub)
-- **Multi-Factor Authentication (MFA)**: TOTP-based 2FA with backup codes
-
-### Audit Logging
-
-Comprehensive audit logging captures all security-sensitive events:
-
-- **Login attempts**: Successful and failed login events
-- **Password changes**: Password resets and updates
-- **Account modifications**: Email verification, profile updates
-- **OAuth events**: Third-party authentication flows
-- **Admin actions**: Administrative operations and access
-
-Audit logs include:
-- User ID and email
-- Action type and severity
-- IP address and User-Agent
-- Timestamp and metadata
-- Success/failure status
-
-**Audit Log API** (Admin only):
-```bash
-GET /api/v1/admin/audit-logs?userId=<id>&action=<action>&severity=<level>&page=1&limit=20
-```
-
-### Password Policy
-
-Strong password requirements:
-- Minimum 8 characters
-- At least one uppercase letter
-- At least one lowercase letter
-- At least one number
-- At least one special character
-
-### HTTPS Requirement
-
-**Production deployments must use HTTPS**. The application enforces HSTS headers to ensure all connections use encrypted transport.
-
-### Additional Security Measures
-
-- **Email Verification**: Required for new accounts
-- **Session Expiration**: Automatic logout after inactivity
-- **IP Tracking**: All sensitive operations log IP addresses
-- **Soft Deletion**: User accounts are soft-deleted, not permanently removed
-- **CORS Configuration**: Strict origin validation for cross-origin requests
-
-## 📝 License
-
-MIT
-
-## 🤝 Contributing
+## 기여하기
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -345,6 +259,6 @@ MIT
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📧 Support
+## 라이선스
 
-For issues and questions, please open an issue on GitHub.
+MIT
