@@ -23,11 +23,11 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
     date: timestamp,
   });
 
+  // 제목용: "1월 4일 토요일" 형식
   const formattedDate = date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
     month: 'long',
     day: 'numeric',
-    weekday: 'short',
+    weekday: 'long',
   });
 
   const handleAddDiary = () => {
@@ -94,7 +94,7 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
               onClick={handleAddDiary}
               className="w-full"
             >
-              <Plus className="w-4 h-4 mr-2" />이 날 일기 추가
+              <Plus className="w-4 h-4 mr-2" />새 독서 일기 작성
             </Button>
           </div>
         )}
