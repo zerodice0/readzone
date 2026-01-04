@@ -22,105 +22,21 @@ Usage notes:
 <available_skills>
 
 <skill>
-<name>algorithmic-art</name>
-<description>Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, generative art, algorithmic art, flow fields, or particle systems. Create original algorithmic art rather than copying existing artists' work to avoid copyright violations.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>brand-guidelines</name>
-<description>Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>canvas-design</name>
-<description>Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs, never copying existing artists' work to avoid copyright violations.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>doc-coauthoring</name>
-<description>Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>docx</name>
-<description>"Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. When Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"</description>
-<location>project</location>
+<name>claude-opus-4-5-migration</name>
+<description>Migrate prompts and code from Claude Sonnet 4.0, Sonnet 4.5, or Opus 4.1 to Opus 4.5. Use when the user wants to update their codebase, prompts, or API calls to use Opus 4.5. Handles model string updates and prompt adjustments for known Opus 4.5 behavioral differences. Does NOT migrate Haiku 4.5.</description>
+<location>global</location>
 </skill>
 
 <skill>
 <name>frontend-design</name>
 <description>Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifacts, posters, or applications (examples include websites, landing pages, dashboards, React components, HTML/CSS layouts, or when styling/beautifying any web UI). Generates creative, polished code and UI design that avoids generic AI aesthetics.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>internal-comms</name>
-<description>A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenever asked to write some sort of internal communications (status reports, leadership updates, 3P updates, company newsletters, FAQs, incident reports, project updates, etc.).</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>mcp-builder</name>
-<description>Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>pdf</name>
-<description>Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, and handling forms. When Claude needs to fill in a PDF form or programmatically process, generate, or analyze PDF documents at scale.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>pptx</name>
-<description>"Presentation creation, editing, and analysis. When Claude needs to work with presentations (.pptx files) for: (1) Creating new presentations, (2) Modifying or editing content, (3) Working with layouts, (4) Adding comments or speaker notes, or any other presentation tasks"</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>skill-creator</name>
-<description>Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>slack-gif-creator</name>
-<description>Knowledge and utilities for creating animated GIFs optimized for Slack. Provides constraints, validation tools, and animation concepts. Use when users request animated GIFs for Slack like "make me a GIF of X doing Y for Slack."</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>template</name>
-<description>Replace with description of the skill and when Claude should use it.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>theme-factory</name>
-<description>Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creating, or can generate a new theme on-the-fly.</description>
-<location>project</location>
+<location>global</location>
 </skill>
 
 <skill>
 <name>web-artifacts-builder</name>
 <description>Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>webapp-testing</name>
-<description>Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.</description>
-<location>project</location>
-</skill>
-
-<skill>
-<name>xlsx</name>
-<description>"Comprehensive spreadsheet creation, editing, and analysis with support for formulas, formatting, data analysis, and visualization. When Claude needs to work with spreadsheets (.xlsx, .xlsm, .csv, .tsv, etc) for: (1) Creating new spreadsheets with formulas and formatting, (2) Reading or analyzing data, (3) Modify existing spreadsheets while preserving formulas, (4) Data analysis and visualization in spreadsheets, or (5) Recalculating formulas"</description>
-<location>project</location>
+<location>global</location>
 </skill>
 
 </available_skills>
@@ -128,3 +44,86 @@ Usage notes:
 <!-- SKILLS_TABLE_END -->
 
 </skills_system>
+
+---
+
+# PROJECT KNOWLEDGE BASE
+
+**Generated:** 2026-01-05  
+**Commit:** 5a1ef6a  
+**Branch:** main
+
+## OVERVIEW
+
+ReadZone: 한국어 독후감 공유 플랫폼. React 19 + Convex + Clerk 기반 서버리스 풀스택.
+
+## STRUCTURE
+
+```
+readzone/
+├── packages/
+│   ├── backend/convex/     # Convex 서버리스 함수 (→ AGENTS.md)
+│   ├── frontend/src/       # React SPA (→ AGENTS.md)
+│   └── shared/             # 공유 타입 (미사용 placeholder)
+├── worker.ts               # Cloudflare Worker: OG 메타 태그 주입
+├── wrangler.toml           # CF Workers 배포 설정
+├── convex.json             # Convex 경로 매핑
+└── turbo.json              # Monorepo 빌드 파이프라인
+```
+
+## WHERE TO LOOK
+
+| Task           | Location                                        | Notes                      |
+| -------------- | ----------------------------------------------- | -------------------------- |
+| DB 스키마 변경 | `packages/backend/convex/schema.ts`             | 인덱스 정의 포함           |
+| 새 API 추가    | `packages/backend/convex/*.ts`                  | query/mutation/action 구분 |
+| 새 페이지 추가 | `packages/frontend/src/pages/` + `router.tsx`   | lazy loading 적용          |
+| UI 컴포넌트    | `packages/frontend/src/components/ui/`          | shadcn/ui 스타일           |
+| 인증 로직      | Clerk → `UserSync.tsx` → Convex `users`         | Webhook 동기화 병행        |
+| OG 메타/SEO    | `worker.ts` + `packages/backend/convex/http.ts` | 봇 UA 감지                 |
+| 환경변수       | Frontend: `.env`, Backend: Convex Dashboard     |                            |
+
+## CONVENTIONS
+
+- **Named exports only**: `import/prefer-default-export: off`
+- **Strict TypeScript**: 모든 `strict` 옵션 활성화
+- **Prettier**: `singleQuote`, `semi`, `trailingComma: es5`, `lf`
+- **Husky**: pre-commit에서 prettier 자동 실행
+
+## ANTI-PATTERNS (THIS PROJECT)
+
+| 금지                       | 이유                                                           |
+| -------------------------- | -------------------------------------------------------------- |
+| 린터/설정 파일 수정        | eslint.config.\*, tsconfig.json, .prettierrc 절대 수정 금지    |
+| `eslint-disable` 무단 추가 | 사용자 승인 필수                                               |
+| README 아키텍처 참조       | **DEPRECATED** - Fastify/Prisma는 구 버전. 현재는 Convex+Clerk |
+| 비밀키 커밋                | .env.example에 실제 값 금지                                    |
+
+## UNIQUE STYLES
+
+- **userId = Clerk ID (string)**: Convex 내부 ID 아닌 Clerk subject 사용
+- **Soft Delete**: `status: 'DELETED'` + `deletedAt` 필드
+- **Dual User Sync**: Clerk Webhook + `UserSync.tsx` 컴포넌트 병행
+- **OG Tag Injection**: Cloudflare Worker에서 봇 UA 감지 후 동적 주입
+
+## COMMANDS
+
+```bash
+pnpm dev              # Convex + Vite 개발 서버
+pnpm build            # Turbo 전체 빌드
+pnpm type-check       # TypeScript 검사
+pnpm lint             # ESLint
+pnpm format           # Prettier
+
+npx convex dev        # Convex 개발 서버 (별도 터미널)
+npx convex deploy     # Convex 프로덕션 배포
+
+pnpm backup:prod-to-dev  # 프로덕션 → 개발 데이터 복사
+```
+
+## NOTES
+
+- **CI 미구축**: `.github/workflows` 없음
+- **테스트 미구현**: Vitest 설치됨, 테스트 파일 없음
+- **packages/shared**: placeholder 상태, 공통 타입 이전 예정
+- **Linear 이슈**: 생성 전 구조 승인 필수 (CLAUDE.md 참조)
