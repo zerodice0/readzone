@@ -12,7 +12,12 @@ interface DiaryListModalProps {
 
 export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
   const navigate = useNavigate();
-  const timestamp = date.getTime();
+  // 로컬 날짜를 UTC 자정 타임스탬프로 변환하여 백엔드에서 올바르게 해석되도록 함
+  const timestamp = Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  );
 
   const diaries = useQuery(api.readingDiaries.getByUserAndDate, {
     date: timestamp,
