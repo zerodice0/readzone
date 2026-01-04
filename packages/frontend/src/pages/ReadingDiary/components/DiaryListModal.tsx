@@ -1,8 +1,16 @@
-import { X, Plus } from 'lucide-react';
+import { Plus, BookOpen, CalendarDays } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
+import { m, AnimatePresence } from 'framer-motion';
+
 import { Button } from '../../../components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/dialog';
 import { DiaryCard } from './DiaryCard';
 
 interface DiaryListModalProps {
@@ -37,68 +45,86 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-stone-200">
-          <h2 className="text-lg font-semibold text-stone-900">
-            {formattedDate}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden flex flex-col max-h-[85vh]">
+        <DialogHeader className="p-6 pb-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <CalendarDays className="w-5 h-5 text-primary" />
+            </div>
+            <div className="space-y-0.5">
+              <DialogTitle className="text-xl font-heading font-semibold">
+                {formattedDate}
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground">이 날의 독서 기록</p>
+            </div>
+          </div>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-6 min-h-[200px]">
           {diaries === undefined ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+            <div className="flex flex-col items-center justify-center h-full gap-4 py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <p className="text-sm text-muted-foreground animate-pulse">
+                기록을 불러오는 중...
+              </p>
             </div>
           ) : diaries.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-stone-500 mb-4">
-                이 날의 독서 일기가 없습니다
+            <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+              <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-5 ring-1 ring-border/50">
+                <BookOpen className="w-9 h-9 text-muted-foreground/60" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2">
+                작성된 일기가 없습니다
+              </h3>
+              <p className="text-sm text-muted-foreground mb-8 max-w-[240px] leading-relaxed">
+                이 날 어떤 책을 읽으셨나요?
+                <br />
+                소중한 독서 기록을 남겨보세요.
               </p>
               <Button
                 onClick={handleAddDiary}
-                className="bg-primary-600 hover:bg-primary-700"
+                className="bg-primary hover:bg-primary/90 shadow-sm"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                일기 작성하기
+                <Plus className="w-4 h-4 mr-2" />첫 일기 작성하기
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {diaries.map((diary) => (
-                <DiaryCard key={diary._id} diary={diary} />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {diaries.map((diary, index) => (
+                  <m.div
+                    key={diary._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{
+                      duration: 0.3,
+                      delay: index * 0.1,
+                      ease: [0.21, 0.47, 0.32, 0.98],
+                    }}
+                  >
+                    <DiaryCard diary={diary} />
+                  </m.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </div>
 
-        {/* Footer */}
         {diaries && diaries.length > 0 && (
-          <div className="p-4 border-t border-stone-200">
+          <div className="p-4 border-t border-border bg-background/95 backdrop-blur shrink-0">
             <Button
               variant="outline"
               onClick={handleAddDiary}
-              className="w-full"
+              className="w-full hover:bg-muted/50 transition-colors border-dashed"
             >
-              <Plus className="w-4 h-4 mr-2" />새 독서 일기 작성
+              <Plus className="w-4 h-4 mr-2" />
+              추가 기록하기
             </Button>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
