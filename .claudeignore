@@ -1,0 +1,21 @@
+# .claudeignore
+# 컨텍스트에서 제외할 파일/디렉토리
+
+# AI 도구 설정 (다른 AI 어시스턴트용)
+.serena/
+
+# 빌드 아티팩트
+dist/
+build/
+.turbo/
+
+# 의존성
+node_modules/
+
+# 로그
+*.log
+
+# 환경 변수 (보안)
+.env
+.env.*
+!.env.example
