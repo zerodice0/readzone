@@ -18,6 +18,7 @@ import { NotFoundPage } from './pages/NotFound/NotFoundPage';
 
 // Clerk components for auth
 import { SignIn, SignUp } from '@clerk/clerk-react';
+import { ClerkLoadingWrapper } from './components/ClerkLoadingWrapper';
 
 // Public pages - Lazy loaded
 const BooksPage = lazy(() => import('./pages/Books/BooksPage'));
@@ -185,28 +186,33 @@ const routes: RouteObject[] = [
       },
 
       // Auth routes without Layout
+      // ClerkLoadingWrapper: iOS Chrome(WKWebView) cross-origin 쿠키 제한 대응
       {
         path: '/sign-in/*',
         element: (
-          <div className="flex items-center justify-center min-h-screen">
-            <SignIn
-              routing="path"
-              path="/sign-in"
-              fallbackRedirectUrl="/feed"
-            />
-          </div>
+          <ClerkLoadingWrapper debug>
+            <div className="flex items-center justify-center min-h-screen">
+              <SignIn
+                routing="path"
+                path="/sign-in"
+                fallbackRedirectUrl="/feed"
+              />
+            </div>
+          </ClerkLoadingWrapper>
         ),
       },
       {
         path: '/sign-up/*',
         element: (
-          <div className="flex items-center justify-center min-h-screen">
-            <SignUp
-              routing="path"
-              path="/sign-up"
-              fallbackRedirectUrl="/feed"
-            />
-          </div>
+          <ClerkLoadingWrapper debug>
+            <div className="flex items-center justify-center min-h-screen">
+              <SignUp
+                routing="path"
+                path="/sign-up"
+                fallbackRedirectUrl="/feed"
+              />
+            </div>
+          </ClerkLoadingWrapper>
         ),
       },
     ],

@@ -120,6 +120,17 @@ function MobileUserInfo({ onNavigate }: { onNavigate: () => void }) {
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isSignedIn } = useAuth();
+  const { loaded: clerkLoaded } = useClerk();
+
+  // 디버깅: Clerk 로딩 상태 로깅 (iOS Chrome 이슈 추적용)
+  if (typeof window !== 'undefined') {
+    console.log(
+      '[Clerk Debug] loaded:',
+      clerkLoaded,
+      'userAgent:',
+      navigator.userAgent.substring(0, 50)
+    );
+  }
 
   const navLinks = useMemo(() => {
     const baseLinks = [
@@ -194,30 +205,40 @@ export function Header() {
         <div className="flex items-center gap-3">
           {/* 데스크톱: 독후감 작성 버튼 */}
           <div className="hidden md:flex items-center gap-3">
-            <SignedOut>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/sign-in">로그인</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/sign-up">회원가입</Link>
-              </Button>
-            </SignedOut>
-            <SignedIn>
-              <Button variant="default" size="sm" asChild className="gap-2">
-                <Link to="/reviews/new">
-                  <PenSquare className="w-4 h-4" />
-                  독후감 작성
-                </Link>
-              </Button>
-              <DesktopDashboardButton />
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: 'w-9 h-9',
-                  },
-                }}
-              />
-            </SignedIn>
+            {!clerkLoaded ? (
+              /* Clerk 로딩 중 스켈레톤 UI */
+              <>
+                <div className="w-16 h-8 bg-stone-200 animate-pulse rounded" />
+                <div className="w-20 h-8 bg-stone-200 animate-pulse rounded" />
+              </>
+            ) : (
+              <>
+                <SignedOut>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/sign-in">로그인</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link to="/sign-up">회원가입</Link>
+                  </Button>
+                </SignedOut>
+                <SignedIn>
+                  <Button variant="default" size="sm" asChild className="gap-2">
+                    <Link to="/reviews/new">
+                      <PenSquare className="w-4 h-4" />
+                      독후감 작성
+                    </Link>
+                  </Button>
+                  <DesktopDashboardButton />
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        avatarBox: 'w-9 h-9',
+                      },
+                    }}
+                  />
+                </SignedIn>
+              </>
+            )}
           </div>
 
           {/* 모바일: 햄버거 메뉴 */}
@@ -271,23 +292,31 @@ export function Header() {
                 <div className="border-t border-stone-200 my-2" />
 
                 {/* 모바일: 로그인/회원가입 */}
-                <SignedOut>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    asChild
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Link to="/sign-in">로그인</Link>
-                  </Button>
-                  <Button
-                    className="w-full"
-                    asChild
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Link to="/sign-up">회원가입</Link>
-                  </Button>
-                </SignedOut>
+                {!clerkLoaded ? (
+                  /* Clerk 로딩 중 스켈레톤 UI */
+                  <>
+                    <div className="w-full h-10 bg-stone-200 animate-pulse rounded" />
+                    <div className="w-full h-10 bg-stone-200 animate-pulse rounded" />
+                  </>
+                ) : (
+                  <SignedOut>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      asChild
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Link to="/sign-in">로그인</Link>
+                    </Button>
+                    <Button
+                      className="w-full"
+                      asChild
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Link to="/sign-up">회원가입</Link>
+                    </Button>
+                  </SignedOut>
+                )}
               </div>
 
               {/* 모바일: 사용자 메뉴 (하단 고정) */}
