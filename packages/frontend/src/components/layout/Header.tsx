@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   SignedIn,
@@ -122,6 +122,16 @@ export function Header() {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { loaded: clerkLoaded, client } = useClerk();
 
+  // iOS Chrome에서 Clerk 상태 변화가 리렌더링을 트리거하지 않는 문제 대응
+  // 로컬 상태로 관리하여 useEffect에서 강제 업데이트
+  const [isClerkReady, setIsClerkReady] = useState(clerkLoaded);
+
+  useEffect(() => {
+    if (clerkLoaded && !isClerkReady) {
+      setIsClerkReady(true);
+    }
+  }, [clerkLoaded, isClerkReady]);
+
   // URL 파라미터로 디버그 모드 활성화 (?debug=true)
   const isDebugMode =
     typeof window !== 'undefined' &&
@@ -132,6 +142,7 @@ export function Header() {
     clerkLoaded,
     authLoaded,
     isSignedIn,
+    isClerkReady,
     clientStatus: client ? 'initialized' : 'null',
     timestamp: new Date().toISOString(),
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
@@ -162,6 +173,10 @@ export function Header() {
             <span className="text-stone-400">clerkLoaded:</span>
             <span className={clerkLoaded ? 'text-green-400' : 'text-red-400'}>
               {String(clerkLoaded)}
+            </span>
+            <span className="text-stone-400">isClerkReady:</span>
+            <span className={isClerkReady ? 'text-green-400' : 'text-red-400'}>
+              {String(isClerkReady)}
             </span>
             <span className="text-stone-400">authLoaded:</span>
             <span className={authLoaded ? 'text-green-400' : 'text-red-400'}>
@@ -238,7 +253,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             {/* 데스크톱: 독후감 작성 버튼 */}
             <div className="hidden md:flex items-center gap-3">
-              {!clerkLoaded ? (
+              {!isClerkReady ? (
                 /* Clerk 로딩 중 스켈레톤 UI */
                 <>
                   <div className="w-16 h-8 bg-stone-200 animate-pulse rounded" />
@@ -330,7 +345,7 @@ export function Header() {
                   <div className="border-t border-stone-200 my-2" />
 
                   {/* 모바일: 로그인/회원가입 */}
-                  {!clerkLoaded ? (
+                  {!isClerkReady ? (
                     /* Clerk 로딩 중 스켈레톤 UI */
                     <>
                       <div className="w-full h-10 bg-stone-200 animate-pulse rounded" />
