@@ -19,6 +19,7 @@ import { ReviewForm } from '../../components/review/ReviewForm';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import { pageVariants, fadeInUpVariants } from '../../utils/animations';
+import { BookDiaryList } from '../../components/diary/BookDiaryList';
 import type { Id } from 'convex/_generated/dataModel';
 
 interface BookData {
@@ -226,50 +227,70 @@ export default function ReviewNewPage() {
         </m.div>
       )}
 
-      {/* Step 2: Review form */}
+      {/* Step 2: Review form with diary sidebar */}
       {step === 2 && selectedBook && (
         <m.div
           variants={fadeInUpVariants}
           initial="hidden"
           animate="visible"
-          className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-stone-900">
-              독후감 작성
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBackToBookSelection}
-              className="text-stone-600 hover:text-stone-900"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />책 다시 선택
-            </Button>
+          {/* Main form area */}
+          <div className="lg:col-span-2 bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-stone-900">
+                독후감 작성
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToBookSelection}
+                className="text-stone-600 hover:text-stone-900"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />책 다시 선택
+              </Button>
+            </div>
+
+            {/* Selected book summary */}
+            <div className="bg-stone-50 rounded-lg p-4 mb-6 flex items-center gap-4">
+              {selectedBook.coverImageUrl && (
+                <img
+                  src={selectedBook.coverImageUrl}
+                  alt={`${selectedBook.title} 표지`}
+                  className="w-16 h-22 object-cover rounded shadow-sm"
+                />
+              )}
+              <div>
+                <h3 className="font-semibold text-stone-900">
+                  {selectedBook.title}
+                </h3>
+                <p className="text-sm text-stone-600">{selectedBook.author}</p>
+              </div>
+            </div>
+
+            {/* Mobile: Collapsible diary section */}
+            <details className="lg:hidden mb-6 bg-stone-50 rounded-lg border border-stone-200">
+              <summary className="p-4 cursor-pointer text-sm font-medium text-stone-700 hover:bg-stone-100 rounded-lg">
+                📖 내 독서 일기 보기
+              </summary>
+              <div className="px-4 pb-4">
+                <BookDiaryList bookId={selectedBook._id} />
+              </div>
+            </details>
+
+            {/* Review form */}
+            <ReviewForm
+              onSubmit={handleSubmitReview}
+              isSubmitting={isSubmitting}
+            />
           </div>
 
-          {/* Selected book summary */}
-          <div className="bg-stone-50 rounded-lg p-4 mb-6 flex items-center gap-4">
-            {selectedBook.coverImageUrl && (
-              <img
-                src={selectedBook.coverImageUrl}
-                alt={`${selectedBook.title} 표지`}
-                className="w-16 h-22 object-cover rounded shadow-sm"
-              />
-            )}
-            <div>
-              <h3 className="font-semibold text-stone-900">
-                {selectedBook.title}
-              </h3>
-              <p className="text-sm text-stone-600">{selectedBook.author}</p>
+          {/* Desktop: Diary sidebar */}
+          <div className="hidden lg:block">
+            <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm sticky top-24">
+              <BookDiaryList bookId={selectedBook._id} />
             </div>
           </div>
-
-          {/* Review form */}
-          <ReviewForm
-            onSubmit={handleSubmitReview}
-            isSubmitting={isSubmitting}
-          />
         </m.div>
       )}
 

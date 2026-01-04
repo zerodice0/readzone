@@ -27,6 +27,12 @@ const BookDetailPage = lazy(() => import('./pages/BookDetail/BookDetailPage'));
 const DashboardPage = lazy(() => import('./pages/Dashboard/DashboardPage'));
 const ReviewNewPage = lazy(() => import('./pages/ReviewNew/ReviewNewPage'));
 const ReviewEditPage = lazy(() => import('./pages/ReviewEdit/ReviewEditPage'));
+const ReadingDiaryPage = lazy(
+  () => import('./pages/ReadingDiary/ReadingDiaryPage')
+);
+const ReadingDiaryNewPage = lazy(
+  () => import('./pages/ReadingDiaryNew/ReadingDiaryNewPage')
+);
 // Note: MyReviewsPage and BookmarksPage are now integrated into DashboardPage as tabs
 
 // T113: Loading fallback component
@@ -117,6 +123,22 @@ const routes: RouteObject[] = [
             element: (
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/reading-diary',
+            element: (
+              <ProtectedRoute>
+                <ReadingDiaryPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/reading-diary/new',
+            element: (
+              <ProtectedRoute>
+                <ReadingDiaryNewPage />
               </ProtectedRoute>
             ),
           },

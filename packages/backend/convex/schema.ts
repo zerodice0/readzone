@@ -112,4 +112,20 @@ export default defineSchema({
     .index('by_user', ['userId'])
     .index('by_review', ['reviewId'])
     .index('by_user_review', ['userId', 'reviewId']),
+
+  /**
+   * Reading Diaries Table
+   * 독서 일기 (날짜별 독서 기록)
+   */
+  readingDiaries: defineTable({
+    userId: v.string(), // Clerk user ID
+    bookId: v.id('books'), // 연결된 책
+    date: v.number(), // 읽은 날짜 (Unix timestamp, 날짜만 - 시간은 00:00:00)
+    content: v.string(), // 일기 내용
+    visibility: v.union(v.literal('PUBLIC'), v.literal('PRIVATE')), // 공개/비공개
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_date', ['userId', 'date'])
+    .index('by_user_book', ['userId', 'bookId'])
+    .index('by_book', ['bookId']),
 });
