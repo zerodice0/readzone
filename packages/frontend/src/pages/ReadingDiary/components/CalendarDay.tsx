@@ -74,7 +74,7 @@ export function CalendarDay({
 
                 {/* 전체 일기 개수 뱃지 */}
                 <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center bg-primary-600 text-white text-[10px] font-bold rounded-full px-0.5 z-10">
-                  {books.reduce((sum, b) => sum + b.diaryCount, 0)}
+                  {books.reduce((sum, b) => sum + (b.diaryCount ?? 1), 0)}
                 </span>
               </div>
 
@@ -105,9 +105,9 @@ export function CalendarDay({
                 </div>
 
                 {/* 일기 개수 뱃지 (2개 이상일 때) */}
-                {books[0].diaryCount > 1 && (
+                {(books[0].diaryCount ?? 1) > 1 && (
                   <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center bg-primary-600 text-white text-[10px] font-bold rounded-full px-0.5">
-                    {books[0].diaryCount}
+                    {books[0].diaryCount ?? 1}
                   </span>
                 )}
               </div>
