@@ -82,7 +82,7 @@ export function FeedPage() {
       >
         {/* Header Section */}
         <div className="text-center mb-16 relative">
-          <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-gradient-to-r from-primary-100/40 via-purple-100/40 to-orange-100/40 blur-3xl rounded-[100%] z-0 pointer-events-none" />
+          <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-linear-to-r from-primary-100/40 via-purple-100/40 to-orange-100/40 blur-3xl rounded-[100%] z-0 pointer-events-none" />
 
           <div className="relative z-10">
             <m.div

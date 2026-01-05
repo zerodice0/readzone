@@ -189,7 +189,7 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
       {/* Aladin error */}
       {aladinError && (
         <div className="flex items-center gap-3 p-4 bg-red-50/50 border border-red-100 rounded-xl text-red-600">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <span className="text-sm font-medium">{aladinError}</span>
           <Button
             variant="ghost"
@@ -205,7 +205,7 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
       {/* Save error */}
       {saveError && (
         <div className="flex items-center gap-3 p-4 bg-red-50/50 border border-red-100 rounded-xl text-red-600">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <AlertCircle className="w-5 h-5 shrink-0" />
           <span className="text-sm font-medium">{saveError}</span>
           <Button
             variant="ghost"
@@ -286,7 +286,7 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
       {selectedBook && !searchQuery && (
         <div className="relative group overflow-hidden border border-primary-200 bg-primary-50/30 rounded-2xl p-6 transition-all hover:bg-primary-50/50 hover:border-primary-300">
           <div className="flex items-start gap-6">
-            <div className="flex-shrink-0 w-24 h-36 bg-white rounded-lg shadow-sm overflow-hidden ring-1 ring-stone-900/5">
+            <div className="shrink-0 w-24 h-36 bg-white rounded-lg shadow-sm overflow-hidden ring-1 ring-stone-900/5">
               {selectedBook.coverImageUrl ? (
                 <img
                   src={selectedBook.coverImageUrl}
