@@ -52,10 +52,15 @@ export const getCalendarSummary = query({
       .filter((q) => q.lte(q.field('date'), endOfMonth))
       .collect();
 
-    // 날짜별로 그룹핑하고 책 커버 이미지 수집
+    // 날짜별로 그룹핑하고 책별로 일기 개수 집계
     const calendarData: Record<
       string,
-      Array<{ bookId: string; coverImageUrl?: string }>
+      Array<{
+        bookId: string;
+        coverImageUrl?: string;
+        diaryCount: number;
+        diaryIds: string[];
+      }>
     > = {};
 
     for (const diary of diaries) {
@@ -66,11 +71,25 @@ export const getCalendarSummary = query({
         calendarData[dateKey] = [];
       }
 
-      const book = await ctx.db.get(diary.bookId);
-      calendarData[dateKey].push({
-        bookId: diary.bookId,
-        coverImageUrl: book?.coverImageUrl,
-      });
+      // 같은 책이 이미 있는지 확인
+      const existingBook = calendarData[dateKey].find(
+        (b) => b.bookId === diary.bookId
+      );
+
+      if (existingBook) {
+        // 같은 책이면 카운트 증가 및 ID 추가
+        existingBook.diaryCount++;
+        existingBook.diaryIds.push(diary._id);
+      } else {
+        // 새로운 책이면 항목 추가
+        const book = await ctx.db.get(diary.bookId);
+        calendarData[dateKey].push({
+          bookId: diary.bookId,
+          coverImageUrl: book?.coverImageUrl,
+          diaryCount: 1,
+          diaryIds: [diary._id],
+        });
+      }
     }
 
     return calendarData;

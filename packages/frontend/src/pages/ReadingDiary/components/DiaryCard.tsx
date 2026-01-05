@@ -28,9 +28,11 @@ interface DiaryCardProps {
       coverImageUrl?: string;
     } | null;
   };
+  /** 책 정보를 표시할지 여부 (그룹화된 뷰에서는 false) */
+  showBookInfo?: boolean;
 }
 
-export function DiaryCard({ diary }: DiaryCardProps) {
+export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(diary.content);
   const [editVisibility, setEditVisibility] = useState(diary.visibility);
@@ -86,8 +88,8 @@ export function DiaryCard({ diary }: DiaryCardProps) {
   if (isEditing) {
     return (
       <div className="bg-stone-50 rounded-lg p-4 space-y-4">
-        {/* Book info */}
-        {diary.book && (
+        {/* Book info (showBookInfo가 true일 때만 표시) */}
+        {showBookInfo && diary.book && (
           <div className="flex items-center gap-3 pb-3 border-b border-stone-200">
             {diary.book.coverImageUrl && (
               <img
@@ -167,8 +169,8 @@ export function DiaryCard({ diary }: DiaryCardProps) {
   return (
     <>
       <div className="bg-stone-50 rounded-lg p-4">
-        {/* Book info */}
-        {diary.book && (
+        {/* Book info (showBookInfo가 true일 때만 표시) */}
+        {showBookInfo && diary.book && (
           <div className="flex items-center gap-3 pb-3 border-b border-stone-200 mb-3">
             {diary.book.coverImageUrl && (
               <img
@@ -196,6 +198,23 @@ export function DiaryCard({ diary }: DiaryCardProps) {
                 </>
               )}
             </div>
+          </div>
+        )}
+
+        {/* 공개/비공개 표시 (책 정보 숨길 때) */}
+        {!showBookInfo && (
+          <div className="flex items-center gap-1 text-xs text-stone-400 mb-2">
+            {diary.visibility === 'PRIVATE' ? (
+              <>
+                <Lock className="w-3.5 h-3.5" />
+                비공개
+              </>
+            ) : (
+              <>
+                <Globe className="w-3.5 h-3.5" />
+                공개
+              </>
+            )}
           </div>
         )}
 

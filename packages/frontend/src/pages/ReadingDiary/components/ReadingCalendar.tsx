@@ -1,7 +1,12 @@
 import { CalendarDay } from './CalendarDay';
 
 interface CalendarData {
-  [dateKey: string]: Array<{ bookId: string; coverImageUrl?: string }>;
+  [dateKey: string]: Array<{
+    bookId: string;
+    coverImageUrl?: string;
+    diaryCount: number;
+    diaryIds: string[];
+  }>;
 }
 
 interface ReadingCalendarProps {
