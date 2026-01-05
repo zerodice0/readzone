@@ -1,4 +1,4 @@
-import { Plus, BookOpen, CalendarDays } from 'lucide-react';
+import { Plus, BookOpen, CalendarDays, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -7,6 +7,7 @@ import { m, AnimatePresence } from 'framer-motion';
 import { Button } from '../../../components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -41,14 +42,14 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
   const handleAddDiary = () => {
     // Navigate to new diary page with date pre-filled
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    void navigate(`/reading-diary/new?date=${dateStr}`);
+    void navigate(`/reading-diary/new?date=${dateStr}`, { replace: true });
   };
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden flex flex-col max-h-[85vh]">
-        <DialogHeader className="p-6 pb-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 shrink-0">
-          <div className="flex items-center gap-3">
+        <DialogHeader className="p-6 pb-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 shrink-0 relative">
+          <div className="flex items-center gap-3 pr-10">
             <div className="p-2.5 bg-primary/10 rounded-xl">
               <CalendarDays className="w-5 h-5 text-primary" />
             </div>
@@ -59,6 +60,10 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
               <p className="text-sm text-muted-foreground">이 날의 독서 기록</p>
             </div>
           </div>
+          <DialogClose className="absolute right-4 top-4 p-2 -m-2 rounded-full hover:bg-muted/80 transition-colors z-20 touch-manipulation">
+            <X className="w-5 h-5 text-muted-foreground" />
+            <span className="sr-only">닫기</span>
+          </DialogClose>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 min-h-[200px]">
