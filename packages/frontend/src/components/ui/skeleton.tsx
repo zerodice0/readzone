@@ -7,7 +7,7 @@ function Skeleton({
   return (
     <div
       className={cn(
-        'animate-pulse rounded-md bg-gradient-to-r from-stone-200 via-stone-100 to-stone-200 bg-[length:200%_100%]',
+        'animate-pulse rounded-md bg-linear-to-r from-stone-200 via-stone-100 to-stone-200 bg-size-[200%_100%]',
         'animate-shimmer',
         className
       )}

@@ -56,7 +56,7 @@ export function ReviewForm({
       <div className="space-y-3">
         <label
           htmlFor="review-title"
-          className="block text-sm font-semibold text-stone-700 flex items-center gap-2"
+          className="text-sm font-semibold text-stone-700 flex items-center gap-2"
         >
           <PenLine className="w-4 h-4 text-primary-500" />
           제목{' '}
@@ -81,7 +81,7 @@ export function ReviewForm({
       <div className="space-y-3">
         <label
           htmlFor="review-content"
-          className="block text-sm font-semibold text-stone-700 flex items-center gap-2"
+          className="text-sm font-semibold text-stone-700 flex items-center gap-2"
         >
           <BookOpen className="w-4 h-4 text-primary-500" />
           내용 <span className="text-red-500 font-bold">*</span>
@@ -225,7 +225,7 @@ export function ReviewForm({
         <Button
           onClick={() => handleSubmit('PUBLISHED')}
           disabled={isSubmitting || !isContentValid}
-          className="flex-[2] h-12 text-base rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 shadow-lg shadow-primary-500/20"
+          className="flex-2 h-12 text-base rounded-xl bg-linear-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 shadow-lg shadow-primary-500/20"
         >
           <Send className="w-4 h-4 mr-2" />
           발행하기
