@@ -65,7 +65,7 @@ export default function ReadingDiaryNewPage() {
       });
 
       toast.success('독서 일기가 저장되었습니다');
-      void navigate('/reading-diary');
+      void navigate('/reading-diary', { replace: true });
     } catch (error) {
       logError(error, 'Failed to create diary');
       toast.error('독서 일기 저장에 실패했습니다', '다시 시도해주세요.');
@@ -88,7 +88,7 @@ export default function ReadingDiaryNewPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/reading-diary')}
+          onClick={() => navigate('/reading-diary', { replace: true })}
           className="mb-4 text-stone-600 hover:text-stone-900"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
