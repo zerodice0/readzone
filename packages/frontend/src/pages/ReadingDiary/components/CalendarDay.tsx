@@ -1,6 +1,8 @@
 interface Book {
   bookId: string;
   coverImageUrl?: string;
+  diaryCount: number;
+  diaryIds: string[];
 }
 
 interface CalendarDayProps {
@@ -47,29 +49,71 @@ export function CalendarDay({
 
       {/* Book covers */}
       {hasBooks && (
-        <div className="flex flex-wrap gap-0.5 justify-center">
-          {books.slice(0, 3).map((book, index) => (
-            <div
-              key={`${book.bookId}-${index}`}
-              className="w-5 h-7 sm:w-6 sm:h-8 rounded overflow-hidden bg-stone-200 shadow-sm"
-            >
-              {book.coverImageUrl ? (
-                <img
-                  src={book.coverImageUrl}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-stone-300 to-stone-400" />
-              )}
+        <>
+          {books.length > 1 ? (
+            // 책 2개 이상: 자동 페이드 캐로셀 + 인디케이터 + 뱃지
+            <div className="flex flex-col items-center gap-0.5">
+              {/* 책 커버 (페이드 전환) */}
+              <div className="relative w-5 h-7 sm:w-6 sm:h-8">
+                {books.slice(0, 3).map((book, idx) => (
+                  <div
+                    key={book.bookId}
+                    className={`absolute inset-0 rounded overflow-hidden bg-stone-200 shadow-sm animate-book-fade-${Math.min(books.length, 3)}-${idx + 1}`}
+                  >
+                    {book.coverImageUrl ? (
+                      <img
+                        src={book.coverImageUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-stone-300 to-stone-400" />
+                    )}
+                  </div>
+                ))}
+
+                {/* 전체 일기 개수 뱃지 */}
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center bg-primary-600 text-white text-[10px] font-bold rounded-full px-0.5 z-10">
+                  {books.reduce((sum, b) => sum + b.diaryCount, 0)}
+                </span>
+              </div>
+
+              {/* 인디케이터 점 */}
+              <div className="flex gap-0.5">
+                {books.slice(0, 3).map((book, idx) => (
+                  <span
+                    key={`dot-${book.bookId}`}
+                    className={`w-1 h-1 rounded-full bg-stone-300 animate-dot-${Math.min(books.length, 3)}-${idx + 1}`}
+                  />
+                ))}
+              </div>
             </div>
-          ))}
-          {books.length > 3 && (
-            <div className="w-5 h-7 sm:w-6 sm:h-8 rounded bg-stone-300 flex items-center justify-center text-xs font-medium text-stone-600">
-              +{books.length - 3}
+          ) : (
+            // 책 1개: 단일 책 표시 + 일기 개수 뱃지
+            <div className="flex justify-center">
+              <div className="relative w-5 h-7 sm:w-6 sm:h-8">
+                <div className="w-full h-full rounded overflow-hidden bg-stone-200 shadow-sm">
+                  {books[0].coverImageUrl ? (
+                    <img
+                      src={books[0].coverImageUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-stone-300 to-stone-400" />
+                  )}
+                </div>
+
+                {/* 일기 개수 뱃지 (2개 이상일 때) */}
+                {books[0].diaryCount > 1 && (
+                  <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center bg-primary-600 text-white text-[10px] font-bold rounded-full px-0.5">
+                    {books[0].diaryCount}
+                  </span>
+                )}
+              </div>
             </div>
           )}
-        </div>
+        </>
       )}
     </button>
   );

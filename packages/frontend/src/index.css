@@ -241,4 +241,78 @@ code {
   .animate-shimmer {
     animation: shimmer 2s infinite linear;
   }
+
+  /* Book carousel fade animation - 2 books */
+  @keyframes book-fade-2 {
+    0%, 45% { opacity: 1; }
+    50%, 95% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  .animate-book-fade-2-1 {
+    animation: book-fade-2 4s infinite ease-in-out;
+  }
+
+  .animate-book-fade-2-2 {
+    animation: book-fade-2 4s infinite ease-in-out;
+    animation-delay: -2s;
+  }
+
+  /* Indicator animation - 2 books */
+  @keyframes dot-active-2 {
+    0%, 45% { background-color: var(--primary); }
+    50%, 95% { background-color: #d1d5db; }
+    100% { background-color: var(--primary); }
+  }
+
+  .animate-dot-2-1 {
+    animation: dot-active-2 4s infinite ease-in-out;
+  }
+
+  .animate-dot-2-2 {
+    animation: dot-active-2 4s infinite ease-in-out;
+    animation-delay: -2s;
+  }
+
+  /* Book carousel fade animation - 3 books */
+  @keyframes book-fade-3 {
+    0%, 28% { opacity: 1; }
+    33%, 95% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  .animate-book-fade-3-1 {
+    animation: book-fade-3 4.5s infinite ease-in-out;
+  }
+
+  .animate-book-fade-3-2 {
+    animation: book-fade-3 4.5s infinite ease-in-out;
+    animation-delay: -1.5s;
+  }
+
+  .animate-book-fade-3-3 {
+    animation: book-fade-3 4.5s infinite ease-in-out;
+    animation-delay: -3s;
+  }
+
+  /* Indicator animation - 3 books */
+  @keyframes dot-active-3 {
+    0%, 28% { background-color: var(--primary); }
+    33%, 95% { background-color: #d1d5db; }
+    100% { background-color: var(--primary); }
+  }
+
+  .animate-dot-3-1 {
+    animation: dot-active-3 4.5s infinite ease-in-out;
+  }
+
+  .animate-dot-3-2 {
+    animation: dot-active-3 4.5s infinite ease-in-out;
+    animation-delay: -1.5s;
+  }
+
+  .animate-dot-3-3 {
+    animation: dot-active-3 4.5s infinite ease-in-out;
+    animation-delay: -3s;
+  }
 }
