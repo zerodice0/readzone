@@ -122,10 +122,16 @@ Handles OG meta tag injection for social media sharing:
 
 - `CONVEX_URL`: Convex HTTP endpoint URL (set via `wrangler secret`)
 
-## Linear 이슈 생성 가이드
+## Linear 가이드
+
+### 이슈 생성
 
 Linear에 이슈를 생성할 때는 다음 절차를 따른다:
 
 1. **이슈 생성 전 확인 필수**: 이슈 구조(메인 이슈, 하위 이슈 등)를 먼저 보여주고 사용자 승인을 받은 후 생성
 2. **구조화된 이슈 사용**: 큰 기능은 하나의 메인 이슈 + Phase별 sub-task로 구성
 3. **이슈 설명 포함 사항**: 개요, 작업 내용, 수정 파일 목록
+
+### 댓글 작성
+
+- **이모지 사용 금지**: Linear 이슈/댓글 작성 시 이모지를 사용하지 않는다
