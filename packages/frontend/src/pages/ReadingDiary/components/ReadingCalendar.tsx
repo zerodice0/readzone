@@ -36,12 +36,12 @@ function normalizeBooks(books: BookEntry[]): NormalizedBookEntry[] {
         existing.diaryIds.push(...book.diaryIds);
       }
     } else {
-      // 새 책 항목 추가
+      // 새 책 항목 추가 (원본 배열 참조 방지를 위해 복사)
       bookMap.set(book.bookId, {
         bookId: book.bookId,
         coverImageUrl: book.coverImageUrl,
         diaryCount: book.diaryCount ?? 1,
-        diaryIds: book.diaryIds ?? [],
+        diaryIds: [...(book.diaryIds ?? [])],
       });
     }
   }
