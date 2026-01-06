@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import {
   createBrowserRouter,
   Navigate,
@@ -9,6 +9,8 @@ import {
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
 import { Skeleton } from './components/ui/skeleton';
 import { Layout } from './components/layout/Layout';
+import { lazyWithRetry } from './utils/lazyWithRetry';
+import { RouteErrorFallback } from './components/RouteErrorFallback';
 
 // T113: Code splitting with React.lazy() for bundle optimization
 // Public pages - Eager loaded (most frequently accessed)
@@ -21,18 +23,35 @@ import { SignIn, SignUp } from '@clerk/clerk-react';
 import { ClerkLoadingWrapper } from './components/ClerkLoadingWrapper';
 
 // Public pages - Lazy loaded
-const BooksPage = lazy(() => import('./pages/Books/BooksPage'));
-const BookDetailPage = lazy(() => import('./pages/BookDetail/BookDetailPage'));
+const BooksPage = lazyWithRetry(
+  () => import('./pages/Books/BooksPage'),
+  'BooksPage'
+);
+const BookDetailPage = lazyWithRetry(
+  () => import('./pages/BookDetail/BookDetailPage'),
+  'BookDetailPage'
+);
 
 // Protected pages - Lazy loaded
-const DashboardPage = lazy(() => import('./pages/Dashboard/DashboardPage'));
-const ReviewNewPage = lazy(() => import('./pages/ReviewNew/ReviewNewPage'));
-const ReviewEditPage = lazy(() => import('./pages/ReviewEdit/ReviewEditPage'));
-const ReadingDiaryPage = lazy(
-  () => import('./pages/ReadingDiary/ReadingDiaryPage')
+const DashboardPage = lazyWithRetry(
+  () => import('./pages/Dashboard/DashboardPage'),
+  'DashboardPage'
 );
-const ReadingDiaryNewPage = lazy(
-  () => import('./pages/ReadingDiaryNew/ReadingDiaryNewPage')
+const ReviewNewPage = lazyWithRetry(
+  () => import('./pages/ReviewNew/ReviewNewPage'),
+  'ReviewNewPage'
+);
+const ReviewEditPage = lazyWithRetry(
+  () => import('./pages/ReviewEdit/ReviewEditPage'),
+  'ReviewEditPage'
+);
+const ReadingDiaryPage = lazyWithRetry(
+  () => import('./pages/ReadingDiary/ReadingDiaryPage'),
+  'ReadingDiaryPage'
+);
+const ReadingDiaryNewPage = lazyWithRetry(
+  () => import('./pages/ReadingDiaryNew/ReadingDiaryNewPage'),
+  'ReadingDiaryNewPage'
 );
 // Note: MyReviewsPage and BookmarksPage are now integrated into DashboardPage as tabs
 
@@ -75,6 +94,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 const routes: RouteObject[] = [
   {
     element: <RootLayout />,
+    errorElement: <RouteErrorFallback />,
     children: [
       // Routes with Layout (Header + content)
       {
