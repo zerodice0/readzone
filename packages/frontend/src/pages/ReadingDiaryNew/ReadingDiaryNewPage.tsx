@@ -28,7 +28,10 @@ export default function ReadingDiaryNewPage() {
   const [selectedBook, setSelectedBook] = useState<BookData | null>(null);
   const [date, setDate] = useState(() => {
     const today = new Date();
-    return today.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   });
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE');
