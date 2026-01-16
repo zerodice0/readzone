@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, BookOpen, CalendarDays, X } from 'lucide-react';
+import { Plus, BookOpen, CalendarDays, X, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -21,6 +21,20 @@ import type { Id } from 'convex/_generated/dataModel';
 interface DiaryListModalProps {
   date: Date;
   onClose: () => void;
+}
+
+// 상대 날짜 포맷팅 헬퍼 함수
+function formatRelativeDate(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (days === 0) return '오늘';
+  if (days === 1) return '어제';
+  if (days < 7) return `${days}일 전`;
+  if (days < 30) return `${Math.floor(days / 7)}주 전`;
+  if (days < 365) return `${Math.floor(days / 30)}개월 전`;
+  return `${Math.floor(days / 365)}년 전`;
 }
 
 interface BookGroup {
@@ -60,6 +74,9 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
   const diaries = useQuery(api.readingDiaries.getByUserAndDate, {
     date: timestamp,
   });
+
+  // 최근 기록한 책 목록 조회 (빈 상태 UI에서 사용)
+  const recentBooks = useQuery(api.readingDiaries.getRecentBooks);
 
   // 책별로 일기 그룹화
   const groupedByBook = useMemo(() => {
@@ -132,24 +149,80 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
               </p>
             </div>
           ) : diaries.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full py-12 text-center">
-              <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-5 ring-1 ring-border/50">
-                <BookOpen className="w-9 h-9 text-muted-foreground/60" />
-              </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">
-                작성된 일기가 없습니다
-              </h3>
-              <p className="text-sm text-muted-foreground mb-8 max-w-[240px] leading-relaxed">
-                이 날 어떤 책을 읽으셨나요?
-                <br />
-                소중한 독서 기록을 남겨보세요.
+            <div className="flex flex-col h-full py-6">
+              <p className="text-center text-muted-foreground mb-6">
+                이 날짜에 작성된 일기가 없습니다
               </p>
-              <Button
-                onClick={handleAddDiary}
-                className="bg-primary hover:bg-primary/90 shadow-sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />첫 일기 작성하기
-              </Button>
+
+              {/* 최근 기록한 책이 있는 경우 */}
+              {recentBooks && recentBooks.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    이전에 읽던 책 계속 기록하기
+                  </p>
+                  <div className="space-y-2">
+                    {recentBooks.map(({ diary, book }) => (
+                      <button
+                        key={book._id}
+                        type="button"
+                        onClick={() => handleQuickAdd(book)}
+                        className="w-full flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors text-left"
+                      >
+                        {book.coverImageUrl ? (
+                          <img
+                            src={book.coverImageUrl}
+                            alt={book.title}
+                            className="w-10 h-14 object-cover rounded shadow-sm shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-14 bg-muted rounded flex items-center justify-center shrink-0">
+                            <BookOpen className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm line-clamp-1">
+                            {book.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {book.author}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            마지막 기록: {formatRelativeDate(diary.date)}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    onClick={handleAddDiary}
+                    className="w-full border-dashed"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    새로운 책으로 기록하기
+                  </Button>
+                </div>
+              ) : (
+                /* 신규 사용자 (최근 기록 없음) */
+                <div className="flex flex-col items-center justify-center flex-1 text-center">
+                  <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-5 ring-1 ring-border/50">
+                    <BookOpen className="w-9 h-9 text-muted-foreground/60" />
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-8 max-w-[240px] leading-relaxed">
+                    이 날 어떤 책을 읽으셨나요?
+                    <br />
+                    소중한 독서 기록을 남겨보세요.
+                  </p>
+                  <Button
+                    onClick={handleAddDiary}
+                    className="bg-primary hover:bg-primary/90 shadow-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />첫 일기 작성하기
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-6">
