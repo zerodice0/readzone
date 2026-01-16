@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Pencil, Trash2, Lock, Globe } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -38,9 +38,24 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
   const [editVisibility, setEditVisibility] = useState(diary.visibility);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const contentRef = useRef<HTMLParagraphElement>(null);
 
   const updateDiary = useMutation(api.readingDiaries.update);
   const removeDiary = useMutation(api.readingDiaries.remove);
+
+  // 콘텐츠 높이 측정하여 3줄 초과 시 truncation 필요 여부 결정
+  useEffect(() => {
+    if (contentRef.current) {
+      // line-height 약 1.5rem (24px), 3줄 = 72px
+      const lineHeight = 24;
+      const maxLines = 3;
+      setNeedsTruncation(
+        contentRef.current.scrollHeight > lineHeight * maxLines
+      );
+    }
+  }, [diary.content]);
 
   const handleSaveEdit = async () => {
     if (!editContent.trim()) {
@@ -219,9 +234,27 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
         )}
 
         {/* Content */}
-        <p className="text-sm text-stone-700 whitespace-pre-wrap">
-          {diary.content}
-        </p>
+        <div className="relative">
+          <p
+            ref={contentRef}
+            className={`text-sm text-stone-700 whitespace-pre-wrap transition-all duration-200 ${
+              !isExpanded && needsTruncation
+                ? 'line-clamp-3 max-h-[4.5rem]'
+                : 'max-h-none'
+            }`}
+          >
+            {diary.content}
+          </p>
+          {needsTruncation && (
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs text-primary-600 hover:text-primary-700 mt-1"
+            >
+              {isExpanded ? '접기' : '더보기'}
+            </button>
+          )}
+        </div>
 
         {/* Actions */}
         <div className="flex justify-end gap-1 mt-3 pt-3 border-t border-stone-200">
