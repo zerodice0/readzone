@@ -202,6 +202,53 @@ export const getPublicByBook = query({
 });
 
 /**
+ * 사용자의 최근 기록한 책 목록 조회 (최대 3개)
+ * - 빈 날짜에서 빠른 추가 UI에 사용
+ * - 중복 책 제거하여 고유한 책만 반환
+ */
+export const getRecentBooks = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const userId = identity.subject;
+
+    // 최근 일기 조회 (중복 책 제거를 위해 충분히 가져옴)
+    const recentDiaries = await ctx.db
+      .query('readingDiaries')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .order('desc')
+      .take(20);
+
+    if (recentDiaries.length === 0) return [];
+
+    // 중복 책 제거하여 최대 3개 추출
+    const seenBookIds = new Set<string>();
+    const uniqueDiaries: typeof recentDiaries = [];
+
+    for (const diary of recentDiaries) {
+      const bookIdStr = diary.bookId.toString();
+      if (!seenBookIds.has(bookIdStr)) {
+        seenBookIds.add(bookIdStr);
+        uniqueDiaries.push(diary);
+        if (uniqueDiaries.length >= 3) break;
+      }
+    }
+
+    // 책 정보 병렬 조회
+    const results = await Promise.all(
+      uniqueDiaries.map(async (diary) => {
+        const book = await ctx.db.get(diary.bookId);
+        return book ? { diary, book } : null;
+      })
+    );
+
+    return results.filter((r) => r !== null);
+  },
+});
+
+/**
  * 단일 일기 상세 조회
  */
 export const get = query({
