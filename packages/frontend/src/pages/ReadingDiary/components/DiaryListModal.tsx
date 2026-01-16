@@ -1,5 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Plus, BookOpen, CalendarDays, X, ChevronRight } from 'lucide-react';
+import {
+  Plus,
+  BookOpen,
+  CalendarDays,
+  X,
+  ChevronRight,
+  ChevronUp,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -14,6 +21,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../../components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../../components/ui/dropdown-menu';
 import { DiaryCard } from './DiaryCard';
 import { QuickAddDiaryDialog } from './QuickAddDiaryDialog';
 import type { Id } from 'convex/_generated/dataModel';
@@ -289,14 +303,59 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
 
         {diaries && diaries.length > 0 && (
           <div className="p-4 border-t border-border bg-background/95 backdrop-blur shrink-0">
-            <Button
-              variant="outline"
-              onClick={handleAddDiary}
-              className="w-full hover:bg-muted/50 transition-colors border-dashed"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              다른 책으로 기록하기
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full hover:bg-muted/50 transition-colors border-dashed"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  일기 추가하기
+                  <ChevronUp className="w-4 h-4 ml-auto" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="top"
+                align="center"
+                className="w-[calc(100vw-3rem)] sm:w-[calc(28rem-2rem)] max-h-[300px] overflow-y-auto"
+              >
+                {groupedByBook.map((group) => (
+                  <DropdownMenuItem
+                    key={group.book._id}
+                    onClick={() => handleQuickAdd(group.book)}
+                    className="flex items-center gap-3 py-2 cursor-pointer"
+                  >
+                    {group.book.coverImageUrl ? (
+                      <img
+                        src={group.book.coverImageUrl}
+                        alt={group.book.title}
+                        className="w-8 h-10 object-cover rounded shadow-sm shrink-0"
+                      />
+                    ) : (
+                      <div className="w-8 h-10 bg-muted rounded flex items-center justify-center shrink-0">
+                        <BookOpen className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {group.book.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {group.diaries.length}개의 기록
+                      </p>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleAddDiary}
+                  className="py-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 mr-3" />
+                  다른 책으로 기록하기
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </DialogContent>
