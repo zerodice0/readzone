@@ -419,6 +419,51 @@ export const updateBookCategory = internalMutation({
 });
 
 /**
+ * OG 메타데이터용 책 조회
+ * 소셜 미디어 크롤러가 책 페이지 공유 시 필요한 정보 반환
+ */
+export const getForOg = internalQuery({
+  args: {
+    id: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // 문자열 ID를 Convex ID로 변환 후 책 조회
+    const bookId = ctx.db.normalizeId('books', args.id);
+    if (!bookId) {
+      return null;
+    }
+
+    const book = await ctx.db.get(bookId);
+    if (!book) {
+      return null;
+    }
+
+    // 해당 책의 리뷰 통계 계산
+    const reviews = await ctx.db
+      .query('reviews')
+      .withIndex('by_book', (q) =>
+        q.eq('bookId', book._id).eq('status', 'PUBLISHED')
+      )
+      .collect();
+
+    const reviewCount = reviews.length;
+    const recommendedCount = reviews.filter((r) => r.isRecommended).length;
+    const recommendationRate =
+      reviewCount > 0 ? Math.round((recommendedCount / reviewCount) * 100) : 0;
+
+    return {
+      title: book.title,
+      author: book.author,
+      description: book.description ?? null,
+      coverImageUrl: book.coverImageUrl ?? null,
+      publisher: book.publisher ?? null,
+      reviewCount,
+      recommendationRate,
+    };
+  },
+});
+
+/**
  * 사이트맵용 책 목록 조회
  * 모든 책의 ID와 수정 시간 반환
  */
