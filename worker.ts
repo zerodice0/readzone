@@ -24,6 +24,16 @@ interface OgMeta {
   authorName: string;
 }
 
+interface BookOgMeta {
+  title: string;
+  author: string;
+  description: string | null;
+  coverImageUrl: string | null;
+  publisher: string | null;
+  reviewCount: number;
+  recommendationRate: number;
+}
+
 // 소셜 미디어 크롤러 User-Agent 목록
 const BOT_USER_AGENTS = [
   'facebookexternalhit', // Facebook
@@ -60,10 +70,26 @@ function isReviewPage(pathname: string): boolean {
 }
 
 /**
+ * 책 페이지 경로인지 확인
+ * 예: /books/abc123def456
+ */
+function isBookPage(pathname: string): boolean {
+  return /^\/books\/[a-z0-9]+$/i.test(pathname);
+}
+
+/**
  * 리뷰 ID 추출
  */
 function extractReviewId(pathname: string): string | null {
   const match = pathname.match(/^\/reviews\/([a-z0-9]+)$/i);
+  return match ? match[1] : null;
+}
+
+/**
+ * 책 ID 추출
+ */
+function extractBookId(pathname: string): string | null {
+  const match = pathname.match(/^\/books\/([a-z0-9]+)$/i);
   return match ? match[1] : null;
 }
 
@@ -215,6 +241,158 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
 }
 
 /**
+ * 책 페이지용 OG 메타 태그가 포함된 HTML 생성
+ */
+function generateBookOgHtml(
+  meta: BookOgMeta,
+  url: string,
+  siteUrl: string
+): string {
+  const title = escapeHtml(meta.title);
+  const author = escapeHtml(meta.author);
+  const description = meta.description
+    ? escapeHtml(meta.description.slice(0, 200))
+    : `『${title}』 - ${author} 저`;
+  const publisher = meta.publisher ? escapeHtml(meta.publisher) : '';
+
+  const ogImage = meta.coverImageUrl || `${siteUrl}/og-default.png`;
+  const ogImageAlt = `『${title}』 표지`;
+
+  // 리뷰 통계 설명
+  const statsDescription =
+    meta.reviewCount > 0
+      ? `${meta.reviewCount}개의 리뷰, ${meta.recommendationRate}% 추천`
+      : '아직 리뷰가 없습니다';
+
+  const fullDescription = `${description} | ${statsDescription}`;
+
+  // 출판사 정보
+  const publisherHtml = publisher
+    ? `<p><strong>출판사:</strong> ${publisher}</p>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title} - ReadZone</title>
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="${title} - ReadZone">
+  <meta name="description" content="${fullDescription}">
+  <meta name="author" content="${author}">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="book">
+  <meta property="og:url" content="${escapeHtml(url)}">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${fullDescription}">
+  <meta property="og:image" content="${escapeHtml(ogImage)}">
+  <meta property="og:image:alt" content="${ogImageAlt}">
+  <meta property="og:site_name" content="ReadZone">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="book:author" content="${author}">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="${escapeHtml(url)}">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${fullDescription}">
+  <meta name="twitter:image" content="${escapeHtml(ogImage)}">
+  <meta name="twitter:image:alt" content="${ogImageAlt}">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${escapeHtml(url)}">
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      background: #fafafa;
+      color: #333;
+    }
+    header { margin-bottom: 2rem; }
+    h1 { font-size: 1.75rem; color: #1a1a1a; margin-bottom: 0.5rem; }
+    .meta { color: #666; font-size: 0.875rem; margin-bottom: 1rem; }
+    .book-info {
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .book-info h2 { font-size: 1rem; margin: 0 0 0.5rem 0; }
+    .book-info p { margin: 0.25rem 0; font-size: 0.875rem; }
+    .stats {
+      background: #e8f4fd;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .stats h2 { font-size: 1rem; margin: 0 0 0.5rem 0; color: #1a5f9e; }
+    .stats p { margin: 0.25rem 0; font-size: 0.875rem; color: #1a5f9e; }
+    article { margin-bottom: 2rem; }
+    .description { font-size: 1rem; color: #444; }
+    .cta {
+      display: inline-block;
+      background: #4f46e5;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .cta:hover { background: #4338ca; }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e5e5e5;
+      font-size: 0.875rem;
+      color: #666;
+    }
+    footer a { color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>${title}</h1>
+    <p class="meta">저자: ${author}</p>
+  </header>
+
+  <section class="book-info">
+    <h2>책 정보</h2>
+    <p><strong>저자:</strong> ${author}</p>
+    ${publisherHtml}
+  </section>
+
+  <section class="stats">
+    <h2>리뷰 통계</h2>
+    <p><strong>리뷰 수:</strong> ${meta.reviewCount}개</p>
+    <p><strong>추천율:</strong> ${meta.recommendationRate}%</p>
+  </section>
+
+  <article>
+    <p class="description">${description}</p>
+  </article>
+
+  <a href="${escapeHtml(url)}" class="cta">리뷰 보기</a>
+
+  <footer>
+    <p><a href="${siteUrl}">ReadZone</a> - 독후감을 공유하고 다른 독자들의 생각을 확인하세요</p>
+  </footer>
+
+  <noscript>
+    <p>이 페이지의 전체 내용을 보려면 <a href="${escapeHtml(url)}">여기를 클릭</a>하세요.</p>
+  </noscript>
+</body>
+</html>`;
+}
+
+/**
  * 기본 OG HTML (리뷰를 찾을 수 없는 경우)
  */
 function generateDefaultOgHtml(url: string, siteUrl: string): string {
@@ -322,6 +500,49 @@ export default {
           }
         } catch (error) {
           console.error('Failed to fetch OG metadata:', error);
+        }
+      }
+
+      // 메타데이터 조회 실패 시 기본 OG HTML 반환
+      const defaultHtml = generateDefaultOgHtml(url.href, siteUrl);
+      return new Response(defaultHtml, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+        },
+      });
+    }
+
+    // 봇이고 책 페이지인 경우 OG HTML 반환
+    if (isBot(userAgent) && isBookPage(url.pathname)) {
+      const bookId = extractBookId(url.pathname);
+
+      if (bookId) {
+        try {
+          // Convex HTTP API에서 책 OG 메타데이터 조회
+          const ogResponse = await fetch(
+            `${env.CONVEX_URL}/og/books/${bookId}`,
+            {
+              headers: {
+                Accept: 'application/json',
+              },
+            }
+          );
+
+          if (ogResponse.ok) {
+            const meta: BookOgMeta = await ogResponse.json();
+            const html = generateBookOgHtml(meta, url.href, siteUrl);
+
+            return new Response(html, {
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'public, max-age=3600', // 1시간 캐싱
+              },
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch book OG metadata:', error);
         }
       }
 
