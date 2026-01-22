@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Lock, Globe } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../../components/ui/button';
@@ -38,7 +37,6 @@ export function QuickAddDiaryDialog({
   onSuccess,
 }: QuickAddDiaryDialogProps) {
   const [content, setContent] = useState('');
-  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createDiary = useMutation(api.readingDiaries.create);
@@ -61,7 +59,7 @@ export function QuickAddDiaryDialog({
         bookId: book._id,
         date: timestamp,
         content: content.trim(),
-        visibility,
+        visibility: 'PRIVATE',
       });
 
       toast.success('일기가 추가되었습니다');
@@ -126,34 +124,6 @@ export function QuickAddDiaryDialog({
               className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none text-sm"
               autoFocus
             />
-          </div>
-
-          {/* 공개 설정 */}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setVisibility('PRIVATE')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm border transition-colors ${
-                visibility === 'PRIVATE'
-                  ? 'border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-stone-300 text-stone-600 hover:bg-stone-100'
-              }`}
-            >
-              <Lock className="w-3.5 h-3.5" />
-              비공개
-            </button>
-            <button
-              type="button"
-              onClick={() => setVisibility('PUBLIC')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm border transition-colors ${
-                visibility === 'PUBLIC'
-                  ? 'border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-stone-300 text-stone-600 hover:bg-stone-100'
-              }`}
-            >
-              <Globe className="w-3.5 h-3.5" />
-              공개
-            </button>
           </div>
 
           {/* 버튼 */}

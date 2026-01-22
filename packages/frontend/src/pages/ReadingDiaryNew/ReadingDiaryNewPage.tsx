@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Lock, Globe, Save } from 'lucide-react';
+import { ArrowLeft, Calendar, Save } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import { m } from 'framer-motion';
@@ -34,7 +34,6 @@ export default function ReadingDiaryNewPage() {
     return `${year}-${month}-${day}`;
   });
   const [content, setContent] = useState('');
-  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PRIVATE');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createDiary = useMutation(api.readingDiaries.create);
@@ -64,7 +63,7 @@ export default function ReadingDiaryNewPage() {
         bookId: selectedBook._id,
         date: dateTimestamp,
         content: content.trim(),
-        visibility,
+        visibility: 'PRIVATE',
       });
 
       toast.success('독서 일기가 저장되었습니다');
@@ -174,39 +173,6 @@ export default function ReadingDiaryNewPage() {
             className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none"
           />
           <p className="mt-1 text-sm text-stone-500">{content.length}자</p>
-        </div>
-
-        {/* Visibility Toggle */}
-        <div>
-          <label className="block text-sm font-medium text-stone-700 mb-3">
-            공개 설정
-          </label>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setVisibility('PRIVATE')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                visibility === 'PRIVATE'
-                  ? 'border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-stone-300 text-stone-600 hover:bg-stone-50'
-              }`}
-            >
-              <Lock className="w-4 h-4" />
-              나만 보기
-            </button>
-            <button
-              type="button"
-              onClick={() => setVisibility('PUBLIC')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                visibility === 'PUBLIC'
-                  ? 'border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-stone-300 text-stone-600 hover:bg-stone-50'
-              }`}
-            >
-              <Globe className="w-4 h-4" />
-              공개
-            </button>
-          </div>
         </div>
 
         {/* Submit Button */}
