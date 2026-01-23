@@ -1,3 +1,18 @@
+import type { Id } from 'convex/_generated/dataModel';
+
+/**
+ * Convex DB에서 가져온 책 데이터 타입
+ */
+export interface BookData {
+  _id: Id<'books'>;
+  title: string;
+  author: string;
+  publisher?: string;
+  publishedDate?: number;
+  coverImageUrl?: string;
+  description?: string;
+}
+
 export interface Book {
   id: string;
   isbn: string | null;

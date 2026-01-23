@@ -16,17 +16,7 @@ import {
   type LocalBook,
   type AladinBook,
 } from '../../hooks/useBookSearch';
-import type { Id } from 'convex/_generated/dataModel';
-
-interface BookData {
-  _id: Id<'books'>;
-  title: string;
-  author: string;
-  publisher?: string;
-  publishedDate?: number;
-  coverImageUrl?: string;
-  description?: string;
-}
+import type { BookData } from '../../types/book';
 
 interface BookSearchProps {
   onSelectBook: (book: BookData) => void;

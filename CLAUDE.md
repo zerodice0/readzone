@@ -32,12 +32,24 @@ pnpm --filter @readzone/frontend test
 
 ### Convex Commands
 
-```bash
-# Generate Convex types after schema changes
-pnpm --filter @readzone/backend codegen
+**중요: Convex CLI는 반드시 프로젝트 루트에서 실행해야 합니다.**
 
-# Run Convex dev server (included in pnpm dev)
-cd packages/backend && npx convex dev
+프로젝트 루트에 `convex.json`과 `.env.local`(CONVEX_DEPLOYMENT 포함)이 있으며,
+`convex.json`의 `functions` 필드가 `packages/backend/convex`를 가리킵니다.
+
+```bash
+# Convex dev server (프로젝트 루트에서 실행)
+npx convex dev
+
+# Convex 프로덕션 배포 (프로젝트 루트에서 실행)
+npx convex deploy
+# 또는 pnpm 스크립트 사용
+pnpm --filter @readzone/backend build
+
+# Generate Convex types after schema changes (프로젝트 루트에서 실행)
+npx convex codegen
+# 또는 pnpm 스크립트 사용
+pnpm --filter @readzone/backend codegen
 ```
 
 ## Architecture Overview
