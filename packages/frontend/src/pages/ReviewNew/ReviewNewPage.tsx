@@ -20,17 +20,7 @@ import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import { pageVariants, fadeInUpVariants } from '../../utils/animations';
 import { BookDiaryList } from '../../components/diary/BookDiaryList';
-import type { Id } from 'convex/_generated/dataModel';
-
-interface BookData {
-  _id: Id<'books'>;
-  title: string;
-  author: string;
-  publisher?: string;
-  publishedDate?: number;
-  coverImageUrl?: string;
-  description?: string;
-}
+import type { BookData } from '../../types/book';
 
 interface ReviewFormData {
   title: string;

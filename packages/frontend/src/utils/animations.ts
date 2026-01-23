@@ -18,18 +18,17 @@ const prefersReducedMotion = (): boolean => {
  * Wrap variants to respect reduced motion preference
  */
 const withReducedMotion = (variants: Variants): Variants => {
-  if (prefersReducedMotion()) {
-    // Return simplified variants with instant transitions
-    const reducedVariants: Variants = {};
-    Object.keys(variants).forEach((key) => {
-      reducedVariants[key] = {
-        ...(typeof variants[key] === 'object' ? variants[key] : {}),
+  if (!prefersReducedMotion()) return variants;
+
+  return Object.fromEntries(
+    Object.entries(variants).map(([key, value]) => [
+      key,
+      {
+        ...(typeof value === 'object' ? value : {}),
         transition: { duration: 0.01 },
-      };
-    });
-    return reducedVariants;
-  }
-  return variants;
+      },
+    ])
+  );
 };
 
 // Page transition animations - like turning a page

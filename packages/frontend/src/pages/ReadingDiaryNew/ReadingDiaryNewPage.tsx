@@ -10,17 +10,7 @@ import { BookSearch } from '../../components/review/BookSearch';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import { pageVariants, fadeInUpVariants } from '../../utils/animations';
-import type { Id } from 'convex/_generated/dataModel';
-
-interface BookData {
-  _id: Id<'books'>;
-  title: string;
-  author: string;
-  publisher?: string;
-  publishedDate?: number;
-  coverImageUrl?: string;
-  description?: string;
-}
+import type { BookData } from '../../types/book';
 
 export default function ReadingDiaryNewPage() {
   const navigate = useNavigate();
@@ -28,19 +18,13 @@ export default function ReadingDiaryNewPage() {
   const [selectedBook, setSelectedBook] = useState<BookData | null>(null);
   const [date, setDate] = useState(() => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // 로컬 시간대 기준 YYYY-MM-DD (UTC 기반 toISOString() 대신 사용)
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   });
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createDiary = useMutation(api.readingDiaries.create);
-
-  const handleSelectBook = (book: BookData | null) => {
-    setSelectedBook(book);
-  };
 
   const handleSubmit = async () => {
     if (!selectedBook || !user) {
@@ -114,7 +98,7 @@ export default function ReadingDiaryNewPage() {
         <div>
           <h2 className="text-lg font-semibold text-stone-900 mb-4">책 선택</h2>
           <BookSearch
-            onSelectBook={handleSelectBook}
+            onSelectBook={setSelectedBook}
             selectedBook={selectedBook}
           />
         </div>

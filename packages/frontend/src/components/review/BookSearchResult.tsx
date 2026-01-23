@@ -1,16 +1,6 @@
 import { Book, Check } from 'lucide-react';
 import { Button } from '../ui/button';
-import type { Id } from 'convex/_generated/dataModel';
-
-interface BookData {
-  _id: Id<'books'>;
-  title: string;
-  author: string;
-  publisher?: string;
-  publishedDate?: number;
-  coverImageUrl?: string;
-  description?: string;
-}
+import type { BookData } from '../../types/book';
 
 interface BookSearchResultProps {
   book: BookData;
