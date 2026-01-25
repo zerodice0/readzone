@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Pencil, Trash2, Lock, Globe } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../../components/ui/button';
@@ -131,7 +131,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
         />
 
         {/* Visibility toggle */}
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setEditVisibility('PRIVATE')}
@@ -156,7 +156,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
             <Globe className="w-3.5 h-3.5" />
             공개
           </button>
-        </div>
+        </div> */}
 
         {/* Actions */}
         <div className="flex justify-end gap-2">
@@ -185,7 +185,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
     <>
       <div className="bg-stone-50 rounded-lg p-4">
         {/* Book info (showBookInfo가 true일 때만 표시) */}
-        {showBookInfo && diary.book && (
+        {/* {showBookInfo && diary.book && (
           <div className="flex items-center gap-3 pb-3 border-b border-stone-200 mb-3">
             {diary.book.coverImageUrl && (
               <img
@@ -214,10 +214,10 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
               )}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* 공개/비공개 표시 (책 정보 숨길 때) */}
-        {!showBookInfo && (
+        {/* {!showBookInfo && (
           <div className="flex items-center gap-1 text-xs text-stone-400 mb-2">
             {diary.visibility === 'PRIVATE' ? (
               <>
@@ -231,7 +231,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
               </>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Content */}
         <div className="relative">
