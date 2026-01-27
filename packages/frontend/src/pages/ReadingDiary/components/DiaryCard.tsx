@@ -35,7 +35,6 @@ interface DiaryCardProps {
 export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(diary.content);
-  const [editVisibility, setEditVisibility] = useState(diary.visibility);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -68,7 +67,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
       await updateDiary({
         id: diary._id,
         content: editContent.trim(),
-        visibility: editVisibility,
+        visibility: 'PRIVATE',
       });
       toast.success('수정되었습니다');
       setIsEditing(false);
@@ -96,7 +95,6 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
 
   const handleCancelEdit = () => {
     setEditContent(diary.content);
-    setEditVisibility(diary.visibility);
     setIsEditing(false);
   };
 
@@ -130,34 +128,6 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
           className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none text-sm"
         />
 
-        {/* Visibility toggle */}
-        {/* <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setEditVisibility('PRIVATE')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm border transition-colors ${
-              editVisibility === 'PRIVATE'
-                ? 'border-primary-600 bg-primary-50 text-primary-700'
-                : 'border-stone-300 text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            <Lock className="w-3.5 h-3.5" />
-            비공개
-          </button>
-          <button
-            type="button"
-            onClick={() => setEditVisibility('PUBLIC')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm border transition-colors ${
-              editVisibility === 'PUBLIC'
-                ? 'border-primary-600 bg-primary-50 text-primary-700'
-                : 'border-stone-300 text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            <Globe className="w-3.5 h-3.5" />
-            공개
-          </button>
-        </div> */}
-
         {/* Actions */}
         <div className="flex justify-end gap-2">
           <Button
@@ -184,55 +154,6 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
   return (
     <>
       <div className="bg-stone-50 rounded-lg p-4">
-        {/* Book info (showBookInfo가 true일 때만 표시) */}
-        {/* {showBookInfo && diary.book && (
-          <div className="flex items-center gap-3 pb-3 border-b border-stone-200 mb-3">
-            {diary.book.coverImageUrl && (
-              <img
-                src={diary.book.coverImageUrl}
-                alt={diary.book.title}
-                className="w-10 h-14 object-cover rounded shadow-sm"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-stone-900 text-sm truncate">
-                {diary.book.title}
-              </p>
-              <p className="text-xs text-stone-500">{diary.book.author}</p>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-stone-400">
-              {diary.visibility === 'PRIVATE' ? (
-                <>
-                  <Lock className="w-3.5 h-3.5" />
-                  비공개
-                </>
-              ) : (
-                <>
-                  <Globe className="w-3.5 h-3.5" />
-                  공개
-                </>
-              )}
-            </div>
-          </div>
-        )} */}
-
-        {/* 공개/비공개 표시 (책 정보 숨길 때) */}
-        {/* {!showBookInfo && (
-          <div className="flex items-center gap-1 text-xs text-stone-400 mb-2">
-            {diary.visibility === 'PRIVATE' ? (
-              <>
-                <Lock className="w-3.5 h-3.5" />
-                비공개
-              </>
-            ) : (
-              <>
-                <Globe className="w-3.5 h-3.5" />
-                공개
-              </>
-            )}
-          </div>
-        )} */}
-
         {/* Content */}
         <div className="relative">
           <p
