@@ -1,3 +1,7 @@
+# General Guidelines
+
+- **Language**: Always provide answers in **Korean**.
+
 <skills_system priority="1">
 
 ## Available Skills
@@ -49,81 +53,103 @@ Usage notes:
 
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-05  
-**Commit:** 5a1ef6a  
-**Branch:** main
+**Generated:** 2026-01-28
+**Frameworks:** React 19, Convex, Clerk, TailwindCSS v4
+**Type:** Monorepo (Turbo)
 
-## OVERVIEW
+## BUILD & EXECUTION
 
-ReadZone: 한국어 독후감 공유 플랫폼. React 19 + Convex + Clerk 기반 서버리스 풀스택.
+| Command           | Description                                    |
+| :---------------- | :--------------------------------------------- |
+| `pnpm dev`        | Start development servers (Frontend + Backend) |
+| `pnpm build`      | Build all packages (Turbo)                     |
+| `pnpm type-check` | Run TypeScript validation across all packages  |
+| `pnpm lint`       | Run ESLint across all packages                 |
+| `pnpm format`     | Format code using Prettier                     |
+| `pnpm test`       | Run tests (Vitest)                             |
+| `npx convex dev`  | Run Convex backend directly                    |
 
-## STRUCTURE
+### Testing Strategy
+
+- **Framework**: Vitest (configured in `@readzone/frontend`)
+- **Run Single Test**: `pnpm --filter @readzone/frontend test -- <filename>`
+- **Example**: `pnpm --filter @readzone/frontend test -- Button.test.tsx`
+- **Note**: Currently, test files are sparse. Add tests for new critical logic.
+
+## CODE STYLE & CONVENTIONS
+
+### 1. Formatting & Linting
+
+- **Strict Compliance**: Never suppress linter errors (`eslint-disable`) without explicit user approval.
+- **Prettier**: Single quotes, semicolons, trailing commas (ES5), 2-space indentation.
+- **Imports**:
+  - Disable `import/prefer-default-export`. Use named exports for better tree-shaking and consistency.
+  - Group imports: External (React, libs) -> Internal (components, hooks) -> Styles/Types.
+
+### 2. TypeScript & Types
+
+- **Strict Mode**: Enabled. No `any` types allowed.
+- **Zod**: Use Zod for runtime validation, especially for API boundaries and form data.
+- **Shared Types**: Place shared Zod schemas in `packages/shared` (when active) or collocate with Convex schema.
+
+### 3. Naming Conventions
+
+- **Files**: `PascalCase.tsx` for components, `camelCase.ts` for utilities/hooks.
+- **Variables**: `camelCase` for variables/functions, `UPPER_CASE` for constants.
+- **User IDs**: `userId` always refers to the **Clerk ID** (string), not the Convex internal ID.
+- **Event Handlers**: `handleEvent` (implementation) and `onEvent` (prop).
+
+### 4. React & Frontend (React 19)
+
+- **Components**: Functional components only. Use `shadcn/ui` patterns for UI elements.
+- **State**: Use `zustand` for global state, `useState`/`useReducer` for local.
+- **Data Fetching**: Use Convex hooks (`useQuery`, `useMutation`) directly in components.
+- **Styling**: Tailwind CSS v4. Avoid raw CSS/SCSS files unless absolutely necessary.
+- **Structure**:
+  - `components/ui`: Reusable, generic UI components.
+  - `features/`: Domain-specific components and logic.
+
+### 5. Backend (Convex)
+
+- **Actions vs Mutations**: Use `mutation` for DB writes. Use `action` (with `'use node'`) for external APIs (e.g., Aladin).
+- **Security**: Never expose sensitive keys. Use `process.env` and Convex dashboard for secrets.
+- **Schema**: Defined in `schema.ts`. Verify indexes for performance.
+
+## ERROR HANDLING
+
+- **API Errors**: Handle Convex exceptions gracefully in UI (toast notifications via `sonner`).
+- **Boundaries**: Use Error Boundaries for React component sub-trees.
+- **Async**: Always use `try/catch` in async functions/actions, especially external API calls.
+
+## PROJECT ARCHITECTURE
 
 ```
 readzone/
 ├── packages/
-│   ├── backend/convex/     # Convex 서버리스 함수 (→ AGENTS.md)
-│   ├── frontend/src/       # React SPA (→ AGENTS.md)
-│   └── shared/             # 공유 타입 (미사용 placeholder)
-├── worker.ts               # Cloudflare Worker: OG 메타 태그 주입
-├── wrangler.toml           # CF Workers 배포 설정
-├── convex.json             # Convex 경로 매핑
-└── turbo.json              # Monorepo 빌드 파이프라인
+│   ├── backend/convex/     # Serverless functions (API & DB)
+│   │   ├── schema.ts       # Database definition
+│   │   ├── http.ts         # Webhooks (Clerk) & HTTP endpoints
+│   │   └── *.ts            # Business logic (books, reviews)
+│   ├── frontend/src/       # React 19 SPA
+│   │   ├── components/ui/  # shadcn/ui components
+│   │   └── pages/          # Route-based lazy-loaded pages
+│   └── shared/             # Common Zod schemas (Future use)
+├── worker.ts               # Cloudflare Worker for OG Meta Tags
+└── turbo.json              # Build pipeline configuration
 ```
 
-## WHERE TO LOOK
+## KEY WORKFLOWS
 
-| Task           | Location                                        | Notes                      |
-| -------------- | ----------------------------------------------- | -------------------------- |
-| DB 스키마 변경 | `packages/backend/convex/schema.ts`             | 인덱스 정의 포함           |
-| 새 API 추가    | `packages/backend/convex/*.ts`                  | query/mutation/action 구분 |
-| 새 페이지 추가 | `packages/frontend/src/pages/` + `router.tsx`   | lazy loading 적용          |
-| UI 컴포넌트    | `packages/frontend/src/components/ui/`          | shadcn/ui 스타일           |
-| 인증 로직      | Clerk → `UserSync.tsx` → Convex `users`         | Webhook 동기화 병행        |
-| OG 메타/SEO    | `worker.ts` + `packages/backend/convex/http.ts` | 봇 UA 감지                 |
-| 환경변수       | Frontend: `.env`, Backend: Convex Dashboard     |                            |
+1.  **Authentication**: Handled by Clerk. Webhooks sync user data to Convex `users` table.
+2.  **Deployment**:
+    - Frontend: Cloudflare Pages (via Vite build).
+    - Backend: Convex Cloud.
+    - OG Worker: Cloudflare Workers.
+3.  **Soft Deletes**: Use `status: 'DELETED'` and `deletedAt` timestamp instead of row removal.
 
-## CONVENTIONS
+## ANTI-PATTERNS
 
-- **Named exports only**: `import/prefer-default-export: off`
-- **Strict TypeScript**: 모든 `strict` 옵션 활성화
-- **Prettier**: `singleQuote`, `semi`, `trailingComma: es5`, `lf`
-- **Husky**: pre-commit에서 prettier 자동 실행
-
-## ANTI-PATTERNS (THIS PROJECT)
-
-| 금지                       | 이유                                                           |
-| -------------------------- | -------------------------------------------------------------- |
-| 린터/설정 파일 수정        | eslint.config.\*, tsconfig.json, .prettierrc 절대 수정 금지    |
-| `eslint-disable` 무단 추가 | 사용자 승인 필수                                               |
-| README 아키텍처 참조       | **DEPRECATED** - Fastify/Prisma는 구 버전. 현재는 Convex+Clerk |
-| 비밀키 커밋                | .env.example에 실제 값 금지                                    |
-
-## UNIQUE STYLES
-
-- **userId = Clerk ID (string)**: Convex 내부 ID 아닌 Clerk subject 사용
-- **Soft Delete**: `status: 'DELETED'` + `deletedAt` 필드
-- **Dual User Sync**: Clerk Webhook + `UserSync.tsx` 컴포넌트 병행
-- **OG Tag Injection**: Cloudflare Worker에서 봇 UA 감지 후 동적 주입
-
-## COMMANDS
-
-```bash
-pnpm dev              # Convex + Vite 개발 서버
-pnpm build            # Turbo 전체 빌드
-pnpm type-check       # TypeScript 검사
-pnpm lint             # ESLint
-pnpm format           # Prettier
-
-npx convex dev        # Convex 개발 서버 (별도 터미널)
-npx convex deploy     # Convex 프로덕션 배포
-
-pnpm backup:prod-to-dev  # 프로덕션 → 개발 데이터 복사
-```
-
-## NOTES
-
-- **CI 미구축**: `.github/workflows` 없음
-- **테스트 미구현**: Vitest 설치됨, 테스트 파일 없음
-- **packages/shared**: placeholder 상태, 공통 타입 이전 예정
-- **Linear 이슈**: 생성 전 구조 승인 필수 (CLAUDE.md 참조)
+- **Direct DB Access**: Never bypass Convex functions.
+- **Secret Commits**: `.env` files are ignored; do not force add them.
+- **Legacy Stack**: Do not refer to Fastify/Prisma (deprecated).
+- **Type Casting**: Avoid `as Unknown` or `as Any`. Fix the underlying type definition.

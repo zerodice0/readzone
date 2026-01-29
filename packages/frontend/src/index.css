@@ -1,8 +1,8 @@
 /* ReadZone Design System - Tailwind CSS v4 */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
-@import "tailwindcss";
-@plugin "tailwindcss-animate";
+@import 'tailwindcss';
+@plugin 'tailwindcss-animate';
 
 /* v4 Theme - CSS 변수를 Tailwind 색상으로 매핑 */
 @theme inline {
@@ -46,17 +46,17 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  /* Primary - Soft Indigo */
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
+  /* Primary - Warm Amber (ReadZone Signature) */
+  --color-primary-50: #fffbeb;
+  --color-primary-100: #fef3c7;
+  --color-primary-200: #fde68a;
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #d97706;
+  --color-primary-700: #b45309;
+  --color-primary-800: #92400e;
+  --color-primary-900: #78350f;
 
   /* Slate (Neutral) - Clean & Sophisticated */
   --color-slate-50: #f8fafc;
@@ -79,23 +79,23 @@
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #6366f1;
+  --primary: #f59e0b;
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #0f172a;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
-  --accent: #e0e7ff;
-  --accent-foreground: #6366f1;
+  --accent: #fffbeb;
+  --accent-foreground: #f59e0b;
   --destructive: #ef4444;
   --destructive-foreground: #f8fafc;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #6366f1;
-  --chart-1: #6366f1;
+  --ring: #f59e0b;
+  --chart-1: #f59e0b;
   --chart-2: #14b8a6;
   --chart-3: #0369a1;
-  --chart-4: #eab308;
+  --chart-4: #a855f7;
   --chart-5: #f97316;
   --radius: 1rem;
 }
@@ -108,8 +108,8 @@
   --card-foreground: #f8fafc;
   --popover: #0f172a;
   --popover-foreground: #f8fafc;
-  --primary: #6366f1;
-  --primary-foreground: #f8fafc;
+  --primary: #f59e0b;
+  --primary-foreground: #ffffff;
   --secondary: #334155;
   --secondary-foreground: #f8fafc;
   --muted: #334155;
@@ -120,8 +120,8 @@
   --destructive-foreground: #f8fafc;
   --border: #334155;
   --input: #334155;
-  --ring: #6366f1;
-  --chart-1: #6366f1;
+  --ring: #f59e0b;
+  --chart-1: #f59e0b;
   --chart-2: #2dd4bf;
   --chart-3: #fb923c;
   --chart-4: #a855f7;
@@ -244,9 +244,17 @@ code {
 
   /* Book carousel fade animation - 2 books */
   @keyframes book-fade-2 {
-    0%, 45% { opacity: 1; }
-    50%, 95% { opacity: 0; }
-    100% { opacity: 1; }
+    0%,
+    45% {
+      opacity: 1;
+    }
+    50%,
+    95% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 
   .animate-book-fade-2-1 {
@@ -260,9 +268,17 @@ code {
 
   /* Indicator animation - 2 books */
   @keyframes dot-active-2 {
-    0%, 45% { background-color: var(--primary); }
-    50%, 95% { background-color: #d1d5db; }
-    100% { background-color: var(--primary); }
+    0%,
+    45% {
+      background-color: var(--primary);
+    }
+    50%,
+    95% {
+      background-color: #d1d5db;
+    }
+    100% {
+      background-color: var(--primary);
+    }
   }
 
   .animate-dot-2-1 {
@@ -276,9 +292,17 @@ code {
 
   /* Book carousel fade animation - 3 books */
   @keyframes book-fade-3 {
-    0%, 28% { opacity: 1; }
-    33%, 95% { opacity: 0; }
-    100% { opacity: 1; }
+    0%,
+    28% {
+      opacity: 1;
+    }
+    33%,
+    95% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 
   .animate-book-fade-3-1 {
@@ -297,9 +321,17 @@ code {
 
   /* Indicator animation - 3 books */
   @keyframes dot-active-3 {
-    0%, 28% { background-color: var(--primary); }
-    33%, 95% { background-color: #d1d5db; }
-    100% { background-color: var(--primary); }
+    0%,
+    28% {
+      background-color: var(--primary);
+    }
+    33%,
+    95% {
+      background-color: #d1d5db;
+    }
+    100% {
+      background-color: var(--primary);
+    }
   }
 
   .animate-dot-3-1 {

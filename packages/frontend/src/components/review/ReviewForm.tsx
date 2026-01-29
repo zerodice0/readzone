@@ -223,9 +223,10 @@ export function ReviewForm({
           초안 저장
         </Button>
         <Button
+          variant="warm"
           onClick={() => handleSubmit('PUBLISHED')}
           disabled={isSubmitting || !isContentValid}
-          className="flex-2 h-12 text-base rounded-xl bg-linear-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 shadow-lg shadow-primary-500/20"
+          className="flex-2 h-12 text-base rounded-xl shadow-lg shadow-primary-500/20"
         >
           <Send className="w-4 h-4 mr-2" />
           발행하기
