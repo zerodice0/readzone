@@ -249,6 +249,89 @@ export const getRecentBooks = query({
 });
 
 /**
+ * 독서일기는 있지만 독후감은 아직 작성하지 않은 책 목록 조회
+ * - 독후감 작성 시 책 추천 UI에 사용
+ * - 각 책의 일기 건수를 함께 반환
+ */
+export const getBooksWithoutReview = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const userId = identity.subject;
+
+    // 사용자의 모든 일기 조회
+    const diaries = await ctx.db
+      .query('readingDiaries')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect();
+
+    if (diaries.length === 0) return [];
+
+    // bookId별 일기 건수 집계 (실제 Id 타입 보존)
+    const bookDiaryMap = new Map<
+      string,
+      { bookId: (typeof diaries)[0]['bookId']; count: number }
+    >();
+    for (const diary of diaries) {
+      const key = diary.bookId.toString();
+      const existing = bookDiaryMap.get(key);
+      if (existing) {
+        existing.count++;
+      } else {
+        bookDiaryMap.set(key, { bookId: diary.bookId, count: 1 });
+      }
+    }
+
+    // 사용자의 리뷰가 있는 bookId 목록 조회 (DELETED 제외)
+    const publishedReviews = await ctx.db
+      .query('reviews')
+      .withIndex('by_user', (q) =>
+        q.eq('userId', userId).eq('status', 'PUBLISHED')
+      )
+      .collect();
+    const draftReviews = await ctx.db
+      .query('reviews')
+      .withIndex('by_user', (q) => q.eq('userId', userId).eq('status', 'DRAFT'))
+      .collect();
+
+    const reviewedBookIds = new Set<string>();
+    for (const review of [...publishedReviews, ...draftReviews]) {
+      reviewedBookIds.add(review.bookId.toString());
+    }
+
+    // 리뷰가 없는 책만 필터링, 일기 건수 내림차순
+    const unreviewedBooks = [...bookDiaryMap.entries()]
+      .filter(([key]) => !reviewedBookIds.has(key))
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 10);
+
+    // 책 정보 병렬 조회
+    const results = await Promise.all(
+      unreviewedBooks.map(async ([, { bookId, count }]) => {
+        const book = await ctx.db.get(bookId);
+        if (!book) return null;
+        return {
+          book: {
+            _id: book._id,
+            title: book.title,
+            author: book.author,
+            publisher: book.publisher,
+            publishedDate: book.publishedDate,
+            coverImageUrl: book.coverImageUrl,
+            description: book.description,
+          },
+          diaryCount: count,
+        };
+      })
+    );
+
+    return results.filter((r) => r !== null);
+  },
+});
+
+/**
  * 단일 일기 상세 조회
  */
 export const get = query({

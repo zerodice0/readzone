@@ -16,6 +16,7 @@ import {
   type LocalBook,
   type AladinBook,
 } from '../../hooks/useBookSearch';
+import { DiaryBookSuggestions } from './DiaryBookSuggestions';
 import type { BookData } from '../../types/book';
 
 interface BookSearchProps {
@@ -257,19 +258,23 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
           </div>
         )}
 
-      {/* Initial state hint */}
+      {/* Diary book suggestions + Initial state hint */}
       {!searchQuery && !selectedBook && (
-        <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50">
-          <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 ring-1 ring-stone-900/5">
-            <BookPlus className="w-8 h-8 text-primary-500" />
+        <>
+          <DiaryBookSuggestions onSelectBook={onSelectBook} />
+          <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 ring-1 ring-stone-900/5">
+              <BookPlus className="w-8 h-8 text-primary-500" />
+            </div>
+            <h3 className="text-lg font-bold text-stone-900 mb-2">
+              어떤 책을 기록할까요?
+            </h3>
+            <p className="text-stone-500 text-sm max-w-xs mx-auto">
+              책 제목이나 저자 이름을 입력하여 독후감을 작성할 책을
+              선택해주세요.
+            </p>
           </div>
-          <h3 className="text-lg font-bold text-stone-900 mb-2">
-            어떤 책을 기록할까요?
-          </h3>
-          <p className="text-stone-500 text-sm max-w-xs mx-auto">
-            책 제목이나 저자 이름을 입력하여 독후감을 작성할 책을 선택해주세요.
-          </p>
-        </div>
+        </>
       )}
 
       {/* Selected book display */}
