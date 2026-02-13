@@ -226,7 +226,7 @@ export default function ReviewNewPage() {
           className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
           {/* Main form area */}
-          <div className="lg:col-span-2 bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm">
+          <div className="lg:col-span-2 bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm lg:flex lg:flex-col">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-stone-900">
                 독후감 작성
@@ -269,16 +269,22 @@ export default function ReviewNewPage() {
             </details>
 
             {/* Review form */}
-            <ReviewForm
-              onSubmit={handleSubmitReview}
-              isSubmitting={isSubmitting}
-            />
+            <div className="lg:flex-1">
+              <ReviewForm
+                onSubmit={handleSubmitReview}
+                isSubmitting={isSubmitting}
+              />
+            </div>
           </div>
 
           {/* Desktop: Diary sidebar */}
           <div className="hidden lg:block">
-            <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm sticky top-24">
-              <BookDiaryList bookId={selectedBook._id} />
+            <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm sticky top-24 lg:flex lg:flex-col lg:max-h-[calc(100vh-7rem)] overflow-hidden">
+              <BookDiaryList
+                bookId={selectedBook._id}
+                className="h-full"
+                viewMode="full"
+              />
             </div>
           </div>
         </m.div>
