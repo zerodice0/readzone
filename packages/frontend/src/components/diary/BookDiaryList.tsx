@@ -13,15 +13,23 @@ import type { Id } from 'convex/_generated/dataModel';
 interface BookDiaryListProps {
   bookId: Id<'books'>;
   className?: string;
+  viewMode?: 'collapsible' | 'full';
 }
 
 type SortOrder = 'newest' | 'oldest';
 
-export function BookDiaryList({ bookId, className = '' }: BookDiaryListProps) {
+export function BookDiaryList({
+  bookId,
+  className = '',
+  viewMode = 'collapsible',
+}: BookDiaryListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>('oldest');
 
   const diaries = useQuery(api.readingDiaries.getByUserAndBook, { bookId });
+  const rootClassName = ['flex min-h-0 flex-col', className]
+    .filter(Boolean)
+    .join(' ');
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('ko-KR', {
@@ -62,7 +70,7 @@ export function BookDiaryList({ bookId, className = '' }: BookDiaryListProps) {
   // Early returns는 모든 hooks 이후에 위치
   if (diaries === undefined) {
     return (
-      <div className={`${className} animate-pulse`}>
+      <div className={`${rootClassName} animate-pulse`}>
         <div className="h-4 bg-stone-200 rounded w-1/2 mb-3" />
         <div className="space-y-2">
           <div className="h-16 bg-stone-100 rounded" />
@@ -74,7 +82,7 @@ export function BookDiaryList({ bookId, className = '' }: BookDiaryListProps) {
 
   if (diaries.length === 0) {
     return (
-      <div className={`${className} text-center py-6`}>
+      <div className={`${rootClassName} text-center py-6`}>
         <BookOpen className="w-10 h-10 text-stone-300 mx-auto mb-2" />
         <p className="text-sm text-stone-500">
           아직 작성한 독서 일기가 없습니다
@@ -84,7 +92,7 @@ export function BookDiaryList({ bookId, className = '' }: BookDiaryListProps) {
   }
 
   return (
-    <div className={className}>
+    <div className={rootClassName}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-stone-700 flex items-center gap-2">
           <Calendar className="w-4 h-4" />내 독서 일기 ({diaries.length})
@@ -101,7 +109,7 @@ export function BookDiaryList({ bookId, className = '' }: BookDiaryListProps) {
           <ArrowUpDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-stone-400 pointer-events-none" />
         </div>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
         {groupedDiaries.map(([dateKey, diariesInDate]) => (
           <div key={dateKey}>
             <p className="text-xs font-medium text-stone-500 mb-2 pb-1 border-b border-stone-200">
@@ -109,6 +117,19 @@ export function BookDiaryList({ bookId, className = '' }: BookDiaryListProps) {
             </p>
             <div className="space-y-2">
               {diariesInDate.map((diary) => {
+                if (viewMode === 'full') {
+                  return (
+                    <div
+                      key={diary._id}
+                      className="bg-stone-50 rounded-lg border border-stone-200 p-3"
+                    >
+                      <p className="text-sm text-stone-700 whitespace-pre-wrap break-words leading-6">
+                        {diary.content}
+                      </p>
+                    </div>
+                  );
+                }
+
                 const isExpanded = expandedId === diary._id;
                 const previewContent =
                   diary.content.length > 50
@@ -141,7 +162,7 @@ export function BookDiaryList({ bookId, className = '' }: BookDiaryListProps) {
 
                     {isExpanded && (
                       <div className="px-3 pb-3 pt-0">
-                        <p className="text-sm text-stone-700 whitespace-pre-wrap">
+                        <p className="text-sm text-stone-700 whitespace-pre-wrap break-words max-h-44 overflow-y-auto pr-1">
                           {diary.content}
                         </p>
                       </div>

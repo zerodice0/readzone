@@ -51,7 +51,7 @@ export function ReviewForm({
   const isContentValid = contentLength >= minLength;
 
   return (
-    <div className="space-y-8 bg-white p-6 md:p-8 rounded-2xl border border-stone-100 shadow-sm">
+    <div className="flex min-h-0 flex-col gap-8 bg-white p-6 md:p-8 rounded-2xl border border-stone-100 shadow-sm">
       {/* Title (optional) */}
       <div className="space-y-3">
         <label
@@ -78,39 +78,41 @@ export function ReviewForm({
       </div>
 
       {/* Content (required) */}
-      <div className="space-y-3">
-        <label
-          htmlFor="review-content"
-          className="text-sm font-semibold text-stone-700 flex items-center gap-2"
-        >
-          <BookOpen className="w-4 h-4 text-primary-500" />
-          내용 <span className="text-red-500 font-bold">*</span>
-        </label>
-        <div className="space-y-2">
-          <textarea
-            id="review-content"
-            value={formData.content}
-            onChange={(e) =>
-              setFormData({ ...formData, content: e.target.value })
-            }
-            placeholder="이 책을 읽고 어떤 생각이 드셨나요? 인상 깊었던 구절이나 느낌을 자유롭게 기록해보세요."
-            rows={15}
-            className="w-full px-5 py-4 bg-stone-50 border border-stone-200 rounded-xl text-base leading-relaxed placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-none hover:bg-white"
-            disabled={isSubmitting}
-          />
-          <div className="flex justify-end items-center gap-3">
-            <span
-              className={`text-xs font-medium px-2 py-1 rounded-md transition-colors ${
-                isContentValid
-                  ? 'bg-green-50 text-green-600'
-                  : 'bg-stone-100 text-stone-500'
-              }`}
-            >
-              {isContentValid ? '작성 완료' : `${minLength}자 이상 필요`}
-            </span>
-            <span className="text-xs text-stone-400 font-mono">
-              {contentLength.toLocaleString()}자
-            </span>
+      <div className="lg:flex-1">
+        <div className="space-y-3">
+          <label
+            htmlFor="review-content"
+            className="text-sm font-semibold text-stone-700 flex items-center gap-2"
+          >
+            <BookOpen className="w-4 h-4 text-primary-500" />
+            내용 <span className="text-red-500 font-bold">*</span>
+          </label>
+          <div className="space-y-2">
+            <textarea
+              id="review-content"
+              value={formData.content}
+              onChange={(e) =>
+                setFormData({ ...formData, content: e.target.value })
+              }
+              placeholder="이 책을 읽고 어떤 생각이 드셨나요? 인상 깊었던 구절이나 느낌을 자유롭게 기록해보세요."
+              rows={15}
+              className="w-full min-h-[280px] md:min-h-[360px] lg:min-h-[420px] px-5 py-4 bg-stone-50 border border-stone-200 rounded-xl text-base leading-relaxed placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-y hover:bg-white"
+              disabled={isSubmitting}
+            />
+            <div className="flex justify-end items-center gap-3">
+              <span
+                className={`text-xs font-medium px-2 py-1 rounded-md transition-colors ${
+                  isContentValid
+                    ? 'bg-green-50 text-green-600'
+                    : 'bg-stone-100 text-stone-500'
+                }`}
+              >
+                {isContentValid ? '작성 완료' : `${minLength}자 이상 필요`}
+              </span>
+              <span className="text-xs text-stone-400 font-mono">
+                {contentLength.toLocaleString()}자
+              </span>
+            </div>
           </div>
         </div>
       </div>
