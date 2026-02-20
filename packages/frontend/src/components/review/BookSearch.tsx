@@ -17,14 +17,20 @@ import {
   type AladinBook,
 } from '../../hooks/useBookSearch';
 import { DiaryBookSuggestions } from './DiaryBookSuggestions';
+import { RecentBookSuggestions } from '../diary/RecentBookSuggestions';
 import type { BookData } from '../../types/book';
 
 interface BookSearchProps {
   onSelectBook: (book: BookData) => void;
   selectedBook?: BookData | null;
+  context?: 'review' | 'diary';
 }
 
-export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
+export function BookSearch({
+  onSelectBook,
+  selectedBook,
+  context = 'review',
+}: BookSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [savingBookId, setSavingBookId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -258,10 +264,14 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
           </div>
         )}
 
-      {/* Diary book suggestions + Initial state hint */}
+      {/* Book suggestions + Initial state hint */}
       {!searchQuery && !selectedBook && (
         <>
-          <DiaryBookSuggestions onSelectBook={onSelectBook} />
+          {context === 'diary' ? (
+            <RecentBookSuggestions onSelectBook={onSelectBook} />
+          ) : (
+            <DiaryBookSuggestions onSelectBook={onSelectBook} />
+          )}
           <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50">
             <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 ring-1 ring-stone-900/5">
               <BookPlus className="w-8 h-8 text-primary-500" />
@@ -270,8 +280,9 @@ export function BookSearch({ onSelectBook, selectedBook }: BookSearchProps) {
               어떤 책을 기록할까요?
             </h3>
             <p className="text-stone-500 text-sm max-w-xs mx-auto">
-              책 제목이나 저자 이름을 입력하여 독후감을 작성할 책을
-              선택해주세요.
+              {context === 'diary'
+                ? '위에서 최근 읽은 책을 선택하거나, 검색하여 새로운 책을 찾아보세요.'
+                : '책 제목이나 저자 이름을 입력하여 독후감을 작성할 책을 선택해주세요.'}
             </p>
           </div>
         </>
