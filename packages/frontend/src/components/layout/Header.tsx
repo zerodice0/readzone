@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   SignedIn,
@@ -8,7 +8,7 @@ import {
   useUser,
   UserButton,
 } from '@clerk/clerk-react';
-import { Menu, PenSquare, LayoutDashboard, LogOut } from 'lucide-react';
+import { Menu, PenSquare, LogOut } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Button } from '../ui/button';
 import {
@@ -19,35 +19,6 @@ import {
   SheetTrigger,
 } from '../ui/sheet';
 import { getAnimationProps } from '../../lib/motion';
-
-interface MobileNavLinksProps {
-  onNavigate: () => void;
-}
-
-function MobileNavLinks({ onNavigate }: MobileNavLinksProps) {
-  return (
-    <Link
-      to="/dashboard"
-      onClick={onNavigate}
-      className="flex items-center gap-3 text-stone-700 hover:text-primary-600 font-medium py-2 px-3 rounded-md hover:bg-stone-50 transition-colors"
-    >
-      <LayoutDashboard className="w-4 h-4" />
-      대시보드
-    </Link>
-  );
-}
-
-function DesktopDashboardButton() {
-  return (
-    <Link
-      to="/dashboard"
-      className="p-2 rounded-lg text-stone-600 hover:text-primary-600 hover:bg-stone-50 transition-colors"
-      aria-label="대시보드로 이동"
-    >
-      <LayoutDashboard className="w-5 h-5" />
-    </Link>
-  );
-}
 
 function MobileLogoutButton({ onLogout }: { onLogout: () => void }) {
   const { signOut } = useClerk();
@@ -127,10 +98,10 @@ export function Header() {
   const [isClerkReady, setIsClerkReady] = useState(clerkLoaded);
 
   useEffect(() => {
-    if (clerkLoaded && !isClerkReady) {
+    if (clerkLoaded) {
       setIsClerkReady(true);
     }
-  }, [clerkLoaded, isClerkReady]);
+  }, [clerkLoaded]);
 
   // URL 파라미터로 디버그 모드 활성화 (?debug=true)
   const isDebugMode =
@@ -148,18 +119,16 @@ export function Header() {
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
   };
 
-  const navLinks = useMemo(() => {
-    const baseLinks = [
-      { to: '/feed', label: '피드' },
-      { to: '/books', label: '책 목록' },
-    ];
-
-    if (isSignedIn) {
-      baseLinks.push({ to: '/reading-diary', label: '독서 일기' });
-    }
-
-    return baseLinks;
-  }, [isSignedIn]);
+  const navLinks = [
+    { to: '/feed', label: '피드' },
+    { to: '/books', label: '책 목록' },
+    ...(isSignedIn
+      ? [
+          { to: '/reading-diary', label: '독서 일기' },
+          { to: '/dashboard', label: '대시보드' },
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -281,7 +250,6 @@ export function Header() {
                         독후감 작성
                       </Link>
                     </Button>
-                    <DesktopDashboardButton />
                     <UserButton
                       appearance={{
                         elements: {
@@ -375,12 +343,6 @@ export function Header() {
                 {/* 모바일: 사용자 메뉴 (하단 고정) */}
                 <SignedIn>
                   <div className="mt-auto border-t border-stone-200 pt-4 flex flex-col gap-3">
-                    {/* 사용자 전용 네비게이션 링크 */}
-                    <MobileNavLinks
-                      onNavigate={() => setIsMobileMenuOpen(false)}
-                    />
-                    {/* 구분선 */}
-                    <div className="border-t border-stone-200" />
                     {/* 사용자 정보 및 계정 관리 */}
                     <MobileUserInfo
                       onNavigate={() => setIsMobileMenuOpen(false)}
