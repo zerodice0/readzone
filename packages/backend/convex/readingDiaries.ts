@@ -202,45 +202,66 @@ export const getPublicByBook = query({
 });
 
 /**
- * 사용자의 최근 기록한 책 목록 조회 (최대 3개)
+ * 사용자의 최근 기록한 책 목록 조회
  * - 빈 날짜에서 빠른 추가 UI에 사용
  * - 중복 책 제거하여 고유한 책만 반환
+ * - limit 파라미터로 반환 개수 조절 가능 (기본 3, 최대 10)
  */
 export const getRecentBooks = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
     const userId = identity.subject;
+    const limit = Math.min(args.limit ?? 3, 10);
 
     // 최근 일기 조회 (중복 책 제거를 위해 충분히 가져옴)
     const recentDiaries = await ctx.db
       .query('readingDiaries')
       .withIndex('by_user', (q) => q.eq('userId', userId))
       .order('desc')
-      .take(20);
+      .take(limit * 7);
 
     if (recentDiaries.length === 0) return [];
 
-    // 중복 책 제거하여 최대 3개 추출
+    // 중복 책 제거하여 최대 limit개 추출
     const seenBookIds = new Set<string>();
     const uniqueDiaries: typeof recentDiaries = [];
 
     for (const diary of recentDiaries) {
-      const bookIdStr = diary.bookId.toString();
-      if (!seenBookIds.has(bookIdStr)) {
-        seenBookIds.add(bookIdStr);
+      if (!seenBookIds.has(diary.bookId)) {
+        seenBookIds.add(diary.bookId);
         uniqueDiaries.push(diary);
-        if (uniqueDiaries.length >= 3) break;
+        if (uniqueDiaries.length >= limit) break;
       }
     }
 
-    // 책 정보 병렬 조회
+    // 책 정보 및 일기 건수 병렬 조회
     const results = await Promise.all(
       uniqueDiaries.map(async (diary) => {
         const book = await ctx.db.get(diary.bookId);
-        return book ? { diary, book } : null;
+        if (!book) return null;
+        const bookDiaries = await ctx.db
+          .query('readingDiaries')
+          .withIndex('by_user_book', (q) =>
+            q.eq('userId', userId).eq('bookId', diary.bookId)
+          )
+          .collect();
+        return {
+          book: {
+            _id: book._id,
+            title: book.title,
+            author: book.author,
+            publisher: book.publisher,
+            publishedDate: book.publishedDate,
+            coverImageUrl: book.coverImageUrl,
+            description: book.description,
+          },
+          diaryCount: bookDiaries.length,
+        };
       })
     );
 

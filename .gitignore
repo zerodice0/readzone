@@ -63,8 +63,10 @@ pnpm-debug.log*
 /backups/
 
 # Serena MCP (local development context)
-.serena/memories/
-.serena/cache/
+.serena/
+
+# MCP server config (may contain tokens)
+.mcp.json
 .vercel
 
 # Claude Code local settings
