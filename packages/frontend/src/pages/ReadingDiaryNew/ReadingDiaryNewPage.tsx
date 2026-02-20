@@ -46,7 +46,8 @@ export default function ReadingDiaryNewPage() {
 
     try {
       // Convert date string to timestamp
-      const dateTimestamp = new Date(date).getTime();
+      const [y, m, d] = date.split('-').map(Number);
+      const dateTimestamp = Date.UTC(y, m - 1, d);
 
       await createDiary({
         bookId: selectedBook._id,
