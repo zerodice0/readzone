@@ -40,7 +40,15 @@ export default function ReadingDiaryPage() {
   };
 
   const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
+    if (!calendarData) return;
+
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+    if (calendarData[dateKey]?.length > 0) {
+      setSelectedDate(date);
+    } else {
+      void navigate(`/reading-diary/new?date=${dateKey}`);
+    }
   };
 
   const handleCloseModal = () => {

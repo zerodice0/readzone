@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, Save } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
@@ -14,9 +14,14 @@ import type { BookData } from '../../types/book';
 
 export default function ReadingDiaryNewPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useUser();
   const [selectedBook, setSelectedBook] = useState<BookData | null>(null);
   const [date, setDate] = useState(() => {
+    const dateParam = searchParams.get('date');
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      return dateParam;
+    }
     const today = new Date();
     // 로컬 시간대 기준 YYYY-MM-DD (UTC 기반 toISOString() 대신 사용)
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -100,27 +105,9 @@ export default function ReadingDiaryNewPage() {
           <BookSearch
             onSelectBook={setSelectedBook}
             selectedBook={selectedBook}
+            context="diary"
           />
         </div>
-
-        {/* Selected Book Summary */}
-        {selectedBook && (
-          <div className="bg-stone-50 rounded-lg p-4 flex items-center gap-4">
-            {selectedBook.coverImageUrl && (
-              <img
-                src={selectedBook.coverImageUrl}
-                alt={`${selectedBook.title} 표지`}
-                className="w-12 h-16 object-cover rounded shadow-sm"
-              />
-            )}
-            <div>
-              <h3 className="font-semibold text-stone-900">
-                {selectedBook.title}
-              </h3>
-              <p className="text-sm text-stone-600">{selectedBook.author}</p>
-            </div>
-          </div>
-        )}
 
         {/* Date Selection */}
         <div>
