@@ -6,6 +6,7 @@ import { useUser } from '@clerk/clerk-react';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
 import { ReviewForm } from '../../components/review/ReviewForm';
+import { BookDiaryList } from '../../components/diary/BookDiaryList';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import type { Id } from 'convex/_generated/dataModel';
@@ -133,18 +134,44 @@ export default function ReviewEditPage() {
         <p className="text-stone-600">독후감 내용을 수정할 수 있습니다</p>
       </div>
 
-      {/* Edit form */}
-      <div className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm">
-        <ReviewForm
-          initialData={{
-            title: review.title || '',
-            content: review.content,
-            isRecommended: review.isRecommended,
-            readStatus: review.readStatus,
-          }}
-          onSubmit={handleSubmitReview}
-          isSubmitting={isSubmitting}
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main form area */}
+        <div className="lg:col-span-2 bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm lg:flex lg:flex-col">
+          {/* Mobile: Collapsible diary section */}
+          <details className="lg:hidden mb-6 bg-stone-50 rounded-lg border border-stone-200">
+            <summary className="p-4 cursor-pointer text-sm font-medium text-stone-700 hover:bg-stone-100 rounded-lg">
+              📖 내 독서 일기 보기
+            </summary>
+            <div className="px-4 pb-4">
+              <BookDiaryList bookId={review.bookId} />
+            </div>
+          </details>
+
+          {/* Edit form */}
+          <div className="lg:flex-1">
+            <ReviewForm
+              initialData={{
+                title: review.title || '',
+                content: review.content,
+                isRecommended: review.isRecommended,
+                readStatus: review.readStatus,
+              }}
+              onSubmit={handleSubmitReview}
+              isSubmitting={isSubmitting}
+            />
+          </div>
+        </div>
+
+        {/* Desktop: Diary sidebar */}
+        <div className="hidden lg:block">
+          <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm sticky top-24 lg:flex lg:flex-col lg:max-h-[calc(100vh-7rem)] overflow-hidden">
+            <BookDiaryList
+              bookId={review.bookId}
+              className="h-full"
+              viewMode="full"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
