@@ -19,7 +19,7 @@ import { ReviewForm } from '../../components/review/ReviewForm';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import { pageVariants, fadeInUpVariants } from '../../utils/animations';
-import { BookDiaryList } from '../../components/diary/BookDiaryList';
+import { BookDiaryListView } from '../../components/diary/BookDiaryList';
 import type { BookData } from '../../types/book';
 
 interface ReviewFormData {
@@ -46,6 +46,10 @@ export default function ReviewNewPage() {
     selectedBook && user
       ? { userId: user.id, bookId: selectedBook._id }
       : 'skip'
+  );
+  const diaries = useQuery(
+    api.readingDiaries.getByUserAndBook,
+    step === 2 && selectedBook && user ? { bookId: selectedBook._id } : 'skip'
   );
 
   const handleSelectBook = (book: BookData | null) => {
@@ -264,7 +268,7 @@ export default function ReviewNewPage() {
                 📖 내 독서 일기 보기
               </summary>
               <div className="px-4 pb-4">
-                <BookDiaryList bookId={selectedBook._id} />
+                <BookDiaryListView diaries={diaries} />
               </div>
             </details>
 
@@ -280,8 +284,8 @@ export default function ReviewNewPage() {
           {/* Desktop: Diary sidebar */}
           <div className="hidden lg:block">
             <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm sticky top-24 lg:flex lg:flex-col lg:max-h-[calc(100vh-7rem)] overflow-hidden">
-              <BookDiaryList
-                bookId={selectedBook._id}
+              <BookDiaryListView
+                diaries={diaries}
                 className="h-full"
                 viewMode="full"
               />

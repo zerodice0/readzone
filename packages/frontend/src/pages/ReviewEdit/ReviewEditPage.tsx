@@ -6,7 +6,7 @@ import { useUser } from '@clerk/clerk-react';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
 import { ReviewForm } from '../../components/review/ReviewForm';
-import { BookDiaryList } from '../../components/diary/BookDiaryList';
+import { BookDiaryListView } from '../../components/diary/BookDiaryList';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import type { Id } from 'convex/_generated/dataModel';
@@ -35,6 +35,10 @@ export default function ReviewEditPage() {
   // Check if user is authorized
   const isAuthorized = review && user && review.userId === user.id;
   const isLoading = review === undefined;
+  const diaries = useQuery(
+    api.readingDiaries.getByUserAndBook,
+    review && isAuthorized ? { bookId: review.bookId } : 'skip'
+  );
 
   useEffect(() => {
     // Redirect if not authorized
@@ -143,7 +147,7 @@ export default function ReviewEditPage() {
               📖 내 독서 일기 보기
             </summary>
             <div className="px-4 pb-4">
-              <BookDiaryList bookId={review.bookId} />
+              <BookDiaryListView diaries={diaries} />
             </div>
           </details>
 
@@ -165,8 +169,8 @@ export default function ReviewEditPage() {
         {/* Desktop: Diary sidebar */}
         <div className="hidden lg:block">
           <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm sticky top-24 lg:flex lg:flex-col lg:max-h-[calc(100vh-7rem)] overflow-hidden">
-            <BookDiaryList
-              bookId={review.bookId}
+            <BookDiaryListView
+              diaries={diaries}
               className="h-full"
               viewMode="full"
             />

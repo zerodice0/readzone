@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
-import type { Id } from 'convex/_generated/dataModel';
+import type { Doc, Id } from 'convex/_generated/dataModel';
 
 interface BookDiaryListProps {
   bookId: Id<'books'>;
@@ -16,17 +16,22 @@ interface BookDiaryListProps {
   viewMode?: 'collapsible' | 'full';
 }
 
+interface BookDiaryListViewProps {
+  diaries: Doc<'readingDiaries'>[] | undefined;
+  className?: string;
+  viewMode?: 'collapsible' | 'full';
+}
+
 type SortOrder = 'newest' | 'oldest';
 
-export function BookDiaryList({
-  bookId,
+export function BookDiaryListView({
+  diaries,
   className = '',
   viewMode = 'collapsible',
-}: BookDiaryListProps) {
+}: BookDiaryListViewProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>('oldest');
 
-  const diaries = useQuery(api.readingDiaries.getByUserAndBook, { bookId });
   const rootClassName = ['flex min-h-0 flex-col', className]
     .filter(Boolean)
     .join(' ');
@@ -175,5 +180,21 @@ export function BookDiaryList({
         ))}
       </div>
     </div>
+  );
+}
+
+export function BookDiaryList({
+  bookId,
+  className = '',
+  viewMode = 'collapsible',
+}: BookDiaryListProps) {
+  const diaries = useQuery(api.readingDiaries.getByUserAndBook, { bookId });
+
+  return (
+    <BookDiaryListView
+      diaries={diaries}
+      className={className}
+      viewMode={viewMode}
+    />
   );
 }
