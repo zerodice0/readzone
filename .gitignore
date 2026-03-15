@@ -62,6 +62,9 @@ pnpm-debug.log*
 # Backup files (production data exports)
 /backups/
 
+# Playwright MCP (local test artifacts)
+.playwright-mcp/
+
 # Serena MCP (local development context)
 .serena/
 
