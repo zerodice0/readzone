@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import {
@@ -7,7 +7,6 @@ import {
   Bookmark,
   ThumbsUp,
   ThumbsDown,
-  Loader2,
   FileText,
   Edit,
   Eye,
@@ -15,11 +14,14 @@ import {
 import { api } from 'convex/_generated/api';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
+import { LoadingState } from '../../../components/ui/loading-state';
+import { EmptyState } from '../../../components/ui/empty-state';
 
 type StatusFilter = 'ALL' | 'PUBLISHED' | 'DRAFT';
 
 export function MyReviewsSection() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
 
   // Fetch user's reviews
@@ -64,12 +66,7 @@ export function MyReviewsSection() {
 
   // Loading state
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500 mr-2" />
-        <span className="text-stone-700">독후감을 불러오는 중...</span>
-      </div>
-    );
+    return <LoadingState message="독후감을 불러오는 중..." />;
   }
 
   if (!stats) return null;
@@ -78,21 +75,21 @@ export function MyReviewsSection() {
     <div className="space-y-6">
       {/* Statistics */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-stone-200 rounded-xl p-4 text-center">
+        <div className="bg-card border border-stone-200 rounded-xl p-4 text-center">
           <FileText className="w-6 h-6 text-primary-500 mx-auto mb-2" />
           <p className="text-2xl font-bold text-stone-900">
             {stats.totalReviews}
           </p>
           <p className="text-sm text-stone-600">총 독후감</p>
         </div>
-        <div className="bg-white border border-stone-200 rounded-xl p-4 text-center">
+        <div className="bg-card border border-stone-200 rounded-xl p-4 text-center">
           <ThumbsUp className="w-6 h-6 text-green-500 mx-auto mb-2" />
           <p className="text-2xl font-bold text-stone-900">
             {stats.recommendationRate}%
           </p>
           <p className="text-sm text-stone-600">추천 비율</p>
         </div>
-        <div className="bg-white border border-stone-200 rounded-xl p-4 text-center">
+        <div className="bg-card border border-stone-200 rounded-xl p-4 text-center">
           <Edit className="w-6 h-6 text-orange-500 mx-auto mb-2" />
           <p className="text-2xl font-bold text-stone-900">
             {stats.draftCount}
@@ -132,7 +129,7 @@ export function MyReviewsSection() {
           {filteredReviews.map((review) => (
             <div
               key={review._id}
-              className="bg-white border border-stone-200 rounded-xl p-6 hover:shadow-md transition-all"
+              className="bg-card border border-stone-200 rounded-xl p-6 hover:shadow-md transition-all"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -212,21 +209,23 @@ export function MyReviewsSection() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 bg-white border border-stone-200 rounded-xl">
-          <FileText className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-stone-900 mb-2">
-            {statusFilter === 'ALL'
-              ? '작성한 독후감이 없습니다'
-              : statusFilter === 'PUBLISHED'
-                ? '발행된 독후감이 없습니다'
-                : '초안이 없습니다'}
-          </h3>
-          <p className="text-stone-600 mb-6">첫 번째 독후감을 작성해보세요!</p>
-          <Link to="/reviews/new">
-            <Button className="bg-primary-600 hover:bg-primary-700">
-              독후감 작성하기
-            </Button>
-          </Link>
+        <div className="bg-card border border-stone-200 rounded-xl">
+          <EmptyState
+            icon={FileText}
+            title={
+              statusFilter === 'ALL'
+                ? '작성한 독후감이 없습니다'
+                : statusFilter === 'PUBLISHED'
+                  ? '발행된 독후감이 없습니다'
+                  : '초안이 없습니다'
+            }
+            description="첫 번째 독후감을 작성해보세요!"
+            action={{
+              label: '독후감 작성하기',
+              // eslint-disable-next-line no-void
+              onClick: () => void navigate('/reviews/new'),
+            }}
+          />
         </div>
       )}
     </div>

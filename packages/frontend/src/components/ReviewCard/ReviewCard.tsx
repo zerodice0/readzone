@@ -154,7 +154,6 @@ export const ReviewCard = memo(function ReviewCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
     >
       <Card
@@ -163,10 +162,10 @@ export const ReviewCard = memo(function ReviewCard({
         aria-describedby={`review-${review._id}-content`}
         tabIndex={0}
         onKeyDown={handleKeyDown}
-        className="cursor-pointer w-full bg-white border-stone-200 hover:border-primary-200/50 hover:shadow-xl hover:shadow-primary-100/20 transition-all duration-300 overflow-hidden group h-full flex flex-col"
+        className="cursor-pointer w-full bg-card border-stone-200 hover:shadow-lg hover:border-accent/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden group h-full flex flex-col"
         onClick={handleCardClick}
       >
-        <div className="p-5 flex gap-5 h-full">
+        <div className="p-6 flex gap-5 h-full">
           {/* Left Side: Book Cover (Hidden on very small screens if needed, but keeping for now) */}
           <div className="shrink-0">
             <div className="relative w-24 h-36 rounded-md overflow-hidden bg-stone-100 shadow-sm group-hover:shadow-md transition-shadow">
@@ -194,7 +193,7 @@ export const ReviewCard = memo(function ReviewCard({
           {/* Right Side: Content */}
           <div className="flex-1 min-w-0 flex flex-col">
             {/* Header: User & Time */}
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 {review.author?.imageUrl ? (
                   <img
@@ -207,17 +206,20 @@ export const ReviewCard = memo(function ReviewCard({
                     {(review.author?.name || 'U').charAt(0)}
                   </div>
                 )}
-                <span className="text-xs font-medium text-stone-600 truncate max-w-[100px]">
-                  {review.author?.name || `사용자 ${review.userId.slice(-4)}`}
-                </span>
-                <span className="text-[10px] text-stone-400">•</span>
-                <span className="text-xs text-stone-400">{displayTime}</span>
+                <div className="min-w-0">
+                  <span className="text-xs font-medium text-stone-600 block truncate">
+                    {review.author?.name || `사용자 ${review.userId.slice(-4)}`}
+                  </span>
+                  <span className="text-[11px] text-stone-400 block">
+                    {displayTime}
+                  </span>
+                </div>
               </div>
 
               {review.isRecommended ? (
                 <Badge
                   variant="secondary"
-                  className="bg-green-50 text-green-700 text-[10px] h-5 px-1.5 hover:bg-green-100 border-0"
+                  className="bg-green-deep/10 text-green-deep text-[10px] h-5 px-1.5 hover:bg-green-deep/20 border-0"
                 >
                   <ThumbsUp className="w-3 h-3 mr-1" /> 추천
                 </Badge>
@@ -233,13 +235,13 @@ export const ReviewCard = memo(function ReviewCard({
 
             {/* Title */}
             {review.title && (
-              <h3 className="font-serif font-bold text-lg text-stone-900 mb-1 leading-tight line-clamp-1 group-hover:text-primary-700 transition-colors">
+              <h3 className="font-serif font-bold text-lg text-stone-900 mb-2 leading-tight line-clamp-1 group-hover:text-accent transition-colors">
                 {review.title}
               </h3>
             )}
 
             {/* Book Title */}
-            <p className="text-xs text-stone-500 mb-2 font-medium flex items-center gap-1">
+            <p className="text-xs text-stone-500 mb-3 font-medium flex items-center gap-1">
               <span className="text-stone-400 font-normal">in</span>
               {review.book?.title || '알 수 없는 책'}
             </p>
@@ -252,7 +254,7 @@ export const ReviewCard = memo(function ReviewCard({
         </div>
 
         {/* Footer Actions */}
-        <CardFooter className="px-5 py-3 border-t border-stone-50 bg-stone-50/30 flex items-center justify-between mt-auto">
+        <CardFooter className="px-6 py-4 border-t border-border/50 bg-secondary/30 flex items-center justify-between mt-auto">
           <div className="flex items-center gap-1">
             <m.div
               variants={likeVariants}
@@ -284,7 +286,7 @@ export const ReviewCard = memo(function ReviewCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 rounded-full ${review.hasBookmarked ? 'text-amber-500 bg-amber-50' : 'text-stone-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                className={`h-8 w-8 rounded-full ${review.hasBookmarked ? 'text-accent bg-accent/10' : 'text-stone-400 hover:text-accent hover:bg-accent/10'}`}
                 onClick={handleBookmark}
               >
                 <Bookmark
