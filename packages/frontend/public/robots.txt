@@ -1,4 +1,4 @@
-# ReadZone - 독후감 공유 플랫폼
+# 글다락 - 독후감 공유 플랫폼
 # https://readzone.org
 
 User-agent: *

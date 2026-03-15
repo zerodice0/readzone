@@ -1,4 +1,4 @@
-# ReadZone UI Design System
+# 글다락 UI Design System
 
 **Date:** 2025-01-15
 **Status:** In Progress
@@ -6,7 +6,7 @@
 
 ## Design Philosophy
 
-ReadZone aims to create a warm, inviting reading environment that:
+글다락 aims to create a warm, inviting reading environment that:
 
 - Showcases book covers prominently
 - Ensures excellent text readability for long reviews

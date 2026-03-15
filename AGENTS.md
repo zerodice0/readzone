@@ -71,9 +71,9 @@ Usage notes:
 
 ### Testing Strategy
 
-- **Framework**: Vitest (configured in `@readzone/frontend`)
-- **Run Single Test**: `pnpm --filter @readzone/frontend test -- <filename>`
-- **Example**: `pnpm --filter @readzone/frontend test -- Button.test.tsx`
+- **Framework**: Vitest (configured in `@geuldarak/frontend`)
+- **Run Single Test**: `pnpm --filter @geuldarak/frontend test -- <filename>`
+- **Example**: `pnpm --filter @geuldarak/frontend test -- Button.test.tsx`
 - **Note**: Currently, test files are sparse. Add tests for new critical logic.
 
 ## CODE STYLE & CONVENTIONS

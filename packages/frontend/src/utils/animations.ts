@@ -1,7 +1,7 @@
 import { Variants } from 'framer-motion';
 
 /**
- * ReadZone Animation System
+ * 글다락 Animation System
  * Warm, elegant animations inspired by turning pages and reading lights
  * Respects user's prefers-reduced-motion setting
  */

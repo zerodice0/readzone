@@ -1,7 +1,7 @@
 /**
- * @readzone/shared
+ * @geuldarak/shared
  *
- * Shared types, utilities, and constants for the ReadZone monorepo
+ * Shared types, utilities, and constants for the 글다락 monorepo
  */
 
 // Placeholder for shared exports

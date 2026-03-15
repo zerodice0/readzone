@@ -1,8 +1,8 @@
 {
-  "name": "readzone-monorepo",
+  "name": "geuldarak-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "ReadZone - Book review platform with user authentication",
+  "description": "글다락 - 독후감 공유 플랫폼",
   "workspaces": [
     "packages/*"
   ],

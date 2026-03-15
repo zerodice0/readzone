@@ -44,7 +44,7 @@ interface AladinSearchResponse {
   errorMessage?: string;
 }
 
-// 알라딘 API 응답을 ReadZone Book 모델로 변환
+// 알라딘 API 응답을 글다락 Book 모델로 변환
 function transformAladinToBook(item: AladinLookupItem) {
   // 출판일 파싱 (YYYY-MM-DD 또는 YYYY 형식)
   let publishedDate: number | null = null;
@@ -138,7 +138,7 @@ export const searchBooks = action({
         throw new Error('도서 검색에 실패했습니다');
       }
 
-      // 검색 결과를 ReadZone 모델로 변환
+      // 검색 결과를 글다락 모델로 변환
       const books = (data.item || []).map(transformAladinToBook);
 
       return {

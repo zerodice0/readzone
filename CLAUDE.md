@@ -12,10 +12,10 @@ pnpm dev
 pnpm build
 
 # Build frontend only
-pnpm --filter @readzone/frontend build
+pnpm --filter @geuldarak/frontend build
 
 # Deploy backend to Convex
-pnpm --filter @readzone/backend build
+pnpm --filter @geuldarak/backend build
 
 # Type checking
 pnpm type-check
@@ -27,7 +27,7 @@ pnpm lint
 pnpm format
 
 # Run frontend tests
-pnpm --filter @readzone/frontend test
+pnpm --filter @geuldarak/frontend test
 ```
 
 ### Convex Commands
@@ -44,12 +44,12 @@ npx convex dev
 # Convex 프로덕션 배포 (프로젝트 루트에서 실행)
 npx convex deploy
 # 또는 pnpm 스크립트 사용
-pnpm --filter @readzone/backend build
+pnpm --filter @geuldarak/backend build
 
 # Generate Convex types after schema changes (프로젝트 루트에서 실행)
 npx convex codegen
 # 또는 pnpm 스크립트 사용
-pnpm --filter @readzone/backend codegen
+pnpm --filter @geuldarak/backend codegen
 ```
 
 ## Architecture Overview

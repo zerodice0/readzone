@@ -1,6 +1,6 @@
-# ReadZone Project Constitution
+# 글다락 Project Constitution
 
-> Development principles and operational guidelines for AI-assisted development in the ReadZone project.
+> Development principles and operational guidelines for AI-assisted development in the 글다락 project.
 
 ## Core Development Principles
 

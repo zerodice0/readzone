@@ -120,7 +120,7 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
   const ogImage = meta.image || `${siteUrl}/og-default.png`;
   const ogImageAlt = bookTitle
     ? `『${bookTitle}』 표지`
-    : 'ReadZone - 독후감 공유 플랫폼';
+    : '글다락 - 독후감 공유 플랫폼';
 
   // 구조화된 설명
   const fullDescription = bookTitle
@@ -142,10 +142,10 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title} - ReadZone</title>
+  <title>${title} - 글다락</title>
 
   <!-- Primary Meta Tags -->
-  <meta name="title" content="${title} - ReadZone">
+  <meta name="title" content="${title} - 글다락">
   <meta name="description" content="${fullDescription}">
   <meta name="author" content="${authorName}">
 
@@ -156,7 +156,7 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
   <meta property="og:description" content="${fullDescription}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
   <meta property="og:image:alt" content="${ogImageAlt}">
-  <meta property="og:site_name" content="ReadZone">
+  <meta property="og:site_name" content="글다락">
   <meta property="og:locale" content="ko_KR">
   <meta property="article:author" content="${authorName}">
 
@@ -230,7 +230,7 @@ function generateOgHtml(meta: OgMeta, url: string, siteUrl: string): string {
   <a href="${escapeHtml(url)}" class="cta">전체 리뷰 보기</a>
 
   <footer>
-    <p><a href="${siteUrl}">ReadZone</a> - 독후감을 공유하고 다른 독자들의 생각을 확인하세요</p>
+    <p><a href="${siteUrl}">글다락</a> - 독후감을 공유하고 다른 독자들의 생각을 확인하세요</p>
   </footer>
 
   <noscript>
@@ -276,10 +276,10 @@ function generateBookOgHtml(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title} - ReadZone</title>
+  <title>${title} - 글다락</title>
 
   <!-- Primary Meta Tags -->
-  <meta name="title" content="${title} - ReadZone">
+  <meta name="title" content="${title} - 글다락">
   <meta name="description" content="${fullDescription}">
   <meta name="author" content="${author}">
 
@@ -290,7 +290,7 @@ function generateBookOgHtml(
   <meta property="og:description" content="${fullDescription}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
   <meta property="og:image:alt" content="${ogImageAlt}">
-  <meta property="og:site_name" content="ReadZone">
+  <meta property="og:site_name" content="글다락">
   <meta property="og:locale" content="ko_KR">
   <meta property="book:author" content="${author}">
 
@@ -382,7 +382,7 @@ function generateBookOgHtml(
   <a href="${escapeHtml(url)}" class="cta">리뷰 보기</a>
 
   <footer>
-    <p><a href="${siteUrl}">ReadZone</a> - 독후감을 공유하고 다른 독자들의 생각을 확인하세요</p>
+    <p><a href="${siteUrl}">글다락</a> - 독후감을 공유하고 다른 독자들의 생각을 확인하세요</p>
   </footer>
 
   <noscript>
@@ -401,17 +401,17 @@ function generateDefaultOgHtml(url: string, siteUrl: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ReadZone - 독후감 공유 플랫폼</title>
+  <title>글다락 - 독후감 공유 플랫폼</title>
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="${escapeHtml(url)}">
-  <meta property="og:title" content="ReadZone - 독후감 공유 플랫폼">
+  <meta property="og:title" content="글다락 - 독후감 공유 플랫폼">
   <meta property="og:description" content="독후감을 공유하고 다른 독자들의 생각을 확인하세요">
   <meta property="og:image" content="${siteUrl}/og-default.png">
-  <meta property="og:site_name" content="ReadZone">
+  <meta property="og:site_name" content="글다락">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ReadZone - 독후감 공유 플랫폼">
+  <meta name="twitter:title" content="글다락 - 독후감 공유 플랫폼">
   <meta name="twitter:description" content="독후감을 공유하고 다른 독자들의 생각을 확인하세요">
 
   <link rel="canonical" href="${escapeHtml(url)}">
@@ -430,9 +430,9 @@ function generateDefaultOgHtml(url: string, siteUrl: string): string {
   </style>
 </head>
 <body>
-  <h1>ReadZone</h1>
+  <h1>글다락</h1>
   <p>독후감을 공유하고 다른 독자들의 생각을 확인하세요</p>
-  <p><a href="${siteUrl}">ReadZone 홈으로 이동</a></p>
+  <p><a href="${siteUrl}">글다락 홈으로 이동</a></p>
 </body>
 </html>`;
 }

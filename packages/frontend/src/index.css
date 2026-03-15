@@ -1,4 +1,4 @@
-/* ReadZone Design System - Tailwind CSS v4 */
+/* 글다락 Design System - Tailwind CSS v4 */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
 @import 'tailwindcss';
@@ -46,7 +46,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  /* Primary - Warm Amber (ReadZone Signature) */
+  /* Primary - Warm Amber (글다락 Signature) */
   --color-primary-50: #fffbeb;
   --color-primary-100: #fef3c7;
   --color-primary-200: #fde68a;

@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-React 19 + Vite + Tailwind CSS 4 기반의 ReadZone 프론트엔드. Convex 실시간 연동 및 Clerk 인증을 활용한 서버리스 아키텍처.
+React 19 + Vite + Tailwind CSS 4 기반의 글다락 프론트엔드. Convex 실시간 연동 및 Clerk 인증을 활용한 서버리스 아키텍처.
 
 ## STRUCTURE
 

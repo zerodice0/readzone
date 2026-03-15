@@ -1,7 +1,7 @@
 import { toast as sonnerToast } from 'sonner';
 
 /**
- * Toast notification utilities with ReadZone's warm aesthetic
+ * Toast notification utilities with 글다락's warm aesthetic
  */
 
 export const toast = {
@@ -33,7 +33,7 @@ export const toast = {
     });
   },
 
-  promise: <T,>(
+  promise: <T>(
     promise: Promise<T>,
     {
       loading,

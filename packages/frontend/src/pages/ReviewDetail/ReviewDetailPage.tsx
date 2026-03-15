@@ -103,7 +103,7 @@ export function ReviewDetailPage() {
     }
 
     // Check sessionStorage for duplicate prevention
-    const viewedReviewsKey = 'readzone_viewed_reviews';
+    const viewedReviewsKey = 'geuldarak_viewed_reviews';
     const storedViews = sessionStorage.getItem(viewedReviewsKey);
     const viewedReviews = (
       storedViews ? JSON.parse(storedViews) : []

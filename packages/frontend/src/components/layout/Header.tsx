@@ -188,7 +188,7 @@ export function Header() {
               })}
               className="inline-block"
             >
-              ReadZone
+              글다락
             </m.span>
           </Link>
 
@@ -276,7 +276,7 @@ export function Header() {
               >
                 <SheetHeader>
                   <SheetTitle className="text-left text-primary-600">
-                    ReadZone
+                    글다락
                   </SheetTitle>
                 </SheetHeader>
                 <div className="mt-8 flex flex-col gap-4">

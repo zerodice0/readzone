@@ -1,2 +1,2 @@
 # Run lint for frontend only (type-check requires Convex codegen)
-pnpm --filter @readzone/frontend lint && npx lint-staged
+pnpm --filter @geuldarak/frontend lint && npx lint-staged

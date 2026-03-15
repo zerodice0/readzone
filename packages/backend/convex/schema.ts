@@ -2,7 +2,7 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 /**
- * Convex Schema for ReadZone
+ * Convex Schema for 글다락
  *
  * Migration from Prisma:
  * - User, Session, OAuth, MFA → Replaced by Clerk
