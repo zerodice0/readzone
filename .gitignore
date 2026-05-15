@@ -88,3 +88,5 @@ pnpm-debug.log*
 .windsurf/
 .kiro/
 skills/
+skills-lock.json
+readzone.pen
