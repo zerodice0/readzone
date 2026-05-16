@@ -9,6 +9,7 @@ import {
   User,
   LogOut,
   Save,
+  Pencil,
 } from 'lucide-react';
 import EmailVerificationBanner from '../../components/EmailVerificationBanner';
 import {
@@ -71,6 +72,7 @@ function AccountPanel() {
   const { signOut } = useClerk();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState(getUserDisplayName(user));
+  const [isEditingDisplayName, setIsEditingDisplayName] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -79,6 +81,8 @@ function AccountPanel() {
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
 
   const email = user?.primaryEmailAddress?.emailAddress || '';
+  const currentDisplayName = getUserDisplayName(user);
+  const isDisplayNameUnchanged = displayName.trim() === currentDisplayName;
   const isVerified =
     user?.primaryEmailAddress?.verification.status === 'verified';
 
@@ -102,6 +106,12 @@ function AccountPanel() {
     loadSessions().catch(() => {});
   }, [user]);
 
+  useEffect(() => {
+    if (!isEditingDisplayName) {
+      setDisplayName(currentDisplayName);
+    }
+  }, [currentDisplayName, isEditingDisplayName]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -114,10 +124,13 @@ function AccountPanel() {
     setIsSaving(true);
 
     try {
-      const { firstName, lastName } = splitDisplayName(displayName);
+      const nextDisplayName = displayName.trim();
+      const { firstName, lastName } = splitDisplayName(nextDisplayName);
 
       await user.update({ firstName, lastName });
       await user.reload();
+      setDisplayName(nextDisplayName);
+      setIsEditingDisplayName(false);
       setMessage('프로필이 저장되었습니다.');
     } catch {
       setError('프로필 저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
@@ -170,62 +183,108 @@ function AccountPanel() {
               {getUserDisplayName(user).charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="min-w-0">
-            <p className="truncate font-medium text-stone-900">
-              {getUserDisplayName(user)}
-            </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <p className="min-w-0 truncate font-medium text-stone-900">
+                {currentDisplayName}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 shrink-0 px-2"
+                disabled={isEditingDisplayName}
+                onClick={() => {
+                  setMessage('');
+                  setError('');
+                  setDisplayName(currentDisplayName);
+                  setIsEditingDisplayName(true);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+                수정
+              </Button>
+            </div>
             <p className="truncate text-sm text-stone-500">{email}</p>
+            <p className="truncate text-xs text-stone-500" title={user.id}>
+              회원 번호 <span className="font-mono">{user.id}</span>
+            </p>
             <p className="mt-1 text-xs text-stone-500">
               {isVerified ? '이메일 인증 완료' : '이메일 인증 필요'}
             </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="account-display-name"
-              className="text-sm font-medium text-stone-700"
-            >
-              표시 이름
-            </label>
-            <input
-              id="account-display-name"
-              type="text"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              className="paper-input w-full rounded-xl px-4 py-3 outline-none"
-            />
-          </div>
+        {message && <p className="text-sm text-green-700">{message}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
-          {message && <p className="text-sm text-green-700">{message}</p>}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+        {isEditingDisplayName && (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 rounded-xl border border-stone-200 bg-white/55 p-4"
+          >
+            <div className="space-y-2">
+              <label
+                htmlFor="account-display-name"
+                className="text-sm font-medium text-stone-700"
+              >
+                표시 이름 변경
+              </label>
+              <input
+                id="account-display-name"
+                type="text"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                className="paper-input w-full rounded-xl px-4 py-3 outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button
+                type="submit"
+                disabled={isSaving || isDisplayNameUnchanged}
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                표시 이름 저장
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSaving}
+                onClick={() => {
+                  setDisplayName(currentDisplayName);
+                  setIsEditingDisplayName(false);
+                  setMessage('');
+                  setError('');
+                }}
+              >
+                취소
+              </Button>
+            </div>
+          </form>
+        )}
+
+        <div className="space-y-4">
           <p className="text-sm text-stone-500">
             비밀번호 변경이 필요하면 로그아웃 후 로그인 화면에서 비밀번호
             재설정을 진행해주세요.
           </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              저장
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                handleSignOut().catch(() => {});
-              }}
-            >
-              <LogOut className="h-4 w-4" />
-              로그아웃
-            </Button>
-          </div>
-        </form>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              handleSignOut().catch(() => {});
+            }}
+          >
+            <LogOut className="h-4 w-4" />
+            로그아웃
+          </Button>
+        </div>
 
         <div className="border-t border-stone-200 pt-6">
           <div className="flex items-center justify-between gap-3">
