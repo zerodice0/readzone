@@ -407,28 +407,14 @@ export const incrementViewCount = mutation({
 
 /**
  * 피드용 페이지네이션 리뷰 목록 (책 정보 + 작성자 정보 + 사용자 상호작용 포함)
- * 정렬 및 필터링 지원
  */
 export const getFeed = query({
   args: {
     paginationOpts: paginationOptsValidator,
     userId: v.optional(v.string()),
-    sortBy: v.optional(v.union(v.literal('recent'), v.literal('popular'))),
-    recommendFilter: v.optional(
-      v.union(
-        v.literal('all'),
-        v.literal('recommended'),
-        v.literal('not-recommended')
-      )
-    ),
   },
   handler: async (ctx, args) => {
-    const {
-      paginationOpts,
-      userId,
-      sortBy = 'recent',
-      recommendFilter = 'all',
-    } = args;
+    const { paginationOpts, userId } = args;
 
     // 페이지네이션 쿼리
     const result = await ctx.db
@@ -442,7 +428,7 @@ export const getFeed = query({
     const authorMap = await getAuthorInfoBatch(ctx, authorUserIds);
 
     // 각 리뷰에 대해 책 정보와 사용자 상호작용 정보 추가
-    let enrichedPage = await Promise.all(
+    const enrichedPage = await Promise.all(
       result.page.map(async (review) => {
         // 책 정보 가져오기
         const book = await ctx.db.get(review.bookId);
@@ -485,20 +471,6 @@ export const getFeed = query({
         };
       })
     );
-
-    // 필터링: 추천 여부
-    if (recommendFilter === 'recommended') {
-      enrichedPage = enrichedPage.filter((review) => review.isRecommended);
-    } else if (recommendFilter === 'not-recommended') {
-      enrichedPage = enrichedPage.filter((review) => !review.isRecommended);
-    }
-
-    // 정렬
-    if (sortBy === 'popular') {
-      // 인기순: 좋아요 수 기준
-      enrichedPage.sort((a, b) => b.likeCount - a.likeCount);
-    }
-    // 'recent'는 이미 기본 정렬(최신순)로 되어 있음
 
     return {
       ...result,

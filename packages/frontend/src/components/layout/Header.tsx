@@ -26,6 +26,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '../ui/sheet';
+import { BrandMark } from '../brand/BrandMark';
 import { getAnimationProps } from '../../lib/motion';
 
 function MobileLogoutButton({ onLogout }: { onLogout: () => void }) {
@@ -241,7 +242,7 @@ export function Header() {
           {/* 로고 */}
           <Link
             to="/feed"
-            className="text-xl font-bold text-ink hover:text-primary-700 transition-colors"
+            className="flex items-center gap-2 text-xl font-bold text-ink hover:text-primary-700 transition-colors"
           >
             <m.span
               {...getAnimationProps({
@@ -254,8 +255,9 @@ export function Header() {
               })}
               className="inline-block"
             >
-              글다락
+              <BrandMark className="h-8 w-8 rounded-xl" />
             </m.span>
+            <span>글다락</span>
           </Link>
 
           {/* 데스크톱 네비게이션 */}

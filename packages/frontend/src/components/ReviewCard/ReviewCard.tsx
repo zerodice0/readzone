@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo, memo } from 'react';
 import { m } from 'framer-motion';
-import { Card, CardFooter } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Heart, Bookmark, Share2, ThumbsUp, ThumbsDown } from 'lucide-react';
@@ -149,6 +148,11 @@ export const ReviewCard = memo(function ReviewCard({
     });
   }, [review.publishedAt]);
 
+  const reviewTitleId = `review-${review._id}-title`;
+  const reviewContentId = `review-${review._id}-content`;
+  const articleLabel =
+    review.title || `${review.book?.title || '알 수 없는 책'} 독후감`;
+
   return (
     <m.div
       initial={{ opacity: 0, y: 20 }}
@@ -156,156 +160,157 @@ export const ReviewCard = memo(function ReviewCard({
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
     >
-      <Card
+      <article
         role="article"
-        aria-labelledby={`review-${review._id}-title`}
-        aria-describedby={`review-${review._id}-content`}
+        aria-labelledby={review.title ? reviewTitleId : undefined}
+        aria-label={review.title ? undefined : articleLabel}
+        aria-describedby={reviewContentId}
         tabIndex={0}
         onKeyDown={handleKeyDown}
-        className="paper-surface cursor-pointer w-full hover:border-paper-300 hover:-translate-y-1 transition-all duration-300 overflow-hidden group h-full flex flex-col"
+        className="group cursor-pointer border-b border-paper-200/70 bg-transparent transition-colors last:border-b-0 hover:bg-paper-50/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40"
         onClick={handleCardClick}
       >
-        <div className="p-6 flex gap-5 h-full">
-          {/* Left Side: Book Cover (Hidden on very small screens if needed, but keeping for now) */}
-          <div className="shrink-0">
-            <div className="book-paper-frame relative w-24 h-36 rounded-lg overflow-hidden transition-shadow">
-              {review.book?.coverImageUrl && !imageError ? (
-                <img
-                  src={review.book.coverImageUrl}
-                  alt={review.book.title}
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-stone-300 font-bold bg-stone-50">
-                  {(review.book?.title || '?').charAt(0)}
-                </div>
-              )}
-              {/* Read Status Overlay */}
-              {review.readStatus === 'READING' && (
-                <div className="absolute top-0 left-0 right-0 bg-black/60 backdrop-blur-[2px] py-1 text-[10px] text-white text-center font-medium">
-                  읽는 중
-                </div>
-              )}
+        <div className="flex gap-3 p-4 sm:gap-4 sm:p-5">
+          {review.author?.imageUrl ? (
+            <img
+              src={review.author.imageUrl}
+              alt=""
+              className="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-paper-200"
+            />
+          ) : (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-stone-100 text-sm font-bold text-stone-500 ring-1 ring-paper-200">
+              {(review.author?.name || 'U').charAt(0)}
             </div>
-          </div>
+          )}
 
-          {/* Right Side: Content */}
-          <div className="flex-1 min-w-0 flex flex-col">
-            {/* Header: User & Time */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                {review.author?.imageUrl ? (
-                  <img
-                    src={review.author.imageUrl}
-                    alt=""
-                    className="w-5 h-5 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold text-stone-500">
-                    {(review.author?.name || 'U').charAt(0)}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <span className="text-xs font-medium text-stone-600 block truncate">
-                    {review.author?.name || `사용자 ${review.userId.slice(-4)}`}
-                  </span>
-                  <span className="text-[11px] text-stone-400 block">
-                    {displayTime}
-                  </span>
-                </div>
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-stone-900">
+                  {review.author?.name || `사용자 ${review.userId.slice(-4)}`}
+                </span>
+                <span className="block text-xs text-stone-500">
+                  {displayTime}
+                </span>
               </div>
 
               {review.isRecommended ? (
                 <Badge
                   variant="secondary"
-                  className="note-badge bg-ink-green/10 text-ink-green text-[10px] h-5 px-1.5 hover:bg-ink-green/20 border-0"
+                  className="note-badge h-6 shrink-0 border-0 bg-ink-green/10 px-2 text-[11px] text-ink-green hover:bg-ink-green/20"
                 >
                   <ThumbsUp className="w-3 h-3 mr-1" /> 추천
                 </Badge>
               ) : (
                 <Badge
                   variant="secondary"
-                  className="note-badge bg-note-red/10 text-note-red text-[10px] h-5 px-1.5 hover:bg-note-red/15 border-0"
+                  className="note-badge h-6 shrink-0 border-0 bg-note-red/10 px-2 text-[11px] text-note-red hover:bg-note-red/15"
                 >
                   <ThumbsDown className="w-3 h-3 mr-1" /> 비추천
                 </Badge>
               )}
             </div>
 
-            {/* Title */}
+            <div className="mb-3 flex items-center gap-3 rounded-2xl border border-paper-200/70 bg-white/62 p-2">
+              <div className="book-paper-frame h-14 w-10 shrink-0 overflow-hidden rounded-md">
+                {review.book?.coverImageUrl && !imageError ? (
+                  <img
+                    src={review.book.coverImageUrl}
+                    alt={review.book.title}
+                    className="h-full w-full object-cover"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-stone-50 text-xs font-bold text-stone-300">
+                    {(review.book?.title || '?').charAt(0)}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-stone-900">
+                  {review.book?.title || '알 수 없는 책'}
+                </p>
+                <p className="truncate text-xs text-stone-500">
+                  {review.book?.author || '저자 정보 없음'}
+                </p>
+                {review.readStatus === 'READING' && (
+                  <p className="mt-1 text-[11px] font-medium text-note-blue">
+                    읽는 중
+                  </p>
+                )}
+              </div>
+            </div>
+
             {review.title && (
-              <h3 className="font-serif font-bold text-lg text-stone-900 mb-2 leading-tight line-clamp-1 group-hover:text-primary-700 transition-colors">
+              <h2
+                id={reviewTitleId}
+                className="mb-1 text-lg font-bold leading-tight text-stone-950 transition-colors group-hover:text-primary-800"
+              >
                 {review.title}
-              </h3>
+              </h2>
             )}
 
-            {/* Book Title */}
-            <p className="text-xs text-stone-500 mb-3 font-medium flex items-center gap-1">
-              <span className="text-stone-400 font-normal">in</span>
-              {review.book?.title || '알 수 없는 책'}
-            </p>
-
-            {/* Content Preview */}
-            <p className="text-sm text-stone-600 line-clamp-2 leading-relaxed mb-auto">
+            <p
+              id={reviewContentId}
+              className="mb-3 line-clamp-4 whitespace-pre-wrap text-[15px] leading-relaxed text-stone-700"
+            >
               {review.content}
             </p>
+
+            <div className="flex items-center justify-between text-stone-500">
+              <div className="flex items-center gap-1">
+                <m.div
+                  variants={likeVariants}
+                  initial="rest"
+                  animate={review.hasLiked ? 'liked' : 'rest'}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 rounded-full ${review.hasLiked ? 'text-red-500 bg-red-50' : 'text-stone-400 hover:text-red-500 hover:bg-red-50'}`}
+                    onClick={handleLike}
+                  >
+                    <Heart
+                      className={`w-4 h-4 ${review.hasLiked ? 'fill-current' : ''}`}
+                    />
+                  </Button>
+                </m.div>
+                <span className="min-w-4 text-xs font-medium">
+                  {review.likeCount > 0 ? review.likeCount : ''}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <m.div
+                  variants={bookmarkVariants}
+                  initial="rest"
+                  animate={review.hasBookmarked ? 'bookmarked' : 'rest'}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 rounded-full ${review.hasBookmarked ? 'text-paper-700 bg-paper-100' : 'text-stone-400 hover:text-paper-700 hover:bg-paper-100'}`}
+                    onClick={handleBookmark}
+                  >
+                    <Bookmark
+                      className={`w-4 h-4 ${review.hasBookmarked ? 'fill-current' : ''}`}
+                    />
+                  </Button>
+                </m.div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-stone-400 hover:text-primary-600 hover:bg-primary-50"
+                  onClick={handleShare}
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Footer Actions */}
-        <CardFooter className="px-6 py-4 border-t border-paper-200/60 bg-paper-50/45 flex items-center justify-between mt-auto">
-          <div className="flex items-center gap-1">
-            <m.div
-              variants={likeVariants}
-              initial="rest"
-              animate={review.hasLiked ? 'liked' : 'rest'}
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-8 w-8 rounded-full ${review.hasLiked ? 'text-red-500 bg-red-50' : 'text-stone-400 hover:text-red-500 hover:bg-red-50'}`}
-                onClick={handleLike}
-              >
-                <Heart
-                  className={`w-4 h-4 ${review.hasLiked ? 'fill-current' : ''}`}
-                />
-              </Button>
-            </m.div>
-            <span className="text-xs font-medium text-stone-500 min-w-[12px]">
-              {review.likeCount > 0 ? review.likeCount : ''}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <m.div
-              variants={bookmarkVariants}
-              initial="rest"
-              animate={review.hasBookmarked ? 'bookmarked' : 'rest'}
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-8 w-8 rounded-full ${review.hasBookmarked ? 'text-paper-700 bg-paper-100' : 'text-stone-400 hover:text-paper-700 hover:bg-paper-100'}`}
-                onClick={handleBookmark}
-              >
-                <Bookmark
-                  className={`w-4 h-4 ${review.hasBookmarked ? 'fill-current' : ''}`}
-                />
-              </Button>
-            </m.div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full text-stone-400 hover:text-primary-600 hover:bg-primary-50"
-              onClick={handleShare}
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
+      </article>
     </m.div>
   );
 });
