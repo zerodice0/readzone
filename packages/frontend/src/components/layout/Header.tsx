@@ -6,11 +6,19 @@ import {
   useAuth,
   useClerk,
   useUser,
-  UserButton,
 } from '@clerk/clerk-react';
-import { Menu, PenSquare, LogOut } from 'lucide-react';
+import { ChevronDown, Menu, PenSquare, LogOut, User } from 'lucide-react';
 import { m } from 'framer-motion';
 import { Button } from '../ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import {
   Sheet,
   SheetContent,
@@ -47,16 +55,86 @@ function MobileLogoutButton({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-function MobileUserInfo({ onNavigate }: { onNavigate: () => void }) {
-  const { user } = useUser();
-
-  // 표시할 이름 결정: fullName > firstName > username > 이메일 앞부분
-  const displayName =
+function getUserDisplayName(user: ReturnType<typeof useUser>['user']) {
+  return (
     user?.fullName ||
     user?.firstName ||
     user?.username ||
     user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
-    '사용자';
+    '사용자'
+  );
+}
+
+function UserAvatar({ className = 'h-9 w-9' }: { className?: string }) {
+  const { user } = useUser();
+  const displayName = getUserDisplayName(user);
+
+  return (
+    <Avatar className={`${className} border border-stone-200`}>
+      <AvatarImage src={user?.imageUrl} alt={displayName} />
+      <AvatarFallback className="bg-primary-100 text-sm font-medium text-primary-700">
+        {displayName.charAt(0).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
+function DesktopUserMenu() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
+  const displayName = getUserDisplayName(user);
+  const email = user?.primaryEmailAddress?.emailAddress;
+
+  const handleSignOut = async () => {
+    await signOut();
+    void navigate('/feed');
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-10 gap-2 px-2">
+          <UserAvatar />
+          <ChevronDown className="h-4 w-4 text-stone-500" />
+          <span className="sr-only">사용자 메뉴 열기</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          <span className="block truncate text-sm">{displayName}</span>
+          {email && (
+            <span className="block truncate text-xs font-normal text-stone-500">
+              {email}
+            </span>
+          )}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/dashboard" className="cursor-pointer">
+            <User className="h-4 w-4" />
+            계정 관리
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer text-red-600 focus:text-red-600"
+          onClick={() => {
+            handleSignOut().catch(() => {});
+          }}
+        >
+          <LogOut className="h-4 w-4" />
+          로그아웃
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function MobileUserInfo({ onNavigate }: { onNavigate: () => void }) {
+  const { user } = useUser();
+
+  // 표시할 이름 결정: fullName > firstName > username > 이메일 앞부분
+  const displayName = getUserDisplayName(user);
 
   // 긴 이름은 12자로 제한
   const truncatedName =
@@ -68,19 +146,7 @@ function MobileUserInfo({ onNavigate }: { onNavigate: () => void }) {
       onClick={onNavigate}
       className="flex items-center gap-3 p-2 rounded-lg hover:bg-stone-50 transition-colors"
     >
-      {user?.imageUrl ? (
-        <img
-          src={user.imageUrl}
-          alt={displayName}
-          className="w-8 h-8 rounded-full border-2 border-stone-200"
-        />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-          <span className="text-primary-600 font-medium text-sm">
-            {displayName.charAt(0).toUpperCase()}
-          </span>
-        </div>
-      )}
+      <UserAvatar className="h-8 w-8" />
       <span className="text-sm font-medium text-stone-700">
         {truncatedName}
       </span>
@@ -250,13 +316,7 @@ export function Header() {
                         독후감 작성
                       </Link>
                     </Button>
-                    <UserButton
-                      appearance={{
-                        elements: {
-                          avatarBox: 'w-9 h-9',
-                        },
-                      }}
-                    />
+                    <DesktopUserMenu />
                   </SignedIn>
                 </>
               )}

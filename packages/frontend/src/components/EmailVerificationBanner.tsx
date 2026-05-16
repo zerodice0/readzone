@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { authApi } from '../lib/api-client';
+import { useState, type FormEvent } from 'react';
+import { useUser } from '@clerk/clerk-react';
 
 /**
  * T107: EmailVerificationBanner
@@ -7,7 +7,10 @@ import { authApi } from '../lib/api-client';
  */
 
 function EmailVerificationBanner() {
+  const { user } = useUser();
   const [isResending, setIsResending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [code, setCode] = useState('');
   const [message, setMessage] = useState<string>('');
   const [messageType, setMessageType] = useState<'success' | 'error'>(
     'success'
@@ -19,23 +22,50 @@ function EmailVerificationBanner() {
     setMessage('');
 
     try {
-      await authApi.resendVerification();
+      if (!user?.primaryEmailAddress) {
+        throw new Error('Missing email address');
+      }
+
+      await user.primaryEmailAddress.prepareVerification({
+        strategy: 'email_code',
+      });
       setMessageType('success');
       setMessage('인증 이메일이 재전송되었습니다. 이메일을 확인해주세요.');
-    } catch (error: unknown) {
+    } catch {
       setMessageType('error');
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        setMessage(
-          axiosError.response?.data?.message || '이메일 재전송에 실패했습니다'
-        );
-      } else {
-        setMessage('이메일 재전송에 실패했습니다');
-      }
+      setMessage('이메일 재전송에 실패했습니다');
     } finally {
       setIsResending(false);
+    }
+  };
+
+  const handleVerifyCode = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsVerifying(true);
+    setMessage('');
+
+    try {
+      if (!user?.primaryEmailAddress) {
+        throw new Error('Missing email address');
+      }
+
+      const result = await user.primaryEmailAddress.attemptVerification({
+        code,
+      });
+
+      if (result.verification.status !== 'verified') {
+        throw new Error('Email verification was not completed');
+      }
+
+      await user.reload();
+      setMessageType('success');
+      setMessage('이메일 인증이 완료되었습니다.');
+      setIsVisible(false);
+    } catch {
+      setMessageType('error');
+      setMessage('인증 코드를 확인해주세요.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -79,6 +109,7 @@ function EmailVerificationBanner() {
           </div>
           <div className="order-3 mt-2 flex-shrink-0 w-full sm:order-2 sm:mt-0 sm:w-auto">
             <button
+              type="button"
               onClick={handleResendVerification}
               disabled={isResending}
               className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-yellow-800 bg-yellow-100 hover:bg-yellow-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -111,6 +142,33 @@ function EmailVerificationBanner() {
             </button>
           </div>
         </div>
+
+        <form
+          onSubmit={handleVerifyCode}
+          className="mt-3 flex flex-col gap-2 sm:flex-row"
+        >
+          <label htmlFor="email-verification-code" className="sr-only">
+            이메일 인증 코드
+          </label>
+          <input
+            id="email-verification-code"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            placeholder="인증 코드"
+            className="paper-input min-h-10 flex-1 rounded-md px-3 py-2 text-sm outline-none"
+            required
+          />
+          <button
+            type="submit"
+            disabled={isVerifying}
+            className="flex min-h-10 items-center justify-center rounded-md bg-yellow-700 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isVerifying ? '확인 중...' : '코드 확인'}
+          </button>
+        </form>
 
         {/* Message Display */}
         {message && (

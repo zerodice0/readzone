@@ -1,12 +1,14 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import {
   createBrowserRouter,
   Navigate,
   Outlet,
   ScrollRestoration,
+  useLocation,
+  useNavigate,
   type RouteObject,
 } from 'react-router-dom';
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import { useAuth, useClerk } from '@clerk/clerk-react';
 import { Skeleton } from './components/ui/skeleton';
 import { Layout } from './components/layout/Layout';
 import { lazyWithRetry } from './utils/lazyWithRetry';
@@ -17,10 +19,9 @@ import { RouteErrorFallback } from './components/RouteErrorFallback';
 import { FeedPage } from './pages/Feed';
 import { ReviewDetailPage } from './pages/ReviewDetail';
 import { NotFoundPage } from './pages/NotFound/NotFoundPage';
-
-// Clerk components for auth
-import { SignIn, SignUp } from '@clerk/clerk-react';
 import { ClerkLoadingWrapper } from './components/ClerkLoadingWrapper';
+import SignInPage from './features/auth/pages/SignInPage';
+import SignUpPage from './features/auth/pages/SignUpPage';
 
 // Public pages - Lazy loaded
 const BooksPage = lazyWithRetry(
@@ -79,15 +80,73 @@ function RootLayout() {
 }
 
 // Protected route wrapper
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <SignedIn>{children}</SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
-  );
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const location = useLocation();
+
+  if (!isLoaded) {
+    return <PageLoader />;
+  }
+
+  if (!isSignedIn) {
+    const redirectUrl = `${location.pathname}${location.search}${location.hash}`;
+
+    return (
+      <Navigate
+        to={`/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`}
+        replace
+      />
+    );
+  }
+
+  return <>{children}</>;
+}
+
+function SsoCallbackPage() {
+  const clerk = useClerk();
+  const navigate = useNavigate();
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    void clerk
+      .handleRedirectCallback({}, (to) => {
+        if (to.startsWith('/') && !to.startsWith('//')) {
+          void navigate(to, { replace: true });
+          return Promise.resolve();
+        }
+
+        window.location.assign(to);
+        return Promise.resolve();
+      })
+      .catch(() => {
+        if (isMounted) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [clerk, navigate]);
+
+  if (hasError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-paper-50 px-4">
+        <div className="max-w-sm text-center">
+          <p className="font-medium text-stone-900">
+            로그인을 완료하지 못했습니다.
+          </p>
+          <p className="mt-2 text-sm text-stone-600">
+            잠시 후 다시 시도해주세요.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return <PageLoader />;
 }
 
 // Route configuration
@@ -126,41 +185,41 @@ const routes: RouteObject[] = [
           {
             path: '/reviews/new',
             element: (
-              <ProtectedRoute>
+              <RequireAuth>
                 <ReviewNewPage />
-              </ProtectedRoute>
+              </RequireAuth>
             ),
           },
           {
             path: '/reviews/:id/edit',
             element: (
-              <ProtectedRoute>
+              <RequireAuth>
                 <ReviewEditPage />
-              </ProtectedRoute>
+              </RequireAuth>
             ),
           },
           {
             path: '/dashboard',
             element: (
-              <ProtectedRoute>
+              <RequireAuth>
                 <DashboardPage />
-              </ProtectedRoute>
+              </RequireAuth>
             ),
           },
           {
             path: '/reading-diary',
             element: (
-              <ProtectedRoute>
+              <RequireAuth>
                 <ReadingDiaryPage />
-              </ProtectedRoute>
+              </RequireAuth>
             ),
           },
           {
             path: '/reading-diary/new',
             element: (
-              <ProtectedRoute>
+              <RequireAuth>
                 <ReadingDiaryNewPage />
-              </ProtectedRoute>
+              </RequireAuth>
             ),
           },
           // Legacy routes - redirect to /dashboard
@@ -210,28 +269,24 @@ const routes: RouteObject[] = [
       {
         path: '/sign-in/*',
         element: (
-          <ClerkLoadingWrapper debug>
-            <div className="flex items-center justify-center min-h-screen">
-              <SignIn
-                routing="path"
-                path="/sign-in"
-                fallbackRedirectUrl="/feed"
-              />
-            </div>
+          <ClerkLoadingWrapper>
+            <SignInPage />
           </ClerkLoadingWrapper>
         ),
       },
       {
         path: '/sign-up/*',
         element: (
-          <ClerkLoadingWrapper debug>
-            <div className="flex items-center justify-center min-h-screen">
-              <SignUp
-                routing="path"
-                path="/sign-up"
-                fallbackRedirectUrl="/feed"
-              />
-            </div>
+          <ClerkLoadingWrapper>
+            <SignUpPage />
+          </ClerkLoadingWrapper>
+        ),
+      },
+      {
+        path: '/sso-callback',
+        element: (
+          <ClerkLoadingWrapper>
+            <SsoCallbackPage />
           </ClerkLoadingWrapper>
         ),
       },
