@@ -59,23 +59,26 @@ Usage notes:
 
 ## BUILD & EXECUTION
 
-| Command            | Description                                                                          |
-| :----------------- | :----------------------------------------------------------------------------------- |
-| `pnpm dev`         | Start development servers (Frontend + Backend)                                       |
-| `pnpm build`       | Build all packages (Turbo)                                                           |
-| `pnpm type-check`  | Run TypeScript validation across all packages                                        |
-| `pnpm lint`        | Run ESLint across all packages                                                       |
-| `pnpm format`      | Format code using Prettier                                                           |
-| `pnpm test`        | Run tests (Vitest)                                                                   |
-| `pnpm deploy:prod` | Build with production Convex URL, verify bundle safety, deploy to Cloudflare Workers |
-| `npx convex dev`   | Run Convex backend directly                                                          |
+| Command            | Description                                                                                     |
+| :----------------- | :---------------------------------------------------------------------------------------------- |
+| `pnpm dev`         | Start development servers (Frontend + Backend)                                                  |
+| `pnpm build`       | Build all packages (Turbo)                                                                      |
+| `pnpm type-check`  | Run TypeScript validation across all packages                                                   |
+| `pnpm lint`        | Run ESLint across all packages                                                                  |
+| `pnpm format`      | Format code using Prettier                                                                      |
+| `pnpm test`        | Run tests (Vitest)                                                                              |
+| `pnpm deploy:prod` | Verify production Clerk/Convex config, build frontend, deploy Convex, deploy Cloudflare Workers |
+| `npx convex dev`   | Run Convex backend directly                                                                     |
 
 ### Production Deployment Safety
 
 - **Always deploy production through `pnpm deploy:prod`**. Do not manually run a separate frontend build followed by `wrangler deploy`.
-- The deploy script injects the production Convex URL (`https://laudable-blackbird-573.convex.cloud`) at build time, then blocks deployment if the built bundle contains the development Convex host (`hardy-bobcat-646.convex.cloud`).
+- The deploy script verifies the production Clerk publishable key before building. Production must use a `pk_live_` key, and the decoded Clerk issuer must match Convex production `CLERK_ISSUER_DOMAIN`.
+- The deploy script injects the production Convex URL (`https://laudable-blackbird-573.convex.cloud`) and production Clerk publishable key at build time, then verifies every built JavaScript asset.
+- The bundle verification must block deployment if a built asset contains the development Convex host (`hardy-bobcat-646.convex.cloud`) or a different local Clerk publishable key.
+- The deploy script deploys Convex production functions before deploying Cloudflare Workers. Do not deploy frontend-only production changes unless the user explicitly asks for that narrower operation.
 - `CLOUDFLARE_API_TOKEN` must be supplied from the shell or ignored `.env.local`; never commit Cloudflare tokens or production secrets.
-- If the script fails its Convex URL verification, stop and fix the environment/configuration before deploying.
+- If the script fails any Convex URL, Clerk key, Clerk issuer, or bundle verification, stop and fix the environment/configuration before deploying. Do not bypass the failure with manual `wrangler deploy`.
 
 ### Testing Strategy
 

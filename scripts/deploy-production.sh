@@ -5,6 +5,56 @@ PROD_CONVEX_URL="https://laudable-blackbird-573.convex.cloud"
 BLOCKED_DEV_CONVEX_HOST="hardy-bobcat-646.convex.cloud"
 DIST_DIR="packages/frontend/dist"
 ASSETS_DIR="$DIST_DIR/assets"
+FRONTEND_PROD_ENV_FILE="packages/frontend/.env.production"
+FRONTEND_LOCAL_ENV_FILE="packages/frontend/.env.local"
+
+read_env_file() {
+  local name="$1"
+  local env_file="$2"
+  local value=""
+
+  if [[ -f "$env_file" ]]; then
+    value="$(grep -E "^${name}=" "$env_file" | tail -n 1 | cut -d= -f2- || true)"
+  fi
+
+  value="${value%$'\r'}"
+  value="${value%\"}"
+  value="${value#\"}"
+  value="${value%\'}"
+  value="${value#\'}"
+  printf '%s' "$value"
+}
+
+read_frontend_env() {
+  local name="$1"
+  local value="${!name:-}"
+
+  if [[ -z "$value" && -f "$FRONTEND_PROD_ENV_FILE" ]]; then
+    value="$(read_env_file "$name" "$FRONTEND_PROD_ENV_FILE")"
+  fi
+
+  printf '%s' "$value"
+}
+
+decode_clerk_issuer_domain() {
+  local publishable_key="$1"
+
+  node - "$publishable_key" <<'NODE'
+const publishableKey = process.argv[2];
+const [prefix, environment, encodedDomain] = publishableKey.split('_');
+
+if (prefix !== 'pk' || !['live', 'test'].includes(environment) || !encodedDomain) {
+  throw new Error('Invalid Clerk publishable key format.');
+}
+
+const decodedDomain = Buffer.from(encodedDomain, 'base64').toString('utf8');
+if (!decodedDomain.endsWith('$')) {
+  throw new Error('Invalid Clerk publishable key domain.');
+}
+
+console.log(`https://${decodedDomain.slice(0, -1)}`);
+NODE
+}
 
 load_cloudflare_token() {
   if [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
@@ -25,14 +75,62 @@ load_cloudflare_token() {
 
 build_frontend() {
   echo "Building frontend with production Convex URL..."
-  VITE_CONVEX_URL="$PROD_CONVEX_URL" pnpm --filter @geuldarak/frontend build
+  local clerk_publishable_key
+  clerk_publishable_key="$(read_frontend_env VITE_CLERK_PUBLISHABLE_KEY)"
+
+  VITE_CONVEX_URL="$PROD_CONVEX_URL" \
+    VITE_CLERK_PUBLISHABLE_KEY="$clerk_publishable_key" \
+    pnpm --filter @geuldarak/frontend build
+}
+
+deploy_convex() {
+  echo "Deploying Convex functions..."
+  pnpm exec convex deploy --yes
+}
+
+verify_clerk_configuration() {
+  echo "Verifying Clerk production configuration..."
+
+  local clerk_publishable_key
+  clerk_publishable_key="$(read_frontend_env VITE_CLERK_PUBLISHABLE_KEY)"
+
+  if [[ -z "$clerk_publishable_key" ]]; then
+    echo "ERROR: VITE_CLERK_PUBLISHABLE_KEY is required for production builds." >&2
+    exit 1
+  fi
+
+  if [[ "$clerk_publishable_key" == pk_test_* ]]; then
+    echo "ERROR: Production build is using a Clerk test publishable key." >&2
+    echo "Set VITE_CLERK_PUBLISHABLE_KEY to the production Clerk key before deploying." >&2
+    exit 1
+  fi
+
+  local clerk_issuer_domain
+  clerk_issuer_domain="$(decode_clerk_issuer_domain "$clerk_publishable_key")"
+
+  local convex_issuer_domain
+  convex_issuer_domain="$(pnpm exec convex env get CLERK_ISSUER_DOMAIN --prod)"
+
+  if [[ "$convex_issuer_domain" != "$clerk_issuer_domain" ]]; then
+    echo "ERROR: Clerk issuer mismatch." >&2
+    echo "Frontend Clerk issuer: $clerk_issuer_domain" >&2
+    echo "Convex CLERK_ISSUER_DOMAIN: $convex_issuer_domain" >&2
+    exit 1
+  fi
+
+  echo "Clerk configuration verified."
 }
 
 verify_frontend_bundle() {
   echo "Verifying production bundle..."
+  local clerk_publishable_key
+  clerk_publishable_key="$(read_frontend_env VITE_CLERK_PUBLISHABLE_KEY)"
+  local local_clerk_publishable_key
+  local_clerk_publishable_key="$(read_env_file VITE_CLERK_PUBLISHABLE_KEY "$FRONTEND_LOCAL_ENV_FILE")"
 
   shopt -s nullglob
   local index_files=("$ASSETS_DIR"/index-*.js)
+  local js_files=("$ASSETS_DIR"/*.js)
   shopt -u nullglob
 
   if (( ${#index_files[@]} == 0 )); then
@@ -40,17 +138,34 @@ verify_frontend_bundle() {
     exit 1
   fi
 
-  if grep -R "$BLOCKED_DEV_CONVEX_HOST" "${index_files[@]}" >/dev/null; then
+  if (( ${#js_files[@]} == 0 )); then
+    echo "ERROR: No built frontend JavaScript files found in $ASSETS_DIR." >&2
+    exit 1
+  fi
+
+  if grep -R -F "$BLOCKED_DEV_CONVEX_HOST" "${js_files[@]}" >/dev/null; then
     echo "ERROR: Built bundle contains dev Convex host: $BLOCKED_DEV_CONVEX_HOST" >&2
     exit 1
   fi
 
-  if ! grep -R "$PROD_CONVEX_URL" "${index_files[@]}" >/dev/null; then
+  if ! grep -R -F "$PROD_CONVEX_URL" "${js_files[@]}" >/dev/null; then
     echo "ERROR: Built bundle does not contain prod Convex URL: $PROD_CONVEX_URL" >&2
     exit 1
   fi
 
-  echo "Bundle verified: production Convex URL is present and dev URL is absent."
+  if ! grep -R -F "$clerk_publishable_key" "${js_files[@]}" >/dev/null; then
+    echo "ERROR: Built bundle does not contain the expected Clerk publishable key." >&2
+    exit 1
+  fi
+
+  if [[ -n "$local_clerk_publishable_key" && "$local_clerk_publishable_key" != "$clerk_publishable_key" ]]; then
+    if grep -R -F "$local_clerk_publishable_key" "${js_files[@]}" >/dev/null; then
+      echo "ERROR: Built bundle contains the local Clerk publishable key." >&2
+      exit 1
+    fi
+  fi
+
+  echo "Bundle verified: production Convex URL and Clerk key are present."
 }
 
 deploy_worker() {
@@ -65,12 +180,14 @@ deploy_worker() {
   npx wrangler deploy
 }
 
+verify_clerk_configuration
 build_frontend
 verify_frontend_bundle
 
 if [[ "${DEPLOY_PROD_CHECK_ONLY:-}" == "1" ]]; then
-  echo "Check-only mode complete. Skipped Cloudflare deployment."
+  echo "Check-only mode complete. Skipped Convex and Cloudflare deployment."
   exit 0
 fi
 
+deploy_convex
 deploy_worker
