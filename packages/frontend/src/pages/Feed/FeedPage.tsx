@@ -86,7 +86,6 @@ export function FeedPage() {
                 독자들이 방금 남긴 책의 흔적
               </p>
             </div>
-            <BrandMark className="sm:hidden" />
           </div>
 
           <div className="paper-surface mb-4 rounded-2xl p-4">
