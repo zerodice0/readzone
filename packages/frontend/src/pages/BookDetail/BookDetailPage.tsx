@@ -28,6 +28,7 @@ import {
   scaleInVariants,
 } from '../../utils/animations';
 import { extractMiddleCategory } from '../../utils/category';
+import { decodeHtmlEntities } from '../../utils/html';
 import type { Id } from 'convex/_generated/dataModel';
 
 export default function BookDetailPage() {
@@ -103,6 +104,9 @@ export default function BookDetailPage() {
   const publishYear = book.publishedDate
     ? new Date(book.publishedDate).getFullYear()
     : null;
+  const bookDescription = book.description
+    ? decodeHtmlEntities(book.description)
+    : null;
 
   return (
     <div className="min-h-screen">
@@ -135,7 +139,7 @@ export default function BookDetailPage() {
               {/* Blurred background image */}
               {book.coverImageUrl && (
                 <div
-                  className="absolute inset-0 opacity-20 blur-xl scale-110"
+                  className="absolute inset-0 opacity-30 blur-xl scale-110"
                   style={{
                     backgroundImage: `url(${book.coverImageUrl})`,
                     backgroundPosition: 'center',
@@ -236,9 +240,9 @@ export default function BookDetailPage() {
                   )}
                 </div>
 
-                {book.description && (
-                  <p className="text-stone-600 leading-relaxed mb-8 max-w-2xl line-clamp-3 hover:line-clamp-none transition-all duration-300">
-                    {book.description}
+                {bookDescription && (
+                  <p className="text-stone-600 leading-relaxed mb-8 max-w-2xl">
+                    {bookDescription}
                   </p>
                 )}
 

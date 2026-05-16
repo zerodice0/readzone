@@ -15,6 +15,8 @@ import {
   Tablet,
   ExternalLink,
   BookOpen,
+  Calendar,
+  Building2,
 } from 'lucide-react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -27,6 +29,7 @@ import { LoginPrompt } from '../../components/LoginPrompt';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import { extractMiddleCategory } from '../../utils/category';
+import { decodeHtmlEntities } from '../../utils/html';
 import { useShare } from '../../hooks/useShare';
 import {
   pageVariants,
@@ -63,6 +66,9 @@ interface ReviewDetail {
     reviewCount?: number;
     isbn?: string;
     category?: string;
+    description?: string;
+    publishedDate?: number;
+    publisher?: string;
   } | null;
   author: {
     name?: string;
@@ -243,6 +249,17 @@ export function ReviewDetailPage() {
       </div>
     );
   }
+
+  const book = review.book;
+  const bookPublishYear = book?.publishedDate
+    ? new Date(book.publishedDate).getFullYear()
+    : null;
+  const bookDescription = book?.description
+    ? decodeHtmlEntities(book.description)
+    : null;
+  const bookCategory = book?.category
+    ? extractMiddleCategory(book.category)
+    : null;
 
   return (
     <div className="min-h-screen">
@@ -440,107 +457,162 @@ export function ReviewDetailPage() {
           {/* Sidebar: Book Info */}
           <aside className="lg:col-span-4">
             <div className="sticky top-24 space-y-6">
-              {review.book && (
+              {book && (
                 <m.div
                   variants={scaleInVariants}
                   initial="hidden"
                   animate="visible"
-                  className="paper-surface rounded-2xl overflow-hidden"
+                  className="paper-surface rounded-3xl overflow-hidden"
                 >
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold text-stone-900 mb-6 flex items-center gap-2">
-                      책 정보
-                    </h3>
+                  <div className="ink-panel relative min-h-72 overflow-hidden flex items-center justify-center p-8">
+                    {book.coverImageUrl && (
+                      <div
+                        className="absolute inset-0 opacity-30 blur-xl scale-110"
+                        style={{
+                          backgroundImage: `url(${book.coverImageUrl})`,
+                          backgroundPosition: 'center',
+                          backgroundSize: 'cover',
+                        }}
+                        aria-hidden="true"
+                      />
+                    )}
 
-                    <div className="flex flex-col items-center text-center">
+                    <div className="relative z-10">
                       <Link
-                        to={`/books/${review.book._id}`}
-                        className="block mb-6 relative group"
+                        to={`/books/${book._id}`}
+                        className="block relative group"
                       >
                         <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
                         <img
-                          src={
-                            review.book.coverImageUrl || '/placeholder-book.svg'
-                          }
-                          alt={review.book.title}
-                          className="book-paper-frame w-32 h-auto rounded-lg transform group-hover:scale-105 transition-transform duration-300"
+                          src={book.coverImageUrl || '/placeholder-book.svg'}
+                          alt={`${book.title} 표지`}
+                          className="book-paper-frame w-40 h-auto rounded-lg transform group-hover:scale-[1.03] transition-transform duration-300"
                           onError={(e) => {
                             e.currentTarget.src = '/placeholder-book.svg';
                           }}
                         />
                       </Link>
+                    </div>
+                  </div>
 
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-stone-900 mb-5">
+                      책 정보
+                    </h3>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {bookPublishYear && (
+                        <Badge
+                          variant="outline"
+                          className="text-stone-500 border-stone-200"
+                        >
+                          {bookPublishYear}년
+                        </Badge>
+                      )}
+                      {bookCategory && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-note-blue/10 text-note-blue border-note-blue/20"
+                        >
+                          {bookCategory}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="text-left">
                       <Link
-                        to={`/books/${review.book._id}`}
+                        to={`/books/${book._id}`}
                         className="hover:text-primary-600 transition-colors"
                       >
-                        <h4 className="font-bold text-xl text-stone-900 mb-2 font-serif">
-                          {review.book.title}
+                        <h4 className="font-bold text-2xl text-stone-900 mb-2 font-serif">
+                          {book.title}
                         </h4>
                       </Link>
-                      <p className="text-stone-600 mb-4">
-                        {review.book.author}
+                      <p className="text-stone-600 mb-5 font-medium">
+                        {book.author}
                       </p>
 
-                      {/* 장르 배지 */}
-                      {review.book.category &&
-                        extractMiddleCategory(review.book.category) && (
-                          <Badge
-                            variant="secondary"
-                            className="mb-4 bg-violet-50 text-violet-700 hover:bg-violet-100"
-                          >
-                            {extractMiddleCategory(review.book.category)}
-                          </Badge>
-                        )}
+                      {(book.publisher || book.publishedDate) && (
+                        <div className="grid grid-cols-1 gap-3 mb-5">
+                          {book.publisher && (
+                            <div className="flex items-center gap-2 text-stone-600">
+                              <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500">
+                                <Building2 className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-medium">
+                                {book.publisher}
+                              </span>
+                            </div>
+                          )}
+                          {book.publishedDate && (
+                            <div className="flex items-center gap-2 text-stone-600">
+                              <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500">
+                                <Calendar className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-medium">
+                                {new Date(
+                                  book.publishedDate
+                                ).toLocaleDateString('ko-KR')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                      {review.book.reviewCount !== undefined &&
-                        review.book.reviewCount > 0 && (
+                      {bookDescription && (
+                        <p className="text-sm text-stone-600 leading-relaxed mb-5 line-clamp-3">
+                          {bookDescription}
+                        </p>
+                      )}
+
+                      {book.reviewCount !== undefined &&
+                        book.reviewCount > 0 && (
                           <Link
-                            to={`/books/${review.book._id}`}
-                            className="mb-6"
+                            to={`/books/${book._id}`}
+                            className="block mb-5"
                           >
                             <Badge
                               variant="secondary"
                               className="hover:bg-stone-200 transition-colors cursor-pointer"
                             >
                               <BookOpen className="w-3 h-3 mr-1" />이 책의 다른
-                              리뷰 {review.book.reviewCount}개
+                              리뷰 {book.reviewCount}개
                             </Badge>
                           </Link>
                         )}
 
-                      <div className="w-full space-y-3">
-                        {review.book.aladinUrl && (
+                      <div className="w-full flex flex-wrap gap-3">
+                        {book.aladinUrl && (
                           <Button
                             asChild
                             variant="outline"
-                            className="w-full border-stone-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                            className="border-stone-200 text-stone-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                           >
                             <a
-                              href={review.book.aladinUrl}
+                              href={book.aladinUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               <ShoppingCart className="w-4 h-4 mr-2" />
-                              종이책 구매하기
-                              <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
+                              종이책
+                              <ExternalLink className="w-3 h-3 ml-1.5 opacity-50" />
                             </a>
                           </Button>
                         )}
-                        {review.book.ebookUrl && (
+                        {book.ebookUrl && (
                           <Button
                             asChild
                             variant="outline"
-                            className="w-full border-stone-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                            className="border-stone-200 text-stone-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
                           >
                             <a
-                              href={review.book.ebookUrl}
+                              href={book.ebookUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               <Tablet className="w-4 h-4 mr-2" />
-                              전자책 구매하기
-                              <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
+                              전자책
+                              <ExternalLink className="w-3 h-3 ml-1.5 opacity-50" />
                             </a>
                           </Button>
                         )}

@@ -44,6 +44,40 @@ interface AladinSearchResponse {
   errorMessage?: string;
 }
 
+const HTML_ENTITIES: Record<string, string> = {
+  amp: '&',
+  apos: "'",
+  gt: '>',
+  lt: '<',
+  nbsp: ' ',
+  quot: '"',
+};
+
+function decodeHtmlEntities(value: string) {
+  return value.replace(
+    /&(#\d+|#x[\da-fA-F]+|[a-zA-Z]+);/g,
+    (match: string, entity: string) => {
+      if (entity[0] === '#') {
+        const codePoint =
+          entity[1]?.toLowerCase() === 'x'
+            ? Number.parseInt(entity.slice(2), 16)
+            : Number.parseInt(entity.slice(1), 10);
+
+        return Number.isNaN(codePoint) || codePoint > 0x10ffff
+          ? match
+          : String.fromCodePoint(codePoint);
+      }
+
+      return HTML_ENTITIES[entity] ?? match;
+    }
+  );
+}
+
+function normalizeAladinText(value: string | null | undefined) {
+  const normalized = value ? decodeHtmlEntities(value).trim() : '';
+  return normalized || null;
+}
+
 // 알라딘 API 응답을 글다락 Book 모델로 변환
 function transformAladinToBook(item: AladinLookupItem) {
   // 출판일 파싱 (YYYY-MM-DD 또는 YYYY 형식)
@@ -62,17 +96,17 @@ function transformAladinToBook(item: AladinLookupItem) {
     externalId: String(item.itemId),
     externalSource: 'ALADIN' as const,
     isbn: item.isbn13 || item.isbn || null,
-    title: item.title.replace(/ - .*$/, ''), // 부제목 제거
-    author: item.author.replace(/ \(지은이\).*$/, ''), // "(지은이)" 등 제거
-    publisher: item.publisher || null,
+    title: decodeHtmlEntities(item.title).replace(/ - .*$/, ''), // 부제목 제거
+    author: decodeHtmlEntities(item.author).replace(/ \(지은이\).*$/, ''), // "(지은이)" 등 제거
+    publisher: normalizeAladinText(item.publisher),
     publishedDate,
     coverImageUrl: item.cover || null,
-    description: item.description || null,
+    description: normalizeAladinText(item.description),
     pageCount: null, // 알라딘 검색 API에서는 페이지 수 미제공
     language: 'ko', // 알라딘은 한국어 도서 기본
     aladinUrl: item.link || null, // 알라딘 종이책 구매 URL
     ebookUrl, // 전자책 구매 URL
-    category: item.categoryName || null, // 장르 카테고리 (예: "국내도서>소설/시/희곡>한국소설")
+    category: normalizeAladinText(item.categoryName), // 장르 카테고리 (예: "국내도서>소설/시/희곡>한국소설")
   };
 }
 

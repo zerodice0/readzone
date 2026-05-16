@@ -18,6 +18,7 @@ import {
 } from '../../hooks/useBookSearch';
 import { DiaryBookSuggestions } from './DiaryBookSuggestions';
 import { RecentBookSuggestions } from '../diary/RecentBookSuggestions';
+import { decodeHtmlEntities } from '../../utils/html';
 import type { BookData } from '../../types/book';
 
 interface BookSearchProps {
@@ -58,6 +59,9 @@ export function BookSearch({
     searchQuery.trim().length >= 2 && !isSearchingLocal && !hasLocalResults;
 
   const canSearchAladin = searchQuery.trim().length >= 2;
+  const selectedBookDescription = selectedBook?.description
+    ? decodeHtmlEntities(selectedBook.description)
+    : null;
 
   // 알라딘 책 선택 핸들러
   const handleSelectAladinBook = async (book: AladinBook) => {
@@ -334,9 +338,9 @@ export function BookSearch({
                 </Button>
               </div>
 
-              {selectedBook.description && (
+              {selectedBookDescription && (
                 <p className="text-sm text-stone-500 line-clamp-2 mt-4 leading-relaxed">
-                  {selectedBook.description}
+                  {selectedBookDescription}
                 </p>
               )}
             </div>
