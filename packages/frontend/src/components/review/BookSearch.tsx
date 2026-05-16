@@ -110,7 +110,7 @@ export function BookSearch({
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setSearchQuery(e.target.value)
           }
-          className="w-full pl-12 pr-12 py-4 bg-white border border-stone-200 rounded-xl text-lg shadow-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+          className="paper-input w-full pl-12 pr-12 py-4 rounded-xl text-lg placeholder:text-stone-400 outline-none transition-all"
         />
         {searchQuery && (
           <button
@@ -272,7 +272,7 @@ export function BookSearch({
           ) : (
             <DiaryBookSuggestions onSelectBook={onSelectBook} />
           )}
-          <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50">
+          <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-paper-200 rounded-2xl bg-paper-50/35">
             <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 ring-1 ring-stone-900/5">
               <BookPlus className="w-8 h-8 text-primary-500" />
             </div>
@@ -290,9 +290,9 @@ export function BookSearch({
 
       {/* Selected book display */}
       {selectedBook && !searchQuery && (
-        <div className="relative group overflow-hidden border border-primary-200 bg-primary-50/30 rounded-2xl p-6 transition-all hover:bg-primary-50/50 hover:border-primary-300">
+        <div className="paper-panel relative group overflow-hidden rounded-2xl p-6 transition-all hover:border-paper-300">
           <div className="flex items-start gap-6">
-            <div className="shrink-0 w-24 h-36 bg-white rounded-lg shadow-sm overflow-hidden ring-1 ring-stone-900/5">
+            <div className="book-paper-frame shrink-0 w-24 h-36 rounded-lg overflow-hidden">
               {selectedBook.coverImageUrl ? (
                 <img
                   src={selectedBook.coverImageUrl}

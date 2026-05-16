@@ -1,5 +1,12 @@
 import { useCallback, useState } from 'react';
-import { FileText, Search, X, BookOpen } from 'lucide-react';
+import {
+  FileText,
+  Search,
+  X,
+  BookOpen,
+  NotebookPen,
+  PenSquare,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePaginatedQuery, useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -70,7 +77,7 @@ export function FeedPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9]">
+    <div className="min-h-screen">
       <LoginPrompt />
 
       <m.main
@@ -81,14 +88,18 @@ export function FeedPage() {
         className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-7xl"
       >
         {/* Header Section */}
-        <div className="text-center mb-16 relative">
-          <div className="hidden sm:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-linear-to-r from-primary-100/40 via-purple-100/40 to-orange-100/40 blur-3xl rounded-[100%] z-0 pointer-events-none" />
+        <div className="mb-12 relative overflow-hidden rounded-3xl paper-panel px-6 py-12 text-center sm:px-10">
+          <div className="absolute inset-0 pointer-events-none opacity-80">
+            <div className="absolute left-8 top-0 h-full w-px bg-primary-200/70" />
+            <div className="absolute inset-x-0 top-20 h-px bg-primary-100/70" />
+            <div className="absolute inset-x-0 bottom-16 h-px bg-primary-100/50" />
+          </div>
 
           <div className="relative z-10">
             <m.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-sm mb-6"
+              className="inline-flex items-center justify-center p-3 bg-white/90 rounded-2xl shadow-sm mb-6 ring-1 ring-paper-200"
             >
               <BookOpen className="w-8 h-8 text-primary-600" />
             </m.div>
@@ -101,6 +112,24 @@ export function FeedPage() {
               <br className="hidden sm:block" />
               새로운 영감을 발견하고 당신의 생각도 나눠보세요.
             </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button
+                onClick={() => navigate('/reading-diary/new')}
+                variant="warm"
+                className="w-full sm:w-auto"
+              >
+                <NotebookPen className="w-4 h-4" />
+                오늘 기록하기
+              </Button>
+              <Button
+                onClick={handleNavigateToNew}
+                variant="outline"
+                className="w-full sm:w-auto border-paper-200 bg-white/80 hover:bg-paper-50"
+              >
+                <PenSquare className="w-4 h-4" />
+                독후감 작성
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -123,7 +152,7 @@ export function FeedPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="책 제목, 저자, 독후감 제목으로 검색..."
-              className="w-full pl-12 pr-12 py-4 bg-white border border-stone-200 rounded-2xl shadow-sm text-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-stone-400"
+              className="paper-input w-full pl-12 pr-12 py-4 rounded-2xl text-lg outline-none transition-all placeholder:text-stone-400"
             />
             {searchQuery && (
               <button
@@ -157,7 +186,7 @@ export function FeedPage() {
             {Array.from({ length: 9 }).map((_, i) => (
               <div
                 key={i}
-                className="bg-white border border-stone-200 rounded-xl p-6 space-y-4 shadow-sm h-full"
+                className="paper-surface rounded-xl p-6 space-y-4 h-full"
               >
                 <div className="flex gap-4">
                   <Skeleton className="w-20 h-28 rounded-md shrink-0" />

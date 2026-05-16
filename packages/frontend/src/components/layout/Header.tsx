@@ -163,7 +163,7 @@ export function Header() {
           <div className="mt-1 text-stone-500">{debugInfo.timestamp}</div>
         </div>
       )}
-      <header className="sticky top-0 z-50 bg-white border-b border-stone-200 shadow-sm">
+      <header className="sticky top-0 z-50 border-b border-paper-200/70 bg-[#fffdf8]/88 shadow-sm backdrop-blur-xl">
         {/* Skip to main content link for accessibility */}
         <a
           href="#main-content"
@@ -175,7 +175,7 @@ export function Header() {
           {/* 로고 */}
           <Link
             to="/feed"
-            className="text-xl font-bold text-primary-600 hover:text-primary-700 transition-colors"
+            className="text-xl font-bold text-ink hover:text-primary-700 transition-colors"
           >
             <m.span
               {...getAnimationProps({
@@ -210,7 +210,7 @@ export function Header() {
               >
                 <Link
                   to={link.to}
-                  className="text-stone-700 hover:text-primary-600 font-medium transition-colors"
+                  className="text-stone-700 hover:text-primary-700 font-medium transition-colors"
                 >
                   {link.label}
                 </Link>

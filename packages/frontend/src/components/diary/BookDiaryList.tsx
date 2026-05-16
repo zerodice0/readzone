@@ -106,7 +106,7 @@ export function BookDiaryListView({
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-            className="appearance-none text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 pl-2 pr-6 py-1 rounded cursor-pointer transition-colors focus:outline-none focus:ring-1 focus:ring-stone-300"
+            className="appearance-none text-xs text-stone-600 bg-paper-50 hover:bg-paper-100 pl-2 pr-6 py-1 rounded cursor-pointer transition-colors focus:outline-none focus:ring-1 focus:ring-paper-200"
           >
             <option value="newest">최신 날짜순</option>
             <option value="oldest">오래된 날짜순</option>
@@ -117,7 +117,7 @@ export function BookDiaryListView({
       <div className="space-y-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
         {groupedDiaries.map(([dateKey, diariesInDate]) => (
           <div key={dateKey}>
-            <p className="text-xs font-medium text-stone-500 mb-2 pb-1 border-b border-stone-200">
+            <p className="text-xs font-medium text-stone-500 mb-2 pb-1 border-b border-paper-200/70">
               {dateKey}
             </p>
             <div className="space-y-2">
@@ -126,7 +126,7 @@ export function BookDiaryListView({
                   return (
                     <div
                       key={diary._id}
-                      className="bg-stone-50 rounded-lg border border-stone-200 p-3"
+                      className="bg-paper-50/45 rounded-lg border border-paper-200/70 border-l-4 border-l-primary-600 p-3"
                     >
                       <p className="text-sm text-stone-700 whitespace-pre-wrap break-words leading-6">
                         {diary.content}
@@ -144,12 +144,12 @@ export function BookDiaryListView({
                 return (
                   <div
                     key={diary._id}
-                    className="bg-stone-50 rounded-lg border border-stone-200 overflow-hidden"
+                    className="bg-paper-50/45 rounded-lg border border-paper-200/70 overflow-hidden"
                   >
                     <button
                       type="button"
                       onClick={() => toggleExpand(diary._id)}
-                      className="w-full p-3 text-left flex items-start justify-between gap-2 hover:bg-stone-100 transition-colors"
+                      className="w-full p-3 text-left flex items-start justify-between gap-2 hover:bg-paper-50 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-stone-700 line-clamp-2">

@@ -30,8 +30,10 @@ export default function BooksPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">책 목록</h1>
+      <div className="paper-panel rounded-3xl p-6 sm:p-8 mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold text-stone-900 mb-2 font-serif">
+          책 목록
+        </h1>
         <p className="text-stone-600">
           다양한 책들의 독후감을 둘러보고 새로운 책을 발견해보세요
         </p>
@@ -46,7 +48,7 @@ export default function BooksPage() {
             placeholder="책 제목 또는 저자로 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="paper-input w-full pl-12 pr-4 py-3 rounded-xl outline-none"
           />
         </div>
       </div>

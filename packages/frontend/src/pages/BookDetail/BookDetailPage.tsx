@@ -64,7 +64,7 @@ export default function BookDetailPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
           <span className="text-stone-500 font-medium">
@@ -78,8 +78,8 @@ export default function BookDetailPage() {
   // Book not found
   if (!book || !id) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-stone-100">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="paper-surface rounded-2xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-stone-400" />
           </div>
@@ -105,7 +105,7 @@ export default function BookDetailPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9]">
+    <div className="min-h-screen">
       <LoginPrompt />
 
       <m.div
@@ -116,7 +116,7 @@ export default function BookDetailPage() {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
       >
         {/* Navigation Bar */}
-        <nav className="flex items-center justify-between mb-8 sticky top-0 z-10 bg-[#FAFAF9]/80 backdrop-blur-md py-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <nav className="flex items-center justify-between mb-8 sticky top-0 z-10 bg-[#fbf7ee]/80 backdrop-blur-md py-4 -mx-4 px-4 sm:mx-0 sm:px-0">
           <Button
             variant="ghost"
             onClick={() => navigate('/books')}
@@ -128,10 +128,10 @@ export default function BookDetailPage() {
         </nav>
 
         {/* Top Section: Book Info and Cover */}
-        <section className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden mb-12">
+        <section className="paper-surface rounded-3xl overflow-hidden mb-12">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-8">
             {/* Left: Book Cover (with blurred background effect) */}
-            <div className="md:col-span-5 lg:col-span-4 bg-stone-100 relative overflow-hidden flex items-center justify-center p-8 md:p-12 min-h-[400px]">
+            <div className="ink-panel md:col-span-5 lg:col-span-4 relative overflow-hidden flex items-center justify-center p-8 md:p-12 min-h-[400px]">
               {/* Blurred background image */}
               {book.coverImageUrl && (
                 <div
@@ -155,7 +155,7 @@ export default function BookDetailPage() {
                   <img
                     src={book.coverImageUrl}
                     alt={`${book.title} 표지`}
-                    className="w-48 sm:w-56 h-auto shadow-2xl rounded-lg transform hover:scale-[1.02] transition-transform duration-500 ease-out"
+                    className="book-paper-frame w-48 sm:w-56 h-auto rounded-lg transform hover:scale-[1.02] transition-transform duration-500 ease-out"
                     loading="lazy"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
@@ -185,7 +185,7 @@ export default function BookDetailPage() {
                     {book.category && extractMiddleCategory(book.category) && (
                       <Badge
                         variant="secondary"
-                        className="bg-violet-50 text-violet-700 border-violet-200"
+                        className="bg-note-blue/10 text-note-blue border-note-blue/20"
                       >
                         {extractMiddleCategory(book.category)}
                       </Badge>
@@ -244,11 +244,7 @@ export default function BookDetailPage() {
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 items-center">
-                  <Button
-                    onClick={handleWriteReview}
-                    size="lg"
-                    className="bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-200/50 hover:shadow-primary-300/50 transition-all"
-                  >
+                  <Button onClick={handleWriteReview} size="lg" variant="warm">
                     <PenSquare className="w-4 h-4 mr-2" />
                     독후감 쓰기
                   </Button>
@@ -417,7 +413,7 @@ export default function BookDetailPage() {
           {/* Sidebar: Stats */}
           <aside className="lg:col-span-4 order-1 lg:order-2">
             <div className="sticky top-24">
-              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm mb-6">
+              <div className="paper-surface rounded-2xl p-6 mb-6">
                 <h3 className="text-lg font-bold text-stone-900 mb-6">
                   리뷰 분석
                 </h3>
@@ -460,15 +456,16 @@ export default function BookDetailPage() {
                 </div>
               </div>
 
-              <div className="bg-primary-50 rounded-2xl p-6 text-center">
-                <p className="text-primary-800 font-medium mb-4">
+              <div className="ink-panel rounded-2xl p-6 text-center">
+                <p className="text-paper-100 font-medium mb-4">
                   이 책을 읽고 계신가요?
                   <br />
                   여러분의 생각이 궁금해요!
                 </p>
                 <Button
                   onClick={handleWriteReview}
-                  className="w-full bg-primary-600 hover:bg-primary-700"
+                  variant="warm"
+                  className="w-full"
                 >
                   독후감 쓰러 가기
                 </Button>

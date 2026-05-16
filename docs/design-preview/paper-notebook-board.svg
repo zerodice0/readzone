@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1050" viewBox="0 0 1600 1050" fill="none">
+  <defs>
+    <filter id="paperShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#211D17" flood-opacity="0.12"/>
+    </filter>
+    <filter id="paperTexture">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.05"/>
+      </feComponentTransfer>
+    </filter>
+    <linearGradient id="page" x1="0" x2="1600" y1="0" y2="1050" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBF7EE"/>
+      <stop offset="1" stop-color="#F3EADB"/>
+    </linearGradient>
+    <style>
+      .label { font: 600 22px Inter, -apple-system, BlinkMacSystemFont, sans-serif; fill: #746B5F; letter-spacing: 0; }
+      .title { font: 800 48px Georgia, 'Times New Roman', serif; fill: #211D17; letter-spacing: 0; }
+      .titleLight { font: 800 48px Georgia, 'Times New Roman', serif; fill: #FFF8E6; letter-spacing: 0; }
+      .h1 { font: 800 34px Georgia, 'Times New Roman', serif; fill: #211D17; letter-spacing: 0; }
+      .body { font: 500 17px Inter, -apple-system, BlinkMacSystemFont, sans-serif; fill: #746B5F; letter-spacing: 0; }
+      .small { font: 600 13px Inter, -apple-system, BlinkMacSystemFont, sans-serif; fill: #78551D; letter-spacing: 0; }
+      .smallLight { font: 600 22px Inter, -apple-system, BlinkMacSystemFont, sans-serif; fill: #F6E8C9; letter-spacing: 0; }
+      .sheet { fill: #FFFDF8; stroke: #E1D4BD; stroke-width: 1.4; filter: url(#paperShadow); }
+      .rule { stroke: #F0DFC0; stroke-width: 1; }
+      .margin { stroke: #D9B86F; stroke-width: 1.4; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1050" fill="url(#page)"/>
+  <path d="M0 120H1600M0 170H1600M0 220H1600M0 270H1600M0 320H1600M0 370H1600M0 420H1600M0 470H1600M0 520H1600M0 570H1600M0 620H1600M0 670H1600M0 720H1600M0 770H1600M0 820H1600M0 870H1600M0 920H1600" class="rule" opacity="0.45"/>
+  <line x1="118" y1="0" x2="118" y2="1050" class="margin" opacity="0.35"/>
+  <rect width="1600" height="1050" filter="url(#paperTexture)" opacity="0.8"/>
+
+  <text x="90" y="86" class="label">Geuldarak visual proposal</text>
+  <text x="90" y="145" class="title">Paper Notebook</text>
+  <text x="90" y="182" class="body">따뜻한 종이, 노트 여백선, 잉크색 텍스트로 독서 일기와 독후감 흐름을 차분하게 연결합니다.</text>
+
+  <g transform="translate(90 250)">
+    <rect class="sheet" width="670" height="520" rx="26"/>
+    <line x1="56" y1="0" x2="56" y2="520" class="margin" opacity="0.45"/>
+    <path d="M88 96H610M88 146H610M88 196H610M88 246H610M88 296H610M88 346H610M88 396H610" class="rule"/>
+    <text x="88" y="68" class="h1">독서 일기</text>
+    <rect x="88" y="112" width="136" height="34" rx="17" fill="#FFF8E6" stroke="#E7CF97"/>
+    <text x="112" y="135" class="small">오늘 기록하기</text>
+    <rect x="88" y="176" width="510" height="96" rx="14" fill="#FFFDF8" stroke="#E7D8C0"/>
+    <text x="112" y="214" class="body">읽은 부분과 떠오른 문장을 짧게 남깁니다.</text>
+    <rect x="88" y="308" width="220" height="138" rx="18" fill="#191B18"/>
+    <text x="116" y="358" class="smallLight">독후감 후보</text>
+    <text x="116" y="414" class="titleLight">3</text>
+  </g>
+
+  <g transform="translate(840 250)">
+    <rect class="sheet" width="670" height="520" rx="26"/>
+    <line x1="56" y1="0" x2="56" y2="520" class="margin" opacity="0.45"/>
+    <path d="M88 96H610M88 146H610M88 196H610M88 246H610M88 296H610M88 346H610M88 396H610" class="rule"/>
+    <text x="88" y="68" class="h1">독후감 작성</text>
+    <rect x="88" y="112" width="116" height="174" rx="10" fill="#F3EADB" stroke="#D9CAB2"/>
+    <rect x="224" y="116" width="310" height="20" rx="10" fill="#211D17"/>
+    <rect x="224" y="152" width="230" height="14" rx="7" fill="#746B5F"/>
+    <rect x="224" y="198" width="330" height="88" rx="14" fill="#FFF8E6" stroke="#E7CF97"/>
+    <text x="248" y="232" class="body">선택한 책과 일기 기록을 참고해 긴 글로 정리합니다.</text>
+    <rect x="88" y="330" width="500" height="110" rx="16" fill="#FFFDF8" stroke="#E7D8C0"/>
+    <text x="116" y="374" class="body">제목</text>
+    <line x1="116" y1="404" x2="548" y2="404" class="rule"/>
+  </g>
+</svg>

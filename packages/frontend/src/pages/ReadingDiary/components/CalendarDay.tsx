@@ -28,10 +28,10 @@ export function CalendarDay({
       type="button"
       onClick={onClick}
       className={`
-        aspect-square p-1 rounded-lg transition-colors
-        hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-primary-500
-        ${isToday ? 'ring-2 ring-primary-500 bg-primary-50' : ''}
-        ${hasBooks ? 'cursor-pointer' : 'cursor-default'}
+        group aspect-square p-1 rounded-xl border transition-all
+        hover:bg-paper-50 focus:outline-none focus:ring-2 focus:ring-primary-500
+        ${isToday ? 'ring-2 ring-primary-500 bg-paper-50 border-paper-300' : 'border-transparent'}
+        ${hasBooks ? 'cursor-pointer bg-white/70 border-paper-200/70 shadow-sm' : 'cursor-pointer hover:border-paper-200'}
       `}
     >
       {/* Date number */}
@@ -114,6 +114,12 @@ export function CalendarDay({
             </div>
           )}
         </>
+      )}
+
+      {!hasBooks && (
+        <div className="mt-3 hidden text-[10px] font-bold text-paper-700 sm:block opacity-0 transition-opacity group-hover:opacity-100">
+          기록
+        </div>
       )}
     </button>
   );

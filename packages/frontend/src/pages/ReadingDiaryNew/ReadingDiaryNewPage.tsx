@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Save } from 'lucide-react';
+import { ArrowLeft, Calendar, PenLine, Save } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import { m } from 'framer-motion';
@@ -30,6 +30,18 @@ export default function ReadingDiaryNewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createDiary = useMutation(api.readingDiaries.create);
+
+  const promptHints = [
+    '오늘 읽은 범위:',
+    '인상 깊었던 문장:',
+    '나중에 독후감에서 더 쓰고 싶은 생각:',
+  ];
+
+  const handleAddPrompt = (prompt: string) => {
+    setContent((current) =>
+      current.trim() ? `${current.trim()}\n\n${prompt} ` : `${prompt} `
+    );
+  };
 
   const handleSubmit = async () => {
     if (!selectedBook || !user) {
@@ -73,24 +85,26 @@ export default function ReadingDiaryNewPage() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl"
+      className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-5xl"
     >
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 paper-panel rounded-3xl p-6 sm:p-8">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/reading-diary', { replace: true })}
-          className="mb-4 text-stone-600 hover:text-stone-900"
+          className="mb-4 text-stone-600 hover:text-stone-900 hover:bg-white/70"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           독서 일기로 돌아가기
         </Button>
 
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">
+        <h1 className="text-3xl sm:text-4xl font-bold text-stone-900 mb-2 font-serif">
           독서 일기 작성
         </h1>
-        <p className="text-stone-600">오늘 읽은 내용을 간단히 기록해보세요</p>
+        <p className="text-stone-600">
+          오늘 읽은 범위와 생각을 짧게 남겨두면, 완독 후 독후감의 재료가 됩니다.
+        </p>
       </div>
 
       {/* Form */}
@@ -98,7 +112,7 @@ export default function ReadingDiaryNewPage() {
         variants={fadeInUpVariants}
         initial="hidden"
         animate="visible"
-        className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm space-y-6"
+        className="paper-surface rounded-2xl p-6 sm:p-8 space-y-6"
       >
         {/* Book Selection */}
         <div>
@@ -124,7 +138,7 @@ export default function ReadingDiaryNewPage() {
             id="diary-date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            className="paper-input w-full sm:w-auto px-4 py-2 rounded-lg outline-none"
           />
         </div>
 
@@ -136,23 +150,37 @@ export default function ReadingDiaryNewPage() {
           >
             오늘의 독서 기록
           </label>
+          <div className="mb-3 flex flex-wrap gap-2">
+            {promptHints.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => handleAddPrompt(prompt)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-paper-200 bg-paper-50 px-3 py-1.5 text-xs font-semibold text-paper-700 transition-colors hover:bg-paper-100"
+              >
+                <PenLine className="w-3 h-3" />
+                {prompt.replace(':', '')}
+              </button>
+            ))}
+          </div>
           <textarea
             id="diary-content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="오늘 읽은 내용, 인상 깊었던 구절, 떠오른 생각 등을 자유롭게 적어보세요..."
             rows={6}
-            className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none"
+            className="paper-input w-full px-4 py-3 rounded-xl outline-none resize-y min-h-48 leading-relaxed"
           />
           <p className="mt-1 text-sm text-stone-500">{content.length}자</p>
         </div>
 
         {/* Submit Button */}
-        <div className="pt-4 border-t border-stone-200">
+        <div className="pt-4 border-t border-paper-200/70">
           <Button
             onClick={handleSubmit}
             disabled={!isFormValid || isSubmitting}
-            className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-stone-300"
+            variant="warm"
+            className="w-full disabled:bg-stone-300"
             size="lg"
           >
             <Save className="w-4 h-4 mr-2" />

@@ -162,13 +162,13 @@ export const ReviewCard = memo(function ReviewCard({
         aria-describedby={`review-${review._id}-content`}
         tabIndex={0}
         onKeyDown={handleKeyDown}
-        className="cursor-pointer w-full bg-card border-stone-200 hover:shadow-lg hover:border-accent/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden group h-full flex flex-col"
+        className="paper-surface cursor-pointer w-full hover:border-paper-300 hover:-translate-y-1 transition-all duration-300 overflow-hidden group h-full flex flex-col"
         onClick={handleCardClick}
       >
         <div className="p-6 flex gap-5 h-full">
           {/* Left Side: Book Cover (Hidden on very small screens if needed, but keeping for now) */}
           <div className="shrink-0">
-            <div className="relative w-24 h-36 rounded-md overflow-hidden bg-stone-100 shadow-sm group-hover:shadow-md transition-shadow">
+            <div className="book-paper-frame relative w-24 h-36 rounded-lg overflow-hidden transition-shadow">
               {review.book?.coverImageUrl && !imageError ? (
                 <img
                   src={review.book.coverImageUrl}
@@ -219,14 +219,14 @@ export const ReviewCard = memo(function ReviewCard({
               {review.isRecommended ? (
                 <Badge
                   variant="secondary"
-                  className="bg-green-deep/10 text-green-deep text-[10px] h-5 px-1.5 hover:bg-green-deep/20 border-0"
+                  className="note-badge bg-ink-green/10 text-ink-green text-[10px] h-5 px-1.5 hover:bg-ink-green/20 border-0"
                 >
                   <ThumbsUp className="w-3 h-3 mr-1" /> 추천
                 </Badge>
               ) : (
                 <Badge
                   variant="secondary"
-                  className="bg-red-50 text-red-700 text-[10px] h-5 px-1.5 hover:bg-red-100 border-0"
+                  className="note-badge bg-note-red/10 text-note-red text-[10px] h-5 px-1.5 hover:bg-note-red/15 border-0"
                 >
                   <ThumbsDown className="w-3 h-3 mr-1" /> 비추천
                 </Badge>
@@ -235,7 +235,7 @@ export const ReviewCard = memo(function ReviewCard({
 
             {/* Title */}
             {review.title && (
-              <h3 className="font-serif font-bold text-lg text-stone-900 mb-2 leading-tight line-clamp-1 group-hover:text-accent transition-colors">
+              <h3 className="font-serif font-bold text-lg text-stone-900 mb-2 leading-tight line-clamp-1 group-hover:text-primary-700 transition-colors">
                 {review.title}
               </h3>
             )}
@@ -254,7 +254,7 @@ export const ReviewCard = memo(function ReviewCard({
         </div>
 
         {/* Footer Actions */}
-        <CardFooter className="px-6 py-4 border-t border-border/50 bg-secondary/30 flex items-center justify-between mt-auto">
+        <CardFooter className="px-6 py-4 border-t border-paper-200/60 bg-paper-50/45 flex items-center justify-between mt-auto">
           <div className="flex items-center gap-1">
             <m.div
               variants={likeVariants}
@@ -286,7 +286,7 @@ export const ReviewCard = memo(function ReviewCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 rounded-full ${review.hasBookmarked ? 'text-accent bg-accent/10' : 'text-stone-400 hover:text-accent hover:bg-accent/10'}`}
+                className={`h-8 w-8 rounded-full ${review.hasBookmarked ? 'text-paper-700 bg-paper-100' : 'text-stone-400 hover:text-paper-700 hover:bg-paper-100'}`}
                 onClick={handleBookmark}
               >
                 <Bookmark

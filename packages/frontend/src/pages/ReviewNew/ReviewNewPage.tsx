@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Check, NotebookPen } from 'lucide-react';
 import { useMutation, useQuery } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import { m } from 'framer-motion';
@@ -21,6 +21,7 @@ import { toast } from '../../utils/toast';
 import { pageVariants, fadeInUpVariants } from '../../utils/animations';
 import { BookDiaryListView } from '../../components/diary/BookDiaryList';
 import type { BookData } from '../../types/book';
+import type { Id } from 'convex/_generated/dataModel';
 
 interface ReviewFormData {
   title: string;
@@ -31,14 +32,37 @@ interface ReviewFormData {
 
 export default function ReviewNewPage() {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const [searchParams] = useSearchParams();
+  const { user, isLoaded } = useUser();
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedBook, setSelectedBook] = useState<BookData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showExistingReviewDialog, setShowExistingReviewDialog] =
     useState(false);
+  const [hasHandledPreselectedBook, setHasHandledPreselectedBook] =
+    useState(false);
 
   const createReview = useMutation(api.reviews.create);
+  const bookIdParam = searchParams.get('bookId');
+  const validBookIdParam =
+    bookIdParam && /^[a-z0-9]{16,64}$/.test(bookIdParam) ? bookIdParam : null;
+  const preselectedBook = useQuery(
+    api.books.get,
+    validBookIdParam ? { id: validBookIdParam as Id<'books'> } : 'skip'
+  );
+
+  useEffect(() => {
+    if (!selectedBook && preselectedBook) {
+      setSelectedBook(preselectedBook);
+    }
+  }, [preselectedBook, selectedBook]);
+
+  useEffect(() => {
+    if (!bookIdParam || validBookIdParam) return;
+
+    toast.error('잘못된 책 링크입니다');
+    void navigate('/reviews/new', { replace: true });
+  }, [bookIdParam, navigate, validBookIdParam]);
 
   // 책 선택 시 해당 책에 대한 기존 리뷰 조회
   const existingReview = useQuery(
@@ -52,12 +76,47 @@ export default function ReviewNewPage() {
     step === 2 && selectedBook && user ? { bookId: selectedBook._id } : 'skip'
   );
 
+  useEffect(() => {
+    if (
+      !validBookIdParam ||
+      hasHandledPreselectedBook ||
+      !selectedBook ||
+      !isLoaded
+    ) {
+      return;
+    }
+
+    if (!user) {
+      setHasHandledPreselectedBook(true);
+      setStep(2);
+      return;
+    }
+
+    if (existingReview === undefined) return;
+
+    setHasHandledPreselectedBook(true);
+    if (existingReview && existingReview.status !== 'DELETED') {
+      setShowExistingReviewDialog(true);
+      return;
+    }
+
+    setStep(2);
+  }, [
+    existingReview,
+    hasHandledPreselectedBook,
+    isLoaded,
+    selectedBook,
+    user,
+    validBookIdParam,
+  ]);
+
   const handleSelectBook = (book: BookData | null) => {
     setSelectedBook(book);
   };
 
   const handleContinueToForm = () => {
     if (!selectedBook) return;
+    if (user && existingReview === undefined) return;
 
     // 기존 리뷰가 있고 삭제된 상태가 아니면 모달 표시
     if (existingReview && existingReview.status !== 'DELETED') {
@@ -67,6 +126,9 @@ export default function ReviewNewPage() {
 
     setStep(2);
   };
+
+  const isCheckingExistingReview =
+    Boolean(selectedBook && user) && existingReview === undefined;
 
   const handleBackToBookSelection = () => {
     setStep(1);
@@ -114,25 +176,25 @@ export default function ReviewNewPage() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl"
+      className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl"
     >
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 paper-panel rounded-3xl p-6 sm:p-8">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/feed')}
-          className="mb-4 text-stone-600 hover:text-stone-900"
+          className="mb-4 text-stone-600 hover:text-stone-900 hover:bg-white/70"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           피드로 돌아가기
         </Button>
 
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">
+        <h1 className="text-3xl sm:text-4xl font-bold text-stone-900 mb-2 font-serif">
           독후감 작성하기
         </h1>
         <p className="text-stone-600">
-          책을 선택하고 당신의 생각을 공유해보세요
+          책을 고르고, 그동안 남긴 독서 일기를 펼쳐보며 긴 감상으로 정리합니다.
         </p>
       </div>
 
@@ -147,7 +209,7 @@ export default function ReviewNewPage() {
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center ${
               step >= 1
-                ? 'bg-primary-600 text-white'
+                ? 'bg-ink text-paper-100'
                 : 'bg-stone-200 text-stone-600'
             }`}
           >
@@ -174,7 +236,7 @@ export default function ReviewNewPage() {
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center ${
               step >= 2
-                ? 'bg-primary-600 text-white'
+                ? 'bg-ink text-paper-100'
                 : 'bg-stone-200 text-stone-600'
             }`}
           >
@@ -185,7 +247,7 @@ export default function ReviewNewPage() {
               step === 2 ? 'text-stone-900' : 'text-stone-600'
             }`}
           >
-            독후감 작성
+            일기 회고와 작성
           </span>
         </div>
       </m.div>
@@ -196,7 +258,7 @@ export default function ReviewNewPage() {
           variants={fadeInUpVariants}
           initial="hidden"
           animate="visible"
-          className="bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm"
+          className="paper-surface rounded-2xl p-6 sm:p-8"
         >
           <h2 className="text-xl font-semibold text-stone-900 mb-6">
             독후감을 작성할 책을 선택하세요
@@ -211,10 +273,12 @@ export default function ReviewNewPage() {
             <div className="mt-6 pt-6 border-t border-stone-200">
               <Button
                 onClick={handleContinueToForm}
-                className="w-full bg-primary-600 hover:bg-primary-700"
+                variant="warm"
+                className="w-full"
                 size="lg"
+                disabled={isCheckingExistingReview}
               >
-                계속하기
+                {isCheckingExistingReview ? '확인 중...' : '계속하기'}
               </Button>
             </div>
           )}
@@ -230,8 +294,8 @@ export default function ReviewNewPage() {
           className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
           {/* Main form area */}
-          <div className="lg:col-span-2 bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm lg:flex lg:flex-col">
-            <div className="flex items-center justify-between mb-6">
+          <div className="lg:col-span-2 space-y-5">
+            <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-stone-900">
                 독후감 작성
               </h2>
@@ -246,15 +310,19 @@ export default function ReviewNewPage() {
             </div>
 
             {/* Selected book summary */}
-            <div className="bg-stone-50 rounded-lg p-4 mb-6 flex items-center gap-4">
+            <div className="paper-panel rounded-2xl p-4 flex items-center gap-4">
               {selectedBook.coverImageUrl && (
                 <img
                   src={selectedBook.coverImageUrl}
                   alt={`${selectedBook.title} 표지`}
-                  className="w-16 h-22 object-cover rounded shadow-sm"
+                  className="book-paper-frame w-16 h-24 object-cover rounded-lg"
                 />
               )}
               <div>
+                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-xs font-bold text-paper-700 ring-1 ring-paper-200">
+                  <NotebookPen className="w-3 h-3" />
+                  선택한 책
+                </div>
                 <h3 className="font-semibold text-stone-900">
                   {selectedBook.title}
                 </h3>
@@ -263,9 +331,9 @@ export default function ReviewNewPage() {
             </div>
 
             {/* Mobile: Collapsible diary section */}
-            <details className="lg:hidden mb-6 bg-stone-50 rounded-lg border border-stone-200">
-              <summary className="p-4 cursor-pointer text-sm font-medium text-stone-700 hover:bg-stone-100 rounded-lg">
-                📖 내 독서 일기 보기
+            <details className="lg:hidden paper-surface rounded-2xl">
+              <summary className="p-4 cursor-pointer text-sm font-medium text-stone-700 hover:bg-paper-50 rounded-2xl">
+                내 독서 일기 보기
               </summary>
               <div className="px-4 pb-4">
                 <BookDiaryListView diaries={diaries} />
@@ -283,7 +351,7 @@ export default function ReviewNewPage() {
 
           {/* Desktop: Diary sidebar */}
           <div className="hidden lg:block">
-            <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm sticky top-24 lg:flex lg:flex-col lg:max-h-[calc(100vh-7rem)] overflow-hidden">
+            <div className="paper-surface rounded-2xl p-5 sticky top-24 lg:flex lg:flex-col lg:max-h-[calc(100vh-7rem)] overflow-hidden">
               <BookDiaryListView
                 diaries={diaries}
                 className="h-full"

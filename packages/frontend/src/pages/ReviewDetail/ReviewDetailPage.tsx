@@ -222,7 +222,7 @@ export function ReviewDetailPage() {
   if (!review || !id) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-stone-100">
+        <div className="paper-surface rounded-2xl p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-stone-400" />
           </div>
@@ -245,7 +245,7 @@ export function ReviewDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9]">
+    <div className="min-h-screen">
       {/* T108: Login prompt for unauthenticated users */}
       <LoginPrompt />
 
@@ -257,7 +257,7 @@ export function ReviewDetailPage() {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
       >
         {/* Navigation Bar */}
-        <nav className="flex items-center justify-between mb-8 sticky top-0 z-10 bg-[#FAFAF9]/80 backdrop-blur-md py-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <nav className="flex items-center justify-between mb-8 sticky top-0 z-10 bg-[#fbf7ee]/80 backdrop-blur-md py-4 -mx-4 px-4 sm:mx-0 sm:px-0">
           <Button
             variant="ghost"
             onClick={handleBack}
@@ -445,7 +445,7 @@ export function ReviewDetailPage() {
                   variants={scaleInVariants}
                   initial="hidden"
                   animate="visible"
-                  className="bg-white rounded-2xl shadow-lg border border-stone-100 overflow-hidden"
+                  className="paper-surface rounded-2xl overflow-hidden"
                 >
                   <div className="p-6">
                     <h3 className="text-lg font-bold text-stone-900 mb-6 flex items-center gap-2">
@@ -463,7 +463,7 @@ export function ReviewDetailPage() {
                             review.book.coverImageUrl || '/placeholder-book.svg'
                           }
                           alt={review.book.title}
-                          className="w-32 h-auto shadow-xl rounded-lg transform group-hover:scale-105 transition-transform duration-300"
+                          className="book-paper-frame w-32 h-auto rounded-lg transform group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
                             e.currentTarget.src = '/placeholder-book.svg';
                           }}
@@ -570,7 +570,7 @@ export function ReviewDetailPage() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl scale-100"
+              className="paper-surface rounded-2xl p-6 sm:p-8 max-w-md w-full scale-100"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center mb-8">

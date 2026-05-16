@@ -51,7 +51,7 @@ export function ReviewForm({
   const isContentValid = contentLength >= minLength;
 
   return (
-    <div className="flex min-h-0 flex-col gap-8 bg-white p-6 md:p-8 rounded-2xl border border-stone-100 shadow-sm">
+    <div className="paper-surface flex min-h-0 flex-col gap-8 p-6 md:p-8 rounded-2xl">
       {/* Title (optional) */}
       <div className="space-y-3">
         <label
@@ -71,7 +71,7 @@ export function ReviewForm({
               setFormData({ ...formData, title: e.target.value })
             }
             placeholder="독후감의 멋진 제목을 지어주세요"
-            className="w-full px-5 py-4 bg-stone-50 border border-stone-200 rounded-xl text-lg font-medium placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all group-hover:bg-white"
+            className="paper-input w-full px-5 py-4 rounded-xl text-lg font-medium placeholder:text-stone-400 outline-none transition-all"
             disabled={isSubmitting}
           />
         </div>
@@ -96,7 +96,7 @@ export function ReviewForm({
               }
               placeholder="이 책을 읽고 어떤 생각이 드셨나요? 인상 깊었던 구절이나 느낌을 자유롭게 기록해보세요."
               rows={15}
-              className="w-full min-h-[280px] md:min-h-[360px] lg:min-h-[420px] px-5 py-4 bg-stone-50 border border-stone-200 rounded-xl text-base leading-relaxed placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all resize-y hover:bg-white"
+              className="paper-input w-full min-h-[280px] md:min-h-[360px] lg:min-h-[420px] px-5 py-4 rounded-xl text-base leading-relaxed placeholder:text-stone-400 outline-none transition-all resize-y"
               disabled={isSubmitting}
             />
             <div className="flex justify-end items-center gap-3">
@@ -214,7 +214,7 @@ export function ReviewForm({
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-4 pt-6 border-t border-stone-100">
+      <div className="flex gap-4 pt-6 border-t border-paper-200/70">
         <Button
           variant="outline"
           onClick={() => handleSubmit('DRAFT')}
@@ -228,7 +228,7 @@ export function ReviewForm({
           variant="warm"
           onClick={() => handleSubmit('PUBLISHED')}
           disabled={isSubmitting || !isContentValid}
-          className="flex-2 h-12 text-base rounded-xl shadow-lg shadow-primary-500/20"
+          className="flex-[2] h-12 text-base rounded-xl"
         >
           <Send className="w-4 h-4 mr-2" />
           발행하기

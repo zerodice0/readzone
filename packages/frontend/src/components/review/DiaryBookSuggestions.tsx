@@ -30,7 +30,7 @@ export function DiaryBookSuggestions({
             onClick={() => onSelectBook(book as BookData)}
             className="flex-shrink-0 w-28 group text-left"
           >
-            <div className="w-28 h-40 bg-stone-100 rounded-lg overflow-hidden shadow-sm ring-1 ring-stone-900/5 group-hover:shadow-md group-hover:ring-primary-300 transition-all">
+            <div className="book-paper-frame w-28 h-40 rounded-lg overflow-hidden group-hover:ring-primary-300 transition-all">
               {book.coverImageUrl ? (
                 <img
                   src={book.coverImageUrl}

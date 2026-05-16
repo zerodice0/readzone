@@ -23,10 +23,10 @@ export function BookCard({ book }: BookCardProps) {
   return (
     <Link
       to={`/books/${book._id}`}
-      className="group block bg-white border border-stone-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-primary-300 transition-all duration-200"
+      className="group block paper-surface rounded-xl overflow-hidden hover:border-paper-300 transition-all duration-200"
     >
       {/* Book cover */}
-      <div className="aspect-[2/3] bg-stone-100 relative overflow-hidden">
+      <div className="aspect-[2/3] bg-stone-100 relative overflow-hidden book-paper-frame border-0 rounded-none">
         {book.coverImageUrl ? (
           <img
             src={book.coverImageUrl}
@@ -57,7 +57,7 @@ export function BookCard({ book }: BookCardProps) {
       {/* Book info */}
       <div className="p-4">
         {/* Title */}
-        <h3 className="font-serif font-bold text-stone-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors">
+        <h3 className="font-serif font-bold text-stone-900 mb-1 line-clamp-2 group-hover:text-primary-700 transition-colors">
           {book.title}
         </h3>
 

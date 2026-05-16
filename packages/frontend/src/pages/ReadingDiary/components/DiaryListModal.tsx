@@ -1,5 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Plus, BookOpen, CalendarDays, X, ChevronUp } from 'lucide-react';
+import {
+  Plus,
+  BookOpen,
+  CalendarDays,
+  X,
+  ChevronUp,
+  FileText,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -107,6 +114,11 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
     setQuickAddBook(book);
   };
 
+  const handleWriteReview = (book: BookGroup['book']) => {
+    void navigate(`/reviews/new?bookId=${book._id}`);
+    onClose();
+  };
+
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden flex flex-col max-h-[85vh]">
@@ -168,13 +180,13 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
                     className="space-y-3"
                   >
                     {/* 책 헤더 + 빠른 추가 버튼 */}
-                    <div className="flex items-center justify-between bg-stone-100 rounded-lg p-3">
+                    <div className="flex items-center justify-between gap-3 bg-paper-50/70 rounded-xl border border-paper-200/70 p-3">
                       <div className="flex items-center gap-3 min-w-0">
                         {group.book.coverImageUrl && (
                           <img
                             src={group.book.coverImageUrl}
                             alt={group.book.title}
-                            className="w-8 h-11 object-cover rounded shadow-sm shrink-0"
+                            className="book-paper-frame w-8 h-11 object-cover rounded shadow-sm shrink-0"
                           />
                         )}
                         <div className="min-w-0">
@@ -187,14 +199,28 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
                           </p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleQuickAdd(group.book)}
-                        className="shrink-0 text-primary-600 hover:text-primary-700 hover:bg-primary-50"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleWriteReview(group.book)}
+                          className="text-paper-700 hover:text-primary-700 hover:bg-white/70"
+                          aria-label={`${group.book.title} 독후감 쓰기`}
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span className="hidden sm:inline">독후감</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleQuickAdd(group.book)}
+                          className="text-primary-600 hover:text-primary-700 hover:bg-white/70"
+                          aria-label={`${group.book.title} 일기 추가`}
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span className="sr-only">일기 추가</span>
+                        </Button>
+                      </div>
                     </div>
 
                     {/* 해당 책의 일기 목록 */}
