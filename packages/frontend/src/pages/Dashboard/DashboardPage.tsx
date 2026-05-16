@@ -36,7 +36,6 @@ import { BookmarksSection } from './components/BookmarksSection';
 
 type ClerkUser = NonNullable<ReturnType<typeof useUser>['user']>;
 type UserSession = Awaited<ReturnType<ClerkUser['getSessions']>>[number];
-type TotpSetup = Awaited<ReturnType<ClerkUser['createTOTP']>>;
 
 function getUserDisplayName(user: ReturnType<typeof useUser>['user']) {
   return (
@@ -66,9 +65,6 @@ function AccountPanel() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [totpSetup, setTotpSetup] = useState<TotpSetup | null>(null);
-  const [totpCode, setTotpCode] = useState('');
-  const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [sessions, setSessions] = useState<UserSession[]>([]);
   const [isSecurityBusy, setIsSecurityBusy] = useState(false);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
@@ -124,82 +120,6 @@ function AccountPanel() {
   const handleSignOut = async () => {
     await signOut();
     void navigate('/feed');
-  };
-
-  const handleCreateTOTP = async () => {
-    if (!user) {
-      return;
-    }
-
-    setMessage('');
-    setError('');
-    setBackupCodes([]);
-    setIsSecurityBusy(true);
-
-    try {
-      const result = await user.createTOTP();
-      setTotpSetup(result);
-      setMessage('인증 앱에 설정 값을 등록한 뒤 코드를 입력해주세요.');
-    } catch {
-      setError('인증 앱 설정을 시작하지 못했습니다.');
-    } finally {
-      setIsSecurityBusy(false);
-    }
-  };
-
-  const handleVerifyTOTP = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!user) {
-      return;
-    }
-
-    setMessage('');
-    setError('');
-    setIsSecurityBusy(true);
-
-    try {
-      const result = await user.verifyTOTP({ code: totpCode });
-      await user.reload();
-      setTotpSetup(null);
-      setTotpCode('');
-      setBackupCodes(result.backupCodes ?? backupCodes);
-      setMessage('인증 앱 2단계 인증이 켜졌습니다.');
-    } catch {
-      setError('인증 코드를 확인해주세요.');
-    } finally {
-      setIsSecurityBusy(false);
-    }
-  };
-
-  const handleDisableTOTP = async () => {
-    if (!user) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      '인증 앱 2단계 인증을 끄면 계정 보호 수준이 낮아집니다. 계속할까요?'
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setMessage('');
-    setError('');
-    setIsSecurityBusy(true);
-
-    try {
-      await user.disableTOTP();
-      await user.reload();
-      setTotpSetup(null);
-      setBackupCodes([]);
-      setMessage('인증 앱 2단계 인증이 꺼졌습니다.');
-    } catch {
-      setError('2단계 인증을 끄지 못했습니다.');
-    } finally {
-      setIsSecurityBusy(false);
-    }
   };
 
   const handleRevokeSession = async (targetSession: UserSession) => {
@@ -297,95 +217,6 @@ function AccountPanel() {
             </Button>
           </div>
         </form>
-
-        <div className="border-t border-stone-200 pt-6">
-          <h3 className="font-semibold text-stone-900">보안</h3>
-          <div className="mt-3 grid gap-2 text-sm text-stone-600 sm:grid-cols-3">
-            <p>2단계 인증: {user.twoFactorEnabled ? '켜짐' : '꺼짐'}</p>
-            <p>인증 앱: {user.totpEnabled ? '켜짐' : '꺼짐'}</p>
-            <p>백업 코드: {user.backupCodeEnabled ? '있음' : '없음'}</p>
-          </div>
-
-          <div className="mt-4 space-y-4">
-            {!user.totpEnabled ? (
-              <>
-                {!totpSetup ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSecurityBusy}
-                    onClick={() => {
-                      handleCreateTOTP().catch(() => {});
-                    }}
-                  >
-                    인증 앱 2단계 인증 설정
-                  </Button>
-                ) : (
-                  <form onSubmit={handleVerifyTOTP} className="space-y-3">
-                    <div className="rounded-xl bg-stone-50 p-3 text-sm text-stone-700">
-                      <p className="font-medium">인증 앱에 등록할 값</p>
-                      {totpSetup.uri && (
-                        <p className="mt-2 break-all">URI: {totpSetup.uri}</p>
-                      )}
-                      {totpSetup.secret && (
-                        <p className="mt-2 break-all">
-                          Secret: {totpSetup.secret}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="totp-setup-code"
-                        className="text-sm font-medium text-stone-700"
-                      >
-                        인증 앱 코드
-                      </label>
-                      <input
-                        id="totp-setup-code"
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        value={totpCode}
-                        onChange={(event) => setTotpCode(event.target.value)}
-                        className="paper-input w-full rounded-xl px-4 py-3 outline-none"
-                        required
-                      />
-                    </div>
-                    <Button type="submit" disabled={isSecurityBusy}>
-                      인증 앱 확인
-                    </Button>
-                  </form>
-                )}
-              </>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isSecurityBusy}
-                onClick={() => {
-                  handleDisableTOTP().catch(() => {});
-                }}
-              >
-                인증 앱 2단계 인증 끄기
-              </Button>
-            )}
-
-            {backupCodes.length > 0 && (
-              <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-3">
-                <p className="text-sm font-medium text-yellow-900">
-                  백업 코드는 다시 볼 수 없습니다. 안전한 곳에 보관해주세요.
-                </p>
-                <div className="mt-2 grid gap-1 text-sm text-yellow-900 sm:grid-cols-2">
-                  {backupCodes.map((code) => (
-                    <code key={code} className="rounded bg-white/70 px-2 py-1">
-                      {code}
-                    </code>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         <div className="border-t border-stone-200 pt-6">
           <div className="flex items-center justify-between gap-3">
