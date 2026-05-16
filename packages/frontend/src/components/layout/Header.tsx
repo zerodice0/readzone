@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   SignedIn,
   SignedOut,
@@ -7,7 +7,20 @@ import {
   useClerk,
   useUser,
 } from '@clerk/clerk-react';
-import { ChevronDown, Menu, PenSquare, LogOut, User } from 'lucide-react';
+import {
+  BarChart3,
+  BookOpen,
+  Bookmark,
+  ChevronDown,
+  FileText,
+  Home,
+  Library,
+  LogOut,
+  Menu,
+  PenSquare,
+  User,
+  type LucideIcon,
+} from 'lucide-react';
 import { m } from 'framer-motion';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -29,6 +42,77 @@ import {
 import { BrandMark } from '../brand/BrandMark';
 import { getAnimationProps } from '../../lib/motion';
 
+interface NavLinkItem {
+  to: string;
+  label: string;
+  shortLabel: string;
+  icon: LucideIcon;
+  authOnly?: boolean;
+}
+
+const NAV_LINKS: NavLinkItem[] = [
+  { to: '/feed', label: '피드', shortLabel: '피드', icon: Home },
+  { to: '/books', label: '책 목록', shortLabel: '책', icon: Library },
+  {
+    to: '/reading-diary',
+    label: '독서 일기',
+    shortLabel: '일기',
+    icon: BookOpen,
+    authOnly: true,
+  },
+  {
+    to: '/dashboard',
+    label: '대시보드',
+    shortLabel: '대시보드',
+    icon: BarChart3,
+    authOnly: true,
+  },
+];
+
+const SIGNED_IN_ACCOUNT_LINKS: NavLinkItem[] = [
+  {
+    to: '/dashboard?tab=account',
+    label: '계정 관리',
+    shortLabel: '계정',
+    icon: User,
+    authOnly: true,
+  },
+  {
+    to: '/dashboard?tab=reviews',
+    label: '내 독후감',
+    shortLabel: '독후감',
+    icon: FileText,
+    authOnly: true,
+  },
+  {
+    to: '/dashboard?tab=bookmarks',
+    label: '북마크',
+    shortLabel: '북마크',
+    icon: Bookmark,
+    authOnly: true,
+  },
+];
+
+function getVisibleNavLinks(isSignedIn?: boolean): NavLinkItem[] {
+  return NAV_LINKS.filter((link) => !link.authOnly || isSignedIn);
+}
+
+function isActiveNavLink(pathname: string, to: string) {
+  if (to === '/feed') {
+    return (
+      pathname === '/' ||
+      pathname === '/feed' ||
+      pathname.startsWith('/reviews')
+    );
+  }
+
+  if (to === '/books') {
+    return pathname === '/books' || pathname.startsWith('/books/');
+  }
+
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
 function MobileLogoutButton({ onLogout }: { onLogout: () => void }) {
   const { signOut } = useClerk();
   const navigate = useNavigate();
@@ -45,7 +129,7 @@ function MobileLogoutButton({ onLogout }: { onLogout: () => void }) {
   return (
     <Button
       variant="ghost"
-      className="w-full justify-start text-stone-600 hover:text-red-600 hover:bg-red-50"
+      className="h-12 w-full justify-start rounded-md px-4 text-stone-600 hover:bg-red-50 hover:text-red-600"
       onClick={() => {
         handleLogout().catch(() => {});
       }}
@@ -112,7 +196,7 @@ function DesktopUserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/dashboard" className="cursor-pointer">
+          <Link to="/dashboard?tab=account" className="cursor-pointer">
             <User className="h-4 w-4" />
             계정 관리
           </Link>
@@ -131,26 +215,131 @@ function DesktopUserMenu() {
   );
 }
 
-function MobileUserInfo({ onNavigate }: { onNavigate: () => void }) {
+function MobileUserInfo() {
   const { user } = useUser();
 
   // 표시할 이름 결정: fullName > firstName > username > 이메일 앞부분
   const displayName = getUserDisplayName(user);
+  const email = user?.primaryEmailAddress?.emailAddress;
 
   // 긴 이름은 12자로 제한
   const truncatedName =
     displayName.length > 12 ? `${displayName.slice(0, 12)}...` : displayName;
 
   return (
-    <Link
-      to="/dashboard"
-      onClick={onNavigate}
-      className="flex items-center gap-3 p-2 rounded-lg hover:bg-stone-50 transition-colors"
+    <div
+      className="flex items-center gap-3 rounded-md px-4 py-4"
+      aria-label="로그인 사용자 정보"
     >
       <UserAvatar className="h-8 w-8" />
-      <span className="text-sm font-medium text-stone-700">
-        {truncatedName}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold text-stone-800">
+          {truncatedName}
+        </span>
+        <span className="block truncate text-xs text-stone-500">
+          {email || '로그인 중'}
+        </span>
       </span>
+    </div>
+  );
+}
+
+function MobileMenuSection({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <section className="space-y-2">
+      <h3 className="px-1 text-xs font-semibold text-stone-500">{title}</h3>
+      <div className="space-y-2">{children}</div>
+    </section>
+  );
+}
+
+function MobileMenuLink({
+  isActive = false,
+  item,
+  onNavigate,
+}: {
+  isActive?: boolean;
+  item: NavLinkItem;
+  onNavigate: () => void;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <Link
+      to={item.to}
+      onClick={onNavigate}
+      className={`relative flex h-14 items-center gap-4 rounded-md px-4 text-base font-semibold transition-colors ${
+        isActive
+          ? 'bg-paper-100/75 text-stone-950 shadow-sm ring-1 ring-paper-200/80'
+          : 'text-stone-700 hover:bg-paper-50 hover:text-primary-800'
+      }`}
+      aria-current={isActive ? 'page' : undefined}
+    >
+      {isActive && (
+        <span className="absolute left-0 top-3 h-8 w-1 rounded-r-sm bg-primary-500" />
+      )}
+      <Icon className="h-5 w-5 text-current" />
+      {item.label}
+    </Link>
+  );
+}
+
+function MobileBottomNavigation({ navLinks }: { navLinks: NavLinkItem[] }) {
+  const location = useLocation();
+
+  return (
+    <nav
+      className="mobile-bottom-nav-wrap md:hidden"
+      aria-label="모바일 주요 네비게이션"
+    >
+      <div
+        className="mobile-bottom-nav grid"
+        style={{
+          gridTemplateColumns: `repeat(${navLinks.length}, minmax(0, 1fr))`,
+        }}
+      >
+        {navLinks.map((link) => {
+          const Icon = link.icon;
+          const isActive = isActiveNavLink(location.pathname, link.to);
+
+          return (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-2 py-2 text-xs font-semibold transition-colors ${
+                isActive
+                  ? 'text-primary-700'
+                  : 'text-stone-500 hover:bg-paper-50 hover:text-stone-800'
+              }`}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{link.shortLabel}</span>
+              {isActive && (
+                <span className="absolute -bottom-1 h-3 w-5 rounded-t-sm bg-primary-500" />
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function MobileComposeButton() {
+  return (
+    <Link
+      to="/reviews/new"
+      className="mobile-compose-fab md:hidden"
+      aria-label="독후감 작성"
+    >
+      <PenSquare className="h-6 w-6" />
     </Link>
   );
 }
@@ -159,6 +348,7 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { loaded: clerkLoaded, client } = useClerk();
+  const location = useLocation();
 
   // iOS Chrome에서 Clerk 상태 변화가 리렌더링을 트리거하지 않는 문제 대응
   // 로컬 상태로 관리하여 useEffect에서 강제 업데이트
@@ -186,16 +376,11 @@ export function Header() {
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
   };
 
-  const navLinks = [
-    { to: '/feed', label: '피드' },
-    { to: '/books', label: '책 목록' },
-    ...(isSignedIn
-      ? [
-          { to: '/reading-diary', label: '독서 일기' },
-          { to: '/dashboard', label: '대시보드' },
-        ]
-      : []),
-  ];
+  const navLinks = getVisibleNavLinks(isSignedIn);
+  const isWritingRoute =
+    location.pathname === '/reviews/new' ||
+    (location.pathname.startsWith('/reviews/') &&
+      location.pathname.endsWith('/edit'));
 
   return (
     <>
@@ -262,28 +447,39 @@ export function Header() {
 
           {/* 데스크톱 네비게이션 */}
           <nav
-            className="hidden md:flex items-center gap-6"
+            className="hidden items-center gap-2 md:flex"
             aria-label="주요 네비게이션"
           >
-            {navLinks.map((link, index) => (
-              <m.div
-                key={link.to}
-                {...getAnimationProps({
-                  initial: { opacity: 0, y: -10 },
-                  animate: { opacity: 1, y: 0 },
-                  transition: { delay: index * 0.1, duration: 0.3 },
-                  whileHover: { y: -2 },
-                  whileTap: { scale: 0.95 },
-                })}
-              >
-                <Link
-                  to={link.to}
-                  className="text-stone-700 hover:text-primary-700 font-medium transition-colors"
+            {navLinks.map((link, index) => {
+              const Icon = link.icon;
+              const isActive = isActiveNavLink(location.pathname, link.to);
+
+              return (
+                <m.div
+                  key={link.to}
+                  {...getAnimationProps({
+                    initial: { opacity: 0, y: -10 },
+                    animate: { opacity: 1, y: 0 },
+                    transition: { delay: index * 0.08, duration: 0.3 },
+                    whileHover: { y: -1 },
+                    whileTap: { scale: 0.97 },
+                  })}
                 >
-                  {link.label}
-                </Link>
-              </m.div>
-            ))}
+                  <Link
+                    to={link.to}
+                    className={`flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold transition-colors ${
+                      isActive
+                        ? 'bg-paper-100 text-primary-800'
+                        : 'text-stone-700 hover:bg-paper-50 hover:text-primary-700'
+                    }`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+                </m.div>
+              );
+            })}
           </nav>
 
           {/* 우측 메뉴 */}
@@ -327,52 +523,52 @@ export function Header() {
             {/* 모바일: 햄버거 메뉴 */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="md:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 border border-paper-200 bg-[#fff8e6]/80 text-stone-700 shadow-sm md:hidden"
+                >
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">메뉴 열기</span>
                 </Button>
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[300px] sm:w-[400px] flex flex-col h-full"
+                className="paper-nav-drawer flex h-dvh w-[min(86vw,22rem)] flex-col border-l-0 px-5 pb-6 pt-10"
               >
-                <SheetHeader>
-                  <SheetTitle className="text-left text-primary-600">
+                <SheetHeader className="mb-8">
+                  <SheetTitle className="text-left font-heading text-2xl text-primary-700">
                     글다락
                   </SheetTitle>
                 </SheetHeader>
-                <div className="mt-8 flex flex-col gap-4">
-                  {/* 모바일: 독후감 작성 버튼 (로그인 상태에서만 표시) */}
+                <div className="flex flex-1 flex-col gap-7">
                   <SignedIn>
-                    <Button
-                      variant="default"
-                      className="w-full gap-2"
-                      asChild
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Link to="/reviews/new">
-                        <PenSquare className="w-4 h-4" />
-                        독후감 작성
-                      </Link>
-                    </Button>
-                    {/* 구분선 (로그인 상태에서만 표시) */}
-                    <div className="border-t border-stone-200 my-2" />
+                    <div className="rounded-lg border border-paper-200/80 bg-[#fffdf8]/72 p-2 shadow-sm">
+                      <MobileUserInfo />
+                    </div>
                   </SignedIn>
 
-                  {/* 모바일 네비게이션 링크 */}
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.to}
-                      to={link.to}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-stone-700 hover:text-primary-600 font-medium py-2 px-3 rounded-md hover:bg-stone-50 transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
+                  <MobileMenuSection title="전체 메뉴">
+                    <nav className="space-y-2" aria-label="모바일 전체 메뉴">
+                      {navLinks.map((link) => {
+                        const isActive = isActiveNavLink(
+                          location.pathname,
+                          link.to
+                        );
 
-                  {/* 구분선 */}
-                  <div className="border-t border-stone-200 my-2" />
+                        return (
+                          <MobileMenuLink
+                            key={link.to}
+                            isActive={isActive}
+                            item={link}
+                            onNavigate={() => setIsMobileMenuOpen(false)}
+                          />
+                        );
+                      })}
+                    </nav>
+                  </MobileMenuSection>
+
+                  <div className="border-t border-paper-200/80" />
 
                   {/* 모바일: 로그인/회원가입 */}
                   {!isClerkReady ? (
@@ -383,43 +579,52 @@ export function Header() {
                     </>
                   ) : (
                     <SignedOut>
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        asChild
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Link to="/sign-in">로그인</Link>
-                      </Button>
-                      <Button
-                        className="w-full"
-                        asChild
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Link to="/sign-up">회원가입</Link>
-                      </Button>
+                      <div className="space-y-3">
+                        <Button
+                          variant="outline"
+                          className="h-12 w-full"
+                          asChild
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Link to="/sign-in">로그인</Link>
+                        </Button>
+                        <Button
+                          className="h-12 w-full"
+                          asChild
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Link to="/sign-up">회원가입</Link>
+                        </Button>
+                      </div>
                     </SignedOut>
                   )}
-                </div>
 
-                {/* 모바일: 사용자 메뉴 (하단 고정) */}
-                <SignedIn>
-                  <div className="mt-auto border-t border-stone-200 pt-4 flex flex-col gap-3">
-                    {/* 사용자 정보 및 계정 관리 */}
-                    <MobileUserInfo
-                      onNavigate={() => setIsMobileMenuOpen(false)}
-                    />
-                    {/* 로그아웃 버튼 */}
-                    <MobileLogoutButton
-                      onLogout={() => setIsMobileMenuOpen(false)}
-                    />
-                  </div>
-                </SignedIn>
+                  {/* 모바일: 사용자 메뉴 */}
+                  <SignedIn>
+                    <MobileMenuSection title="내 메뉴">
+                      {SIGNED_IN_ACCOUNT_LINKS.map((link) => (
+                        <MobileMenuLink
+                          key={`${link.to}-${link.label}`}
+                          isActive={false}
+                          item={link}
+                          onNavigate={() => setIsMobileMenuOpen(false)}
+                        />
+                      ))}
+                      <div className="rounded-lg border border-paper-200/80 bg-[#fffdf8]/72 p-2 shadow-sm">
+                        <MobileLogoutButton
+                          onLogout={() => setIsMobileMenuOpen(false)}
+                        />
+                      </div>
+                    </MobileMenuSection>
+                  </SignedIn>
+                </div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
       </header>
+      {!isWritingRoute && <MobileComposeButton />}
+      <MobileBottomNavigation navLinks={navLinks} />
     </>
   );
 }

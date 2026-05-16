@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useClerk, useSession, useUser } from '@clerk/clerk-react';
 import {
   Loader2,
@@ -36,6 +36,15 @@ import { BookmarksSection } from './components/BookmarksSection';
 
 type ClerkUser = NonNullable<ReturnType<typeof useUser>['user']>;
 type UserSession = Awaited<ReturnType<ClerkUser['getSessions']>>[number];
+type DashboardTab = 'stats' | 'reviews' | 'bookmarks' | 'account';
+
+function getDashboardTab(value: string | null): DashboardTab {
+  if (value === 'reviews' || value === 'bookmarks' || value === 'account') {
+    return value;
+  }
+
+  return 'stats';
+}
 
 function getUserDisplayName(user: ReturnType<typeof useUser>['user']) {
   return (
@@ -299,7 +308,23 @@ function AccountPanel() {
  */
 function DashboardPage() {
   const { user, isLoaded } = useUser();
-  const [activeTab, setActiveTab] = useState('stats');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() =>
+    getDashboardTab(tabParam)
+  );
+
+  useEffect(() => {
+    setActiveTab(getDashboardTab(tabParam));
+  }, [tabParam]);
+
+  const handleTabChange = (value: string) => {
+    const nextTab = getDashboardTab(value);
+    setActiveTab(nextTab);
+    setSearchParams(nextTab === 'stats' ? {} : { tab: nextTab }, {
+      replace: true,
+    });
+  };
 
   if (!isLoaded) {
     return (
@@ -325,7 +350,11 @@ function DashboardPage() {
           <h1 className="text-2xl font-bold text-stone-900">대시보드</h1>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
           {/* 탭 네비게이션 - 모바일에서도 가로 스크롤 가능 */}
           <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-6 h-auto p-1">
             <TabsTrigger
