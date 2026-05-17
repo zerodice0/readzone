@@ -7,6 +7,8 @@ DIST_DIR="packages/frontend/dist"
 ASSETS_DIR="$DIST_DIR/assets"
 FRONTEND_PROD_ENV_FILE="packages/frontend/.env.production"
 FRONTEND_LOCAL_ENV_FILE="packages/frontend/.env.local"
+MEMBER_NUMBER_MIGRATION_ADMIN_IDS_ENV="MEMBER_NUMBER_MIGRATION_ADMIN_IDS"
+MEMBER_NUMBER_MIGRATION_BATCH_SIZE="${MEMBER_NUMBER_MIGRATION_BATCH_SIZE:-500}"
 
 read_env_file() {
   local name="$1"
@@ -34,6 +36,27 @@ read_frontend_env() {
   fi
 
   printf '%s' "$value"
+}
+
+read_convex_prod_env() {
+  local name="$1"
+  local value="${!name:-}"
+
+  if [[ -z "$value" ]]; then
+    value="$(pnpm exec convex env get "$name" --prod)"
+  fi
+
+  if [[ "$value" == "undefined" ]]; then
+    value=""
+  fi
+
+  printf '%s' "$value"
+}
+
+json_string() {
+  node - "$1" <<'NODE'
+console.log(JSON.stringify(process.argv[2]));
+NODE
 }
 
 decode_clerk_issuer_domain() {
@@ -86,6 +109,60 @@ build_frontend() {
 deploy_convex() {
   echo "Deploying Convex functions..."
   pnpm exec convex deploy --yes
+}
+
+run_member_number_migration() {
+  if [[ "${DEPLOY_PROD_SKIP_MEMBER_NUMBER_MIGRATION:-}" == "1" ]]; then
+    echo "Skipping member number migration by request."
+    return
+  fi
+
+  if ! [[ "$MEMBER_NUMBER_MIGRATION_BATCH_SIZE" =~ ^[0-9]+$ ]] || (( MEMBER_NUMBER_MIGRATION_BATCH_SIZE < 1 )); then
+    echo "ERROR: MEMBER_NUMBER_MIGRATION_BATCH_SIZE must be a positive integer." >&2
+    exit 1
+  fi
+
+  local admin_ids
+  admin_ids="$(read_convex_prod_env "$MEMBER_NUMBER_MIGRATION_ADMIN_IDS_ENV")"
+
+  if [[ -z "$admin_ids" ]]; then
+    echo "Skipping member number migration: $MEMBER_NUMBER_MIGRATION_ADMIN_IDS_ENV is not set."
+    return
+  fi
+
+  local migration_subject
+  migration_subject="${admin_ids%%,*}"
+  migration_subject="$(printf '%s' "$migration_subject" | xargs)"
+
+  if [[ -z "$migration_subject" ]]; then
+    echo "ERROR: $MEMBER_NUMBER_MIGRATION_ADMIN_IDS_ENV does not contain a valid Clerk user id." >&2
+    exit 1
+  fi
+
+  local identity
+  local subject_json
+  subject_json="$(json_string "$migration_subject")"
+  identity="{\"subject\":${subject_json}}"
+
+  echo "Running member number migration..."
+
+  while true; do
+    local result
+    result="$(pnpm exec convex run users:backfillMemberNumbers "{\"batchSize\":$MEMBER_NUMBER_MIGRATION_BATCH_SIZE}" --prod --identity "$identity")"
+    echo "$result"
+
+    local remaining
+    remaining="$(node - "$result" <<'NODE'
+const input = process.argv[2] || "";
+const result = JSON.parse(input);
+console.log(Number(result.remaining ?? 0));
+NODE
+)"
+
+    if (( remaining <= 0 )); then
+      break
+    fi
+  done
 }
 
 verify_clerk_configuration() {
@@ -190,4 +267,5 @@ if [[ "${DEPLOY_PROD_CHECK_ONLY:-}" == "1" ]]; then
 fi
 
 deploy_convex
+run_member_number_migration
 deploy_worker
