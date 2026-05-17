@@ -62,7 +62,7 @@ export function ReadingStatsSection() {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
-        <span className="ml-2 text-stone-600">통계를 불러오는 중...</span>
+        <span className="ml-2 text-stone-600">통계를 불러오는 중…</span>
       </div>
     );
   }
@@ -72,15 +72,15 @@ export function ReadingStatsSection() {
   return (
     <div className="space-y-6">
       {/* 요약 카드 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-stone-100 shadow-sm hover:shadow-md transition-all duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-violet-50 rounded-xl">
-                <BookOpen className="w-6 h-6 text-violet-600" />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        <Card className="paper-panel rounded-xl border-paper-200/80 shadow-sm hover:shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50">
+                <BookOpen className="h-5 w-5 text-violet-600" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900 tracking-tight">
+              <div className="min-w-0">
+                <p className="text-2xl font-bold tracking-tight text-stone-950 tabular-nums">
                   {summary?.totalReviews ?? 0}
                 </p>
                 <p className="text-sm font-medium text-stone-500">
@@ -91,14 +91,14 @@ export function ReadingStatsSection() {
           </CardContent>
         </Card>
 
-        <Card className="border-stone-100 shadow-sm hover:shadow-md transition-all duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 rounded-xl">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
+        <Card className="paper-panel rounded-xl border-paper-200/80 shadow-sm hover:shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900 tracking-tight">
+              <div className="min-w-0">
+                <p className="text-2xl font-bold tracking-tight text-stone-950 tabular-nums">
                   {summary?.totalBooks ?? 0}
                 </p>
                 <p className="text-sm font-medium text-stone-500">읽은 책</p>
@@ -107,14 +107,14 @@ export function ReadingStatsSection() {
           </CardContent>
         </Card>
 
-        <Card className="border-stone-100 shadow-sm hover:shadow-md transition-all duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-rose-50 rounded-xl">
-                <Heart className="w-6 h-6 text-rose-600" />
+        <Card className="paper-panel rounded-xl border-paper-200/80 shadow-sm hover:shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50">
+                <Heart className="h-5 w-5 text-rose-600" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900 tracking-tight">
+              <div className="min-w-0">
+                <p className="text-2xl font-bold tracking-tight text-stone-950 tabular-nums">
                   {summary?.totalLikes ?? 0}
                 </p>
                 <p className="text-sm font-medium text-stone-500">
@@ -125,14 +125,14 @@ export function ReadingStatsSection() {
           </CardContent>
         </Card>
 
-        <Card className="border-stone-100 shadow-sm hover:shadow-md transition-all duration-200">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-50 rounded-xl">
-                <Bookmark className="w-6 h-6 text-amber-600" />
+        <Card className="paper-panel rounded-xl border-paper-200/80 shadow-sm hover:shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+                <Bookmark className="h-5 w-5 text-amber-600" />
               </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900 tracking-tight">
+              <div className="min-w-0">
+                <p className="text-2xl font-bold tracking-tight text-stone-950 tabular-nums">
                   {summary?.totalBookmarks ?? 0}
                 </p>
                 <p className="text-sm font-medium text-stone-500">
@@ -145,10 +145,10 @@ export function ReadingStatsSection() {
       </div>
 
       {/* 기간 필터 */}
-      <Card className="border-stone-100 shadow-sm">
-        <CardHeader className="pb-2 border-b border-stone-100/50">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-stone-800">
+      <Card className="paper-surface rounded-xl border-paper-200/80 shadow-sm hover:shadow-sm">
+        <CardHeader className="border-b border-paper-200/70 pb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-lg font-semibold text-stone-950">
               장르별 독서 현황
             </CardTitle>
             <PeriodFilter
@@ -157,10 +157,10 @@ export function ReadingStatsSection() {
             />
           </div>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent className="pt-5">
           {!hasData ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mb-4">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-paper-50">
                 <BookOpen className="w-8 h-8 text-stone-300" />
               </div>
               <h3 className="text-lg font-semibold text-stone-900 mb-1">
@@ -171,28 +171,28 @@ export function ReadingStatsSection() {
               </p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid gap-5 md:grid-cols-2">
               {/* 레이더 차트 */}
-              <div className="bg-stone-50/50 rounded-2xl p-4 border border-stone-100">
-                <h3 className="text-sm font-semibold text-stone-500 mb-4 flex items-center gap-2">
+              <div className="rounded-xl bg-[#fffdf8]/65 p-4">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-stone-500">
                   <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
                   독서 프로필
                 </h3>
-                <div className="h-[320px]">
+                <div className="h-[260px] sm:h-[320px]">
                   <GenreRadarChart data={genreStats.topGenres} />
                 </div>
               </div>
 
               {/* 바 차트 */}
-              <div className="bg-stone-50/50 rounded-2xl p-4 border border-stone-100">
-                <h3 className="text-sm font-semibold text-stone-500 mb-4 flex items-center gap-2">
+              <div className="rounded-xl bg-[#fffdf8]/65 p-4">
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-stone-500">
                   <span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
                   장르별 상세{' '}
                   <span className="text-stone-400 font-normal">
                     ({genreStats.allGenres.length}개)
                   </span>
                 </h3>
-                <div className="h-[320px]">
+                <div className="h-[260px] sm:h-[320px]">
                   <GenreBarChart data={genreStats.allGenres} />
                 </div>
               </div>

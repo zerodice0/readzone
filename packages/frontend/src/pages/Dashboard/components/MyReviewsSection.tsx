@@ -19,6 +19,10 @@ import { EmptyState } from '../../../components/ui/empty-state';
 
 type StatusFilter = 'ALL' | 'PUBLISHED' | 'DRAFT';
 
+const publishedDateFormatter = new Intl.DateTimeFormat('ko-KR', {
+  dateStyle: 'medium',
+});
+
 export function MyReviewsSection() {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -66,7 +70,7 @@ export function MyReviewsSection() {
 
   // Loading state
   if (isLoading) {
-    return <LoadingState message="독후감을 불러오는 중..." />;
+    return <LoadingState message="독후감을 불러오는 중…" />;
   }
 
   if (!stats) return null;
@@ -74,35 +78,42 @@ export function MyReviewsSection() {
   return (
     <div className="space-y-6">
       {/* Statistics */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-card border border-stone-200 rounded-xl p-4 text-center">
-          <FileText className="w-6 h-6 text-primary-500 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-stone-900">
-            {stats.totalReviews}
-          </p>
-          <p className="text-sm text-stone-600">총 독후감</p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+        <div className="paper-panel flex items-center gap-3 rounded-xl p-4">
+          <FileText className="h-5 w-5 shrink-0 text-primary-600" />
+          <div>
+            <p className="text-2xl font-bold text-stone-950 tabular-nums">
+              {stats.totalReviews}
+            </p>
+            <p className="text-sm text-stone-600">총 독후감</p>
+          </div>
         </div>
-        <div className="bg-card border border-stone-200 rounded-xl p-4 text-center">
-          <ThumbsUp className="w-6 h-6 text-green-500 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-stone-900">
-            {stats.recommendationRate}%
-          </p>
-          <p className="text-sm text-stone-600">추천 비율</p>
+        <div className="paper-panel flex items-center gap-3 rounded-xl p-4">
+          <ThumbsUp className="h-5 w-5 shrink-0 text-green-600" />
+          <div>
+            <p className="text-2xl font-bold text-stone-950 tabular-nums">
+              {stats.recommendationRate}%
+            </p>
+            <p className="text-sm text-stone-600">추천 비율</p>
+          </div>
         </div>
-        <div className="bg-card border border-stone-200 rounded-xl p-4 text-center">
-          <Edit className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-stone-900">
-            {stats.draftCount}
-          </p>
-          <p className="text-sm text-stone-600">초안</p>
+        <div className="paper-panel flex items-center gap-3 rounded-xl p-4">
+          <Edit className="h-5 w-5 shrink-0 text-orange-600" />
+          <div>
+            <p className="text-2xl font-bold text-stone-950 tabular-nums">
+              {stats.draftCount}
+            </p>
+            <p className="text-sm text-stone-600">초안</p>
+          </div>
         </div>
       </div>
 
       {/* Status filter */}
-      <div className="flex gap-2">
+      <div className="paper-surface flex gap-2 overflow-x-auto rounded-xl p-2 shadow-sm">
         <Button
           variant={statusFilter === 'ALL' ? 'default' : 'outline'}
           size="sm"
+          className="shrink-0"
           onClick={() => setStatusFilter('ALL')}
         >
           전체 ({stats.totalReviews})
@@ -110,6 +121,7 @@ export function MyReviewsSection() {
         <Button
           variant={statusFilter === 'PUBLISHED' ? 'default' : 'outline'}
           size="sm"
+          className="shrink-0"
           onClick={() => setStatusFilter('PUBLISHED')}
         >
           발행됨 ({stats.publishedCount})
@@ -117,6 +129,7 @@ export function MyReviewsSection() {
         <Button
           variant={statusFilter === 'DRAFT' ? 'default' : 'outline'}
           size="sm"
+          className="shrink-0"
           onClick={() => setStatusFilter('DRAFT')}
         >
           초안 ({stats.draftCount})
@@ -129,13 +142,13 @@ export function MyReviewsSection() {
           {filteredReviews.map((review) => (
             <div
               key={review._id}
-              className="bg-card border border-stone-200 rounded-xl p-6 hover:shadow-md transition-all"
+              className="paper-surface rounded-xl p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex min-w-0 flex-wrap items-center gap-2">
                     {review.title && (
-                      <h3 className="text-lg font-semibold text-stone-900">
+                      <h3 className="min-w-0 text-lg font-semibold text-stone-950 line-clamp-2">
                         {review.title}
                       </h3>
                     )}
@@ -152,12 +165,12 @@ export function MyReviewsSection() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-stone-600 line-clamp-2 mb-3">
+                  <p className="mb-3 text-sm leading-6 text-stone-600 line-clamp-2">
                     {review.content}
                   </p>
 
                   {/* Metadata */}
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500 tabular-nums">
                     {review.isRecommended ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
                         <ThumbsUp className="w-3 h-3 mr-1" />
@@ -183,8 +196,8 @@ export function MyReviewsSection() {
                     </div>
                     {review.publishedAt && (
                       <span>
-                        {new Date(review.publishedAt).toLocaleDateString(
-                          'ko-KR'
+                        {publishedDateFormatter.format(
+                          new Date(review.publishedAt)
                         )}
                       </span>
                     )}
@@ -192,14 +205,14 @@ export function MyReviewsSection() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 ml-4">
+                <div className="flex shrink-0 gap-2 sm:ml-4">
                   <Link to={`/reviews/${review._id}`}>
                     <Button variant="outline" size="sm">
                       보기
                     </Button>
                   </Link>
                   <Link to={`/reviews/${review._id}/edit`}>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" aria-label="독후감 수정">
                       <Edit className="w-4 h-4" />
                     </Button>
                   </Link>
@@ -209,7 +222,7 @@ export function MyReviewsSection() {
           ))}
         </div>
       ) : (
-        <div className="bg-card border border-stone-200 rounded-xl">
+        <div className="paper-surface rounded-xl">
           <EmptyState
             icon={FileText}
             title={
@@ -219,7 +232,7 @@ export function MyReviewsSection() {
                   ? '발행된 독후감이 없습니다'
                   : '초안이 없습니다'
             }
-            description="첫 번째 독후감을 작성해보세요!"
+            description="첫 번째 독후감을 작성해보세요."
             action={{
               label: '독후감 작성하기',
               // eslint-disable-next-line no-void

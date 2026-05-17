@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useClerk, useSession, useUser } from '@clerk/clerk-react';
+import { useQuery } from 'convex/react';
 import {
   Loader2,
   BarChart3,
@@ -10,7 +11,9 @@ import {
   LogOut,
   Save,
   Pencil,
+  BookOpen,
 } from 'lucide-react';
+import { api } from 'convex/_generated/api';
 import EmailVerificationBanner from '../../components/EmailVerificationBanner';
 import {
   Tabs,
@@ -24,6 +27,7 @@ import {
   AvatarImage,
 } from '../../components/ui/avatar';
 import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
 import {
   Card,
   CardContent,
@@ -38,6 +42,11 @@ import { BookmarksSection } from './components/BookmarksSection';
 type ClerkUser = NonNullable<ReturnType<typeof useUser>['user']>;
 type UserSession = Awaited<ReturnType<ClerkUser['getSessions']>>[number];
 type DashboardTab = 'stats' | 'reviews' | 'bookmarks' | 'account';
+
+const sessionDateFormatter = new Intl.DateTimeFormat('ko-KR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
 
 function getDashboardTab(value: string | null): DashboardTab {
   if (value === 'reviews' || value === 'bookmarks' || value === 'account') {
@@ -66,11 +75,19 @@ function splitDisplayName(displayName: string) {
   };
 }
 
+function formatMemberNumber(memberNumber: number) {
+  return `#${memberNumber.toString().padStart(6, '0')}`;
+}
+
 function AccountPanel() {
   const { user } = useUser();
   const { session } = useSession();
   const { signOut } = useClerk();
   const navigate = useNavigate();
+  const currentUserRecord = useQuery(
+    api.users.getByClerkId,
+    user ? { clerkUserId: user.id } : 'skip'
+  );
   const [displayName, setDisplayName] = useState(getUserDisplayName(user));
   const [isEditingDisplayName, setIsEditingDisplayName] = useState(false);
   const [message, setMessage] = useState('');
@@ -83,6 +100,11 @@ function AccountPanel() {
   const email = user?.primaryEmailAddress?.emailAddress || '';
   const currentDisplayName = getUserDisplayName(user);
   const isDisplayNameUnchanged = displayName.trim() === currentDisplayName;
+  const memberNumber = currentUserRecord?.memberNumber;
+  const memberBadgeLabel =
+    typeof memberNumber === 'number'
+      ? formatMemberNumber(memberNumber)
+      : '발급 대기';
   const isVerified =
     user?.primaryEmailAddress?.verification.status === 'verified';
 
@@ -170,13 +192,15 @@ function AccountPanel() {
   }
 
   return (
-    <Card className="rounded-xl">
-      <CardHeader>
-        <CardTitle className="text-xl">계정 관리</CardTitle>
-        <CardDescription>표시 이름과 로그인 상태를 관리합니다.</CardDescription>
+    <Card className="paper-surface rounded-xl border-paper-200/80 shadow-sm hover:shadow-sm">
+      <CardHeader className="border-b border-paper-200/70 pb-4">
+        <CardTitle className="text-xl text-stone-950">계정 관리</CardTitle>
+        <CardDescription className="text-stone-500">
+          표시 이름과 로그인 상태를 관리합니다.
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center gap-4">
+      <CardContent className="space-y-6 pt-6">
+        <div className="paper-panel flex items-center gap-4 rounded-xl p-4">
           <Avatar className="h-16 w-16 border border-stone-200">
             <AvatarImage src={user.imageUrl} alt={getUserDisplayName(user)} />
             <AvatarFallback className="bg-primary-100 text-lg font-medium text-primary-700">
@@ -206,9 +230,14 @@ function AccountPanel() {
               </Button>
             </div>
             <p className="truncate text-sm text-stone-500">{email}</p>
-            <p className="truncate text-xs text-stone-500" title={user.id}>
-              회원 번호 <span className="font-mono">{user.id}</span>
-            </p>
+            <Badge
+              variant="outline"
+              className="mt-1 w-fit border-primary-200 bg-primary-50/70 font-mono text-[11px] tracking-wide text-primary-800"
+              title={typeof memberNumber === 'number' ? undefined : user.id}
+              aria-label={`회원 번호 ${memberBadgeLabel}`}
+            >
+              PK {memberBadgeLabel}
+            </Badge>
             <p className="mt-1 text-xs text-stone-500">
               {isVerified ? '이메일 인증 완료' : '이메일 인증 필요'}
             </p>
@@ -221,7 +250,7 @@ function AccountPanel() {
         {isEditingDisplayName && (
           <form
             onSubmit={handleSubmit}
-            className="space-y-4 rounded-xl border border-stone-200 bg-white/55 p-4"
+            className="space-y-4 rounded-xl border border-paper-200/80 bg-[#fffdf8]/70 p-4"
           >
             <div className="space-y-2">
               <label
@@ -235,7 +264,9 @@ function AccountPanel() {
                 type="text"
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
-                className="paper-input w-full rounded-xl px-4 py-3 outline-none"
+                name="displayName"
+                autoComplete="off"
+                className="paper-input w-full rounded-xl px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30"
               />
             </div>
 
@@ -268,7 +299,7 @@ function AccountPanel() {
           </form>
         )}
 
-        <div className="space-y-4">
+        <div className="rounded-xl border border-paper-200/70 bg-[#fffdf8]/55 p-4">
           <p className="text-sm text-stone-500">
             비밀번호 변경이 필요하면 로그아웃 후 로그인 화면에서 비밀번호
             재설정을 진행해주세요.
@@ -277,6 +308,7 @@ function AccountPanel() {
           <Button
             type="button"
             variant="outline"
+            className="mt-4"
             onClick={() => {
               handleSignOut().catch(() => {});
             }}
@@ -286,7 +318,7 @@ function AccountPanel() {
           </Button>
         </div>
 
-        <div className="border-t border-stone-200 pt-6">
+        <div className="border-t border-paper-200/80 pt-6">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-semibold text-stone-900">로그인 세션</h3>
             <Button
@@ -311,7 +343,7 @@ function AccountPanel() {
               return (
                 <div
                   key={item.id}
-                  className="flex flex-col gap-3 rounded-xl border border-stone-200 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="paper-panel flex flex-col gap-3 rounded-xl p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0 text-sm">
                     <p className="font-medium text-stone-900">
@@ -321,7 +353,7 @@ function AccountPanel() {
                     <p className="text-stone-500">
                       마지막 활동:{' '}
                       {item.lastActiveAt
-                        ? item.lastActiveAt.toLocaleString('ko-KR')
+                        ? sessionDateFormatter.format(item.lastActiveAt)
                         : '알 수 없음'}
                     </p>
                     <p className="text-stone-500">
@@ -403,11 +435,25 @@ function DashboardPage() {
         <EmailVerificationBanner />
       )}
 
-      <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* 페이지 헤더 */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-stone-900">대시보드</h1>
-        </div>
+      <div className="mx-auto max-w-5xl px-4 pb-8 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+        <section className="paper-surface mb-5 rounded-xl px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="mb-1 text-sm font-semibold text-primary-700">
+                나의 독서 기록
+              </p>
+              <h1 className="text-2xl font-bold text-stone-950 text-pretty">
+                대시보드
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600 break-keep">
+                독후감, 북마크, 계정 정보를 한 곳에서 확인합니다.
+              </p>
+            </div>
+            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-100/80 text-primary-700 sm:flex">
+              <BookOpen className="h-6 w-6" />
+            </div>
+          </div>
+        </section>
 
         <Tabs
           value={activeTab}
@@ -415,10 +461,10 @@ function DashboardPage() {
           className="w-full"
         >
           {/* 탭 네비게이션 - 모바일에서도 가로 스크롤 가능 */}
-          <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-6 h-auto p-1">
+          <TabsList className="paper-surface mb-6 grid h-auto w-full grid-cols-4 gap-1 overflow-x-auto rounded-xl border-paper-200/80 p-1 shadow-sm">
             <TabsTrigger
               value="stats"
-              className="flex items-center gap-2 whitespace-nowrap"
+              className="h-11 min-w-0 gap-2 rounded-lg px-2 text-stone-600 data-[state=active]:bg-[#fffdf8] data-[state=active]:text-primary-800 data-[state=active]:ring-1 data-[state=active]:ring-paper-200"
             >
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">독서 통계</span>
@@ -426,7 +472,7 @@ function DashboardPage() {
             </TabsTrigger>
             <TabsTrigger
               value="reviews"
-              className="flex items-center gap-2 whitespace-nowrap"
+              className="h-11 min-w-0 gap-2 rounded-lg px-2 text-stone-600 data-[state=active]:bg-[#fffdf8] data-[state=active]:text-primary-800 data-[state=active]:ring-1 data-[state=active]:ring-paper-200"
             >
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">내 독후감</span>
@@ -434,14 +480,14 @@ function DashboardPage() {
             </TabsTrigger>
             <TabsTrigger
               value="bookmarks"
-              className="flex items-center gap-2 whitespace-nowrap"
+              className="h-11 min-w-0 gap-2 rounded-lg px-2 text-stone-600 data-[state=active]:bg-[#fffdf8] data-[state=active]:text-primary-800 data-[state=active]:ring-1 data-[state=active]:ring-paper-200"
             >
               <Bookmark className="w-4 h-4" />
               <span>북마크</span>
             </TabsTrigger>
             <TabsTrigger
               value="account"
-              className="flex items-center gap-2 whitespace-nowrap"
+              className="h-11 min-w-0 gap-2 rounded-lg px-2 text-stone-600 data-[state=active]:bg-[#fffdf8] data-[state=active]:text-primary-800 data-[state=active]:ring-1 data-[state=active]:ring-paper-200"
             >
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">계정 관리</span>
@@ -449,19 +495,19 @@ function DashboardPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="stats">
+          <TabsContent value="stats" className="mt-0">
             <ReadingStatsSection />
           </TabsContent>
 
-          <TabsContent value="reviews">
+          <TabsContent value="reviews" className="mt-0">
             <MyReviewsSection />
           </TabsContent>
 
-          <TabsContent value="bookmarks">
+          <TabsContent value="bookmarks" className="mt-0">
             <BookmarksSection />
           </TabsContent>
 
-          <TabsContent value="account">
+          <TabsContent value="account" className="mt-0">
             <AccountPanel />
           </TabsContent>
         </Tabs>

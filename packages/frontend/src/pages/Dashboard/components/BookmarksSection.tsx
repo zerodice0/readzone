@@ -19,6 +19,10 @@ import { EmptyState } from '../../../components/ui/empty-state';
 
 type SortOption = 'recent' | 'popular';
 
+const bookmarkedDateFormatter = new Intl.DateTimeFormat('ko-KR', {
+  dateStyle: 'medium',
+});
+
 export function BookmarksSection() {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -35,19 +39,19 @@ export function BookmarksSection() {
 
   // Loading state
   if (isLoading) {
-    return <LoadingState message="북마크를 불러오는 중..." />;
+    return <LoadingState message="북마크를 불러오는 중…" />;
   }
 
   return (
     <div className="space-y-6">
       {/* Sort options */}
       {hasBookmarks && (
-        <div className="flex gap-2">
+        <div className="paper-surface flex gap-2 overflow-x-auto rounded-xl p-2 shadow-sm">
           <Button
             variant={sortBy === 'recent' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSortBy('recent')}
-            className="gap-2"
+            className="shrink-0 gap-2"
           >
             <Clock className="w-4 h-4" />
             최신순
@@ -56,7 +60,7 @@ export function BookmarksSection() {
             variant={sortBy === 'popular' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSortBy('popular')}
-            className="gap-2"
+            className="shrink-0 gap-2"
           >
             <TrendingUp className="w-4 h-4" />
             인기순
@@ -71,17 +75,20 @@ export function BookmarksSection() {
             <Link
               key={item._id}
               to={`/reviews/${item._id}`}
-              className="block bg-card border border-stone-200 rounded-xl p-6 hover:shadow-md transition-all"
+              className="paper-surface block rounded-xl p-5 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 sm:p-6"
             >
               <div className="flex gap-4">
                 {/* Book cover */}
-                <div className="w-20 h-28 flex-shrink-0">
+                <div className="h-28 w-20 flex-shrink-0">
                   {item.book.coverImageUrl ? (
                     <img
                       src={item.book.coverImageUrl}
                       alt={`${item.book.title} 표지`}
+                      width={80}
+                      height={112}
                       className="w-full h-full object-cover rounded-lg shadow-sm"
                       loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
@@ -96,24 +103,24 @@ export function BookmarksSection() {
                 {/* Review info */}
                 <div className="flex-1 min-w-0">
                   {/* Book title */}
-                  <h3 className="text-sm font-medium text-stone-600 mb-1">
+                  <h3 className="mb-1 text-sm font-medium text-stone-600 line-clamp-1">
                     {item.book.title}
                   </h3>
 
                   {/* Review title */}
                   {item.title && (
-                    <h4 className="text-lg font-semibold text-stone-900 mb-2 line-clamp-1">
+                    <h4 className="mb-2 text-lg font-semibold text-stone-950 line-clamp-2">
                       {item.title}
                     </h4>
                   )}
 
                   {/* Review content */}
-                  <p className="text-sm text-stone-700 line-clamp-2 mb-3">
+                  <p className="mb-3 text-sm leading-6 text-stone-700 line-clamp-2">
                     {item.content}
                   </p>
 
                   {/* Metadata */}
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500 tabular-nums">
                     {item.isRecommended ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
                         <ThumbsUp className="w-3 h-3 mr-1" />
@@ -135,8 +142,8 @@ export function BookmarksSection() {
                     </div>
                     {item.bookmarkedAt && (
                       <span className="text-xs">
-                        {new Date(item.bookmarkedAt).toLocaleDateString(
-                          'ko-KR'
+                        {bookmarkedDateFormatter.format(
+                          new Date(item.bookmarkedAt)
                         )}
                       </span>
                     )}
@@ -147,11 +154,11 @@ export function BookmarksSection() {
           ))}
         </div>
       ) : (
-        <div className="bg-card border border-stone-200 rounded-xl">
+        <div className="paper-surface rounded-xl">
           <EmptyState
             icon={Bookmark}
             title="북마크한 독후감이 없습니다"
-            description="마음에 드는 독후감을 북마크해보세요"
+            description="마음에 드는 독후감을 북마크해보세요."
             action={{
               label: '피드 둘러보기',
               // eslint-disable-next-line no-void

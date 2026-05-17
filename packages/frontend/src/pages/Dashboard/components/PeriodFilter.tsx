@@ -20,16 +20,17 @@ export function PeriodFilter({
   onPeriodChange,
 }: PeriodFilterProps) {
   return (
-    <div className="flex gap-1 p-1 bg-stone-100 rounded-lg">
+    <div className="paper-surface flex max-w-full gap-1 overflow-x-auto rounded-xl p-1 shadow-sm">
       {periodOptions.map((option) => (
         <button
           key={option.value}
+          type="button"
           onClick={() => onPeriodChange(option.value)}
           className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            'shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30',
             selectedPeriod === option.value
-              ? 'bg-white text-primary-600 shadow-sm'
-              : 'text-stone-600 hover:text-stone-900'
+              ? 'bg-[#fffdf8] text-primary-700 shadow-sm ring-1 ring-paper-200'
+              : 'text-stone-600 hover:bg-paper-50 hover:text-stone-900'
           )}
         >
           {option.label}
