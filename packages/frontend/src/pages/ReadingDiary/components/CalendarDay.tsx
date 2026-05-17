@@ -22,23 +22,28 @@ export function CalendarDay({
   onClick,
 }: CalendarDayProps) {
   const hasBooks = books.length > 0;
+  const diaryCount = books.reduce(
+    (sum, book) => sum + (book.diaryCount ?? 1),
+    0
+  );
 
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-label={`${date.getDate()}일${hasBooks ? `, 독서 기록 ${diaryCount}건` : ', 새 기록 작성'}`}
       className={`
-        group aspect-square p-1 rounded-xl border transition-all
-        hover:bg-paper-50 focus:outline-none focus:ring-2 focus:ring-primary-500
-        ${isToday ? 'ring-2 ring-primary-500 bg-paper-50 border-paper-300' : 'border-transparent'}
-        ${hasBooks ? 'cursor-pointer bg-white/70 border-paper-200/70 shadow-sm' : 'cursor-pointer hover:border-paper-200'}
+        group flex aspect-square min-h-[3.35rem] flex-col overflow-hidden rounded-xl border p-1.5 text-left transition-all
+        hover:border-paper-300 hover:bg-paper-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
+        ${isToday ? 'border-ring bg-primary-50' : 'border-paper-200/45'}
+        ${hasBooks ? 'bg-[#fffdf8]/90 shadow-sm' : 'bg-white/35'}
       `}
     >
       {/* Date number */}
       <div
-        className={`text-sm font-medium mb-1 ${
+        className={`mb-1 text-sm font-semibold leading-none ${
           isToday
-            ? 'text-primary-600'
+            ? 'text-primary-700'
             : isSunday
               ? 'text-red-500'
               : 'text-stone-700'
@@ -52,29 +57,29 @@ export function CalendarDay({
         <>
           {books.length > 1 ? (
             // 책 2개 이상: 자동 페이드 캐로셀 + 인디케이터 + 뱃지
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="mt-auto flex flex-col items-center gap-0.5">
               {/* 책 커버 (페이드 전환) */}
-              <div className="relative w-5 h-7 sm:w-6 sm:h-8">
+              <div className="relative h-7 w-5 sm:h-8 sm:w-6">
                 {books.slice(0, 3).map((book, idx) => (
                   <div
                     key={book.bookId}
-                    className={`absolute inset-0 rounded overflow-hidden bg-stone-200 shadow-sm animate-book-fade-${Math.min(books.length, 3)}-${idx + 1}`}
+                    className={`book-paper-frame absolute inset-0 overflow-hidden rounded bg-stone-200 shadow-sm animate-book-fade-${Math.min(books.length, 3)}-${idx + 1}`}
                   >
                     {book.coverImageUrl ? (
                       <img
                         src={book.coverImageUrl}
                         alt=""
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-stone-300 to-stone-400" />
+                      <div className="h-full w-full bg-gradient-to-br from-stone-200 to-stone-400" />
                     )}
                   </div>
                 ))}
 
                 {/* 전체 일기 개수 뱃지 */}
-                <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center bg-primary-600 text-white text-[10px] font-bold rounded-full px-0.5 z-10">
-                  {books.reduce((sum, b) => sum + (b.diaryCount ?? 1), 0)}
+                <span className="absolute -right-1 -top-1 z-10 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-600 px-0.5 text-[10px] font-bold text-white">
+                  {diaryCount}
                 </span>
               </div>
 
@@ -90,23 +95,23 @@ export function CalendarDay({
             </div>
           ) : (
             // 책 1개: 단일 책 표시 + 일기 개수 뱃지
-            <div className="flex justify-center">
-              <div className="relative w-5 h-7 sm:w-6 sm:h-8">
-                <div className="w-full h-full rounded overflow-hidden bg-stone-200 shadow-sm">
+            <div className="mt-auto flex justify-center">
+              <div className="relative h-7 w-5 sm:h-8 sm:w-6">
+                <div className="book-paper-frame h-full w-full overflow-hidden rounded bg-stone-200 shadow-sm">
                   {books[0].coverImageUrl ? (
                     <img
                       src={books[0].coverImageUrl}
                       alt=""
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-stone-300 to-stone-400" />
+                    <div className="h-full w-full bg-gradient-to-br from-stone-200 to-stone-400" />
                   )}
                 </div>
 
                 {/* 일기 개수 뱃지 (2개 이상일 때) */}
                 {(books[0].diaryCount ?? 1) > 1 && (
-                  <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center bg-primary-600 text-white text-[10px] font-bold rounded-full px-0.5">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-600 px-0.5 text-[10px] font-bold text-white">
                     {books[0].diaryCount ?? 1}
                   </span>
                 )}
@@ -117,7 +122,7 @@ export function CalendarDay({
       )}
 
       {!hasBooks && (
-        <div className="mt-3 hidden text-[10px] font-bold text-paper-700 sm:block opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="mt-auto hidden text-[10px] font-bold text-primary-700 opacity-0 transition-opacity group-hover:opacity-100 sm:block">
           기록
         </div>
       )}

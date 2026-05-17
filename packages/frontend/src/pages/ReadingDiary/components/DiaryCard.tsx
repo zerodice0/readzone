@@ -100,15 +100,15 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
 
   if (isEditing) {
     return (
-      <div className="bg-stone-50 rounded-lg p-4 space-y-4">
+      <div className="paper-panel space-y-4 rounded-xl p-4">
         {/* Book info (showBookInfo가 true일 때만 표시) */}
         {showBookInfo && diary.book && (
-          <div className="flex items-center gap-3 pb-3 border-b border-stone-200">
+          <div className="flex items-center gap-3 border-b border-paper-200/70 pb-3">
             {diary.book.coverImageUrl && (
               <img
                 src={diary.book.coverImageUrl}
                 alt={diary.book.title}
-                className="w-10 h-14 object-cover rounded shadow-sm"
+                className="book-paper-frame h-14 w-10 rounded object-cover shadow-sm"
               />
             )}
             <div>
@@ -125,7 +125,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
           value={editContent}
           onChange={(e) => setEditContent(e.target.value)}
           rows={4}
-          className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none text-sm"
+          className="paper-input w-full resize-none rounded-lg px-3 py-2 text-sm leading-relaxed outline-none"
         />
 
         {/* Actions */}
@@ -153,12 +153,12 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
 
   return (
     <>
-      <div className="bg-stone-50 rounded-lg p-4">
+      <article className="paper-panel rounded-xl p-4">
         {/* Content */}
-        <div className="relative">
+        <div className="relative border-l-2 border-primary-300/70 pl-3">
           <p
             ref={contentRef}
-            className={`text-sm text-stone-700 whitespace-pre-wrap transition-all duration-200 ${
+            className={`whitespace-pre-wrap text-sm leading-6 text-stone-700 transition-all duration-200 ${
               !isExpanded && needsTruncation
                 ? 'line-clamp-3 max-h-[4.5rem]'
                 : 'max-h-none'
@@ -170,7 +170,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-xs text-primary-600 hover:text-primary-700 mt-1"
+              className="mt-1 text-xs font-semibold text-primary-700 hover:text-primary-600"
             >
               {isExpanded ? '접기' : '더보기'}
             </button>
@@ -178,7 +178,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-1 mt-3 pt-3 border-t border-stone-200">
+        <div className="mt-3 flex justify-end gap-1 border-t border-paper-200/70 pt-3">
           <Button
             variant="ghost"
             size="sm"
@@ -198,7 +198,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
             삭제
           </Button>
         </div>
-      </div>
+      </article>
 
       {/* Delete confirmation dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

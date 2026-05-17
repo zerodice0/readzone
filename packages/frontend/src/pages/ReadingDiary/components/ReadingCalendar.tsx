@@ -112,11 +112,11 @@ export function ReadingCalendar({
   return (
     <div>
       {/* Day labels */}
-      <div className="grid grid-cols-7 mb-2">
+      <div className="mb-2 grid grid-cols-7">
         {dayLabels.map((label, index) => (
           <div
             key={label}
-            className={`text-center text-sm font-medium py-2 ${
+            className={`py-2 text-center text-xs font-bold sm:text-sm ${
               index === 0
                 ? 'text-red-500'
                 : index === 6
@@ -130,7 +130,7 @@ export function ReadingCalendar({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {weeks.map((week, weekIndex) =>
           week.map((date, dayIndex) => {
             if (!date) {

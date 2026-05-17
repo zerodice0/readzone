@@ -1,7 +1,19 @@
 import { v } from 'convex/values';
-import { query, mutation, internalQuery, QueryCtx } from './_generated/server';
+import {
+  query,
+  mutation,
+  internalQuery,
+  type MutationCtx,
+  type QueryCtx,
+} from './_generated/server';
 import { paginationOptsValidator } from 'convex/server';
 import { Id } from './_generated/dataModel';
+
+const MEMBER_NUMBER_COUNTER_NAME = 'users.memberNumber';
+
+function normalizeDisplayName(value: string | undefined) {
+  return value?.trim() || undefined;
+}
 
 /**
  * 사용자 정보를 users 테이블에서 조회하는 헬퍼 함수
@@ -12,7 +24,14 @@ async function getAuthorInfo(ctx: QueryCtx, userId: string) {
     .withIndex('by_clerk_id', (q) => q.eq('clerkUserId', userId))
     .unique();
 
-  return user ? { name: user.name, imageUrl: user.imageUrl } : null;
+  return user
+    ? {
+        name:
+          normalizeDisplayName(user.name) ??
+          normalizeDisplayName(user.username),
+        imageUrl: user.imageUrl,
+      }
+    : null;
 }
 
 /**
@@ -33,7 +52,9 @@ async function getAuthorInfoBatch(
       return user
         ? {
             clerkUserId: user.clerkUserId,
-            name: user.name,
+            name:
+              normalizeDisplayName(user.name) ??
+              normalizeDisplayName(user.username),
             imageUrl: user.imageUrl,
           }
         : null;
@@ -51,6 +72,105 @@ async function getAuthorInfoBatch(
   });
 
   return userMap;
+}
+
+async function getMemberNumberCounter(ctx: MutationCtx) {
+  return await ctx.db
+    .query('counters')
+    .withIndex('by_name', (q) => q.eq('name', MEMBER_NUMBER_COUNTER_NAME))
+    .unique();
+}
+
+async function getNextInitialMemberNumber(ctx: MutationCtx) {
+  const users = await ctx.db.query('users').collect();
+  const maxMemberNumber = users.reduce(
+    (maxNumber, user) => Math.max(maxNumber, user.memberNumber ?? 0),
+    0
+  );
+
+  return Math.max(maxMemberNumber, users.length) + 1;
+}
+
+async function claimNextMemberNumber(ctx: MutationCtx) {
+  const counter = await getMemberNumberCounter(ctx);
+  const now = Date.now();
+
+  if (!counter) {
+    const nextMemberNumber = await getNextInitialMemberNumber(ctx);
+
+    await ctx.db.insert('counters', {
+      name: MEMBER_NUMBER_COUNTER_NAME,
+      value: nextMemberNumber,
+      updatedAt: now,
+    });
+
+    return nextMemberNumber;
+  }
+
+  const nextMemberNumber = counter.value + 1;
+
+  await ctx.db.patch(counter._id, {
+    value: nextMemberNumber,
+    updatedAt: now,
+  });
+
+  return nextMemberNumber;
+}
+
+async function ensureReviewAuthorUser(
+  ctx: MutationCtx,
+  identity: NonNullable<
+    Awaited<ReturnType<MutationCtx['auth']['getUserIdentity']>>
+  >,
+  displayName: string | undefined
+) {
+  const clerkUserId = identity.subject;
+  const name = normalizeDisplayName(displayName);
+  const imageUrl = identity.pictureUrl ?? undefined;
+  const email = identity.email ?? undefined;
+  const username = normalizeDisplayName(identity.nickname ?? undefined);
+
+  const existingUser = await ctx.db
+    .query('users')
+    .withIndex('by_clerk_id', (q) => q.eq('clerkUserId', clerkUserId))
+    .unique();
+
+  if (existingUser) {
+    const memberNumber =
+      existingUser.memberNumber ?? (await claimNextMemberNumber(ctx));
+    const nextName = name ?? existingUser.name;
+
+    if (
+      existingUser.memberNumber !== memberNumber ||
+      existingUser.name !== nextName ||
+      existingUser.imageUrl !== imageUrl ||
+      existingUser.email !== email ||
+      existingUser.username !== username
+    ) {
+      await ctx.db.patch(existingUser._id, {
+        memberNumber,
+        name: nextName,
+        imageUrl,
+        email,
+        username,
+        updatedAt: Date.now(),
+      });
+    }
+
+    return;
+  }
+
+  const memberNumber = await claimNextMemberNumber(ctx);
+
+  await ctx.db.insert('users', {
+    clerkUserId,
+    memberNumber,
+    name,
+    imageUrl,
+    email,
+    username,
+    updatedAt: Date.now(),
+  });
 }
 
 /**
@@ -217,6 +337,7 @@ export const create = mutation({
       v.literal('DROPPED')
     ),
     status: v.optional(v.union(v.literal('DRAFT'), v.literal('PUBLISHED'))),
+    displayName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -225,35 +346,7 @@ export const create = mutation({
     }
 
     const userId = identity.subject;
-
-    // 사용자 정보 upsert (users 테이블에 저장)
-    const existingUser = await ctx.db
-      .query('users')
-      .withIndex('by_clerk_id', (q) => q.eq('clerkUserId', userId))
-      .unique();
-
-    if (existingUser) {
-      const imageUrl = identity.pictureUrl ?? undefined;
-      const email = identity.email ?? undefined;
-
-      if (existingUser.imageUrl !== imageUrl || existingUser.email !== email) {
-        await ctx.db.patch(existingUser._id, {
-          imageUrl,
-          email,
-          updatedAt: Date.now(),
-        });
-      }
-    } else {
-      // 새 사용자 생성
-      await ctx.db.insert('users', {
-        clerkUserId: userId,
-        name: undefined,
-        imageUrl: identity.pictureUrl ?? undefined,
-        email: identity.email ?? undefined,
-        username: identity.nickname ?? undefined,
-        updatedAt: Date.now(),
-      });
-    }
+    await ensureReviewAuthorUser(ctx, identity, args.displayName);
 
     // 책이 존재하는지 확인
     const book = await ctx.db.get(args.bookId);

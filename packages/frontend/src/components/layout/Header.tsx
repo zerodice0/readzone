@@ -266,8 +266,8 @@ function MobileMenuLink({
       onClick={onNavigate}
       className={`relative flex h-14 items-center gap-4 rounded-md px-4 text-base font-semibold transition-colors ${
         isActive
-          ? 'bg-paper-100/75 text-stone-950 shadow-sm ring-1 ring-paper-200/80'
-          : 'text-stone-700 hover:bg-paper-50 hover:text-primary-800'
+          ? 'bg-primary-50 text-primary-700 shadow-sm ring-1 ring-primary-200/80'
+          : 'text-stone-700 hover:bg-paper-50 hover:text-primary-700'
       }`}
       aria-current={isActive ? 'page' : undefined}
     >
@@ -322,18 +322,6 @@ function MobileBottomNavigation({ navLinks }: { navLinks: NavLinkItem[] }) {
   );
 }
 
-function MobileComposeButton() {
-  return (
-    <Link
-      to="/reviews/new"
-      className="mobile-compose-fab md:hidden"
-      aria-label="독후감 작성"
-    >
-      <PenSquare className="h-6 w-6" />
-    </Link>
-  );
-}
-
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
@@ -367,10 +355,6 @@ export function Header() {
   };
 
   const navLinks = getVisibleNavLinks(isSignedIn);
-  const isWritingRoute =
-    location.pathname === '/reviews/new' ||
-    (location.pathname.startsWith('/reviews/') &&
-      location.pathname.endsWith('/edit'));
 
   return (
     <>
@@ -459,7 +443,7 @@ export function Header() {
                     to={link.to}
                     className={`flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold transition-colors ${
                       isActive
-                        ? 'bg-paper-100 text-primary-800'
+                        ? 'bg-primary-50 text-primary-700 ring-1 ring-primary-200/70'
                         : 'text-stone-700 hover:bg-paper-50 hover:text-primary-700'
                     }`}
                     aria-current={isActive ? 'page' : undefined}
@@ -613,7 +597,6 @@ export function Header() {
           </div>
         </div>
       </header>
-      {!isWritingRoute && <MobileComposeButton />}
       <MobileBottomNavigation navLinks={navLinks} />
     </>
   );

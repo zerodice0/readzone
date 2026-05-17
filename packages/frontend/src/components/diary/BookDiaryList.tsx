@@ -106,7 +106,7 @@ export function BookDiaryListView({
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-            className="appearance-none text-xs text-stone-600 bg-paper-50 hover:bg-paper-100 pl-2 pr-6 py-1 rounded cursor-pointer transition-colors focus:outline-none focus:ring-1 focus:ring-paper-200"
+            className="appearance-none text-xs text-stone-600 bg-paper-50 hover:bg-paper-100 pl-2 pr-6 py-1 rounded cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="newest">최신 날짜순</option>
             <option value="oldest">오래된 날짜순</option>

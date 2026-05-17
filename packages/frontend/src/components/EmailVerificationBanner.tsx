@@ -121,7 +121,7 @@ function EmailVerificationBanner() {
             <button
               type="button"
               onClick={handleDismiss}
-              className="-mr-1 flex p-2 rounded-md hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-white sm:-mr-2"
+              className="-mr-1 flex p-2 rounded-md hover:bg-yellow-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:-mr-2"
             >
               <span className="sr-only">닫기</span>
               <svg

@@ -121,17 +121,17 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden flex flex-col max-h-[85vh]">
-        <DialogHeader className="p-6 pb-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 shrink-0 relative">
+      <DialogContent className="paper-surface flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="relative z-10 shrink-0 border-b border-paper-200/70 bg-[#fffdf8]/95 p-6 pb-4 backdrop-blur">
           <div className="flex items-center gap-3 pr-10">
-            <div className="p-2.5 bg-primary/10 rounded-xl">
-              <CalendarDays className="w-5 h-5 text-primary" />
+            <div className="rounded-xl border border-paper-200 bg-white/70 p-2.5">
+              <CalendarDays className="h-5 w-5 text-primary-700" />
             </div>
             <div className="space-y-0.5">
-              <DialogTitle className="text-xl font-heading font-semibold">
+              <DialogTitle className="font-heading text-xl font-semibold text-stone-950">
                 {formattedDate}
               </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
+              <DialogDescription className="text-sm text-stone-500">
                 이 날의 독서 기록
               </DialogDescription>
             </div>
@@ -142,22 +142,22 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
           </DialogClose>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-6 min-h-[200px]">
+        <div className="min-h-[200px] flex-1 overflow-y-auto p-6">
           {diaries === undefined ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-600" />
               <p className="text-sm text-muted-foreground animate-pulse">
                 기록을 불러오는 중...
               </p>
             </div>
           ) : diaries.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-12">
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="mb-4 text-sm text-stone-500">
                 이 날짜에 작성된 일기가 없습니다
               </p>
               <Button
                 onClick={handleAddDiary}
-                className="bg-primary hover:bg-primary/90 shadow-sm"
+                className="bg-primary-600 shadow-sm hover:bg-primary-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 일기 작성하기
@@ -180,13 +180,13 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
                     className="space-y-3"
                   >
                     {/* 책 헤더 + 빠른 추가 버튼 */}
-                    <div className="flex items-center justify-between gap-3 bg-paper-50/70 rounded-xl border border-paper-200/70 p-3">
-                      <div className="flex items-center gap-3 min-w-0">
+                    <div className="paper-panel flex items-center justify-between gap-3 rounded-xl p-3">
+                      <div className="flex min-w-0 items-center gap-3">
                         {group.book.coverImageUrl && (
                           <img
                             src={group.book.coverImageUrl}
                             alt={group.book.title}
-                            className="book-paper-frame w-8 h-11 object-cover rounded shadow-sm shrink-0"
+                            className="book-paper-frame h-11 w-8 shrink-0 rounded object-cover shadow-sm"
                           />
                         )}
                         <div className="min-w-0">
@@ -204,7 +204,7 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleWriteReview(group.book)}
-                          className="text-paper-700 hover:text-primary-700 hover:bg-white/70"
+                          className="text-primary-700 hover:bg-white/70 hover:text-primary-600"
                           aria-label={`${group.book.title} 독후감 쓰기`}
                         >
                           <FileText className="w-4 h-4" />
@@ -214,7 +214,7 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleQuickAdd(group.book)}
-                          className="text-primary-600 hover:text-primary-700 hover:bg-white/70"
+                          className="text-primary-700 hover:bg-white/70 hover:text-primary-600"
                           aria-label={`${group.book.title} 일기 추가`}
                         >
                           <Plus className="w-4 h-4" />
@@ -241,7 +241,7 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
         </div>
 
         {diaries && diaries.length > 0 && (
-          <div className="p-4 border-t border-border bg-background/95 backdrop-blur shrink-0">
+          <div className="shrink-0 border-t border-paper-200/70 bg-[#fffdf8]/95 p-4 backdrop-blur">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

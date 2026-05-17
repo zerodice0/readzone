@@ -202,12 +202,14 @@ export default function MyReviewsPage() {
                     <div className="flex gap-2 ml-4">
                       <Link to={`/reviews/${review._id}`}>
                         <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4" />
                           보기
                         </Button>
                       </Link>
                       <Link to={`/reviews/${review._id}/edit`}>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="outline" size="sm">
                           <Edit className="w-4 h-4" />
+                          수정
                         </Button>
                       </Link>
                     </div>

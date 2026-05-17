@@ -22,7 +22,7 @@ function ConfirmDialog({
   message,
   confirmText = '확인',
   cancelText = '취소',
-  confirmButtonClass = 'bg-primary-600 hover:bg-primary-700 focus:ring-primary-500',
+  confirmButtonClass = 'bg-primary-600 hover:bg-primary-700 focus-visible:ring-ring',
   onConfirm,
   onCancel,
   isLoading = false,
@@ -98,7 +98,7 @@ function ConfirmDialog({
               type="button"
               onClick={onConfirm}
               disabled={isLoading}
-              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed ${confirmButtonClass}`}
+              className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed ${confirmButtonClass}`}
             >
               {isLoading ? '처리 중...' : confirmText}
             </button>
@@ -106,7 +106,7 @@ function ConfirmDialog({
               type="button"
               onClick={onCancel}
               disabled={isLoading}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               {cancelText}
             </button>

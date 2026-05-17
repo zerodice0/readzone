@@ -80,9 +80,9 @@ export function QuickAddDiaryDialog({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="paper-surface sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>빠른 일기 추가</DialogTitle>
+          <DialogTitle className="text-stone-950">빠른 일기 추가</DialogTitle>
           <DialogDescription className="sr-only">
             선택한 날짜에 새로운 독서 일기를 작성합니다
           </DialogDescription>
@@ -90,12 +90,12 @@ export function QuickAddDiaryDialog({
 
         <div className="space-y-4">
           {/* 책 정보 */}
-          <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg">
+          <div className="paper-panel flex items-center gap-3 rounded-xl p-3">
             {book.coverImageUrl && (
               <img
                 src={book.coverImageUrl}
                 alt={book.title}
-                className="w-10 h-14 object-cover rounded shadow-sm"
+                className="book-paper-frame h-14 w-10 rounded object-cover shadow-sm"
               />
             )}
             <div className="flex-1 min-w-0">
@@ -103,7 +103,7 @@ export function QuickAddDiaryDialog({
                 {book.title}
               </p>
               <p className="text-xs text-stone-500">{book.author}</p>
-              <p className="text-xs text-primary-600 mt-1">{formattedDate}</p>
+              <p className="mt-1 text-xs text-primary-700">{formattedDate}</p>
             </div>
           </div>
 
@@ -121,7 +121,7 @@ export function QuickAddDiaryDialog({
               onChange={(e) => setContent(e.target.value)}
               placeholder="이 책에서 인상 깊었던 부분이나 느낀 점을 기록해보세요..."
               rows={4}
-              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none text-sm"
+              className="paper-input w-full resize-none rounded-lg px-3 py-2 text-sm leading-relaxed outline-none"
               autoFocus
             />
           </div>

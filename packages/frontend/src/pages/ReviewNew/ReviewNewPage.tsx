@@ -19,6 +19,7 @@ import { ReviewForm } from '../../components/review/ReviewForm';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import { pageVariants, fadeInUpVariants } from '../../utils/animations';
+import { getUserNickname } from '../../utils/userDisplayName';
 import { BookDiaryListView } from '../../components/diary/BookDiaryList';
 import type { BookData } from '../../types/book';
 import type { Id } from 'convex/_generated/dataModel';
@@ -152,6 +153,7 @@ export default function ReviewNewPage() {
     setIsSubmitting(true);
 
     try {
+      const displayName = getUserNickname(user);
       const reviewId = await createReview({
         bookId: selectedBook._id,
         title: data.title || undefined,
@@ -159,6 +161,7 @@ export default function ReviewNewPage() {
         isRecommended: data.isRecommended,
         readStatus: data.readStatus,
         status,
+        ...(displayName ? { displayName } : {}),
       });
 
       // Navigate to the created review

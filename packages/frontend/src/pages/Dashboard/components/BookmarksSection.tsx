@@ -75,7 +75,7 @@ export function BookmarksSection() {
             <Link
               key={item._id}
               to={`/reviews/${item._id}`}
-              className="paper-surface block rounded-xl p-5 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30 sm:p-6"
+              className="paper-surface block rounded-xl p-5 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 sm:p-6"
             >
               <div className="flex gap-4">
                 {/* Book cover */}

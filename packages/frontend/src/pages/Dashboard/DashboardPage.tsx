@@ -255,7 +255,7 @@ function AccountPanel() {
                 onChange={(event) => setDisplayName(event.target.value)}
                 name="displayName"
                 autoComplete="off"
-                className="paper-input w-full rounded-xl px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30"
+                className="paper-input w-full rounded-xl px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               />
             </div>
 

@@ -1,6 +1,7 @@
 # General Guidelines
 
 - **Language**: Always provide answers in **Korean**.
+- **Design Source of Truth**: 디자인, UI 스타일, 레이아웃, 색상, 포커스, 선택/활성 상태, 시각 QA 작업을 할 때는 파일 수정 전에 `DESIGN.md`를 먼저 읽고 따른다.
 
 <skills_system priority="1">
 
@@ -67,12 +68,25 @@ Usage notes:
 | `pnpm lint`        | Run ESLint across all packages                                                                  |
 | `pnpm format`      | Format code using Prettier                                                                      |
 | `pnpm test`        | Run tests (Vitest)                                                                              |
+| `pnpm deploy:dev`  | Verify development Clerk/Convex config and push Convex functions to the development deployment  |
 | `pnpm deploy:prod` | Verify production Clerk/Convex config, build frontend, deploy Convex, deploy Cloudflare Workers |
 | `npx convex dev`   | Run Convex backend directly                                                                     |
+
+### Development Deployment Safety
+
+- **Always deploy development Convex function changes through `pnpm deploy:dev`** when manually pushing backend changes to the shared development deployment.
+- The development deploy script targets only `dev:hardy-bobcat-646` / `https://hardy-bobcat-646.convex.cloud`.
+- The development deploy script must fail if `.env.local` or `packages/frontend/.env.local` points to the production Convex URL (`https://laudable-blackbird-573.convex.cloud`).
+- Development must use Clerk test keys (`pk_test_`). Do not use production Clerk keys for `pnpm deploy:dev`.
+- `pnpm deploy:dev` pushes Convex functions only. It does not build or deploy Cloudflare Workers.
+- `pnpm deploy:dev` may require Convex browser/device authorization. Complete that auth only after confirming the target is `dev:hardy-bobcat-646`.
+- Use `DEPLOY_DEV_CHECK_ONLY=1 pnpm deploy:dev` to validate development environment wiring without pushing Convex functions.
+- Do not use `pnpm deploy:prod`, `pnpm exec convex deploy`, `wrangler deploy`, or production environment files for development-only changes.
 
 ### Production Deployment Safety
 
 - **Always deploy production through `pnpm deploy:prod`**. Do not manually run a separate frontend build followed by `wrangler deploy`.
+- `pnpm deploy:prod` is the only production deploy path. Never use it for development-only Convex pushes.
 - The deploy script verifies the production Clerk publishable key before building. Production must use a `pk_live_` key, and the decoded Clerk issuer must match Convex production `CLERK_ISSUER_DOMAIN`.
 - The deploy script injects the production Convex URL (`https://laudable-blackbird-573.convex.cloud`) and production Clerk publishable key at build time, then verifies every built JavaScript asset.
 - The bundle verification must block deployment if a built asset contains the development Convex host (`hardy-bobcat-646.convex.cloud`) or a different local Clerk publishable key.

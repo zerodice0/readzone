@@ -27,7 +27,7 @@ export function PeriodFilter({
           type="button"
           onClick={() => onPeriodChange(option.value)}
           className={cn(
-            'shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30',
+            'shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             selectedPeriod === option.value
               ? 'bg-[#fffdf8] text-primary-700 shadow-sm ring-1 ring-paper-200'
               : 'text-stone-600 hover:bg-paper-50 hover:text-stone-900'

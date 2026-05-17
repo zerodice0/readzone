@@ -167,7 +167,7 @@ export const ReviewCard = memo(function ReviewCard({
         aria-describedby={reviewContentId}
         tabIndex={0}
         onKeyDown={handleKeyDown}
-        className="group cursor-pointer border-b border-paper-200/70 bg-transparent transition-colors last:border-b-0 hover:bg-paper-50/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40"
+        className="group cursor-pointer border-b border-paper-200/70 bg-transparent transition-colors last:border-b-0 hover:bg-paper-50/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45"
         onClick={handleCardClick}
       >
         <div className="flex gap-3 p-4 sm:gap-4 sm:p-5">
