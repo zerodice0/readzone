@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useId, useState, useEffect } from 'react';
 import {
   Search,
   Loader2,
@@ -25,13 +25,18 @@ interface BookSearchProps {
   onSelectBook: (book: BookData) => void;
   selectedBook?: BookData | null;
   context?: 'review' | 'diary';
+  hideInitialHint?: boolean;
+  compact?: boolean;
 }
 
 export function BookSearch({
   onSelectBook,
   selectedBook,
   context = 'review',
+  hideInitialHint = false,
+  compact = false,
 }: BookSearchProps) {
+  const searchInputId = useId();
   const [searchQuery, setSearchQuery] = useState('');
   const [savingBookId, setSavingBookId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -103,25 +108,43 @@ export function BookSearch({
   };
 
   return (
-    <div className="space-y-6">
+    <div className={compact ? 'space-y-4' : 'space-y-6'}>
       {/* Search input */}
       <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 group-focus-within:text-primary-500 transition-colors" />
+        <label htmlFor={searchInputId} className="sr-only">
+          책 검색
+        </label>
+        <Search
+          className={`absolute top-1/2 -translate-y-1/2 text-stone-400 transition-colors group-focus-within:text-primary-500 ${
+            compact ? 'left-3 h-4 w-4' : 'left-4 h-5 w-5'
+          }`}
+        />
         <input
+          id={searchInputId}
+          name="book-search"
           type="text"
-          placeholder="책 제목, 저자명으로 검색해보세요"
+          placeholder={
+            compact
+              ? '책 제목, 저자명 검색'
+              : '책 제목, 저자명으로 검색해보세요'
+          }
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setSearchQuery(e.target.value)
           }
-          className="paper-input w-full pl-12 pr-12 py-4 rounded-xl text-lg placeholder:text-stone-400 outline-none transition-all"
+          className={`paper-input w-full rounded-xl placeholder:text-stone-400 outline-none transition-all ${
+            compact ? 'py-3 pl-10 pr-10 text-base' : 'py-4 pl-12 pr-12 text-lg'
+          }`}
         />
         {searchQuery && (
           <button
+            type="button"
             onClick={() => setSearchQuery('')}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
+            className={`absolute top-1/2 -translate-y-1/2 rounded-full p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600 ${
+              compact ? 'right-3' : 'right-4'
+            }`}
           >
-            <X className="w-5 h-5" />
+            <X className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
           </button>
         )}
       </div>
@@ -276,19 +299,21 @@ export function BookSearch({
           ) : (
             <DiaryBookSuggestions onSelectBook={onSelectBook} />
           )}
-          <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-paper-200 rounded-2xl bg-paper-50/35">
-            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 ring-1 ring-stone-900/5">
-              <BookPlus className="w-8 h-8 text-primary-500" />
+          {!hideInitialHint && (
+            <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-paper-200 rounded-2xl bg-paper-50/35">
+              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 ring-1 ring-stone-900/5">
+                <BookPlus className="w-8 h-8 text-primary-500" />
+              </div>
+              <h3 className="text-lg font-bold text-stone-900 mb-2">
+                어떤 책을 기록할까요?
+              </h3>
+              <p className="text-stone-500 text-sm max-w-xs mx-auto">
+                {context === 'diary'
+                  ? '위에서 최근 읽은 책을 선택하거나, 검색하여 새로운 책을 찾아보세요.'
+                  : '책 제목이나 저자 이름을 입력하여 독후감을 작성할 책을 선택해주세요.'}
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-stone-900 mb-2">
-              어떤 책을 기록할까요?
-            </h3>
-            <p className="text-stone-500 text-sm max-w-xs mx-auto">
-              {context === 'diary'
-                ? '위에서 최근 읽은 책을 선택하거나, 검색하여 새로운 책을 찾아보세요.'
-                : '책 제목이나 저자 이름을 입력하여 독후감을 작성할 책을 선택해주세요.'}
-            </p>
-          </div>
+          )}
         </>
       )}
 
