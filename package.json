@@ -16,8 +16,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "prepare": "husky install",
-    "deploy:dev": "bash scripts/deploy-development.sh",
-    "deploy:prod": "bash scripts/deploy-production.sh",
+    "deploy:dev": "bash scripts/deploy.sh dev",
+    "deploy:prod": "bash scripts/deploy.sh prod",
     "backup:prod-to-dev": "bash scripts/backup-prod-to-dev.sh",
     "backup:export-prod": "npx convex export --path ./backups/prod-backup.zip --prod --include-file-storage",
     "backup:import-dev": "npx convex import ./backups/prod-backup.zip --replace-all"
