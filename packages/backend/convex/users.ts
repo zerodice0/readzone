@@ -6,6 +6,147 @@ import {
   type MutationCtx,
 } from './_generated/server';
 
+const MEMBER_NUMBER_COUNTER_NAME = 'users.memberNumber';
+const MEMBER_NUMBER_MIGRATION_ADMIN_IDS_ENV =
+  'MEMBER_NUMBER_MIGRATION_ADMIN_IDS';
+
+function getMigrationAdminIds() {
+  return (process.env[MEMBER_NUMBER_MIGRATION_ADMIN_IDS_ENV] ?? '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+async function assertMigrationPermission(ctx: MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  const adminIds = getMigrationAdminIds();
+
+  if (!identity || !adminIds.includes(identity.subject)) {
+    throw new Error('Unauthorized: Member number migration is restricted');
+  }
+}
+
+async function getMemberNumberCounter(ctx: MutationCtx) {
+  return await ctx.db
+    .query('counters')
+    .withIndex('by_name', (q) => q.eq('name', MEMBER_NUMBER_COUNTER_NAME))
+    .unique();
+}
+
+async function getNextInitialMemberNumber(ctx: MutationCtx) {
+  const users = await ctx.db.query('users').collect();
+  const maxMemberNumber = users.reduce(
+    (maxNumber, user) => Math.max(maxNumber, user.memberNumber ?? 0),
+    0
+  );
+
+  return Math.max(maxMemberNumber, users.length) + 1;
+}
+
+async function ensureMemberNumberCounterAtLeast(
+  ctx: MutationCtx,
+  value: number
+) {
+  const counter = await getMemberNumberCounter(ctx);
+  const now = Date.now();
+
+  if (!counter) {
+    await ctx.db.insert('counters', {
+      name: MEMBER_NUMBER_COUNTER_NAME,
+      value,
+      updatedAt: now,
+    });
+    return;
+  }
+
+  if (counter.value < value) {
+    await ctx.db.patch(counter._id, {
+      value,
+      updatedAt: now,
+    });
+  }
+}
+
+async function claimNextMemberNumber(ctx: MutationCtx) {
+  const counter = await getMemberNumberCounter(ctx);
+  const now = Date.now();
+
+  if (!counter) {
+    const nextMemberNumber = await getNextInitialMemberNumber(ctx);
+
+    await ctx.db.insert('counters', {
+      name: MEMBER_NUMBER_COUNTER_NAME,
+      value: nextMemberNumber,
+      updatedAt: now,
+    });
+
+    return nextMemberNumber;
+  }
+
+  const nextMemberNumber = counter.value + 1;
+
+  await ctx.db.patch(counter._id, {
+    value: nextMemberNumber,
+    updatedAt: now,
+  });
+
+  return nextMemberNumber;
+}
+
+async function backfillMissingMemberNumbers(
+  ctx: MutationCtx,
+  batchSize: number
+) {
+  const users = await ctx.db.query('users').order('asc').collect();
+  const missingUsers = users.filter((user) => user.memberNumber === undefined);
+  const assignedNumbers = new Set<number>();
+  let maxMemberNumber = 0;
+  let nextCandidate = 1;
+  let assigned = 0;
+
+  for (const user of users) {
+    if (user.memberNumber !== undefined) {
+      assignedNumbers.add(user.memberNumber);
+      maxMemberNumber = Math.max(maxMemberNumber, user.memberNumber);
+    }
+  }
+
+  const claimLowestAvailableMemberNumber = () => {
+    while (assignedNumbers.has(nextCandidate)) {
+      nextCandidate += 1;
+    }
+
+    const memberNumber = nextCandidate;
+    assignedNumbers.add(memberNumber);
+    maxMemberNumber = Math.max(maxMemberNumber, memberNumber);
+    nextCandidate += 1;
+
+    return memberNumber;
+  };
+
+  for (const user of missingUsers.slice(0, batchSize)) {
+    const memberNumber = claimLowestAvailableMemberNumber();
+
+    await ctx.db.patch(user._id, {
+      memberNumber,
+      updatedAt: Date.now(),
+    });
+    assigned += 1;
+  }
+
+  if (assigned > 0) {
+    await ensureMemberNumberCounterAtLeast(ctx, maxMemberNumber);
+  }
+
+  return {
+    totalUsers: users.length,
+    missingBefore: missingUsers.length,
+    assigned,
+    remaining: missingUsers.length - assigned,
+    nextMemberNumber: maxMemberNumber + 1,
+  };
+}
+
 async function migrateLegacyDataByEmail(
   ctx: MutationCtx,
   email: string,
@@ -134,8 +275,10 @@ export const getOrCreateCurrentUser = mutation({
     }
 
     // 새 사용자 생성
+    const memberNumber = await claimNextMemberNumber(ctx);
     const userId = await ctx.db.insert('users', {
       clerkUserId,
+      memberNumber,
       name: identity.name ?? identity.nickname ?? undefined,
       imageUrl: identity.pictureUrl ?? undefined,
       email: identity.email ?? undefined,
@@ -225,8 +368,11 @@ export const upsertFromClerk = internalMutation({
     }
 
     // 새로 생성
+    const memberNumber = await claimNextMemberNumber(ctx);
+
     return await ctx.db.insert('users', {
       clerkUserId: args.clerkUserId,
+      memberNumber,
       name: args.name,
       imageUrl: args.imageUrl,
       email: args.email,
@@ -255,5 +401,23 @@ export const deleteFromClerk = internalMutation({
     }
 
     return false;
+  },
+});
+
+/**
+ * 기존 사용자에게 공개용 회원 번호를 부여합니다.
+ *
+ * 실행 전 Convex 환경변수 MEMBER_NUMBER_MIGRATION_ADMIN_IDS에
+ * 실행할 Clerk user id를 쉼표로 구분해 등록해야 합니다.
+ */
+export const backfillMemberNumbers = mutation({
+  args: {
+    batchSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await assertMigrationPermission(ctx);
+
+    const batchSize = Math.min(Math.max(args.batchSize ?? 100, 1), 500);
+    return await backfillMissingMemberNumbers(ctx, batchSize);
   },
 });

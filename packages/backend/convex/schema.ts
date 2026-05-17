@@ -16,12 +16,25 @@ export default defineSchema({
    */
   users: defineTable({
     clerkUserId: v.string(), // Clerk subject ID
+    memberNumber: v.optional(v.number()), // 공개용 회원 번호
     name: v.optional(v.string()), // 표시 이름
     imageUrl: v.optional(v.string()), // 프로필 이미지 URL
     email: v.optional(v.string()), // 이메일
     username: v.optional(v.string()), // Clerk username
     updatedAt: v.number(), // 마지막 업데이트 시간
-  }).index('by_clerk_id', ['clerkUserId']),
+  })
+    .index('by_clerk_id', ['clerkUserId'])
+    .index('by_member_number', ['memberNumber']),
+
+  /**
+   * Counters Table
+   * 순차 번호 발급용 카운터 저장
+   */
+  counters: defineTable({
+    name: v.string(),
+    value: v.number(),
+    updatedAt: v.number(),
+  }).index('by_name', ['name']),
 
   /**
    * Books Table
