@@ -46,15 +46,6 @@ function getAuthErrorMessage(error: unknown) {
   return '회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.';
 }
 
-function splitDisplayName(displayName: string) {
-  const parts = displayName.trim().split(/\s+/).filter(Boolean);
-
-  return {
-    firstName: parts[0],
-    lastName: parts.slice(1).join(' ') || undefined,
-  };
-}
-
 function SignUpPage() {
   const { signUp, isLoaded, setActive } = useSignUp();
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
@@ -91,13 +82,14 @@ function SignUpPage() {
     setIsSubmitting(true);
 
     try {
-      const { firstName, lastName } = splitDisplayName(displayName);
+      const nextDisplayName = displayName.trim();
 
       await signUp.create({
         emailAddress: email,
         password,
-        firstName,
-        lastName,
+        unsafeMetadata: nextDisplayName
+          ? { displayName: nextDisplayName }
+          : undefined,
       });
       await signUp.prepareVerification({ strategy: 'email_code' });
       setStep('verify');
@@ -226,7 +218,7 @@ function SignUpPage() {
                 <input
                   id="display-name"
                   type="text"
-                  autoComplete="name"
+                  autoComplete="nickname"
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
                   className="paper-input w-full rounded-xl px-4 py-3 outline-none"

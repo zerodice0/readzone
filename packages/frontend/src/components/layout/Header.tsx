@@ -41,6 +41,7 @@ import {
 } from '../ui/sheet';
 import { BrandMark } from '../brand/BrandMark';
 import { getAnimationProps } from '../../lib/motion';
+import { getUserDisplayName } from '../../utils/userDisplayName';
 
 interface NavLinkItem {
   to: string;
@@ -140,16 +141,6 @@ function MobileLogoutButton({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-function getUserDisplayName(user: ReturnType<typeof useUser>['user']) {
-  return (
-    user?.fullName ||
-    user?.firstName ||
-    user?.username ||
-    user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
-    '사용자'
-  );
-}
-
 function UserAvatar({ className = 'h-9 w-9' }: { className?: string }) {
   const { user } = useUser();
   const displayName = getUserDisplayName(user);
@@ -218,7 +209,6 @@ function DesktopUserMenu() {
 function MobileUserInfo() {
   const { user } = useUser();
 
-  // 표시할 이름 결정: fullName > firstName > username > 이메일 앞부분
   const displayName = getUserDisplayName(user);
   const email = user?.primaryEmailAddress?.emailAddress;
 

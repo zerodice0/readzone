@@ -6,6 +6,18 @@ import { Webhook } from 'svix';
 
 const http = httpRouter();
 
+function getMetadataDisplayName(
+  metadata: Record<string, unknown> | null | undefined
+) {
+  const displayName = metadata?.displayName;
+
+  if (typeof displayName !== 'string') {
+    return undefined;
+  }
+
+  return displayName.trim() || undefined;
+}
+
 /**
  * Clerk Webhook 엔드포인트
  * user.created, user.updated, user.deleted 이벤트 처리
@@ -22,20 +34,10 @@ http.route({
     switch (event.type) {
       case 'user.created':
       case 'user.updated': {
-        const {
-          id,
-          first_name,
-          last_name,
-          image_url,
-          email_addresses,
-          username,
-        } = event.data;
+        const { id, image_url, email_addresses, username, unsafe_metadata } =
+          event.data;
 
-        // 이름 조합 (first_name + last_name 또는 username)
-        const name =
-          [first_name, last_name].filter(Boolean).join(' ') ||
-          username ||
-          undefined;
+        const name = getMetadataDisplayName(unsafe_metadata);
 
         // 기본 이메일 주소 추출
         const primaryEmail = email_addresses?.find(

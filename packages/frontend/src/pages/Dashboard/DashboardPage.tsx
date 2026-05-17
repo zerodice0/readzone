@@ -38,6 +38,10 @@ import {
 import { ReadingStatsSection } from './components/ReadingStatsSection';
 import { MyReviewsSection } from './components/MyReviewsSection';
 import { BookmarksSection } from './components/BookmarksSection';
+import {
+  getUnsafeMetadataWithDisplayName,
+  getUserDisplayName,
+} from '../../utils/userDisplayName';
 
 type ClerkUser = NonNullable<ReturnType<typeof useUser>['user']>;
 type UserSession = Awaited<ReturnType<ClerkUser['getSessions']>>[number];
@@ -54,25 +58,6 @@ function getDashboardTab(value: string | null): DashboardTab {
   }
 
   return 'stats';
-}
-
-function getUserDisplayName(user: ReturnType<typeof useUser>['user']) {
-  return (
-    user?.fullName ||
-    user?.firstName ||
-    user?.username ||
-    user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
-    '사용자'
-  );
-}
-
-function splitDisplayName(displayName: string) {
-  const parts = displayName.trim().split(/\s+/).filter(Boolean);
-
-  return {
-    firstName: parts[0],
-    lastName: parts.slice(1).join(' ') || undefined,
-  };
 }
 
 function formatMemberNumber(memberNumber: number) {
@@ -147,9 +132,13 @@ function AccountPanel() {
 
     try {
       const nextDisplayName = displayName.trim();
-      const { firstName, lastName } = splitDisplayName(nextDisplayName);
 
-      await user.update({ firstName, lastName });
+      await user.update({
+        unsafeMetadata: getUnsafeMetadataWithDisplayName(
+          user.unsafeMetadata,
+          nextDisplayName
+        ),
+      });
       await user.reload();
       setDisplayName(nextDisplayName);
       setIsEditingDisplayName(false);
@@ -236,7 +225,7 @@ function AccountPanel() {
               title={typeof memberNumber === 'number' ? undefined : user.id}
               aria-label={`회원 번호 ${memberBadgeLabel}`}
             >
-              PK {memberBadgeLabel}
+              회원번호 {memberBadgeLabel}
             </Badge>
             <p className="mt-1 text-xs text-stone-500">
               {isVerified ? '이메일 인증 완료' : '이메일 인증 필요'}

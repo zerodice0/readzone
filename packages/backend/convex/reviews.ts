@@ -233,18 +233,11 @@ export const create = mutation({
       .unique();
 
     if (existingUser) {
-      // 기존 사용자 정보 업데이트
-      const name = identity.name ?? identity.nickname ?? undefined;
       const imageUrl = identity.pictureUrl ?? undefined;
       const email = identity.email ?? undefined;
 
-      if (
-        existingUser.name !== name ||
-        existingUser.imageUrl !== imageUrl ||
-        existingUser.email !== email
-      ) {
+      if (existingUser.imageUrl !== imageUrl || existingUser.email !== email) {
         await ctx.db.patch(existingUser._id, {
-          name,
           imageUrl,
           email,
           updatedAt: Date.now(),
@@ -254,7 +247,7 @@ export const create = mutation({
       // 새 사용자 생성
       await ctx.db.insert('users', {
         clerkUserId: userId,
-        name: identity.name ?? identity.nickname ?? undefined,
+        name: undefined,
         imageUrl: identity.pictureUrl ?? undefined,
         email: identity.email ?? undefined,
         username: identity.nickname ?? undefined,

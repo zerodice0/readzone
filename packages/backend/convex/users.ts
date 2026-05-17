@@ -147,6 +147,31 @@ async function backfillMissingMemberNumbers(
   };
 }
 
+async function clearStoredDisplayNames(ctx: MutationCtx, batchSize: number) {
+  const users = await ctx.db.query('users').order('asc').collect();
+  const usersWithName = users.filter((user) => user.name !== undefined);
+  let cleared = 0;
+
+  for (const user of usersWithName.slice(0, batchSize)) {
+    await ctx.db.patch(user._id, {
+      name: undefined,
+      updatedAt: Date.now(),
+    });
+    cleared += 1;
+  }
+
+  return {
+    totalUsers: users.length,
+    withNameBefore: usersWithName.length,
+    cleared,
+    remaining: usersWithName.length - cleared,
+  };
+}
+
+function normalizeDisplayName(displayName: string | undefined) {
+  return displayName?.trim() || undefined;
+}
+
 async function migrateLegacyDataByEmail(
   ctx: MutationCtx,
   email: string,
@@ -234,17 +259,20 @@ async function migrateLegacyDataByEmail(
  * (ctx.auth.getUserIdentity() 정보로 자동 upsert)
  */
 export const getOrCreateCurrentUser = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    displayName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       return null;
     }
 
     const clerkUserId = identity.subject;
-    const name = identity.name ?? identity.nickname ?? undefined;
+    const name = normalizeDisplayName(args.displayName);
     const imageUrl = identity.pictureUrl ?? undefined;
     const email = identity.email ?? undefined;
+    const username = identity.nickname ?? undefined;
 
     // 기존 사용자 조회
     const existingUser = await ctx.db
@@ -257,12 +285,14 @@ export const getOrCreateCurrentUser = mutation({
       if (
         existingUser.name !== name ||
         existingUser.imageUrl !== imageUrl ||
-        existingUser.email !== email
+        existingUser.email !== email ||
+        existingUser.username !== username
       ) {
         await ctx.db.patch(existingUser._id, {
           name,
           imageUrl,
           email,
+          username,
           updatedAt: Date.now(),
         });
       }
@@ -279,10 +309,10 @@ export const getOrCreateCurrentUser = mutation({
     const userId = await ctx.db.insert('users', {
       clerkUserId,
       memberNumber,
-      name: identity.name ?? identity.nickname ?? undefined,
+      name,
       imageUrl: identity.pictureUrl ?? undefined,
       email: identity.email ?? undefined,
-      username: identity.nickname ?? undefined,
+      username,
       updatedAt: Date.now(),
     });
 
@@ -419,5 +449,23 @@ export const backfillMemberNumbers = mutation({
 
     const batchSize = Math.min(Math.max(args.batchSize ?? 100, 1), 500);
     return await backfillMissingMemberNumbers(ctx, batchSize);
+  },
+});
+
+/**
+ * 기존 users.name 캐시를 비워 Clerk 실명 기반 표시 이름을 제거합니다.
+ *
+ * 이후 로그인/UserSync 또는 Clerk webhook은 unsafeMetadata.displayName만
+ * users.name에 다시 동기화합니다.
+ */
+export const clearStoredNames = mutation({
+  args: {
+    batchSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await assertMigrationPermission(ctx);
+
+    const batchSize = Math.min(Math.max(args.batchSize ?? 100, 1), 500);
+    return await clearStoredDisplayNames(ctx, batchSize);
   },
 });

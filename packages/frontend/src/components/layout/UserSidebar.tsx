@@ -4,6 +4,7 @@ import { LayoutDashboard, FileText, Bookmark, LogOut } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { logError } from '../../utils/error';
+import { getUserDisplayName } from '../../utils/userDisplayName';
 
 const navItems = [
   { to: '/dashboard', label: '대시보드', icon: LayoutDashboard },
@@ -21,12 +22,7 @@ export function UserSidebar({ onNavigate }: UserSidebarProps) {
   const { user } = useUser();
   const clerk = useClerk();
 
-  const displayName =
-    user?.fullName ||
-    user?.firstName ||
-    user?.username ||
-    user?.primaryEmailAddress?.emailAddress?.split('@')[0] ||
-    '사용자';
+  const displayName = getUserDisplayName(user);
 
   const handleLogout = async () => {
     try {
