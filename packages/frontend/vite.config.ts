@@ -27,50 +27,5 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) {
-            return undefined;
-          }
-
-          if (id.includes('/react/') || id.includes('/react-dom/')) {
-            return 'react-vendor';
-          }
-
-          if (id.includes('/react-router')) {
-            return 'router-vendor';
-          }
-
-          if (id.includes('/@clerk/') || id.includes('/convex')) {
-            return 'services-vendor';
-          }
-
-          if (id.includes('/framer-motion') || id.includes('/motion-')) {
-            return 'motion-vendor';
-          }
-
-          if (
-            id.includes('/@radix-ui/') ||
-            id.includes('/@floating-ui/') ||
-            id.includes('/react-remove-scroll')
-          ) {
-            return 'ui-vendor';
-          }
-
-          if (
-            id.includes('/@nivo/') ||
-            id.includes('/d3-') ||
-            id.includes('/lodash') ||
-            id.includes('/@react-spring/') ||
-            id.includes('/react-virtualized-auto-sizer')
-          ) {
-            return 'charts-vendor';
-          }
-
-          return 'vendor';
-        },
-      },
-    },
   },
 });
