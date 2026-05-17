@@ -185,7 +185,7 @@ function AccountPanel() {
       <CardHeader className="border-b border-paper-200/70 pb-4">
         <CardTitle className="text-xl text-stone-950">계정 관리</CardTitle>
         <CardDescription className="text-stone-500">
-          표시 이름과 로그인 상태를 관리합니다.
+          닉네임과 로그인 상태를 관리합니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
@@ -246,7 +246,7 @@ function AccountPanel() {
                 htmlFor="account-display-name"
                 className="text-sm font-medium text-stone-700"
               >
-                표시 이름 변경
+                닉네임 변경
               </label>
               <input
                 id="account-display-name"
@@ -269,7 +269,7 @@ function AccountPanel() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                표시 이름 저장
+                닉네임 저장
               </Button>
               <Button
                 type="button"

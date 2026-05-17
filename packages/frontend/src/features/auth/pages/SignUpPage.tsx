@@ -213,7 +213,7 @@ function SignUpPage() {
                   htmlFor="display-name"
                   className="text-sm font-medium text-stone-700"
                 >
-                  표시 이름
+                  닉네임
                 </label>
                 <input
                   id="display-name"

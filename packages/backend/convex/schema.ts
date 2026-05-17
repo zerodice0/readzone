@@ -17,7 +17,7 @@ export default defineSchema({
   users: defineTable({
     clerkUserId: v.string(), // Clerk subject ID
     memberNumber: v.optional(v.number()), // 공개용 회원 번호
-    name: v.optional(v.string()), // 앱 표시 이름(Clerk unsafeMetadata.displayName)
+    name: v.optional(v.string()), // 앱 닉네임(Clerk unsafeMetadata.displayName)
     imageUrl: v.optional(v.string()), // 프로필 이미지 URL
     email: v.optional(v.string()), // 이메일
     username: v.optional(v.string()), // Clerk username

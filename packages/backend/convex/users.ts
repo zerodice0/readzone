@@ -453,7 +453,7 @@ export const backfillMemberNumbers = mutation({
 });
 
 /**
- * 기존 users.name 캐시를 비워 Clerk 실명 기반 표시 이름을 제거합니다.
+ * 기존 users.name 캐시를 비워 Clerk 실명 기반 이름을 제거합니다.
  *
  * 이후 로그인/UserSync 또는 Clerk webhook은 unsafeMetadata.displayName만
  * users.name에 다시 동기화합니다.
