@@ -319,57 +319,75 @@ export function BookSearch({
 
       {/* Selected book display */}
       {selectedBook && !searchQuery && (
-        <div className="paper-panel relative group overflow-hidden rounded-2xl p-6 transition-all hover:border-paper-300">
-          <div className="flex items-start gap-6">
-            <div className="book-paper-frame shrink-0 w-24 h-36 rounded-lg overflow-hidden">
+        <div
+          className={`paper-panel relative group overflow-hidden rounded-2xl transition-all hover:border-paper-300 ${
+            compact ? 'p-4' : 'p-5 sm:p-6'
+          }`}
+        >
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="inline-flex items-center gap-1.5 rounded-md border border-primary-100 bg-white px-2.5 py-1 text-xs font-bold text-primary-700 shadow-sm">
+              <Check className="h-3 w-3" />
+              선택된 도서
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                onSelectBook(null as unknown as BookData);
+                setSearchQuery('');
+              }}
+              className="-mr-2 -mt-2 h-10 w-10 rounded-full text-stone-400 hover:bg-red-50 hover:text-red-500"
+              aria-label="선택한 도서 해제"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          <div className={`flex items-start ${compact ? 'gap-4' : 'gap-5'}`}>
+            <div
+              className={`book-paper-frame shrink-0 overflow-hidden rounded-lg ${
+                compact ? 'h-[7.5rem] w-20' : 'h-36 w-24'
+              }`}
+            >
               {selectedBook.coverImageUrl ? (
                 <img
                   src={selectedBook.coverImageUrl}
                   alt={`${selectedBook.title} 표지`}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-stone-50">
-                  <BookPlus className="w-8 h-8 text-stone-300" />
+                <div className="flex h-full w-full items-center justify-center bg-stone-50">
+                  <BookPlus className="h-8 w-8 text-stone-300" />
                 </div>
               )}
             </div>
 
-            <div className="flex-1 py-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-primary-100 text-primary-700 text-xs font-bold mb-3 shadow-sm">
-                    <Check className="w-3 h-3" />
-                    선택된 도서
-                  </div>
-                  <h3 className="font-serif font-bold text-xl text-stone-900 mb-2 leading-tight">
-                    {selectedBook.title}
-                  </h3>
-                  <p className="text-stone-600 font-medium">
-                    {selectedBook.author}
-                  </p>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    onSelectBook(null as unknown as BookData);
-                    setSearchQuery('');
-                  }}
-                  className="text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-full w-10 h-10 -mr-2 -mt-2"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-
-              {selectedBookDescription && (
-                <p className="text-sm text-stone-500 line-clamp-2 mt-4 leading-relaxed">
-                  {selectedBookDescription}
-                </p>
-              )}
+            <div className="min-w-0 flex-1 py-1">
+              <h3
+                className={`break-words font-serif font-bold leading-tight text-stone-900 ${
+                  compact ? 'text-lg' : 'text-xl'
+                }`}
+              >
+                {selectedBook.title}
+              </h3>
+              <p className="mt-2 break-words font-medium text-stone-600">
+                {selectedBook.author}
+              </p>
             </div>
           </div>
+
+          {selectedBookDescription && (
+            <div
+              className={`mt-4 overflow-y-auto pr-2 text-sm leading-relaxed text-stone-600 custom-scrollbar focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                compact ? 'max-h-28 sm:max-h-32' : 'max-h-36 sm:max-h-40'
+              }`}
+              tabIndex={0}
+              aria-label={`${selectedBook.title} 도서 설명`}
+            >
+              {selectedBookDescription}
+            </div>
+          )}
         </div>
       )}
     </div>
