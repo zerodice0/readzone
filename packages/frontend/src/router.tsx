@@ -17,11 +17,8 @@ import { RouteErrorFallback } from './components/RouteErrorFallback';
 // T113: Code splitting with React.lazy() for bundle optimization
 // Public pages - Eager loaded (most frequently accessed)
 import { FeedPage } from './pages/Feed';
-import { ReviewDetailPage } from './pages/ReviewDetail';
 import { NotFoundPage } from './pages/NotFound/NotFoundPage';
 import { ClerkLoadingWrapper } from './components/ClerkLoadingWrapper';
-import SignInPage from './features/auth/pages/SignInPage';
-import SignUpPage from './features/auth/pages/SignUpPage';
 
 // Public pages - Lazy loaded
 const BooksPage = lazyWithRetry(
@@ -31,6 +28,13 @@ const BooksPage = lazyWithRetry(
 const BookDetailPage = lazyWithRetry(
   () => import('./pages/BookDetail/BookDetailPage'),
   'BookDetailPage'
+);
+const ReviewDetailPage = lazyWithRetry(
+  () =>
+    import('./pages/ReviewDetail').then((module) => ({
+      default: module.ReviewDetailPage,
+    })),
+  'ReviewDetailPage'
 );
 
 // Protected pages - Lazy loaded
@@ -53,6 +57,16 @@ const ReadingDiaryPage = lazyWithRetry(
 const ReadingDiaryNewPage = lazyWithRetry(
   () => import('./pages/ReadingDiaryNew/ReadingDiaryNewPage'),
   'ReadingDiaryNewPage'
+);
+
+// Auth pages - Lazy loaded
+const SignInPage = lazyWithRetry(
+  () => import('./features/auth/pages/SignInPage'),
+  'SignInPage'
+);
+const SignUpPage = lazyWithRetry(
+  () => import('./features/auth/pages/SignUpPage'),
+  'SignUpPage'
 );
 // Note: MyReviewsPage and BookmarksPage are now integrated into DashboardPage as tabs
 

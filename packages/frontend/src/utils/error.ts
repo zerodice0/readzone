@@ -2,13 +2,25 @@
  * Error handling utilities
  */
 
-import axios, { AxiosError } from 'axios';
+type ApiErrorLike = Error & {
+  isAxiosError?: boolean;
+  response?: {
+    status?: number;
+    data?: {
+      message?: unknown;
+    };
+  };
+};
 
 /**
- * Type guard to check if error is an AxiosError
+ * Type guard to check if an error follows the API client error shape.
  */
-export function isAxiosError(error: unknown): error is AxiosError {
-  return axios.isAxiosError(error);
+function isApiErrorLike(error: unknown): error is ApiErrorLike {
+  return (
+    error instanceof Error &&
+    typeof (error as { isAxiosError?: unknown }).isAxiosError === 'boolean' &&
+    (error as { isAxiosError?: boolean }).isAxiosError === true
+  );
 }
 
 /**
@@ -18,10 +30,9 @@ export function extractErrorMessage(
   error: unknown,
   defaultMessage = 'An unexpected error occurred'
 ): string {
-  // AxiosError
-  if (isAxiosError(error)) {
-    const responseData = error.response?.data as { message?: unknown } | undefined;
-    const responseMessage = responseData?.message;
+  // API client error with response payload
+  if (isApiErrorLike(error)) {
+    const responseMessage = error.response?.data?.message;
     if (typeof responseMessage === 'string') {
       return responseMessage;
     }
@@ -74,7 +85,7 @@ export function handleApiError(
   logError(error, context);
 
   const message = extractErrorMessage(error);
-  const status = isAxiosError(error) ? error.response?.status : undefined;
+  const status = isApiErrorLike(error) ? error.response?.status : undefined;
 
   return { message, status };
 }
