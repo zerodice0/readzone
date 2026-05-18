@@ -187,12 +187,12 @@ export function BookSearch({
               variant="outline"
               onClick={triggerAladinSearch}
               disabled={isSearchingAladin}
-              className="w-full h-12 gap-2 border-blue-100 bg-blue-50/50 text-blue-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all"
+              className="h-12 w-full gap-2 border-primary-200 bg-primary-50/60 text-primary-700 transition-colors hover:border-primary-300 hover:bg-primary-100/70 hover:text-primary-800"
             >
               {isSearchingAladin ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  알라딘 데이터베이스 검색 중...
+                  알라딘 데이터베이스 검색 중…
                 </>
               ) : (
                 <>
@@ -202,9 +202,9 @@ export function BookSearch({
               )}
             </Button>
           ) : isSearchingAladin ? (
-            <div className="flex flex-col items-center justify-center py-8 text-blue-600/80">
+            <div className="flex flex-col items-center justify-center py-8 text-primary-700">
               <Loader2 className="w-6 h-6 animate-spin mb-2" />
-              <span className="text-sm">알라딘에서 책을 찾고 있습니다...</span>
+              <span className="text-sm">알라딘에서 책을 찾고 있습니다…</span>
             </div>
           ) : null}
         </div>
@@ -246,8 +246,8 @@ export function BookSearch({
       {hasAladinResults && (
         <div className="space-y-3 mt-4">
           <div className="flex items-center gap-2 px-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            <h4 className="text-sm font-bold text-blue-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+            <h4 className="text-sm font-bold text-stone-700">
               알라딘 검색 결과
             </h4>
           </div>

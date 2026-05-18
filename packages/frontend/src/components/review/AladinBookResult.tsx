@@ -1,6 +1,4 @@
-import { Book, ExternalLink, Loader2 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
+import { Book, Loader2 } from 'lucide-react';
 import type { AladinBook } from '../../hooks/useBookSearch';
 import { extractMiddleCategory } from '../../utils/category';
 
@@ -12,7 +10,7 @@ interface AladinBookResultProps {
 
 /**
  * 알라딘 검색 결과 표시 컴포넌트
- * 파란색 테마로 로컬 결과와 시각적으로 구분
+ * 외부 검색 결과를 카드 전체 선택 대상으로 표시
  */
 export function AladinBookResult({
   book,
@@ -23,74 +21,85 @@ export function AladinBookResult({
     ? new Date(book.publishedDate).getFullYear()
     : null;
   const categoryDisplay = extractMiddleCategory(book.category);
+  const metadata = [book.publisher, publishYear ? `${publishYear}` : null]
+    .filter(Boolean)
+    .join(' • ');
 
   return (
-    <div className="group flex gap-4 p-4 rounded-xl border border-blue-100 bg-blue-50/20 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/40 transition-all">
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={isLoading}
+      aria-busy={isLoading}
+      aria-label={`${book.title} 선택`}
+      className="group flex min-w-0 w-full touch-manipulation items-stretch gap-4 rounded-xl border border-paper-200/80 bg-white/75 p-4 text-left shadow-sm transition-[background-color,border-color,box-shadow,transform] hover:border-primary-200 hover:bg-primary-50/35 hover:shadow-md active:scale-[0.99] disabled:cursor-wait disabled:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:scale-100"
+    >
       {/* Book cover */}
-      <div className="flex-shrink-0 w-16 h-24 bg-white rounded-lg overflow-hidden shadow-sm group-hover:shadow transition-shadow">
+      <span className="book-paper-frame flex h-24 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-white shadow-sm transition-shadow group-hover:shadow motion-reduce:transition-none">
         {book.coverImageUrl ? (
           <img
             src={book.coverImageUrl}
             alt={`${book.title} 표지`}
-            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+            width={64}
+            height={96}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             loading="lazy"
             onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = 'none';
+              e.currentTarget.style.display = 'none';
             }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-stone-100">
-            <Book className="w-8 h-8 text-stone-400" />
-          </div>
+          <span className="flex h-full w-full items-center justify-center bg-stone-100">
+            <Book className="h-8 w-8 text-stone-400" aria-hidden="true" />
+          </span>
         )}
-      </div>
+      </span>
 
       {/* Book info */}
-      <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="font-serif font-bold text-lg text-stone-900 truncate">
-            {book.title}
-          </h3>
-          <ExternalLink className="w-3 h-3 text-blue-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
+      <span className="flex min-w-0 flex-1 flex-col justify-center">
+        <span className="flex items-start justify-between gap-3">
+          <span className="min-w-0">
+            <span className="block truncate font-serif text-lg font-bold text-stone-900 transition-colors group-hover:text-primary-800">
+              {book.title}
+            </span>
+            <span className="mt-1 block truncate text-sm font-medium text-stone-600">
+              {book.author}
+            </span>
+          </span>
 
-        <p className="text-sm text-stone-600 font-medium mb-1">{book.author}</p>
+          <span
+            className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-700 transition-colors group-hover:border-primary-300 group-hover:bg-primary-100 motion-reduce:transition-none"
+            aria-hidden="true"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+            ) : (
+              <span className="h-2.5 w-2.5 rounded-full border-2 border-primary-500 bg-white" />
+            )}
+          </span>
+        </span>
 
-        <div className="flex items-center gap-2 mt-auto flex-wrap">
-          <p className="text-xs text-stone-500 flex items-center gap-1">
-            {book.publisher}
-            {publishYear && ` • ${publishYear}`}
-          </p>
+        <span className="mt-3 flex flex-wrap items-center gap-2">
+          {metadata && (
+            <span className="text-xs text-stone-500">{metadata}</span>
+          )}
+          <span className="inline-flex items-center rounded-md border border-paper-200 bg-white/70 px-2 py-0.5 text-xs font-semibold text-stone-600">
+            알라딘
+          </span>
           {categoryDisplay && (
-            <Badge
-              variant="secondary"
-              className="bg-violet-50 text-violet-700 text-xs"
-            >
+            <span className="inline-flex items-center rounded-md border border-paper-200 bg-white/70 px-2 py-0.5 text-xs font-semibold text-stone-600">
               {categoryDisplay}
-            </Badge>
+            </span>
           )}
-        </div>
-      </div>
+        </span>
 
-      {/* Select button */}
-      <div className="flex-shrink-0 flex items-center">
-        <Button
-          variant="default"
-          size="sm"
-          onClick={onSelect}
-          disabled={isLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow active:scale-95 transition-all"
+        <span
+          className="mt-3 text-xs font-bold text-primary-700"
+          aria-live="polite"
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-              저장 중
-            </>
-          ) : (
-            '선택'
-          )}
-        </Button>
-      </div>
-    </div>
+          {isLoading ? '저장 중…' : '탭해서 이 책 선택'}
+        </span>
+      </span>
+    </button>
   );
 }
