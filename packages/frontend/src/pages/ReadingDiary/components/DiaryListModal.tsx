@@ -1,12 +1,5 @@
 import { useState, useMemo } from 'react';
-import {
-  Plus,
-  BookOpen,
-  CalendarDays,
-  X,
-  ChevronUp,
-  FileText,
-} from 'lucide-react';
+import { Plus, CalendarDays, X, FileText, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -21,15 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../../components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../../../components/ui/dropdown-menu';
 import { DiaryCard } from './DiaryCard';
-import { QuickAddDiaryDialog } from './QuickAddDiaryDialog';
+import { QuickAddDiaryForm } from './QuickAddDiaryForm';
 import type { Id } from 'convex/_generated/dataModel';
 
 interface DiaryListModalProps {
@@ -114,6 +100,14 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
     setQuickAddBook(book);
   };
 
+  const handleBackToList = () => {
+    setQuickAddBook(null);
+  };
+
+  const handleQuickAddSuccess = () => {
+    setQuickAddBook(null);
+  };
+
   const handleWriteReview = (book: BookGroup['book']) => {
     void navigate(`/reviews/new?bookId=${book._id}`);
     onClose();
@@ -124,15 +118,28 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
       <DialogContent className="paper-surface flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <DialogHeader className="relative z-10 shrink-0 border-b border-paper-200/70 bg-[#fffdf8]/95 p-6 pb-4 backdrop-blur">
           <div className="flex items-center gap-3 pr-10">
-            <div className="rounded-xl border border-paper-200 bg-white/70 p-2.5">
-              <CalendarDays className="h-5 w-5 text-primary-700" />
-            </div>
+            {quickAddBook ? (
+              <button
+                type="button"
+                onClick={handleBackToList}
+                className="rounded-xl border border-paper-200 bg-white/70 p-2.5 text-primary-700 transition-colors hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                aria-label="일기 목록으로 돌아가기"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            ) : (
+              <div className="rounded-xl border border-paper-200 bg-white/70 p-2.5">
+                <CalendarDays className="h-5 w-5 text-primary-700" />
+              </div>
+            )}
             <div className="space-y-0.5">
               <DialogTitle className="font-heading text-xl font-semibold text-stone-950">
-                {formattedDate}
+                {quickAddBook ? '빠른 일기 추가' : formattedDate}
               </DialogTitle>
               <DialogDescription className="text-sm text-stone-500">
-                이 날의 독서 기록
+                {quickAddBook
+                  ? `${formattedDate}의 독서 기록`
+                  : '이 날의 독서 기록'}
               </DialogDescription>
             </div>
           </div>
@@ -143,11 +150,18 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
         </DialogHeader>
 
         <div className="min-h-[200px] flex-1 overflow-y-auto p-6">
-          {diaries === undefined ? (
+          {quickAddBook ? (
+            <QuickAddDiaryForm
+              book={quickAddBook}
+              date={date}
+              onCancel={handleBackToList}
+              onSuccess={handleQuickAddSuccess}
+            />
+          ) : diaries === undefined ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-600" />
               <p className="text-sm text-muted-foreground animate-pulse">
-                기록을 불러오는 중...
+                기록을 불러오는 중…
               </p>
             </div>
           ) : diaries.length === 0 ? (
@@ -179,13 +193,14 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
                     }}
                     className="space-y-3"
                   >
-                    {/* 책 헤더 + 빠른 추가 버튼 */}
-                    <div className="paper-panel flex items-center justify-between gap-3 rounded-xl p-3">
+                    <div className="paper-panel rounded-xl p-3">
                       <div className="flex min-w-0 items-center gap-3">
                         {group.book.coverImageUrl && (
                           <img
                             src={group.book.coverImageUrl}
-                            alt={group.book.title}
+                            alt={`${group.book.title} 표지`}
+                            width={32}
+                            height={44}
                             className="book-paper-frame h-11 w-8 shrink-0 rounded object-cover shadow-sm"
                           />
                         )}
@@ -199,32 +214,31 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
                           </p>
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-1">
+                      <div className="mt-3 grid grid-cols-2 gap-2">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleWriteReview(group.book)}
-                          className="text-primary-700 hover:bg-white/70 hover:text-primary-600"
+                          className="w-full border-paper-200 bg-white/70 text-stone-700 hover:bg-primary-50 hover:text-primary-700"
                           aria-label={`${group.book.title} 독후감 쓰기`}
                         >
                           <FileText className="w-4 h-4" />
-                          <span className="hidden sm:inline">독후감</span>
+                          독후감
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleQuickAdd(group.book)}
-                          className="text-primary-700 hover:bg-white/70 hover:text-primary-600"
+                          className="w-full border-primary-200 bg-primary-50/60 text-primary-700 hover:bg-primary-100 hover:text-primary-800"
                           aria-label={`${group.book.title} 일기 추가`}
                         >
                           <Plus className="w-4 h-4" />
-                          <span className="sr-only">일기 추가</span>
+                          일기 추가
                         </Button>
                       </div>
                     </div>
 
-                    {/* 해당 책의 일기 목록 */}
-                    <div className="space-y-2 pl-2">
+                    <div className="space-y-2">
                       {group.diaries.map((diary) => (
                         <DiaryCard
                           key={diary._id}
@@ -240,74 +254,19 @@ export function DiaryListModal({ date, onClose }: DiaryListModalProps) {
           )}
         </div>
 
-        {diaries && diaries.length > 0 && (
+        {diaries && diaries.length > 0 && !quickAddBook && (
           <div className="shrink-0 border-t border-paper-200/70 bg-[#fffdf8]/95 p-4 backdrop-blur">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full hover:bg-muted/50 transition-colors border-dashed"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  일기 추가하기
-                  <ChevronUp className="w-4 h-4 ml-auto" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                align="center"
-                className="w-[calc(100vw-3rem)] sm:w-[calc(28rem-2rem)] max-h-[300px] overflow-y-auto"
-              >
-                {groupedByBook.map((group) => (
-                  <DropdownMenuItem
-                    key={group.book._id}
-                    onClick={() => handleQuickAdd(group.book)}
-                    className="flex items-center gap-3 py-2 cursor-pointer"
-                  >
-                    {group.book.coverImageUrl ? (
-                      <img
-                        src={group.book.coverImageUrl}
-                        alt={group.book.title}
-                        className="w-8 h-10 object-cover rounded shadow-sm shrink-0"
-                      />
-                    ) : (
-                      <div className="w-8 h-10 bg-muted rounded flex items-center justify-center shrink-0">
-                        <BookOpen className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {group.book.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {group.diaries.length}개의 기록
-                      </p>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleAddDiary}
-                  className="py-2 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4 mr-3" />
-                  다른 책으로 기록하기
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="outline"
+              onClick={handleAddDiary}
+              className="w-full border-dashed border-primary-200 bg-white/70 text-primary-700 hover:bg-primary-50 hover:text-primary-800"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              다른 책으로 기록하기
+            </Button>
           </div>
         )}
       </DialogContent>
-
-      {/* 빠른 일기 추가 다이얼로그 */}
-      {quickAddBook && (
-        <QuickAddDiaryDialog
-          book={quickAddBook}
-          date={date}
-          onClose={() => setQuickAddBook(null)}
-          onSuccess={() => setQuickAddBook(null)}
-        />
-      )}
     </Dialog>
   );
 }

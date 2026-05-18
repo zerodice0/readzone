@@ -1,16 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../../components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../../../components/ui/dialog';
 import { toast } from '../../../utils/toast';
 import { logError } from '../../../utils/error';
 import type { Id } from 'convex/_generated/dataModel';
@@ -33,9 +25,10 @@ interface DiaryCardProps {
 }
 
 export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
+  const editTextareaId = useId();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(diary.content);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsTruncation, setNeedsTruncation] = useState(false);
@@ -84,7 +77,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
     try {
       await removeDiary({ id: diary._id });
       toast.success('삭제되었습니다');
-      setShowDeleteDialog(false);
+      setShowDeleteConfirm(false);
     } catch (error) {
       logError(error, 'Failed to delete diary');
       toast.error('삭제에 실패했습니다');
@@ -107,7 +100,9 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
             {diary.book.coverImageUrl && (
               <img
                 src={diary.book.coverImageUrl}
-                alt={diary.book.title}
+                alt={`${diary.book.title} 표지`}
+                width={40}
+                height={56}
                 className="book-paper-frame h-14 w-10 rounded object-cover shadow-sm"
               />
             )}
@@ -121,10 +116,16 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
         )}
 
         {/* Edit form */}
+        <label htmlFor={editTextareaId} className="sr-only">
+          독서 일기 내용 수정
+        </label>
         <textarea
+          id={editTextareaId}
+          name="diary-edit-content"
           value={editContent}
           onChange={(e) => setEditContent(e.target.value)}
           rows={4}
+          autoComplete="off"
           className="paper-input w-full resize-none rounded-lg px-3 py-2 text-sm leading-relaxed outline-none"
         />
 
@@ -144,7 +145,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
             disabled={isSubmitting}
             className="bg-primary-600 hover:bg-primary-700"
           >
-            {isSubmitting ? '저장 중...' : '저장'}
+            {isSubmitting ? '저장 중…' : '저장'}
           </Button>
         </div>
       </div>
@@ -158,7 +159,7 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
         <div className="relative border-l-2 border-primary-300/70 pl-3">
           <p
             ref={contentRef}
-            className={`whitespace-pre-wrap text-sm leading-6 text-stone-700 transition-all duration-200 ${
+            className={`whitespace-pre-wrap text-sm leading-6 text-stone-700 transition-[max-height] duration-200 ${
               !isExpanded && needsTruncation
                 ? 'line-clamp-3 max-h-[4.5rem]'
                 : 'max-h-none'
@@ -177,57 +178,55 @@ export function DiaryCard({ diary, showBookInfo = true }: DiaryCardProps) {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="mt-3 flex justify-end gap-1 border-t border-paper-200/70 pt-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="text-stone-500 hover:text-stone-700"
-          >
-            <Pencil className="w-4 h-4 mr-1" />
-            수정
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-          >
-            <Trash2 className="w-4 h-4 mr-1" />
-            삭제
-          </Button>
-        </div>
+        {showDeleteConfirm ? (
+          <div className="mt-3 rounded-lg border border-red-100 bg-red-50/70 p-3">
+            <p className="text-sm font-bold text-red-700">독서 일기 삭제</p>
+            <p className="mt-1 text-xs leading-5 text-red-600">
+              삭제된 일기는 복구할 수 없습니다.
+            </p>
+            <div className="mt-3 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isSubmitting}
+              >
+                취소
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isSubmitting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isSubmitting ? '삭제 중…' : '삭제'}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 flex justify-end gap-1 border-t border-paper-200/70 pt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditing(true)}
+              className="text-stone-500 hover:text-stone-700"
+            >
+              <Pencil className="w-4 h-4 mr-1" />
+              수정
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-red-500 hover:bg-red-50 hover:text-red-700"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              삭제
+            </Button>
+          </div>
+        )}
       </article>
-
-      {/* Delete confirmation dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>독서 일기 삭제</DialogTitle>
-            <DialogDescription>
-              이 독서 일기를 삭제하시겠습니까? 삭제된 일기는 복구할 수 없습니다.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-              disabled={isSubmitting}
-            >
-              취소
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isSubmitting}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isSubmitting ? '삭제 중...' : '삭제'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
