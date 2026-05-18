@@ -265,7 +265,16 @@ export const listByUser = query({
 
     const reviews = await q.order('desc').take(limit);
 
-    return reviews;
+    return await Promise.all(
+      reviews.map(async (review) => {
+        const book = await ctx.db.get(review.bookId);
+
+        return {
+          ...review,
+          book,
+        };
+      })
+    );
   },
 });
 

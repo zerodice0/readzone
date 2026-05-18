@@ -1,24 +1,20 @@
 import { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
-import {
-  Heart,
-  Bookmark,
-  ThumbsUp,
-  ThumbsDown,
-  FileText,
-  Edit,
-  Eye,
-} from 'lucide-react';
+import { ThumbsUp, FileText, Edit } from 'lucide-react';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
 import { LoadingState } from '../../components/ui/loading-state';
 import { EmptyState } from '../../components/ui/empty-state';
 import { UserLayout } from '../../components/layout/UserLayout';
+import { MyReviewCard } from '../../components/reviews/MyReviewCard';
 
 type StatusFilter = 'ALL' | 'PUBLISHED' | 'DRAFT';
+
+const publishedDateFormatter = new Intl.DateTimeFormat('ko-KR', {
+  dateStyle: 'medium',
+});
 
 export default function MyReviewsPage() {
   const navigate = useNavigate();
@@ -134,87 +130,11 @@ export default function MyReviewsPage() {
           {hasReviews ? (
             <div className="space-y-4">
               {filteredReviews.map((review) => (
-                <div
+                <MyReviewCard
                   key={review._id}
-                  className="bg-card border border-stone-200 rounded-xl p-6 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {review.title && (
-                          <h3 className="text-lg font-semibold text-stone-900">
-                            {review.title}
-                          </h3>
-                        )}
-                        {review.status === 'DRAFT' ? (
-                          <Badge variant="secondary" className="text-xs">
-                            초안
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="default"
-                            className="text-xs bg-green-100 text-green-800 border-green-200"
-                          >
-                            발행됨
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-stone-600 line-clamp-2 mb-3">
-                        {review.content}
-                      </p>
-
-                      {/* Metadata */}
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
-                        {review.isRecommended ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
-                            <ThumbsUp className="w-3 h-3 mr-1" />
-                            추천
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
-                            <ThumbsDown className="w-3 h-3 mr-1" />
-                            비추천
-                          </Badge>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Heart className="w-4 h-4" />
-                          <span>{review.likeCount}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Bookmark className="w-4 h-4" />
-                          <span>{review.bookmarkCount}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-4 h-4" />
-                          <span>{review.viewCount}</span>
-                        </div>
-                        {review.publishedAt && (
-                          <span>
-                            {new Date(review.publishedAt).toLocaleDateString(
-                              'ko-KR'
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2 ml-4">
-                      <Link to={`/reviews/${review._id}`}>
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4" />
-                          보기
-                        </Button>
-                      </Link>
-                      <Link to={`/reviews/${review._id}/edit`}>
-                        <Button variant="outline" size="sm">
-                          <Edit className="w-4 h-4" />
-                          수정
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                  review={review}
+                  dateFormatter={publishedDateFormatter}
+                />
               ))}
             </div>
           ) : (
