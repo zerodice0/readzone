@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useClerk, useSession, useUser } from '@clerk/clerk-react';
 import { useQuery } from 'convex/react';
@@ -35,7 +35,6 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/ui/card';
-import { ReadingStatsSection } from './components/ReadingStatsSection';
 import { MyReviewsSection } from './components/MyReviewsSection';
 import { BookmarksSection } from './components/BookmarksSection';
 import {
@@ -46,6 +45,13 @@ import {
 type ClerkUser = NonNullable<ReturnType<typeof useUser>['user']>;
 type UserSession = Awaited<ReturnType<ClerkUser['getSessions']>>[number];
 type DashboardTab = 'stats' | 'reviews' | 'bookmarks' | 'account';
+
+const loadReadingStatsSection = () =>
+  import('./components/ReadingStatsSection').then((module) => ({
+    default: module.ReadingStatsSection,
+  }));
+
+const ReadingStatsSection = lazy(loadReadingStatsSection);
 
 const sessionDateFormatter = new Intl.DateTimeFormat('ko-KR', {
   dateStyle: 'medium',
@@ -62,6 +68,15 @@ function getDashboardTab(value: string | null): DashboardTab {
 
 function formatMemberNumber(memberNumber: number) {
   return `#${memberNumber.toString().padStart(6, '0')}`;
+}
+
+function DashboardSectionLoader() {
+  return (
+    <div className="paper-surface flex items-center justify-center rounded-xl py-12">
+      <Loader2 className="h-6 w-6 animate-spin text-primary-500" />
+      <span className="ml-2 text-stone-600">섹션을 불러오는 중...</span>
+    </div>
+  );
 }
 
 function AccountPanel() {
@@ -453,6 +468,12 @@ function DashboardPage() {
           <TabsList className="paper-surface mb-6 grid h-auto w-full grid-cols-4 gap-1 overflow-x-auto rounded-xl border-paper-200/80 p-1 shadow-sm">
             <TabsTrigger
               value="stats"
+              onPointerEnter={() => {
+                void loadReadingStatsSection();
+              }}
+              onFocus={() => {
+                void loadReadingStatsSection();
+              }}
               className="h-11 min-w-0 gap-2 rounded-lg px-2 text-stone-600 data-[state=active]:bg-[#fffdf8] data-[state=active]:text-primary-800 data-[state=active]:ring-1 data-[state=active]:ring-paper-200"
             >
               <BarChart3 className="w-4 h-4" />
@@ -485,7 +506,11 @@ function DashboardPage() {
           </TabsList>
 
           <TabsContent value="stats" className="mt-0">
-            <ReadingStatsSection />
+            {activeTab === 'stats' && (
+              <Suspense fallback={<DashboardSectionLoader />}>
+                <ReadingStatsSection />
+              </Suspense>
+            )}
           </TabsContent>
 
           <TabsContent value="reviews" className="mt-0">

@@ -1,12 +1,5 @@
 import { useCallback, useState } from 'react';
-import {
-  FileText,
-  Search,
-  X,
-  NotebookPen,
-  PenSquare,
-  Sparkles,
-} from 'lucide-react';
+import { FileText, Search, X, NotebookPen, PenSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePaginatedQuery, useQuery } from 'convex/react';
 import { api } from 'convex/_generated/api';
@@ -243,23 +236,29 @@ export function FeedPage() {
                 <BrandMark />
                 <div>
                   <h2 className="font-bold text-stone-950">글다락</h2>
-                  <p className="text-xs text-stone-500">독후감 타임라인</p>
+                  <p className="text-xs text-stone-500">독자의 기록</p>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed text-stone-600">
-                긴 소개보다 먼저 독자의 글을 보여줍니다. 읽고, 반응하고, 바로
-                이어서 내 독후감을 남기는 흐름에 맞췄습니다.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-note-blue/15 bg-note-blue/5 p-5">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-note-blue">
-                <Sparkles className="h-4 w-4" />
-                논의할 점
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  onClick={handleNavigateToNew}
+                  variant="warm"
+                  className="w-full justify-start"
+                >
+                  <PenSquare className="h-4 w-4" />
+                  독후감 쓰기
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => navigate('/reading-diary/new')}
+                  variant="outline"
+                  className="w-full justify-start"
+                >
+                  <NotebookPen className="h-4 w-4" />
+                  오늘 기록
+                </Button>
               </div>
-              <p className="text-sm leading-relaxed text-stone-600">
-                다음 단계에서는 팔로잉 피드, 책별 토픽, 인용문 중심 작성 모드 중
-                무엇을 우선할지 결정하면 됩니다.
-              </p>
             </div>
           </div>
         </aside>
