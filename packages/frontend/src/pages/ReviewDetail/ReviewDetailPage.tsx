@@ -102,6 +102,7 @@ export function ReviewDetailPage() {
   // - Skip if already viewed in this session
   useEffect(() => {
     if (!review || !id || hasIncrementedViewCount.current) return;
+    if (review.status !== 'PUBLISHED') return;
 
     // Skip if this is the author viewing their own review
     if (user?.id && review.userId === user.id) {
@@ -137,11 +138,11 @@ export function ReviewDetailPage() {
   }, [review, id, user?.id, incrementViewCount]);
 
   const handleBack = useCallback((): void => {
-    void navigate('/feed');
-  }, [navigate]);
+    void navigate(review?.status === 'DRAFT' ? '/dashboard' : '/feed');
+  }, [navigate, review?.status]);
 
   const handleLike = useCallback((): void => {
-    if (!review || !id) return;
+    if (!review || !id || review.status !== 'PUBLISHED') return;
 
     // T108: Check authentication before allowing like
     if (!isSignedIn) {
@@ -156,7 +157,7 @@ export function ReviewDetailPage() {
   }, [review, id, isSignedIn, showLoginPrompt, toggleLike]);
 
   const handleBookmark = useCallback((): void => {
-    if (!review || !id) return;
+    if (!review || !id || review.status !== 'PUBLISHED') return;
 
     // T108: Check authentication before allowing bookmark
     if (!isSignedIn) {
@@ -173,7 +174,13 @@ export function ReviewDetailPage() {
   }, [review, id, isSignedIn, showLoginPrompt, toggleBookmark]);
 
   const handleShare = useCallback((): void => {
-    if (typeof window === 'undefined' || !review) return;
+    if (
+      typeof window === 'undefined' ||
+      !review ||
+      review.status !== 'PUBLISHED'
+    ) {
+      return;
+    }
 
     const url = (window as Window).location.href;
     const title = review.title || '독후감';
@@ -201,14 +208,14 @@ export function ReviewDetailPage() {
 
     void deleteReview({ id: id as Id<'reviews'> })
       .then(() => {
-        void navigate('/feed');
+        void navigate(review?.status === 'DRAFT' ? '/dashboard' : '/feed');
       })
       .catch((err: unknown) => {
         toast.error('독후감 삭제에 실패했습니다', '다시 시도해주세요.');
         logError(err, 'Delete review failed');
         setShowDeleteModal(false);
       });
-  }, [id, deleteReview, navigate]);
+  }, [id, deleteReview, navigate, review?.status]);
 
   // Loading state
   if (review === undefined) {
@@ -250,6 +257,8 @@ export function ReviewDetailPage() {
     );
   }
 
+  const isDraft = review.status === 'DRAFT';
+  const isAuthor = Boolean(user && review.userId === user.id);
   const book = review.book;
   const bookPublishYear = book?.publishedDate
     ? new Date(book.publishedDate).getFullYear()
@@ -285,7 +294,7 @@ export function ReviewDetailPage() {
           </Button>
 
           {/* Mobile Action Buttons (Edit/Delete) - visible only for author */}
-          {user && review.userId === user.id && (
+          {isAuthor && (
             <div className="sm:hidden flex gap-1">
               <Button
                 variant="ghost"
@@ -306,6 +315,18 @@ export function ReviewDetailPage() {
             </div>
           )}
         </nav>
+
+        {isDraft && (
+          <div className="mb-8 rounded-2xl bg-primary-50/80 p-4 text-primary-900 ring-1 ring-primary-100 sm:p-5">
+            <p className="text-sm font-semibold">
+              아직 발행되지 않은 초안입니다
+            </p>
+            <p className="mt-1 text-sm text-primary-800">
+              이 글은 작성자 본인만 볼 수 있어요. 계속 작성한 뒤 발행하면 피드와
+              책 상세에 공개됩니다.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Main Content Area */}
@@ -363,13 +384,15 @@ export function ReviewDetailPage() {
                         `사용자 ${review.userId.slice(-4)}`}
                     </p>
                     <p className="text-sm text-stone-500">
-                      View {review.viewCount.toLocaleString()}
+                      {isDraft
+                        ? '발행 전까지 비공개'
+                        : `View ${review.viewCount.toLocaleString()}`}
                     </p>
                   </div>
                 </div>
 
                 {/* Desktop Action Buttons (Edit/Delete) */}
-                {user && review.userId === user.id && (
+                {isAuthor && (
                   <div className="hidden sm:flex gap-2">
                     <Button
                       variant="outline"
@@ -378,7 +401,7 @@ export function ReviewDetailPage() {
                       className="text-stone-600 hover:text-primary-600 hover:border-primary-200"
                     >
                       <Edit className="w-4 h-4 mr-1.5" />
-                      수정
+                      {isDraft ? '계속 작성' : '수정'}
                     </Button>
                     <Button
                       variant="outline"
@@ -405,53 +428,57 @@ export function ReviewDetailPage() {
             </m.article>
 
             {/* Interaction Bar */}
-            <div className="flex items-center justify-center gap-6 py-8 border-t border-stone-200 mt-12">
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={handleLike}
-                className={`flex flex-col gap-1 h-auto py-3 px-6 rounded-xl transition-all duration-300 ${
-                  review.hasLiked
-                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                    : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900'
-                }`}
-              >
-                <Heart
-                  className={`w-8 h-8 ${review.hasLiked ? 'fill-current' : ''}`}
-                />
-                <span className="text-xs font-medium">{review.likeCount}</span>
-              </Button>
+            {!isDraft && (
+              <div className="flex items-center justify-center gap-6 py-8 border-t border-stone-200 mt-12">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={handleLike}
+                  className={`flex flex-col gap-1 h-auto py-3 px-6 rounded-xl transition-all duration-300 ${
+                    review.hasLiked
+                      ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                      : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900'
+                  }`}
+                >
+                  <Heart
+                    className={`w-8 h-8 ${review.hasLiked ? 'fill-current' : ''}`}
+                  />
+                  <span className="text-xs font-medium">
+                    {review.likeCount}
+                  </span>
+                </Button>
 
-              <div className="w-px h-12 bg-stone-200" />
+                <div className="w-px h-12 bg-stone-200" />
 
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={handleBookmark}
-                className={`flex flex-col gap-1 h-auto py-3 px-6 rounded-xl transition-all duration-300 ${
-                  review.hasBookmarked
-                    ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
-                    : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900'
-                }`}
-              >
-                <Bookmark
-                  className={`w-8 h-8 ${review.hasBookmarked ? 'fill-current' : ''}`}
-                />
-                <span className="text-xs font-medium">저장</span>
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={handleBookmark}
+                  className={`flex flex-col gap-1 h-auto py-3 px-6 rounded-xl transition-all duration-300 ${
+                    review.hasBookmarked
+                      ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                      : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900'
+                  }`}
+                >
+                  <Bookmark
+                    className={`w-8 h-8 ${review.hasBookmarked ? 'fill-current' : ''}`}
+                  />
+                  <span className="text-xs font-medium">저장</span>
+                </Button>
 
-              <div className="w-px h-12 bg-stone-200" />
+                <div className="w-px h-12 bg-stone-200" />
 
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={handleShare}
-                className="flex flex-col gap-1 h-auto py-3 px-6 rounded-xl text-stone-500 hover:bg-stone-100 hover:text-primary-600 transition-all duration-300"
-              >
-                <Share2 className="w-8 h-8" />
-                <span className="text-xs font-medium">공유</span>
-              </Button>
-            </div>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={handleShare}
+                  className="flex flex-col gap-1 h-auto py-3 px-6 rounded-xl text-stone-500 hover:bg-stone-100 hover:text-primary-600 transition-all duration-300"
+                >
+                  <Share2 className="w-8 h-8" />
+                  <span className="text-xs font-medium">공유</span>
+                </Button>
+              </div>
+            )}
           </main>
 
           {/* Sidebar: Book Info */}

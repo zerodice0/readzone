@@ -44,6 +44,7 @@ export function MyReviewCard({ review, dateFormatter }: MyReviewCardProps) {
   const hasReviewTitle = Boolean(review.title?.trim());
   const reviewTitle = review.title?.trim() || '제목 없는 독후감';
   const bookTitle = book?.title || '도서 정보 없음';
+  const isDraft = review.status === 'DRAFT';
   const statusBadge =
     review.status === 'DRAFT' ? (
       <Badge variant="secondary" className="text-xs">
@@ -150,28 +151,57 @@ export function MyReviewCard({ review, dateFormatter }: MyReviewCardProps) {
           </div>
 
           <div className="flex shrink-0 gap-1">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 text-xs text-stone-700 hover:bg-paper-100/70 hover:text-stone-950"
-            >
-              <Link to={`/reviews/${review._id}`}>
-                <Eye className="h-4 w-4" aria-hidden="true" />
-                보기
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 text-xs text-stone-700 hover:bg-paper-100/70 hover:text-stone-950"
-            >
-              <Link to={`/reviews/${review._id}/edit`}>
-                <Edit className="h-4 w-4" aria-hidden="true" />
-                수정
-              </Link>
-            </Button>
+            {isDraft ? (
+              <>
+                <Button
+                  asChild
+                  variant="default"
+                  size="sm"
+                  className="h-8 px-3 text-xs"
+                >
+                  <Link to={`/reviews/${review._id}/edit`}>
+                    <Edit className="h-4 w-4" aria-hidden="true" />
+                    이어쓰기
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-xs text-stone-700 hover:bg-paper-100/70 hover:text-stone-950"
+                >
+                  <Link to={`/reviews/${review._id}`}>
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                    미리보기
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-xs text-stone-700 hover:bg-paper-100/70 hover:text-stone-950"
+                >
+                  <Link to={`/reviews/${review._id}`}>
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                    보기
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 text-xs text-stone-700 hover:bg-paper-100/70 hover:text-stone-950"
+                >
+                  <Link to={`/reviews/${review._id}/edit`}>
+                    <Edit className="h-4 w-4" aria-hidden="true" />
+                    수정
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

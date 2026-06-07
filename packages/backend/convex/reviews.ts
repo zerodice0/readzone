@@ -254,13 +254,16 @@ export const listByUser = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 20;
+    const identity = await ctx.auth.getUserIdentity();
+    const isOwnReviews = identity?.subject === args.userId;
+    const visibleStatus = isOwnReviews ? args.status : 'PUBLISHED';
 
     let q = ctx.db
       .query('reviews')
       .withIndex('by_user', (q) => q.eq('userId', args.userId));
 
-    if (args.status) {
-      q = q.filter((q) => q.eq(q.field('status'), args.status));
+    if (visibleStatus) {
+      q = q.filter((q) => q.eq(q.field('status'), visibleStatus));
     }
 
     const reviews = await q.order('desc').take(limit);
@@ -306,7 +309,20 @@ export const get = query({
     id: v.id('reviews'),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
     const review = await ctx.db.get(args.id);
+    if (!review || review.status === 'DELETED') {
+      return null;
+    }
+
+    if (review.userId !== identity.subject) {
+      return null;
+    }
+
     return review;
   },
 });
@@ -320,6 +336,11 @@ export const getByUserAndBook = query({
     bookId: v.id('books'),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (identity?.subject !== args.userId) {
+      return null;
+    }
+
     const review = await ctx.db
       .query('reviews')
       .withIndex('by_user_book', (q) =>
@@ -668,8 +689,14 @@ export const getDetail = query({
     userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const viewerUserId = identity?.subject;
     const review = await ctx.db.get(args.id);
-    if (!review) {
+    if (!review || review.status === 'DELETED') {
+      return null;
+    }
+
+    if (review.status === 'DRAFT' && review.userId !== viewerUserId) {
       return null;
     }
 
@@ -692,8 +719,8 @@ export const getDetail = query({
     let hasLiked = false;
     let hasBookmarked = false;
 
-    const userId = args.userId;
-    if (userId) {
+    const userId = viewerUserId === args.userId ? viewerUserId : undefined;
+    if (userId && review.status === 'PUBLISHED') {
       // 좋아요 여부 확인
       const like = await ctx.db
         .query('likes')

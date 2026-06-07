@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ThumbsUp,
   ThumbsDown,
@@ -20,14 +20,23 @@ interface ReviewFormData {
 
 interface ReviewFormProps {
   initialData?: Partial<ReviewFormData>;
-  onSubmit: (data: ReviewFormData, status: 'DRAFT' | 'PUBLISHED') => void;
+  onSubmit: (
+    data: ReviewFormData,
+    status: 'DRAFT' | 'PUBLISHED'
+  ) => void | Promise<void>;
   isSubmitting?: boolean;
+  submittingStatus?: 'DRAFT' | 'PUBLISHED' | null;
+  currentStatus?: 'DRAFT' | 'PUBLISHED';
+  lastSavedAt?: number | null;
 }
 
 export function ReviewForm({
   initialData,
   onSubmit,
   isSubmitting = false,
+  submittingStatus = null,
+  currentStatus,
+  lastSavedAt = null,
 }: ReviewFormProps) {
   const [formData, setFormData] = useState<ReviewFormData>({
     title: initialData?.title || '',
@@ -36,19 +45,44 @@ export function ReviewForm({
     readStatus: initialData?.readStatus || 'COMPLETED',
   });
 
+  const contentLength = formData.content.length;
+  const minLength = 10;
+  const isContentValid = contentLength >= minLength;
+  const hasDraftContent = Boolean(
+    formData.title.trim() || formData.content.trim()
+  );
+  const formattedLastSavedAt = useMemo(() => {
+    if (!lastSavedAt) return null;
+
+    return new Intl.DateTimeFormat('ko-KR', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(lastSavedAt));
+  }, [lastSavedAt]);
+
   const handleSubmit = (status: 'DRAFT' | 'PUBLISHED') => {
-    // Validate required fields
+    if (status === 'DRAFT') {
+      if (!hasDraftContent) {
+        toast.warning('저장할 제목이나 내용을 입력해주세요');
+        return;
+      }
+
+      Promise.resolve(onSubmit(formData, status)).catch(() => undefined);
+      return;
+    }
+
     if (!formData.content.trim()) {
       toast.warning('독후감 내용을 입력해주세요');
       return;
     }
 
-    onSubmit(formData, status);
-  };
+    if (!isContentValid) {
+      toast.warning(`독후감은 ${minLength}자 이상 작성해주세요`);
+      return;
+    }
 
-  const contentLength = formData.content.length;
-  const minLength = 10;
-  const isContentValid = contentLength >= minLength;
+    Promise.resolve(onSubmit(formData, status)).catch(() => undefined);
+  };
 
   return (
     <div className="paper-surface flex min-h-0 flex-col gap-8 p-6 md:p-8 rounded-2xl">
@@ -214,25 +248,43 @@ export function ReviewForm({
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-4 pt-6 border-t border-paper-200/70">
-        <Button
-          variant="outline"
-          onClick={() => handleSubmit('DRAFT')}
-          disabled={isSubmitting || !isContentValid}
-          className="flex-1 h-12 text-base rounded-xl border-stone-200 hover:bg-stone-50 hover:border-stone-300"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          초안 저장
-        </Button>
-        <Button
-          variant="warm"
-          onClick={() => handleSubmit('PUBLISHED')}
-          disabled={isSubmitting || !isContentValid}
-          className="flex-[2] h-12 text-base rounded-xl"
-        >
-          <Send className="w-4 h-4 mr-2" />
-          발행하기
-        </Button>
+      <div className="space-y-3 border-t border-paper-200/70 pt-6">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            variant="outline"
+            onClick={() => handleSubmit('DRAFT')}
+            disabled={isSubmitting}
+            className="h-12 flex-1 rounded-xl border-stone-200 text-base hover:border-stone-300 hover:bg-stone-50"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {submittingStatus === 'DRAFT' ? '저장 중...' : '초안 저장'}
+          </Button>
+          <Button
+            variant="warm"
+            onClick={() => handleSubmit('PUBLISHED')}
+            disabled={isSubmitting || !isContentValid}
+            className="h-12 flex-[2] rounded-xl text-base"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            {submittingStatus === 'PUBLISHED' ? '발행 중...' : '발행하기'}
+          </Button>
+        </div>
+        <div className="rounded-xl bg-primary-50/70 px-4 py-3 text-sm text-primary-800 ring-1 ring-primary-100">
+          {formattedLastSavedAt ? (
+            <span>
+              {formattedLastSavedAt}에 초안이 저장되었습니다. 이 화면에서 계속
+              이어서 작성할 수 있어요.
+            </span>
+          ) : currentStatus === 'DRAFT' ? (
+            <span>
+              저장된 초안을 이어 쓰는 중입니다. 발행 전까지 나만 볼 수 있어요.
+            </span>
+          ) : (
+            <span>
+              초안 저장은 작성 화면을 벗어나지 않고 현재 내용을 보관합니다.
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
