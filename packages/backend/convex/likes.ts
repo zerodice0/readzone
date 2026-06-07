@@ -79,6 +79,10 @@ export const toggle = mutation({
       throw new Error('Review not found');
     }
 
+    if (review.status !== 'PUBLISHED') {
+      throw new Error('Cannot like unpublished reviews');
+    }
+
     // 기존 좋아요 확인
     const existingLike = await ctx.db
       .query('likes')

@@ -80,6 +80,10 @@ export const toggle = mutation({
       throw new Error('Review not found');
     }
 
+    if (review.status !== 'PUBLISHED') {
+      throw new Error('Cannot bookmark unpublished reviews');
+    }
+
     // 기존 북마크 확인
     const existingBookmark = await ctx.db
       .query('bookmarks')

@@ -346,6 +346,7 @@ export const getByUserAndBook = query({
       .withIndex('by_user_book', (q) =>
         q.eq('userId', args.userId).eq('bookId', args.bookId)
       )
+      .filter((q) => q.neq(q.field('status'), 'DELETED'))
       .first();
 
     return review;
@@ -390,9 +391,10 @@ export const create = mutation({
       .withIndex('by_user_book', (q) =>
         q.eq('userId', userId).eq('bookId', args.bookId)
       )
+      .filter((q) => q.neq(q.field('status'), 'DELETED'))
       .first();
 
-    if (existingReview && existingReview.status !== 'DELETED') {
+    if (existingReview) {
       throw new Error('You have already written a review for this book');
     }
 
@@ -511,6 +513,10 @@ export const incrementViewCount = mutation({
     const review = await ctx.db.get(args.id);
     if (!review) {
       throw new Error('Review not found');
+    }
+
+    if (review.status !== 'PUBLISHED') {
+      throw new Error('Cannot increment view count for unpublished reviews');
     }
 
     await ctx.db.patch(args.id, {
