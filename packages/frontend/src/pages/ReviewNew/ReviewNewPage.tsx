@@ -16,6 +16,7 @@ import {
 } from '../../components/ui/dialog';
 import { BookSearch } from '../../components/review/BookSearch';
 import { ReviewForm } from '../../components/review/ReviewForm';
+import { ReviewDiaryReference } from '../../components/review/ReviewDiaryReference';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
 import { pageVariants, fadeInUpVariants } from '../../utils/animations';
@@ -31,19 +32,25 @@ interface ReviewFormData {
   readStatus: 'READING' | 'COMPLETED' | 'DROPPED';
 }
 
+type ReviewSubmitStatus = 'DRAFT' | 'PUBLISHED';
+
 export default function ReviewNewPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, isLoaded } = useUser();
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedBook, setSelectedBook] = useState<BookData | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingStatus, setSubmittingStatus] =
+    useState<ReviewSubmitStatus | null>(null);
+  const [draftReviewId, setDraftReviewId] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [showExistingReviewDialog, setShowExistingReviewDialog] =
     useState(false);
   const [hasHandledPreselectedBook, setHasHandledPreselectedBook] =
     useState(false);
 
   const createReview = useMutation(api.reviews.create);
+  const updateReview = useMutation(api.reviews.update);
   const bookIdParam = searchParams.get('bookId');
   const validBookIdParam =
     bookIdParam && /^[a-z0-9]{16,64}$/.test(bookIdParam) ? bookIdParam : null;
@@ -132,6 +139,14 @@ export default function ReviewNewPage() {
     Boolean(selectedBook && user) && existingReview === undefined;
 
   const handleBackToBookSelection = () => {
+    if (draftReviewId) {
+      toast.info(
+        '초안이 저장되어 책을 변경할 수 없습니다',
+        '다른 책으로 작성하려면 내 독후감에서 이 초안을 정리한 뒤 새로 작성해주세요.'
+      );
+      return;
+    }
+
     setStep(1);
   };
 
@@ -143,33 +158,69 @@ export default function ReviewNewPage() {
 
   const handleSubmitReview = async (
     data: ReviewFormData,
-    status: 'DRAFT' | 'PUBLISHED'
+    status: ReviewSubmitStatus
   ) => {
     if (!selectedBook || !user) {
       toast.error('로그인이 필요합니다');
       return;
     }
 
-    setIsSubmitting(true);
+    setSubmittingStatus(status);
 
     try {
-      const displayName = getUserNickname(user);
-      const reviewId = await createReview({
-        bookId: selectedBook._id,
-        title: data.title || undefined,
+      const title = data.title.trim() || undefined;
+      const payload = {
+        title,
         content: data.content,
         isRecommended: data.isRecommended,
         readStatus: data.readStatus,
         status,
+      };
+
+      if (draftReviewId) {
+        await updateReview({
+          id: draftReviewId as Id<'reviews'>,
+          ...payload,
+        });
+
+        if (status === 'DRAFT') {
+          setLastSavedAt(Date.now());
+          toast.success(
+            '초안이 저장되었습니다',
+            '작성 화면에서 계속 이어쓸 수 있어요.'
+          );
+          return;
+        }
+
+        toast.success('독후감이 발행되었습니다');
+        void navigate(`/reviews/${draftReviewId}`);
+        return;
+      }
+
+      const displayName = getUserNickname(user);
+      const reviewId = await createReview({
+        bookId: selectedBook._id,
+        ...payload,
         ...(displayName ? { displayName } : {}),
       });
 
-      // Navigate to the created review
+      if (status === 'DRAFT') {
+        setDraftReviewId(reviewId);
+        setLastSavedAt(Date.now());
+        toast.success(
+          '초안이 저장되었습니다',
+          '작성 화면에서 계속 이어쓸 수 있어요.'
+        );
+        return;
+      }
+
+      toast.success('독후감이 발행되었습니다');
       void navigate(`/reviews/${reviewId}`);
     } catch (error) {
-      logError(error, 'Failed to create review');
-      toast.error('독후감 작성에 실패했습니다', '다시 시도해주세요.');
-      setIsSubmitting(false);
+      logError(error, 'Failed to save review');
+      toast.error('독후감 저장에 실패했습니다', '다시 시도해주세요.');
+    } finally {
+      setSubmittingStatus(null);
     }
   };
 
@@ -186,7 +237,9 @@ export default function ReviewNewPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/feed')}
+          onClick={() => {
+            Promise.resolve(navigate('/feed')).catch(() => undefined);
+          }}
           className="mb-4 text-stone-600 hover:text-stone-900 hover:bg-white/70"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -308,7 +361,8 @@ export default function ReviewNewPage() {
                 onClick={handleBackToBookSelection}
                 className="text-stone-600 hover:text-stone-900"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />책 다시 선택
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {draftReviewId ? '선택한 책 유지 중' : '책 다시 선택'}
               </Button>
             </div>
 
@@ -333,21 +387,16 @@ export default function ReviewNewPage() {
               </div>
             </div>
 
-            {/* Mobile: Collapsible diary section */}
-            <details className="lg:hidden paper-surface rounded-2xl">
-              <summary className="p-4 cursor-pointer text-sm font-medium text-stone-700 hover:bg-paper-50 rounded-2xl">
-                내 독서 일기 보기
-              </summary>
-              <div className="px-4 pb-4">
-                <BookDiaryListView diaries={diaries} />
-              </div>
-            </details>
+            <ReviewDiaryReference diaries={diaries} />
 
             {/* Review form */}
             <div className="lg:flex-1">
               <ReviewForm
                 onSubmit={handleSubmitReview}
-                isSubmitting={isSubmitting}
+                isSubmitting={submittingStatus !== null}
+                submittingStatus={submittingStatus}
+                currentStatus={draftReviewId ? 'DRAFT' : undefined}
+                lastSavedAt={lastSavedAt}
               />
             </div>
           </div>

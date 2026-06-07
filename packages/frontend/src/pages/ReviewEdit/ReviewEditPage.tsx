@@ -6,6 +6,7 @@ import { useUser } from '@clerk/clerk-react';
 import { api } from 'convex/_generated/api';
 import { Button } from '../../components/ui/button';
 import { ReviewForm } from '../../components/review/ReviewForm';
+import { ReviewDiaryReference } from '../../components/review/ReviewDiaryReference';
 import { BookDiaryListView } from '../../components/diary/BookDiaryList';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
@@ -18,11 +19,15 @@ interface ReviewFormData {
   readStatus: 'READING' | 'COMPLETED' | 'DROPPED';
 }
 
+type ReviewSubmitStatus = 'DRAFT' | 'PUBLISHED';
+
 export default function ReviewEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useUser();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingStatus, setSubmittingStatus] =
+    useState<ReviewSubmitStatus | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
 
   // Fetch review data
   const review = useQuery(
@@ -50,30 +55,40 @@ export default function ReviewEditPage() {
 
   const handleSubmitReview = async (
     data: ReviewFormData,
-    status: 'DRAFT' | 'PUBLISHED'
+    status: ReviewSubmitStatus
   ) => {
     if (!id || !review || !isAuthorized) {
       return;
     }
 
-    setIsSubmitting(true);
+    setSubmittingStatus(status);
 
     try {
       await updateReview({
         id: id as Id<'reviews'>,
-        title: data.title || undefined,
+        title: data.title.trim() || undefined,
         content: data.content,
         isRecommended: data.isRecommended,
         readStatus: data.readStatus,
         status,
       });
 
-      // Navigate back to the review detail page
+      if (status === 'DRAFT') {
+        setLastSavedAt(Date.now());
+        toast.success(
+          '초안이 저장되었습니다',
+          '작성 화면에서 계속 이어쓸 수 있어요.'
+        );
+        return;
+      }
+
+      toast.success('독후감이 발행되었습니다');
       void navigate(`/reviews/${id}`);
     } catch (error) {
       logError(error, 'Failed to update review');
       toast.error('독후감 수정에 실패했습니다', '다시 시도해주세요.');
-      setIsSubmitting(false);
+    } finally {
+      setSubmittingStatus(null);
     }
   };
 
@@ -104,7 +119,9 @@ export default function ReviewEditPage() {
             요청하신 독후감이 존재하지 않거나 삭제되었습니다
           </p>
           <Button
-            onClick={() => navigate('/feed')}
+            onClick={() => {
+              Promise.resolve(navigate('/feed')).catch(() => undefined);
+            }}
             className="bg-primary-500 hover:bg-primary-600"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -120,6 +137,8 @@ export default function ReviewEditPage() {
     return null; // Will redirect in useEffect
   }
 
+  const isDraft = review.status === 'DRAFT';
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
       {/* Header */}
@@ -127,29 +146,31 @@ export default function ReviewEditPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(`/reviews/${id}`)}
+          onClick={() => {
+            Promise.resolve(
+              navigate(isDraft ? '/dashboard' : `/reviews/${id}`)
+            ).catch(() => undefined);
+          }}
           className="mb-4 text-stone-600 hover:text-stone-900"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          독후감으로 돌아가기
+          {isDraft ? '내 독후감으로 돌아가기' : '독후감으로 돌아가기'}
         </Button>
 
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">독후감 수정</h1>
-        <p className="text-stone-600">독후감 내용을 수정할 수 있습니다</p>
+        <h1 className="text-3xl font-bold text-stone-900 mb-2">
+          {isDraft ? '초안 이어쓰기' : '독후감 수정'}
+        </h1>
+        <p className="text-stone-600">
+          {isDraft
+            ? '초안은 발행 전까지 나만 볼 수 있습니다. 저장 후에도 이 화면에서 계속 작성하세요.'
+            : '독후감 내용을 수정할 수 있습니다'}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main form area */}
-        <div className="lg:col-span-2 bg-white border border-stone-200 rounded-xl p-6 sm:p-8 shadow-sm lg:flex lg:flex-col">
-          {/* Mobile: Collapsible diary section */}
-          <details className="lg:hidden mb-6 bg-stone-50 rounded-lg border border-stone-200">
-            <summary className="p-4 cursor-pointer text-sm font-medium text-stone-700 hover:bg-stone-100 rounded-lg">
-              📖 내 독서 일기 보기
-            </summary>
-            <div className="px-4 pb-4">
-              <BookDiaryListView diaries={diaries} />
-            </div>
-          </details>
+        <div className="lg:col-span-2 space-y-5 lg:flex lg:flex-col">
+          <ReviewDiaryReference diaries={diaries} />
 
           {/* Edit form */}
           <div className="lg:flex-1">
@@ -161,7 +182,10 @@ export default function ReviewEditPage() {
                 readStatus: review.readStatus,
               }}
               onSubmit={handleSubmitReview}
-              isSubmitting={isSubmitting}
+              isSubmitting={submittingStatus !== null}
+              submittingStatus={submittingStatus}
+              currentStatus={review.status === 'DRAFT' ? 'DRAFT' : 'PUBLISHED'}
+              lastSavedAt={lastSavedAt}
             />
           </div>
         </div>
