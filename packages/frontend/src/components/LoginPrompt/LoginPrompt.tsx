@@ -18,7 +18,7 @@ import { useLoginPromptStore } from '../../stores/loginPromptStore';
 
 export function LoginPrompt() {
   const navigate = useNavigate();
-  const { isOpen, message, hide } = useLoginPromptStore();
+  const { isOpen, message, returnUrl, hide } = useLoginPromptStore();
   // T112: Focus management for modal
   const firstFocusRef = useRef<HTMLButtonElement>(null);
 
@@ -31,10 +31,11 @@ export function LoginPrompt() {
 
   const handleLogin = useCallback((): void => {
     // Clerk의 redirect_url 파라미터를 사용하여 로그인 후 원래 페이지로 복귀
-    const returnUrl = window.location.pathname;
-    void navigate(`/sign-in?redirect_url=${encodeURIComponent(returnUrl)}`);
+    const fallbackReturnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const redirectUrl = returnUrl ?? fallbackReturnUrl;
+    void navigate(`/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`);
     hide();
-  }, [navigate, hide]);
+  }, [hide, navigate, returnUrl]);
 
   const handleClose = useCallback((): void => {
     hide();

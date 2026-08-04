@@ -55,11 +55,15 @@ export default function BookDetailPage() {
     reviewCount > 0 ? (recommendedCount / reviewCount) * 100 : 0;
 
   const handleWriteReview = () => {
+    if (!book) return;
+
+    const reviewUrl = `/reviews/new?bookId=${book._id}`;
+
     if (!isSignedIn) {
-      showLoginPrompt('독후감을 작성하려면 로그인이 필요합니다.');
+      showLoginPrompt('독후감을 작성하려면 로그인이 필요합니다.', reviewUrl);
       return;
     }
-    void navigate('/reviews/new');
+    void navigate(reviewUrl);
   };
 
   // Loading state
@@ -159,8 +163,10 @@ export default function BookDetailPage() {
                   <img
                     src={book.coverImageUrl}
                     alt={`${book.title} 표지`}
+                    width={224}
+                    height={320}
                     className="book-paper-frame w-48 sm:w-56 h-auto rounded-lg transform hover:scale-[1.02] transition-transform duration-500 ease-out"
-                    loading="lazy"
+                    fetchPriority="high"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
@@ -248,12 +254,19 @@ export default function BookDetailPage() {
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 items-center">
-                  <Button onClick={handleWriteReview} size="lg" variant="warm">
-                    <PenSquare className="w-4 h-4 mr-2" />
-                    독후감 쓰기
-                  </Button>
+                  {reviewCount > 0 && (
+                    <Button
+                      onClick={handleWriteReview}
+                      size="lg"
+                      variant="warm"
+                    >
+                      <PenSquare className="w-4 h-4 mr-2" />이 책 독후감 쓰기
+                    </Button>
+                  )}
 
-                  <div className="w-px h-8 bg-stone-200 mx-2 hidden sm:block" />
+                  {reviewCount > 0 && (book.aladinUrl || book.ebookUrl) && (
+                    <div className="w-px h-8 bg-stone-200 mx-2 hidden sm:block" />
+                  )}
 
                   {book.aladinUrl && (
                     <Button
@@ -297,7 +310,13 @@ export default function BookDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main: Reviews List */}
-          <main className="lg:col-span-8 order-2 lg:order-1">
+          <main
+            className={
+              reviewCount === 0
+                ? 'order-1 lg:col-span-12'
+                : 'order-1 lg:col-span-8'
+            }
+          >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-stone-900 font-serif">
                 이 책의 독후감
@@ -305,14 +324,6 @@ export default function BookDetailPage() {
                   {reviewCount}
                 </span>
               </h2>
-              {reviewCount > 0 && (
-                <Button
-                  variant="ghost"
-                  className="text-primary-600 hover:text-primary-700 p-0 hover:bg-transparent"
-                >
-                  전체보기 <ArrowLeft className="w-4 h-4 ml-1 rotate-180" />
-                </Button>
-              )}
             </div>
 
             {reviewCount === 0 ? (
@@ -324,14 +335,14 @@ export default function BookDetailPage() {
                   아직 작성된 독후감이 없습니다
                 </h3>
                 <p className="text-stone-500 mb-8 max-w-sm mx-auto">
-                  이 책의 첫 번째 독자가 되어주세요! 당신의 감상을 나누면 더
-                  많은 사람들이 이 책을 발견하게 될 거예요.
+                  이 책의 첫 독후감을 남겨보세요. 감상을 나누면 더 많은 사람이
+                  이 책을 발견할 수 있어요.
                 </p>
                 <Button
                   onClick={handleWriteReview}
                   className="bg-primary-600 hover:bg-primary-700"
                 >
-                  <PenSquare className="w-4 h-4 mr-2" />첫 독후감 남기기
+                  <PenSquare className="w-4 h-4 mr-2" />이 책의 첫 독후감 쓰기
                 </Button>
               </div>
             ) : (
@@ -345,7 +356,7 @@ export default function BookDetailPage() {
                   >
                     <Link
                       to={`/reviews/${review._id}`}
-                      className="group block bg-white border border-stone-100 rounded-xl p-5 sm:p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary-100 transition-all duration-300"
+                      className="group block bg-white border border-stone-100 rounded-xl p-5 sm:p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary-100 transition-[transform,box-shadow,border-color] duration-300"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2 text-sm text-stone-500 mb-2">
@@ -415,18 +426,16 @@ export default function BookDetailPage() {
           </main>
 
           {/* Sidebar: Stats */}
-          <aside className="lg:col-span-4 order-1 lg:order-2">
-            <div className="sticky top-24">
+          {reviewCount > 0 && (
+            <aside className="order-2 lg:col-span-4">
               <div className="paper-surface rounded-2xl p-6 mb-6">
                 <h3 className="text-lg font-bold text-stone-900 mb-6">
-                  리뷰 분석
+                  독후감 반응
                 </h3>
 
                 <div className="text-center mb-8 pb-8 border-b border-stone-100">
                   <div className="text-5xl font-bold text-primary-600 mb-2 font-serif">
-                    {recommendationRate > 0
-                      ? Math.round(recommendationRate)
-                      : 0}
+                    {Math.round(recommendationRate)}
                     <span className="text-2xl text-primary-400">%</span>
                   </div>
                   <p className="text-stone-500 text-sm font-medium">
@@ -459,23 +468,8 @@ export default function BookDetailPage() {
                   </div>
                 </div>
               </div>
-
-              <div className="ink-panel rounded-2xl p-6 text-center">
-                <p className="text-paper-100 font-medium mb-4">
-                  이 책을 읽고 계신가요?
-                  <br />
-                  여러분의 생각이 궁금해요!
-                </p>
-                <Button
-                  onClick={handleWriteReview}
-                  variant="warm"
-                  className="w-full"
-                >
-                  독후감 쓰러 가기
-                </Button>
-              </div>
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
       </m.div>
     </div>

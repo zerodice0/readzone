@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, NotebookPen } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, NotebookPen } from 'lucide-react';
 import { useMutation, useQuery } from 'convex/react';
 import { useUser } from '@clerk/clerk-react';
 import { m } from 'framer-motion';
@@ -72,6 +72,13 @@ export default function ReviewNewPage() {
     void navigate('/reviews/new', { replace: true });
   }, [bookIdParam, navigate, validBookIdParam]);
 
+  useEffect(() => {
+    if (!validBookIdParam || preselectedBook !== null) return;
+
+    toast.error('책을 찾을 수 없습니다');
+    void navigate('/reviews/new', { replace: true });
+  }, [navigate, preselectedBook, validBookIdParam]);
+
   // 책 선택 시 해당 책에 대한 기존 리뷰 조회
   const existingReview = useQuery(
     api.reviews.getByUserAndBook,
@@ -137,6 +144,14 @@ export default function ReviewNewPage() {
 
   const isCheckingExistingReview =
     Boolean(selectedBook && user) && existingReview === undefined;
+  const isPreparingPreselectedBook =
+    Boolean(validBookIdParam) &&
+    (preselectedBook === undefined ||
+      !selectedBook ||
+      !isLoaded ||
+      (Boolean(user) && existingReview === undefined) ||
+      !hasHandledPreselectedBook);
+  const displayedStep = validBookIdParam ? 2 : step;
 
   const handleBackToBookSelection = () => {
     if (draftReviewId) {
@@ -269,11 +284,11 @@ export default function ReviewNewPage() {
                 : 'bg-stone-200 text-stone-600'
             }`}
           >
-            {step > 1 ? <Check className="w-5 h-5" /> : '1'}
+            {displayedStep > 1 ? <Check className="w-5 h-5" /> : '1'}
           </div>
           <span
             className={`font-medium ${
-              step === 1 ? 'text-stone-900' : 'text-stone-600'
+              displayedStep === 1 ? 'text-stone-900' : 'text-stone-600'
             }`}
           >
             책 선택
@@ -282,8 +297,8 @@ export default function ReviewNewPage() {
 
         <div className="flex-1 h-0.5 bg-stone-200">
           <div
-            className={`h-full transition-all duration-300 ${
-              step >= 2 ? 'bg-primary-600 w-full' : 'bg-stone-200 w-0'
+            className={`h-full transition-[width,background-color] duration-300 ${
+              displayedStep >= 2 ? 'bg-primary-600 w-full' : 'bg-stone-200 w-0'
             }`}
           />
         </div>
@@ -291,7 +306,7 @@ export default function ReviewNewPage() {
         <div className="flex items-center gap-2">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              step >= 2
+              displayedStep >= 2
                 ? 'bg-ink text-paper-100'
                 : 'bg-stone-200 text-stone-600'
             }`}
@@ -300,7 +315,7 @@ export default function ReviewNewPage() {
           </div>
           <span
             className={`font-medium ${
-              step === 2 ? 'text-stone-900' : 'text-stone-600'
+              displayedStep === 2 ? 'text-stone-900' : 'text-stone-600'
             }`}
           >
             일기 회고와 작성
@@ -308,8 +323,30 @@ export default function ReviewNewPage() {
         </div>
       </m.div>
 
+      {isPreparingPreselectedBook ? (
+        <m.div
+          variants={fadeInUpVariants}
+          initial="hidden"
+          animate="visible"
+          className="paper-surface flex min-h-64 flex-col items-center justify-center rounded-2xl p-8 text-center"
+          role="status"
+          aria-live="polite"
+        >
+          <Loader2
+            className="mb-4 h-8 w-8 animate-spin text-primary-600 motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+          <h2 className="text-lg font-semibold text-stone-900">
+            이 책의 독후감 작성 화면을 준비하고 있어요
+          </h2>
+          <p className="mt-2 text-sm text-stone-500">
+            선택한 책과 기존 독후감을 확인하는 중…
+          </p>
+        </m.div>
+      ) : null}
+
       {/* Step 1: Book selection */}
-      {step === 1 && (
+      {!isPreparingPreselectedBook && step === 1 && (
         <m.div
           variants={fadeInUpVariants}
           initial="hidden"
@@ -334,7 +371,7 @@ export default function ReviewNewPage() {
                 size="lg"
                 disabled={isCheckingExistingReview}
               >
-                {isCheckingExistingReview ? '확인 중...' : '계속하기'}
+                {isCheckingExistingReview ? '확인 중…' : '계속하기'}
               </Button>
             </div>
           )}
@@ -342,7 +379,7 @@ export default function ReviewNewPage() {
       )}
 
       {/* Step 2: Review form with diary sidebar */}
-      {step === 2 && selectedBook && (
+      {!isPreparingPreselectedBook && step === 2 && selectedBook && (
         <m.div
           variants={fadeInUpVariants}
           initial="hidden"
@@ -421,9 +458,9 @@ export default function ReviewNewPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>이미 작성한 리뷰가 있습니다</DialogTitle>
+            <DialogTitle>이미 작성한 독후감이 있습니다</DialogTitle>
             <DialogDescription>
-              이 책에 대한 리뷰를 이미 작성하셨습니다. 기존 리뷰를
+              이 책에 대한 독후감을 이미 작성하셨습니다. 기존 독후감을
               수정하시겠습니까?
             </DialogDescription>
           </DialogHeader>
@@ -453,7 +490,7 @@ export default function ReviewNewPage() {
             >
               취소
             </Button>
-            <Button onClick={handleEditExistingReview}>기존 리뷰 수정</Button>
+            <Button onClick={handleEditExistingReview}>기존 독후감 수정</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
