@@ -65,6 +65,21 @@ export function ReviewForm({
     }).format(new Date(lastSavedAt));
   }, [lastSavedAt]);
 
+  const contentLength = formData.content.length;
+  const minLength = 10;
+  const isContentValid = contentLength >= minLength;
+  const hasDraftContent = Boolean(
+    formData.title.trim() || formData.content.trim()
+  );
+  const formattedLastSavedAt = useMemo(() => {
+    if (!lastSavedAt) return null;
+
+    return new Intl.DateTimeFormat('ko-KR', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(lastSavedAt));
+  }, [lastSavedAt]);
+
   const handleSubmit = (status: 'DRAFT' | 'PUBLISHED') => {
     if (status === 'DRAFT') {
       if (!hasDraftContent) {
