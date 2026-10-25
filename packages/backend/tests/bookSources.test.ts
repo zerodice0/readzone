@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isbn13To10,
   normalizeKakaoDocument,
   parseKakaoResponse,
   parseNlkResponse,
@@ -42,6 +43,23 @@ describe('pickIsbn', () => {
   });
 });
 
+describe('isbn13To10', () => {
+  it('converts 978-prefixed ISBN-13 with the right check digit', () => {
+    expect(isbn13To10('9788937460777')).toBe('8937460777');
+    expect(isbn13To10('9780306406157')).toBe('0306406152');
+    expect(isbn13To10('9780140449136')).toBe('0140449132');
+  });
+
+  it('uses X when the check digit is 10', () => {
+    expect(isbn13To10('9780804429573')).toBe('080442957X');
+  });
+
+  it('returns null for 979 prefixes and malformed input', () => {
+    expect(isbn13To10('9791191824001')).toBeNull();
+    expect(isbn13To10('12345')).toBeNull();
+  });
+});
+
 describe('upgradeKakaoThumbnail', () => {
   it('unwraps the original image from fname and forces https', () => {
     expect(upgradeKakaoThumbnail(kakaoDoc.thumbnail)).toBe(
@@ -76,7 +94,6 @@ describe('normalizeKakaoDocument', () => {
         'https://t1.daumcdn.net/lbook/image/5795318?timestamp=20240301',
       description:
         '더스트 이후, 지구 끝의 온실에서 피어난 "식물"과 사람의 이야기',
-      sourceUrl: 'https://search.daum.net/search?w=bookpage&bookId=5795318',
     });
   });
 

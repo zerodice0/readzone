@@ -10,7 +10,8 @@ Convex 서버리스 백엔드: 스키마 정의, 실시간 쿼리/뮤테이션, 
 - `reviews.ts`: 리뷰 CRUD, 페이지네이션 피드, N+1 방지 배칭 로직
 - `books.ts`, `bookmarks.ts`, `likes.ts`, `readingDiaries.ts`: 도메인별 함수
 - `users.ts`: 사용자 프로필 관리 및 Clerk 동기화
-- `bookSearch.ts`: 카카오 책 검색(`searchBooks`)과 책 가져오기(`importBook`, 국립중앙도서관 ISBN 서지정보로 KDC·쪽수·장르 보강)
+- `bookSearch.ts`: 외부 API 호출만 담당. 카카오 책 검색(`searchBooks`), 국립중앙도서관 ISBN 서지정보 보강(`enrichFromNlk`, internal)
+- `books.ts`의 `importFromSearch`: 검색 결과에서 고른 책 저장 후 `enrichFromNlk` 예약. 장르는 '그 밖의 책'을 저장하지 않고 읽을 때 `resolveGenre`로 추정
 - `lib/genre.ts`: ReadZone 장르 목록과 KDC·ISBN 부가기호·알라딘 분류 → 장르 매핑
 - `lib/bookSources.ts`: 외부 응답 파싱 순수 함수 (단위 테스트: `packages/backend/tests/`)
 - `http.ts`: Clerk Webhook 수신 및 동적 OG 메타데이터/사이트맵 제공

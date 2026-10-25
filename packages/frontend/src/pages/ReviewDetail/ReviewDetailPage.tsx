@@ -59,6 +59,8 @@ interface ReviewDetail {
     title: string;
     author: string;
     coverImageUrl?: string;
+    aladinUrl?: string;
+    ebookUrl?: string;
     reviewCount?: number;
     isbn?: string;
     genre?: string;
@@ -607,6 +609,8 @@ export function ReviewDetailPage() {
                         isbn={book.isbn}
                         title={book.title}
                         author={book.author}
+                        aladinUrl={book.aladinUrl}
+                        ebookUrl={book.ebookUrl}
                       />
                     </div>
                   </div>

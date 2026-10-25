@@ -1,21 +1,20 @@
-import { v } from 'convex/values';
-import { action } from './_generated/server';
+import { ConvexError, v } from 'convex/values';
+import { action, internalAction } from './_generated/server';
 import { internal } from './_generated/api';
-import type { Id } from './_generated/dataModel';
 import {
   parseKakaoResponse,
   parseNlkResponse,
+  searchBookValidator,
   type KakaoBookResponse,
   type NlkBookInfo,
-  type SearchBook,
 } from './lib/bookSources';
 
 /**
- * 책 검색과 가져오기
+ * 책 정보 외부 API 호출 (네트워크가 필요한 부분만 여기에 둔다)
  *
  * - 검색: 카카오 책 검색 (KAKAO_REST_API_KEY, 하루 30,000건)
  * - 보강: 국립중앙도서관 ISBN 서지정보 (NLK_CERT_KEY, 선택)
- *   고른 책의 ISBN으로 KDC, 쪽수, 표지를 채운다. 키가 없거나 실패해도 저장은 된다.
+ *   books.importFromSearch가 책을 저장한 뒤 enrichFromNlk를 예약해 KDC, 쪽수, 장르를 채운다.
  *
  * 알라딘 OpenAPI는 2026-10-30에 종료되어 더 이상 쓰지 않는다.
  */
@@ -23,7 +22,7 @@ import {
 const KAKAO_BOOK_SEARCH_URL = 'https://dapi.kakao.com/v3/search/book';
 const NLK_SEOJI_URL = 'https://www.nl.go.kr/seoji/SearchApi.do';
 const KAKAO_TIMEOUT_MS = 8000;
-const NLK_TIMEOUT_MS = 5000;
+const NLK_TIMEOUT_MS = 10000;
 
 class TimeoutError extends Error {}
 
@@ -32,24 +31,23 @@ async function fetchWithTimeout(
   init: RequestInit,
   timeoutMs: number
 ): Promise<Response> {
+  const controller =
+    typeof AbortController === 'undefined' ? null : new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new TimeoutError()), timeoutMs);
+    timer = setTimeout(() => {
+      controller?.abort();
+      reject(new TimeoutError());
+    }, timeoutMs);
   });
 
   try {
-    return await Promise.race([fetch(url, init), timeout]);
+    return await Promise.race([
+      fetch(url, { ...init, signal: controller?.signal }),
+      timeout,
+    ]);
   } finally {
     clearTimeout(timer);
-  }
-}
-
-async function requireUser(ctx: {
-  auth: { getUserIdentity: () => Promise<unknown> };
-}) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error('Unauthorized: Must be logged in');
   }
 }
 
@@ -59,22 +57,18 @@ async function requireUser(ctx: {
 export const searchBooks = action({
   args: {
     query: v.string(),
-    target: v.optional(
-      v.union(
-        v.literal('title'),
-        v.literal('person'),
-        v.literal('publisher'),
-        v.literal('isbn')
-      )
-    ),
     size: v.optional(v.number()),
   },
-  handler: async (
-    ctx,
-    args
-  ): Promise<{ totalResults: number; books: SearchBook[] }> => {
+  returns: v.object({
+    totalResults: v.number(),
+    books: v.array(searchBookValidator),
+  }),
+  handler: async (ctx, args) => {
     // 쿼터를 지키기 위해 로그인 사용자만 검색할 수 있다 (검색 화면은 모두 로그인 필요)
-    await requireUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('로그인이 필요합니다. 다시 로그인해주세요.');
+    }
 
     const query = args.query.trim();
     if (query.length < 2) {
@@ -84,7 +78,7 @@ export const searchBooks = action({
     const apiKey = process.env.KAKAO_REST_API_KEY;
     if (!apiKey) {
       console.error('KAKAO_REST_API_KEY 환경변수가 설정되지 않았습니다');
-      throw new Error('도서 검색 서비스를 사용할 수 없습니다');
+      throw new ConvexError('도서 검색 서비스를 사용할 수 없습니다');
     }
 
     const params = new URLSearchParams({
@@ -93,9 +87,6 @@ export const searchBooks = action({
       page: '1',
       size: String(Math.min(Math.max(args.size ?? 20, 1), 50)),
     });
-    if (args.target) {
-      params.set('target', args.target);
-    }
 
     let response: Response;
     try {
@@ -106,7 +97,7 @@ export const searchBooks = action({
       );
     } catch (error) {
       console.error('카카오 책 검색 요청 실패:', error);
-      throw new Error(
+      throw new ConvexError(
         error instanceof TimeoutError
           ? '검색이 오래 걸리고 있습니다. 잠시 후 다시 시도해주세요.'
           : '도서 검색에 실패했습니다'
@@ -114,14 +105,14 @@ export const searchBooks = action({
     }
 
     if (response.status === 429) {
-      throw new Error('검색 요청이 많습니다. 잠시 후 다시 시도해주세요.');
+      throw new ConvexError('검색 요청이 많습니다. 잠시 후 다시 시도해주세요.');
     }
     if (!response.ok) {
       const body = await response.text().catch(() => '');
       console.error(
         `카카오 책 검색 HTTP ${response.status}: ${body.slice(0, 300)}`
       );
-      throw new Error(
+      throw new ConvexError(
         response.status === 401 || response.status === 403
           ? '도서 검색 서비스를 사용할 수 없습니다'
           : '도서 검색에 실패했습니다'
@@ -133,19 +124,19 @@ export const searchBooks = action({
       return parseKakaoResponse(data);
     } catch (error) {
       console.error('카카오 책 검색 응답 파싱 실패:', error);
-      throw new Error('도서 검색 결과를 처리할 수 없습니다');
+      throw new ConvexError('도서 검색 결과를 처리할 수 없습니다');
     }
   },
 });
 
 /**
  * 국립중앙도서관에서 ISBN으로 KDC, 쪽수, 표지를 가져온다.
- * 보강용이라 실패하면 null을 돌려주고 로그만 남긴다.
+ * 보강용이라 실패하면 null을 돌려주고 원인을 로그로 남긴다.
  */
-async function fetchNlkInfo(isbn: string): Promise<NlkBookInfo | null> {
-  const certKey = process.env.NLK_CERT_KEY;
-  if (!certKey || isbn.length !== 13) return null;
-
+async function fetchNlkInfo(
+  certKey: string,
+  isbn: string
+): Promise<NlkBookInfo | null> {
   const params = new URLSearchParams({
     cert_key: certKey,
     result_style: 'json',
@@ -154,6 +145,7 @@ async function fetchNlkInfo(isbn: string): Promise<NlkBookInfo | null> {
     isbn,
   });
 
+  let body: unknown;
   try {
     const response = await fetchWithTimeout(
       `${NLK_SEOJI_URL}?${params.toString()}`,
@@ -164,60 +156,42 @@ async function fetchNlkInfo(isbn: string): Promise<NlkBookInfo | null> {
       console.warn(`국립중앙도서관 서지정보 HTTP ${response.status} (${isbn})`);
       return null;
     }
-    return parseNlkResponse(await response.json());
+    body = await response.json();
   } catch (error) {
     console.warn(`국립중앙도서관 서지정보 조회 실패 (${isbn}):`, error);
     return null;
   }
+
+  const info = parseNlkResponse(body);
+  if (!info) {
+    // 결과 없음(TOTAL_COUNT 0)이거나 인증키 오류 등 예상과 다른 응답
+    console.warn(
+      `국립중앙도서관 서지정보 결과 없음 (${isbn}):`,
+      JSON.stringify(body).slice(0, 300)
+    );
+  }
+  return info;
 }
 
-const searchBookArgs = {
-  externalId: v.string(),
-  externalSource: v.literal('KAKAO'),
-  isbn: v.union(v.string(), v.null()),
-  title: v.string(),
-  author: v.string(),
-  translator: v.union(v.string(), v.null()),
-  publisher: v.union(v.string(), v.null()),
-  publishedDate: v.union(v.number(), v.null()),
-  coverImageUrl: v.union(v.string(), v.null()),
-  description: v.union(v.string(), v.null()),
-  sourceUrl: v.union(v.string(), v.null()),
-};
-
 /**
- * 검색 결과에서 고른 책을 ReadZone에 저장하고 책 ID를 돌려준다.
- * 이미 저장된 책(ISBN 기준)이면 기존 ID를 돌려준다.
+ * [Internal] 저장된 책을 국립중앙도서관 정보로 보강한다.
+ * books.importFromSearch가 새 책을 저장한 직후 예약한다.
  */
-export const importBook = action({
-  args: { book: v.object(searchBookArgs) },
-  handler: async (ctx, { book }): Promise<Id<'books'>> => {
-    await requireUser(ctx);
+export const enrichFromNlk = internalAction({
+  args: { bookId: v.id('books'), isbn: v.string() },
+  handler: async (ctx, { bookId, isbn }) => {
+    const certKey = process.env.NLK_CERT_KEY;
+    if (!certKey) return;
 
-    const isbn = book.isbn ?? undefined;
-    const existing = await ctx.runQuery(internal.books.findExisting, {
-      isbn,
-      externalSource: 'KAKAO',
-      externalId: book.externalId,
-    });
-    if (existing) return existing;
+    const info = await fetchNlkInfo(certKey, isbn);
+    if (!info) return;
 
-    const nlk = isbn ? await fetchNlkInfo(isbn) : null;
-
-    return await ctx.runMutation(internal.books.insertFromSearch, {
-      externalSource: 'KAKAO',
-      externalId: book.externalId,
-      isbn,
-      title: book.title,
-      author: book.author,
-      translator: book.translator ?? undefined,
-      publisher: book.publisher ?? undefined,
-      publishedDate: book.publishedDate ?? undefined,
-      coverImageUrl: book.coverImageUrl ?? nlk?.coverImageUrl ?? undefined,
-      description: book.description ?? undefined,
-      pageCount: nlk?.pageCount ?? undefined,
-      genre: nlk?.genre ?? undefined,
-      kdc: nlk?.kdc ?? undefined,
+    await ctx.runMutation(internal.books.applyNlkInfo, {
+      bookId,
+      kdc: info.kdc ?? undefined,
+      genre: info.genre ?? undefined,
+      pageCount: info.pageCount ?? undefined,
+      coverImageUrl: info.coverImageUrl ?? undefined,
     });
   },
 });

@@ -73,35 +73,30 @@ export const getGenreStats = query({
 
     const totalReviews = reviews.length;
 
-    // Map을 배열로 변환하고 정렬
+    // 많이 읽은 순으로 정렬하되, '그 밖의 책'은 항상 맨 뒤에 둔다
+    const toStats = (genre: string, count: number): GenreStats => ({
+      genre,
+      count,
+      percentage: Math.round((count / totalReviews) * 100),
+    });
     const allGenres: GenreStats[] = Array.from(genreCountMap.entries())
-      .map(([genre, count]) => ({
-        genre,
-        count,
-        percentage: Math.round((count / totalReviews) * 100),
-      }))
+      .filter(([genre]) => genre !== FALLBACK_GENRE)
+      .map(([genre, count]) => toStats(genre, count))
       .sort((a, b) => b.count - a.count);
+    const fallbackCount = genreCountMap.get(FALLBACK_GENRE) ?? 0;
 
-    // 상위 5개 장르 + 나머지는 '그 밖의 책'으로 합산 (항상 마지막에 둔다)
+    // 항목이 6개 이하면 모두 보여주고, 넘으면 상위 5개 + 나머지를 '그 밖의 책'으로 합산
     const TOP_N = 5;
-    let topGenres: GenreStats[];
-
-    if (allGenres.length <= TOP_N + 1) {
-      topGenres = allGenres;
-    } else {
-      const named = allGenres.filter((g) => g.genre !== FALLBACK_GENRE);
-      const otherCount =
-        (genreCountMap.get(FALLBACK_GENRE) ?? 0) +
-        named.slice(TOP_N).reduce((sum, g) => sum + g.count, 0);
-
-      topGenres = named.slice(0, TOP_N);
-      if (otherCount > 0) {
-        topGenres.push({
-          genre: FALLBACK_GENRE,
-          count: otherCount,
-          percentage: Math.round((otherCount / totalReviews) * 100),
-        });
-      }
+    const showAll = allGenres.length + (fallbackCount > 0 ? 1 : 0) <= TOP_N + 1;
+    const topGenres = showAll ? [...allGenres] : allGenres.slice(0, TOP_N);
+    const restCount = showAll
+      ? 0
+      : allGenres.slice(TOP_N).reduce((sum, g) => sum + g.count, 0);
+    if (fallbackCount + restCount > 0) {
+      topGenres.push(toStats(FALLBACK_GENRE, fallbackCount + restCount));
+    }
+    if (fallbackCount > 0) {
+      allGenres.push(toStats(FALLBACK_GENRE, fallbackCount));
     }
 
     return {

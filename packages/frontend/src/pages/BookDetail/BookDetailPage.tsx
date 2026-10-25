@@ -267,6 +267,8 @@ export default function BookDetailPage() {
                     isbn={book.isbn}
                     title={book.title}
                     author={book.author}
+                    aladinUrl={book.aladinUrl}
+                    ebookUrl={book.ebookUrl}
                   />
                 </div>
               </m.div>

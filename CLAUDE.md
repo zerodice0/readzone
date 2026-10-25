@@ -96,7 +96,7 @@ packages/
 
 1. **Authentication**: Clerk handles all auth → Clerk webhooks sync user data to Convex `users` table via `http.ts`
 2. **Data**: Frontend uses Convex React hooks (`useQuery`, `useMutation`) directly
-3. **Book Search**: `bookSearch.searchBooks` action calls Kakao Book Search. When a user picks a result, `bookSearch.importBook` looks up the ISBN in the National Library of Korea (NLK) ISBN API to fill KDC, page count and `genre`, then saves the book. Aladin OpenAPI was shut down on 2026-10-30 and is no longer used.
+3. **Book Search**: `bookSearch.searchBooks` action calls Kakao Book Search. When a user picks a result, `books.importFromSearch` saves it and schedules `bookSearch.enrichFromNlk`, which looks up the ISBN-13 in the National Library of Korea (NLK) ISBN API to fill KDC, page count and `genre`. Aladin OpenAPI was shut down on 2026-10-30 and is no longer used.
 
 ### Convex Schema (packages/backend/convex/schema.ts)
 

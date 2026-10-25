@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import {
   query,
   mutation,
@@ -8,7 +8,8 @@ import {
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
-import { resolveGenre } from './lib/genre';
+import { genreValidator, resolveGenre, storableGenre } from './lib/genre';
+import { isbn13To10, searchBookValidator } from './lib/bookSources';
 
 /**
  * 모든 책 목록 조회
@@ -168,7 +169,7 @@ export const create = mutation({
         v.literal('MANUAL')
       )
     ),
-    genre: v.optional(v.string()),
+    genre: v.optional(genreValidator),
   },
   handler: async (ctx, args) => {
     // Clerk 인증 확인
@@ -292,15 +293,22 @@ export const remove = mutation({
 /**
  * ISBN 또는 외부 출처 ID로 이미 저장된 책을 찾는다.
  * ISBN이 같으면 출처가 달라도 같은 책으로 본다.
+ * 알라딘 시절에 ISBN-10만 저장된 책도 찾도록 ISBN-10으로 한 번 더 본다.
  */
 async function findExistingBook(
   ctx: QueryCtx,
-  args: { isbn?: string; externalSource: 'KAKAO'; externalId: string }
+  args: { isbn: string | null; externalId: string }
 ): Promise<Id<'books'> | null> {
-  if (args.isbn) {
+  const isbns = args.isbn
+    ? [args.isbn, isbn13To10(args.isbn)].filter(
+        (isbn): isbn is string => isbn !== null
+      )
+    : [];
+
+  for (const isbn of isbns) {
     const byIsbn = await ctx.db
       .query('books')
-      .withIndex('by_isbn', (q) => q.eq('isbn', args.isbn))
+      .withIndex('by_isbn', (q) => q.eq('isbn', isbn))
       .first();
     if (byIsbn) return byIsbn._id;
   }
@@ -308,9 +316,7 @@ async function findExistingBook(
   const byExternal = await ctx.db
     .query('books')
     .withIndex('by_external', (q) =>
-      q
-        .eq('externalSource', args.externalSource)
-        .eq('externalId', args.externalId)
+      q.eq('externalSource', 'KAKAO').eq('externalId', args.externalId)
     )
     .first();
 
@@ -318,48 +324,73 @@ async function findExistingBook(
 }
 
 /**
- * [Internal] 책 가져오기 전에 이미 저장된 책인지 확인
+ * 검색 결과(bookSearch.searchBooks)에서 고른 책을 저장하고 책 ID를 돌려준다.
+ * 이미 저장된 책이면 기존 ID를 돌려준다.
+ * 새로 저장한 책은 국립중앙도서관 보강(bookSearch.enrichFromNlk)을 예약한다.
  */
-export const findExisting = internalQuery({
-  args: {
-    isbn: v.optional(v.string()),
-    externalSource: v.literal('KAKAO'),
-    externalId: v.string(),
+export const importFromSearch = mutation({
+  args: { book: searchBookValidator },
+  handler: async (ctx, { book }): Promise<Id<'books'>> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError('로그인이 필요합니다. 다시 로그인해주세요.');
+    }
+
+    const existing = await findExistingBook(ctx, book);
+    if (existing) return existing;
+
+    const bookId = await ctx.db.insert('books', {
+      externalSource: 'KAKAO',
+      externalId: book.externalId,
+      isbn: book.isbn ?? undefined,
+      title: book.title,
+      author: book.author,
+      translator: book.translator ?? undefined,
+      publisher: book.publisher ?? undefined,
+      publishedDate: book.publishedDate ?? undefined,
+      coverImageUrl: book.coverImageUrl ?? undefined,
+      description: book.description ?? undefined,
+      language: 'ko',
+    });
+
+    if (book.isbn?.length === 13) {
+      await ctx.scheduler.runAfter(0, internal.bookSearch.enrichFromNlk, {
+        bookId,
+        isbn: book.isbn,
+      });
+    }
+
+    return bookId;
   },
-  handler: async (ctx, args) => findExistingBook(ctx, args),
 });
 
 /**
- * [Internal] 검색 결과로 고른 책을 저장 (bookSearch.importBook에서 호출)
- * 그사이 다른 사용자가 같은 책을 저장했으면 그 책 ID를 돌려준다.
+ * [Internal] 국립중앙도서관 정보로 비어 있는 필드만 채운다.
  */
-export const insertFromSearch = internalMutation({
+export const applyNlkInfo = internalMutation({
   args: {
-    externalSource: v.literal('KAKAO'),
-    externalId: v.string(),
-    isbn: v.optional(v.string()),
-    title: v.string(),
-    author: v.string(),
-    translator: v.optional(v.string()),
-    publisher: v.optional(v.string()),
-    publishedDate: v.optional(v.number()),
-    coverImageUrl: v.optional(v.string()),
-    description: v.optional(v.string()),
-    pageCount: v.optional(v.number()),
-    genre: v.optional(v.string()),
+    bookId: v.id('books'),
     kdc: v.optional(v.string()),
+    genre: v.optional(genreValidator),
+    pageCount: v.optional(v.number()),
+    coverImageUrl: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    const existing = await findExistingBook(ctx, args);
-    if (existing) return existing;
+  handler: async (ctx, { bookId, ...info }) => {
+    const book = await ctx.db.get(bookId);
+    if (!book) return;
 
-    return await ctx.db.insert('books', { ...args, language: 'ko' });
+    await ctx.db.patch(bookId, {
+      kdc: book.kdc ?? info.kdc,
+      genre: book.genre ?? storableGenre(info.genre),
+      pageCount: book.pageCount ?? info.pageCount,
+      coverImageUrl: book.coverImageUrl ?? info.coverImageUrl,
+    });
   },
 });
 
 /**
  * [Internal] genre가 비어 있는 책에 장르를 채운다.
- * 알라딘 category, KDC 순으로 추정하고, 둘 다 없으면 '그 밖의 책'으로 둔다.
+ * KDC, 알라딘 category 순으로 추정하고, 알 수 없으면('그 밖의 책') 비워 둔다.
  * 한 번 실행하면 끝까지 스스로 이어서 돈다:
  *   npx convex run books:backfillGenres
  */
@@ -376,7 +407,9 @@ export const backfillGenres = internalMutation({
     let updated = args.updatedSoFar ?? 0;
     for (const book of page.page) {
       if (book.genre) continue;
-      await ctx.db.patch(book._id, { genre: resolveGenre(book) });
+      const genre = storableGenre(resolveGenre(book));
+      if (!genre) continue;
+      await ctx.db.patch(book._id, { genre });
       updated += 1;
     }
 

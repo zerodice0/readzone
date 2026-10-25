@@ -1,3 +1,5 @@
+import { ConvexError } from 'convex/values';
+
 /**
  * Error handling utilities
  */
@@ -51,6 +53,20 @@ export function extractErrorMessage(
 
   // Unknown error type
   return defaultMessage;
+}
+
+/**
+ * Convex 함수가 ConvexError로 던진 사용자용 메시지를 꺼낸다.
+ * 일반 Error 메시지는 프로덕션에서 "Server Error"로 가려지므로 fallback을 쓴다.
+ */
+export function getConvexErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  if (error instanceof ConvexError && typeof error.data === 'string') {
+    return error.data;
+  }
+  return fallback;
 }
 
 /**

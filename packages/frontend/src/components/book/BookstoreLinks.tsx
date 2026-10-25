@@ -6,13 +6,15 @@ interface BookstoreLinksProps {
   isbn?: string | null;
   title: string;
   author?: string | null;
+  aladinUrl?: string | null;
+  ebookUrl?: string | null;
 }
 
 /**
- * ISBN으로 서점 검색 결과를 여는 버튼 묶음
+ * 서점 링크 버튼 묶음 (ISBN 검색, 이전 알라딘 상품 링크가 있으면 그 링크)
  */
-export function BookstoreLinks({ isbn, title, author }: BookstoreLinksProps) {
-  const links = getBookstoreLinks({ isbn, title, author });
+export function BookstoreLinks(props: BookstoreLinksProps) {
+  const links = getBookstoreLinks(props);
 
   return (
     <div className="flex flex-wrap items-center gap-2">

@@ -6,22 +6,24 @@
  *
  * 네트워크 호출은 bookSearch.ts(action)에서 하고, 여기서는 응답 파싱만 한다.
  */
+import { v, type Infer } from 'convex/values';
 import { genreFromEaAddCode, genreFromKdc, type Genre } from './genre';
 
-/** 검색 결과 한 권 (DB 저장 전) */
-export interface SearchBook {
-  externalId: string;
-  externalSource: 'KAKAO';
-  isbn: string | null;
-  title: string;
-  author: string;
-  translator: string | null;
-  publisher: string | null;
-  publishedDate: number | null;
-  coverImageUrl: string | null;
-  description: string | null;
-  sourceUrl: string | null;
-}
+/** 검색 결과 한 권 (DB 저장 전). bookSearch.searchBooks의 반환값이자 books.importFromSearch의 인자 */
+export const searchBookValidator = v.object({
+  externalId: v.string(),
+  externalSource: v.literal('KAKAO'),
+  isbn: v.union(v.string(), v.null()),
+  title: v.string(),
+  author: v.string(),
+  translator: v.union(v.string(), v.null()),
+  publisher: v.union(v.string(), v.null()),
+  publishedDate: v.union(v.number(), v.null()),
+  coverImageUrl: v.union(v.string(), v.null()),
+  description: v.union(v.string(), v.null()),
+});
+
+export type SearchBook = Infer<typeof searchBookValidator>;
 
 export interface KakaoBookDocument {
   title?: string;
@@ -114,6 +116,21 @@ export function pickIsbn(raw: string | null | undefined): string | null {
 }
 
 /**
+ * 978로 시작하는 ISBN-13 → ISBN-10
+ * 알라딘 시절에 ISBN-10만 저장된 책을 같은 책으로 찾기 위해 쓴다.
+ */
+export function isbn13To10(isbn13: string): string | null {
+  if (!/^978\d{10}$/.test(isbn13)) return null;
+  const core = isbn13.slice(3, 12);
+  const sum = [...core].reduce(
+    (acc, digit, index) => acc + Number(digit) * (10 - index),
+    0
+  );
+  const check = (11 - (sum % 11)) % 11;
+  return core + (check === 10 ? 'X' : String(check));
+}
+
+/**
  * 카카오 썸네일은 120x174 리사이즈 주소다.
  * fname 파라미터에 원본 이미지 주소가 들어 있으면 그 주소(https)를 쓴다.
  */
@@ -162,8 +179,8 @@ export function normalizeKakaoDocument(
   if (!title) return null;
 
   const isbn = pickIsbn(doc.isbn);
-  const sourceUrl = cleanText(doc.url);
-  const externalId = isbn ?? sourceUrl;
+  // ISBN이 없는 책(일부 독립출판물 등)은 다음 책 페이지 주소로 구분한다
+  const externalId = isbn ?? cleanText(doc.url);
   if (!externalId) return null;
 
   return {
@@ -177,7 +194,6 @@ export function normalizeKakaoDocument(
     publishedDate: parseDate(doc.datetime),
     coverImageUrl: upgradeKakaoThumbnail(doc.thumbnail),
     description: cleanText(doc.contents),
-    sourceUrl,
   };
 }
 

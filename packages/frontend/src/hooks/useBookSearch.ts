@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
-import { useQuery, useAction } from 'convex/react';
+import { useQuery, useAction, useMutation } from 'convex/react';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from 'convex/_generated/api';
 import { useDebounce } from './useDebounce';
+import { getConvexErrorMessage } from '../utils/error';
 import type { Id } from 'convex/_generated/dataModel';
 
 // 로컬 DB에 저장된 책 타입
@@ -64,7 +65,7 @@ export function useBookSearch(query: string): UseBookSearchResult {
   ) as LocalBook[] | undefined;
 
   const searchBooks = useAction(api.bookSearch.searchBooks);
-  const importBook = useAction(api.bookSearch.importBook);
+  const importFromSearch = useMutation(api.books.importFromSearch);
 
   const triggerExternalSearch = useCallback(async () => {
     if (debouncedQuery.trim().length < 2) {
@@ -92,9 +93,9 @@ export function useBookSearch(query: string): UseBookSearchResult {
         result.books.filter((book) => !book.isbn || !localIsbns.has(book.isbn))
       );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : '도서 검색에 실패했습니다';
-      setExternalError(message);
+      setExternalError(
+        getConvexErrorMessage(error, '도서 검색에 실패했습니다')
+      );
       console.error('Book search error:', error);
     } finally {
       setIsSearchingExternal(false);
@@ -103,8 +104,8 @@ export function useBookSearch(query: string): UseBookSearchResult {
 
   // 검색 결과에서 고른 책을 ReadZone에 저장
   const selectExternalBook = useCallback(
-    (book: ExternalBook): Promise<Id<'books'>> => importBook({ book }),
-    [importBook]
+    (book: ExternalBook): Promise<Id<'books'>> => importFromSearch({ book }),
+    [importFromSearch]
   );
 
   const clearExternalResults = useCallback(() => {

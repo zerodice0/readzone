@@ -6,6 +6,7 @@ import {
   genreFromEaAddCode,
   genreFromKdc,
   resolveGenre,
+  storableGenre,
 } from '../convex/lib/genre';
 
 describe('genreFromKdc', () => {
@@ -16,10 +17,18 @@ describe('genreFromKdc', () => {
     ['814.6', '에세이'],
     ['816.7', '에세이'],
     ['810', '소설'],
+    ['810.9', '인문'],
+    ['810.8', '소설'],
     ['801.9', '인문'],
+    ['892.83', '소설'],
+    ['892.81', '시'],
+    ['892.84', '에세이'],
+    ['891', '소설'],
     ['325.211', '경제·경영'],
     ['331.5', '사회'],
     ['199.1', '자기계발'],
+    ['190', '인문'],
+    ['198.5', '인문'],
     ['181.3', '인문'],
     ['404', '과학'],
     ['512.5', '과학'],
@@ -46,6 +55,10 @@ describe('genreFromEaAddCode', () => {
   it('treats children and teen audiences as 어린이·청소년', () => {
     expect(genreFromEaAddCode('77810')).toBe('어린이·청소년');
     expect(genreFromEaAddCode('43810')).toBe('어린이·청소년');
+  });
+
+  it('treats picture books and comics for adults as 만화', () => {
+    expect(genreFromEaAddCode('07650')).toBe('만화');
   });
 
   it('falls back to the KDC part for general readers', () => {
@@ -78,6 +91,14 @@ describe('genreFromAladinCategory', () => {
 
   it('returns null without a category', () => {
     expect(genreFromAladinCategory(undefined)).toBeNull();
+  });
+});
+
+describe('storableGenre', () => {
+  it('never stores the unknown-genre fallback', () => {
+    expect(storableGenre(FALLBACK_GENRE)).toBeUndefined();
+    expect(storableGenre(null)).toBeUndefined();
+    expect(storableGenre('소설')).toBe('소설');
   });
 });
 

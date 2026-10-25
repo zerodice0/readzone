@@ -19,6 +19,7 @@ import {
 import { DiaryBookSuggestions } from './DiaryBookSuggestions';
 import { RecentBookSuggestions } from '../diary/RecentBookSuggestions';
 import { decodeHtmlEntities } from '../../utils/html';
+import { getConvexErrorMessage } from '../../utils/error';
 import type { BookData } from '../../types/book';
 
 interface BookSearchProps {
@@ -90,13 +91,7 @@ export function BookSearch({
       setSearchQuery('');
     } catch (error) {
       console.error('Failed to save book:', error);
-      const message =
-        error instanceof Error ? error.message : '책 저장에 실패했습니다';
-      if (message.includes('Unauthorized') || message.includes('logged in')) {
-        setSaveError('로그인이 필요합니다. 다시 로그인해주세요.');
-      } else {
-        setSaveError(message);
-      }
+      setSaveError(getConvexErrorMessage(error, '책 저장에 실패했습니다'));
     } finally {
       setSavingBookId(null);
     }

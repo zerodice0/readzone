@@ -22,5 +22,7 @@ export function getGenreLabel(
   book: { genre?: string | null; category?: string | null } | null | undefined
 ): string | null {
   if (!book) return null;
-  return book.genre || extractMiddleCategory(book.category);
+  // '그 밖의 책'은 분류를 모른다는 뜻이라 배지로 보여주지 않는다
+  const genre = book.genre === '그 밖의 책' ? null : book.genre;
+  return genre || extractMiddleCategory(book.category);
 }
