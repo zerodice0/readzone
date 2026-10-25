@@ -11,9 +11,6 @@ import {
   ThumbsDown,
   Edit,
   Trash2,
-  ShoppingCart,
-  Tablet,
-  ExternalLink,
   BookOpen,
   Calendar,
   Building2,
@@ -28,7 +25,8 @@ import { useLoginPromptStore } from '../../stores/loginPromptStore';
 import { LoginPrompt } from '../../components/LoginPrompt';
 import { logError } from '../../utils/error';
 import { toast } from '../../utils/toast';
-import { extractMiddleCategory } from '../../utils/category';
+import { getGenreLabel } from '../../utils/category';
+import { BookstoreLinks } from '../../components/book/BookstoreLinks';
 import { decodeHtmlEntities } from '../../utils/html';
 import { useShare } from '../../hooks/useShare';
 import {
@@ -61,10 +59,9 @@ interface ReviewDetail {
     title: string;
     author: string;
     coverImageUrl?: string;
-    aladinUrl?: string;
-    ebookUrl?: string;
     reviewCount?: number;
     isbn?: string;
+    genre?: string;
     category?: string;
     description?: string;
     publishedDate?: number;
@@ -110,7 +107,7 @@ export function ReviewDetailPage() {
     }
 
     // Check sessionStorage for duplicate prevention
-    const viewedReviewsKey = 'geuldarak_viewed_reviews';
+    const viewedReviewsKey = 'readzone_viewed_reviews';
     const storedViews = sessionStorage.getItem(viewedReviewsKey);
     const viewedReviews = (
       storedViews ? JSON.parse(storedViews) : []
@@ -266,9 +263,7 @@ export function ReviewDetailPage() {
   const bookDescription = book?.description
     ? decodeHtmlEntities(book.description)
     : null;
-  const bookCategory = book?.category
-    ? extractMiddleCategory(book.category)
-    : null;
+  const bookCategory = getGenreLabel(book);
 
   return (
     <div className="min-h-screen">
@@ -608,42 +603,11 @@ export function ReviewDetailPage() {
                           </Link>
                         )}
 
-                      <div className="w-full flex flex-wrap gap-3">
-                        {book.aladinUrl && (
-                          <Button
-                            asChild
-                            variant="outline"
-                            className="border-stone-200 text-stone-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-                          >
-                            <a
-                              href={book.aladinUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <ShoppingCart className="w-4 h-4 mr-2" />
-                              종이책
-                              <ExternalLink className="w-3 h-3 ml-1.5 opacity-50" />
-                            </a>
-                          </Button>
-                        )}
-                        {book.ebookUrl && (
-                          <Button
-                            asChild
-                            variant="outline"
-                            className="border-stone-200 text-stone-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                          >
-                            <a
-                              href={book.ebookUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Tablet className="w-4 h-4 mr-2" />
-                              전자책
-                              <ExternalLink className="w-3 h-3 ml-1.5 opacity-50" />
-                            </a>
-                          </Button>
-                        )}
-                      </div>
+                      <BookstoreLinks
+                        isbn={book.isbn}
+                        title={book.title}
+                        author={book.author}
+                      />
                     </div>
                   </div>
                 </m.div>

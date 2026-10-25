@@ -1,8 +1,8 @@
 {
-  "name": "geuldarak-monorepo",
+  "name": "readzone-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "글다락 - 독후감 공유 플랫폼",
+  "description": "ReadZone - 한 번 쓴 독후감을 여러 곳에 맞춰 공유하는 플랫폼",
   "workspaces": [
     "packages/*"
   ],

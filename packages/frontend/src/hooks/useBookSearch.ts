@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useQuery, useAction, useMutation } from 'convex/react';
+import { useQuery, useAction } from 'convex/react';
+import type { FunctionReturnType } from 'convex/server';
 import { api } from 'convex/_generated/api';
 import { useDebounce } from './useDebounce';
 import type { Id } from 'convex/_generated/dataModel';
@@ -7,66 +8,54 @@ import type { Id } from 'convex/_generated/dataModel';
 // 로컬 DB에 저장된 책 타입
 export interface LocalBook {
   _id: Id<'books'>;
+  isbn?: string;
   title: string;
   author: string;
   publisher?: string;
   publishedDate?: number;
   coverImageUrl?: string;
   description?: string;
-  externalSource?: 'GOOGLE_BOOKS' | 'ALADIN' | 'MANUAL';
+  externalSource?: 'GOOGLE_BOOKS' | 'ALADIN' | 'KAKAO' | 'MANUAL';
   externalId?: string;
 }
 
-// 알라딘 검색 결과 타입 (DB 저장 전)
-export interface AladinBook {
-  externalId: string;
-  externalSource: 'ALADIN';
-  isbn: string | null;
-  title: string;
-  author: string;
-  publisher: string | null;
-  publishedDate: number | null;
-  coverImageUrl: string | null;
-  description: string | null;
-  pageCount: number | null;
-  language: string | null;
-  aladinUrl: string | null; // 알라딘 종이책 구매 URL
-  ebookUrl: string | null; // 알라딘 전자책 구매 URL
-  category: string | null; // 장르 카테고리 (예: "국내도서>소설/시/희곡>한국소설")
-}
+// 외부(카카오 책 검색) 검색 결과 타입 (DB 저장 전)
+export type ExternalBook = FunctionReturnType<
+  typeof api.bookSearch.searchBooks
+>['books'][number];
 
 interface UseBookSearchResult {
   // 상태
   isSearchingLocal: boolean;
-  isSearchingAladin: boolean;
+  isSearchingExternal: boolean;
   localResults: LocalBook[];
-  aladinResults: AladinBook[];
-  aladinError: string | null;
+  externalResults: ExternalBook[];
+  externalError: string | null;
 
   // 액션
-  triggerAladinSearch: () => Promise<void>;
-  selectAladinBook: (book: AladinBook) => Promise<Id<'books'>>;
-  clearAladinResults: () => void;
+  triggerExternalSearch: () => Promise<void>;
+  selectExternalBook: (book: ExternalBook) => Promise<Id<'books'>>;
+  clearExternalResults: () => void;
 
   // 헬퍼
   hasLocalResults: boolean;
-  hasAladinResults: boolean;
+  hasExternalResults: boolean;
   hasSearched: boolean;
 }
 
 /**
  * 책 검색 통합 훅
- * 로컬 DB 검색 + 알라딘 API 검색을 통합 관리
+ * ReadZone에 이미 있는 책(로컬 DB) + 카카오 책 검색을 함께 관리
  */
 export function useBookSearch(query: string): UseBookSearchResult {
-  const [isSearchingAladin, setIsSearchingAladin] = useState(false);
-  const [aladinResults, setAladinResults] = useState<AladinBook[]>([]);
-  const [aladinError, setAladinError] = useState<string | null>(null);
-  const [hasSearchedAladin, setHasSearchedAladin] = useState(false);
+  const [isSearchingExternal, setIsSearchingExternal] = useState(false);
+  const [externalResults, setExternalResults] = useState<ExternalBook[]>([]);
+  const [externalError, setExternalError] = useState<string | null>(null);
+  const [hasSearchedExternal, setHasSearchedExternal] = useState(false);
 
   const debouncedQuery = useDebounce(query, 500);
 
-  // 로컬 DB 검색 (기존 쿼리)
+  // 로컬 DB 검색
   const localResults = useQuery(
     api.books.search,
     debouncedQuery.trim().length >= 2
@@ -74,97 +63,72 @@ export function useBookSearch(query: string): UseBookSearchResult {
       : 'skip'
   ) as LocalBook[] | undefined;
 
-  // 알라딘 검색 Action
-  const searchAladin = useAction(api.aladin.searchBooks);
+  const searchBooks = useAction(api.bookSearch.searchBooks);
+  const importBook = useAction(api.bookSearch.importBook);
 
-  // 알라딘 책 저장 Mutation
-  const saveFromAladin = useMutation(api.books.saveFromAladin);
-
-  // 알라딘 검색 트리거
-  const triggerAladinSearch = useCallback(async () => {
-    if (!debouncedQuery.trim() || debouncedQuery.length < 2) {
+  const triggerExternalSearch = useCallback(async () => {
+    if (debouncedQuery.trim().length < 2) {
       return;
     }
 
-    setIsSearchingAladin(true);
-    setAladinError(null);
-    setHasSearchedAladin(true);
+    setIsSearchingExternal(true);
+    setExternalError(null);
+    setHasSearchedExternal(true);
 
     try {
-      const result = await searchAladin({
+      const result = await searchBooks({
         query: debouncedQuery.trim(),
-        maxResults: 10,
+        size: 20,
       });
 
-      // 로컬 DB에 이미 있는 책 제외 (externalId 기준)
-      const localExternalIds = new Set(
+      // ReadZone에 이미 있는 책은 위쪽 목록에 나오므로 제외 (ISBN 기준)
+      const localIsbns = new Set(
         (localResults || [])
-          .filter((b) => b.externalSource === 'ALADIN' && b.externalId)
-          .map((b) => b.externalId)
+          .map((book) => book.isbn)
+          .filter((isbn): isbn is string => Boolean(isbn))
       );
 
-      const newBooks = result.books.filter(
-        (book: AladinBook) => !localExternalIds.has(book.externalId)
+      setExternalResults(
+        result.books.filter((book) => !book.isbn || !localIsbns.has(book.isbn))
       );
-
-      setAladinResults(newBooks);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : '알라딘 검색에 실패했습니다';
-      setAladinError(message);
-      console.error('Aladin search error:', error);
+        error instanceof Error ? error.message : '도서 검색에 실패했습니다';
+      setExternalError(message);
+      console.error('Book search error:', error);
     } finally {
-      setIsSearchingAladin(false);
+      setIsSearchingExternal(false);
     }
-  }, [debouncedQuery, localResults, searchAladin]);
+  }, [debouncedQuery, localResults, searchBooks]);
 
-  // 알라딘 책 선택 시 DB에 저장
-  const selectAladinBook = useCallback(
-    async (book: AladinBook): Promise<Id<'books'>> => {
-      const bookId = await saveFromAladin({
-        externalId: book.externalId,
-        isbn: book.isbn || undefined,
-        title: book.title,
-        author: book.author,
-        publisher: book.publisher || undefined,
-        publishedDate: book.publishedDate || undefined,
-        coverImageUrl: book.coverImageUrl || undefined,
-        description: book.description || undefined,
-        pageCount: book.pageCount || undefined,
-        language: book.language || undefined,
-        aladinUrl: book.aladinUrl || undefined,
-        ebookUrl: book.ebookUrl || undefined,
-        category: book.category || undefined,
-      });
-
-      return bookId;
-    },
-    [saveFromAladin]
+  // 검색 결과에서 고른 책을 ReadZone에 저장
+  const selectExternalBook = useCallback(
+    (book: ExternalBook): Promise<Id<'books'>> => importBook({ book }),
+    [importBook]
   );
 
-  // 알라딘 결과 초기화
-  const clearAladinResults = useCallback(() => {
-    setAladinResults([]);
-    setAladinError(null);
-    setHasSearchedAladin(false);
+  const clearExternalResults = useCallback(() => {
+    setExternalResults([]);
+    setExternalError(null);
+    setHasSearchedExternal(false);
   }, []);
 
   return {
     // 상태
     isSearchingLocal: debouncedQuery.length >= 2 && localResults === undefined,
-    isSearchingAladin,
+    isSearchingExternal,
     localResults: localResults || [],
-    aladinResults,
-    aladinError,
+    externalResults,
+    externalError,
 
     // 액션
-    triggerAladinSearch,
-    selectAladinBook,
-    clearAladinResults,
+    triggerExternalSearch,
+    selectExternalBook,
+    clearExternalResults,
 
     // 헬퍼
     hasLocalResults: (localResults || []).length > 0,
-    hasAladinResults: aladinResults.length > 0,
-    hasSearched: hasSearchedAladin,
+    hasExternalResults: externalResults.length > 0,
+    hasSearched: hasSearchedExternal,
   };
 }

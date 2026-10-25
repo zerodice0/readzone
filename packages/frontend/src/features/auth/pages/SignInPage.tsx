@@ -293,7 +293,7 @@ function SignInPage() {
         <CardHeader>
           <CardTitle className="text-2xl">로그인</CardTitle>
           <CardDescription>
-            글다락 계정으로 독서 기록과 독후감을 이어가세요.
+            ReadZone 계정으로 독서 기록과 독후감을 이어가세요.
           </CardDescription>
         </CardHeader>
         <CardContent>

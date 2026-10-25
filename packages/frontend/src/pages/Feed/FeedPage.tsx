@@ -235,7 +235,7 @@ export function FeedPage() {
               <div className="mb-4 flex items-center gap-3">
                 <BrandMark />
                 <div>
-                  <h2 className="font-bold text-stone-950">글다락</h2>
+                  <h2 className="font-bold text-stone-950">ReadZone</h2>
                   <p className="text-xs text-stone-500">독자의 기록</p>
                 </div>
               </div>

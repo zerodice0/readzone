@@ -249,7 +249,7 @@ build_production_frontend() {
 
   VITE_CONVEX_URL="$PROD_CONVEX_URL" \
     VITE_CLERK_PUBLISHABLE_KEY="$clerk_publishable_key" \
-    pnpm --filter @geuldarak/frontend build
+    pnpm --filter @readzone/frontend build
 }
 
 verify_production_bundle() {

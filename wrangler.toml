@@ -1,6 +1,8 @@
 # Cloudflare Workers + Static Assets Configuration
 # https://developers.cloudflare.com/workers/static-assets/
 
+# 서비스 이름은 ReadZone으로 바뀌었지만, Worker 이름을 바꾸면 새 Worker가 만들어지고
+# 기존 도메인 라우트가 끊기므로 배포 리소스 이름은 그대로 둔다.
 name = "geuldarak"
 main = "worker.ts"
 compatibility_date = "2024-09-19"

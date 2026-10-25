@@ -5,6 +5,10 @@ import {
   internalQuery,
   internalMutation,
 } from './_generated/server';
+import { internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
+import type { QueryCtx } from './_generated/server';
+import { resolveGenre } from './lib/genre';
 
 /**
  * 모든 책 목록 조회
@@ -160,10 +164,11 @@ export const create = mutation({
       v.union(
         v.literal('GOOGLE_BOOKS'),
         v.literal('ALADIN'),
+        v.literal('KAKAO'),
         v.literal('MANUAL')
       )
     ),
-    category: v.optional(v.string()), // 장르 카테고리
+    genre: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Clerk 인증 확인
@@ -214,7 +219,7 @@ export const create = mutation({
       language: args.language,
       externalId: args.externalId,
       externalSource: args.externalSource,
-      category: args.category,
+      genre: args.genre,
     });
 
     return bookId;
@@ -253,79 +258,6 @@ export const update = mutation({
 });
 
 /**
- * 알라딘 검색 결과를 DB에 저장 (책 선택 시)
- * 이미 존재하는 책이면 기존 ID 반환, 없으면 새로 생성
- */
-export const saveFromAladin = mutation({
-  args: {
-    externalId: v.string(),
-    isbn: v.optional(v.string()),
-    title: v.string(),
-    author: v.string(),
-    publisher: v.optional(v.string()),
-    publishedDate: v.optional(v.number()),
-    coverImageUrl: v.optional(v.string()),
-    description: v.optional(v.string()),
-    pageCount: v.optional(v.number()),
-    language: v.optional(v.string()),
-    aladinUrl: v.optional(v.string()), // 알라딘 종이책 구매 URL
-    ebookUrl: v.optional(v.string()), // 알라딘 전자책 구매 URL
-    category: v.optional(v.string()), // 장르 카테고리
-  },
-  handler: async (ctx, args) => {
-    // 인증 확인
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error('Unauthorized: Must be logged in');
-    }
-
-    // 이미 저장된 책인지 확인 (externalId 기준)
-    const existingByExternal = await ctx.db
-      .query('books')
-      .withIndex('by_external', (q) =>
-        q.eq('externalSource', 'ALADIN').eq('externalId', args.externalId)
-      )
-      .unique();
-
-    if (existingByExternal) {
-      return existingByExternal._id;
-    }
-
-    // ISBN 중복 체크 (다른 소스에서 같은 책이 있을 수 있음)
-    if (args.isbn) {
-      const existingByIsbn = await ctx.db
-        .query('books')
-        .withIndex('by_isbn', (q) => q.eq('isbn', args.isbn))
-        .unique();
-
-      if (existingByIsbn) {
-        return existingByIsbn._id;
-      }
-    }
-
-    // 새 책 저장
-    const bookId = await ctx.db.insert('books', {
-      externalId: args.externalId,
-      externalSource: 'ALADIN',
-      isbn: args.isbn,
-      title: args.title,
-      author: args.author,
-      publisher: args.publisher,
-      publishedDate: args.publishedDate,
-      coverImageUrl: args.coverImageUrl,
-      description: args.description,
-      pageCount: args.pageCount,
-      language: args.language,
-      aladinUrl: args.aladinUrl,
-      ebookUrl: args.ebookUrl,
-      category: args.category,
-    });
-
-    return bookId;
-  },
-});
-
-/**
  * 책 삭제
  * 인증 필요 (관리자만 가능하도록 확장 가능)
  */
@@ -358,63 +290,106 @@ export const remove = mutation({
 });
 
 /**
- * [Internal] 마이그레이션용: aladinUrl 또는 ebookUrl이 없는 ALADIN 소스 책 조회
+ * ISBN 또는 외부 출처 ID로 이미 저장된 책을 찾는다.
+ * ISBN이 같으면 출처가 달라도 같은 책으로 본다.
  */
-export const getBooksNeedingMigration = internalQuery({
-  args: {},
-  handler: async (ctx) => {
-    const allBooks = await ctx.db.query('books').collect();
-    return allBooks.filter(
-      (book) =>
-        book.externalSource === 'ALADIN' &&
-        book.isbn &&
-        (!book.aladinUrl || !book.ebookUrl)
-    );
+async function findExistingBook(
+  ctx: QueryCtx,
+  args: { isbn?: string; externalSource: 'KAKAO'; externalId: string }
+): Promise<Id<'books'> | null> {
+  if (args.isbn) {
+    const byIsbn = await ctx.db
+      .query('books')
+      .withIndex('by_isbn', (q) => q.eq('isbn', args.isbn))
+      .first();
+    if (byIsbn) return byIsbn._id;
+  }
+
+  const byExternal = await ctx.db
+    .query('books')
+    .withIndex('by_external', (q) =>
+      q
+        .eq('externalSource', args.externalSource)
+        .eq('externalId', args.externalId)
+    )
+    .first();
+
+  return byExternal?._id ?? null;
+}
+
+/**
+ * [Internal] 책 가져오기 전에 이미 저장된 책인지 확인
+ */
+export const findExisting = internalQuery({
+  args: {
+    isbn: v.optional(v.string()),
+    externalSource: v.literal('KAKAO'),
+    externalId: v.string(),
   },
+  handler: async (ctx, args) => findExistingBook(ctx, args),
 });
 
 /**
- * [Internal] 마이그레이션용: 책의 알라딘 URL 업데이트
+ * [Internal] 검색 결과로 고른 책을 저장 (bookSearch.importBook에서 호출)
+ * 그사이 다른 사용자가 같은 책을 저장했으면 그 책 ID를 돌려준다.
  */
-export const updateBookAladinUrls = internalMutation({
+export const insertFromSearch = internalMutation({
   args: {
-    bookId: v.id('books'),
-    aladinUrl: v.union(v.string(), v.null()),
-    ebookUrl: v.union(v.string(), v.null()),
+    externalSource: v.literal('KAKAO'),
+    externalId: v.string(),
+    isbn: v.optional(v.string()),
+    title: v.string(),
+    author: v.string(),
+    translator: v.optional(v.string()),
+    publisher: v.optional(v.string()),
+    publishedDate: v.optional(v.number()),
+    coverImageUrl: v.optional(v.string()),
+    description: v.optional(v.string()),
+    pageCount: v.optional(v.number()),
+    genre: v.optional(v.string()),
+    kdc: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.bookId, {
-      aladinUrl: args.aladinUrl ?? undefined,
-      ebookUrl: args.ebookUrl ?? undefined,
-    });
+    const existing = await findExistingBook(ctx, args);
+    if (existing) return existing;
+
+    return await ctx.db.insert('books', { ...args, language: 'ko' });
   },
 });
 
 /**
- * [Internal] 마이그레이션용: category가 없는 ALADIN 소스 책 조회
+ * [Internal] genre가 비어 있는 책에 장르를 채운다.
+ * 알라딘 category, KDC 순으로 추정하고, 둘 다 없으면 '그 밖의 책'으로 둔다.
+ * 한 번 실행하면 끝까지 스스로 이어서 돈다:
+ *   npx convex run books:backfillGenres
  */
-export const getBooksNeedingCategoryMigration = internalQuery({
-  args: {},
-  handler: async (ctx) => {
-    const allBooks = await ctx.db.query('books').collect();
-    return allBooks.filter(
-      (book) => book.externalSource === 'ALADIN' && book.isbn && !book.category
-    );
-  },
-});
-
-/**
- * [Internal] 마이그레이션용: 책의 category 업데이트
- */
-export const updateBookCategory = internalMutation({
+export const backfillGenres = internalMutation({
   args: {
-    bookId: v.id('books'),
-    category: v.union(v.string(), v.null()),
+    cursor: v.optional(v.union(v.string(), v.null())),
+    updatedSoFar: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.bookId, {
-      category: args.category ?? undefined,
-    });
+    const page = await ctx.db
+      .query('books')
+      .paginate({ cursor: args.cursor ?? null, numItems: 100 });
+
+    let updated = args.updatedSoFar ?? 0;
+    for (const book of page.page) {
+      if (book.genre) continue;
+      await ctx.db.patch(book._id, { genre: resolveGenre(book) });
+      updated += 1;
+    }
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(0, internal.books.backfillGenres, {
+        cursor: page.continueCursor,
+        updatedSoFar: updated,
+      });
+    } else {
+      console.log(`장르 채우기 완료: ${updated}권`);
+    }
+
+    return { updated, isDone: page.isDone };
   },
 });
 

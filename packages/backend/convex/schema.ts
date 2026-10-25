@@ -2,7 +2,7 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 /**
- * Convex Schema for 글다락
+ * Convex Schema for ReadZone
  *
  * Migration from Prisma:
  * - User, Session, OAuth, MFA → Replaced by Clerk
@@ -55,14 +55,19 @@ export default defineSchema({
       v.union(
         v.literal('GOOGLE_BOOKS'),
         v.literal('ALADIN'),
+        v.literal('KAKAO'),
         v.literal('MANUAL')
       )
     ),
-    // 알라딘 구매 링크
-    aladinUrl: v.optional(v.string()), // 종이책 구매 URL
-    ebookUrl: v.optional(v.string()), // 전자책 구매 URL
-    // 장르/카테고리 (알라딘: "국내도서>소설/시/희곡>한국소설" 형식)
-    category: v.optional(v.string()), // 원본 카테고리 문자열
+    translator: v.optional(v.string()), // 옮긴이 (카카오 검색 결과)
+    // ReadZone 장르 (convex/lib/genre.ts의 GENRES 중 하나). 통계와 화면 표시에 쓴다.
+    genre: v.optional(v.string()),
+    // 국립중앙도서관 KDC 분류기호 (예: "813.7")
+    kdc: v.optional(v.string()),
+    // 알라딘 OpenAPI 시절(2026-10-30 종료 전)에 저장된 값. 새 책에는 채우지 않는다.
+    aladinUrl: v.optional(v.string()), // 종이책 상품 페이지
+    ebookUrl: v.optional(v.string()), // 전자책 상품 페이지
+    category: v.optional(v.string()), // "국내도서>소설/시/희곡>한국소설" 형식
   })
     .index('by_isbn', ['isbn'])
     .index('by_title', ['title'])

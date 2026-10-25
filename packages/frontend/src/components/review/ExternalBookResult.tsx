@@ -1,26 +1,24 @@
 import { Book, Loader2 } from 'lucide-react';
-import type { AladinBook } from '../../hooks/useBookSearch';
-import { extractMiddleCategory } from '../../utils/category';
+import type { ExternalBook } from '../../hooks/useBookSearch';
 
-interface AladinBookResultProps {
-  book: AladinBook;
+interface ExternalBookResultProps {
+  book: ExternalBook;
   onSelect: () => void;
   isLoading?: boolean;
 }
 
 /**
- * 알라딘 검색 결과 표시 컴포넌트
+ * 외부(카카오 책 검색) 검색 결과 표시 컴포넌트
  * 외부 검색 결과를 카드 전체 선택 대상으로 표시
  */
-export function AladinBookResult({
+export function ExternalBookResult({
   book,
   onSelect,
   isLoading = false,
-}: AladinBookResultProps) {
+}: ExternalBookResultProps) {
   const publishYear = book.publishedDate
     ? new Date(book.publishedDate).getFullYear()
     : null;
-  const categoryDisplay = extractMiddleCategory(book.category);
   const metadata = [book.publisher, publishYear ? `${publishYear}` : null]
     .filter(Boolean)
     .join(' • ');
@@ -63,7 +61,9 @@ export function AladinBookResult({
               {book.title}
             </span>
             <span className="mt-1 block truncate text-sm font-medium text-stone-600">
-              {book.author}
+              {book.translator
+                ? `${book.author} 지음, ${book.translator} 옮김`
+                : book.author}
             </span>
           </span>
 
@@ -79,19 +79,9 @@ export function AladinBookResult({
           </span>
         </span>
 
-        <span className="mt-3 flex flex-wrap items-center gap-2">
-          {metadata && (
-            <span className="text-xs text-stone-500">{metadata}</span>
-          )}
-          <span className="inline-flex items-center rounded-md border border-paper-200 bg-white/70 px-2 py-0.5 text-xs font-semibold text-stone-600">
-            알라딘
-          </span>
-          {categoryDisplay && (
-            <span className="inline-flex items-center rounded-md border border-paper-200 bg-white/70 px-2 py-0.5 text-xs font-semibold text-stone-600">
-              {categoryDisplay}
-            </span>
-          )}
-        </span>
+        {metadata && (
+          <span className="mt-3 text-xs text-stone-500">{metadata}</span>
+        )}
 
         <span
           className="mt-3 text-xs font-bold text-primary-700"

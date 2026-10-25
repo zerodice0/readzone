@@ -10,11 +10,11 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { BookSearchResult } from './BookSearchResult';
-import { AladinBookResult } from './AladinBookResult';
+import { ExternalBookResult } from './ExternalBookResult';
 import {
   useBookSearch,
   type LocalBook,
-  type AladinBook,
+  type ExternalBook,
 } from '../../hooks/useBookSearch';
 import { DiaryBookSuggestions } from './DiaryBookSuggestions';
 import { RecentBookSuggestions } from '../diary/RecentBookSuggestions';
@@ -43,37 +43,37 @@ export function BookSearch({
 
   const {
     isSearchingLocal,
-    isSearchingAladin,
+    isSearchingExternal,
     localResults,
-    aladinResults,
-    aladinError,
-    triggerAladinSearch,
-    selectAladinBook,
-    clearAladinResults,
+    externalResults,
+    externalError,
+    triggerExternalSearch,
+    selectExternalBook,
+    clearExternalResults,
     hasLocalResults,
-    hasAladinResults,
+    hasExternalResults,
     hasSearched,
   } = useBookSearch(searchQuery);
 
-  // 검색어 변경 시 알라딘 결과 초기화
+  // 검색어 변경 시 외부 검색 결과 초기화
   useEffect(() => {
-    clearAladinResults();
-  }, [searchQuery, clearAladinResults]);
+    clearExternalResults();
+  }, [searchQuery, clearExternalResults]);
 
   const showNoLocalResults =
     searchQuery.trim().length >= 2 && !isSearchingLocal && !hasLocalResults;
 
-  const canSearchAladin = searchQuery.trim().length >= 2;
+  const canSearchExternal = searchQuery.trim().length >= 2;
   const selectedBookDescription = selectedBook?.description
     ? decodeHtmlEntities(selectedBook.description)
     : null;
 
-  // 알라딘 책 선택 핸들러
-  const handleSelectAladinBook = async (book: AladinBook) => {
+  // 외부 검색 결과 선택 핸들러
+  const handleSelectExternalBook = async (book: ExternalBook) => {
     setSavingBookId(book.externalId);
     setSaveError(null);
     try {
-      const bookId = await selectAladinBook(book);
+      const bookId = await selectExternalBook(book);
 
       // 저장된 책을 BookData 형태로 변환하여 전달
       const savedBook: BookData = {
@@ -164,7 +164,9 @@ export function BookSearch({
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
             <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
-            <h4 className="text-sm font-bold text-stone-700">검색 결과</h4>
+            <h4 className="text-sm font-bold text-stone-700">
+              ReadZone에 이미 있는 책
+            </h4>
           </div>
           <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
             {localResults.map((book) => (
@@ -179,46 +181,46 @@ export function BookSearch({
         </div>
       )}
 
-      {/* Aladin search button */}
-      {canSearchAladin && !isSearchingLocal && (
+      {/* External search button */}
+      {canSearchExternal && !isSearchingLocal && (
         <div className="border-t border-dashed border-stone-200 pt-6 mt-2">
           {!hasSearched ? (
             <Button
               variant="outline"
-              onClick={triggerAladinSearch}
-              disabled={isSearchingAladin}
+              onClick={triggerExternalSearch}
+              disabled={isSearchingExternal}
               className="h-12 w-full gap-2 border-primary-200 bg-primary-50/60 text-primary-700 transition-colors hover:border-primary-300 hover:bg-primary-100/70 hover:text-primary-800"
             >
-              {isSearchingAladin ? (
+              {isSearchingExternal ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  알라딘 데이터베이스 검색 중…
+                  책을 찾고 있습니다…
                 </>
               ) : (
                 <>
                   <Globe className="w-4 h-4" />
-                  알라딘에서 더 찾아보기
+                  새로운 책 찾아보기
                 </>
               )}
             </Button>
-          ) : isSearchingAladin ? (
+          ) : isSearchingExternal ? (
             <div className="flex flex-col items-center justify-center py-8 text-primary-700">
               <Loader2 className="w-6 h-6 animate-spin mb-2" />
-              <span className="text-sm">알라딘에서 책을 찾고 있습니다…</span>
+              <span className="text-sm">책을 찾고 있습니다…</span>
             </div>
           ) : null}
         </div>
       )}
 
-      {/* Aladin error */}
-      {aladinError && (
+      {/* External search error */}
+      {externalError && (
         <div className="flex items-center gap-3 p-4 bg-red-50/50 border border-red-100 rounded-xl text-red-600">
           <AlertCircle className="w-5 h-5 shrink-0" />
-          <span className="text-sm font-medium">{aladinError}</span>
+          <span className="text-sm font-medium">{externalError}</span>
           <Button
             variant="ghost"
             size="sm"
-            onClick={triggerAladinSearch}
+            onClick={triggerExternalSearch}
             className="ml-auto text-red-600 hover:text-red-700 hover:bg-red-100"
           >
             다시 시도
@@ -242,34 +244,35 @@ export function BookSearch({
         </div>
       )}
 
-      {/* Aladin search results */}
-      {hasAladinResults && (
+      {/* External search results */}
+      {hasExternalResults && (
         <div className="space-y-3 mt-4">
           <div className="flex items-center gap-2 px-1">
             <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
-            <h4 className="text-sm font-bold text-stone-700">
-              알라딘 검색 결과
-            </h4>
+            <h4 className="text-sm font-bold text-stone-700">새로 찾은 책</h4>
           </div>
           <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {aladinResults.map((book) => (
-              <AladinBookResult
+            {externalResults.map((book) => (
+              <ExternalBookResult
                 key={book.externalId}
                 book={book}
-                onSelect={() => handleSelectAladinBook(book)}
+                onSelect={() => handleSelectExternalBook(book)}
                 isLoading={savingBookId === book.externalId}
               />
             ))}
           </div>
+          <p className="px-1 text-xs text-stone-500">
+            책 정보 제공: 카카오 책 검색, 국립중앙도서관
+          </p>
         </div>
       )}
 
       {/* No results at all */}
       {showNoLocalResults &&
         hasSearched &&
-        !hasAladinResults &&
-        !isSearchingAladin &&
-        !aladinError && (
+        !hasExternalResults &&
+        !isSearchingExternal &&
+        !externalError && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-4 text-stone-400">
               <Search className="w-8 h-8" />
@@ -282,11 +285,11 @@ export function BookSearch({
             </p>
             <Button
               variant="outline"
-              onClick={triggerAladinSearch}
+              onClick={triggerExternalSearch}
               className="gap-2"
             >
               <BookPlus className="w-4 h-4" />
-              알라딘에서 다시 검색
+              다시 검색
             </Button>
           </div>
         )}

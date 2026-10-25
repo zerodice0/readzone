@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-Convex 서버리스 백엔드: 스키마 정의, 실시간 쿼리/뮤테이션, 알라딘 API 연동 및 Clerk 인증 처리.
+Convex 서버리스 백엔드: 스키마 정의, 실시간 쿼리/뮤테이션, 책 검색(카카오 + 국립중앙도서관) 연동 및 Clerk 인증 처리.
 
 ## STRUCTURE
 
@@ -10,7 +10,9 @@ Convex 서버리스 백엔드: 스키마 정의, 실시간 쿼리/뮤테이션, 
 - `reviews.ts`: 리뷰 CRUD, 페이지네이션 피드, N+1 방지 배칭 로직
 - `books.ts`, `bookmarks.ts`, `likes.ts`, `readingDiaries.ts`: 도메인별 함수
 - `users.ts`: 사용자 프로필 관리 및 Clerk 동기화
-- `aladin.ts`: 외부 도서 검색 API (Action, Node.js 환경)
+- `bookSearch.ts`: 카카오 책 검색(`searchBooks`)과 책 가져오기(`importBook`, 국립중앙도서관 ISBN 서지정보로 KDC·쪽수·장르 보강)
+- `lib/genre.ts`: ReadZone 장르 목록과 KDC·ISBN 부가기호·알라딘 분류 → 장르 매핑
+- `lib/bookSources.ts`: 외부 응답 파싱 순수 함수 (단위 테스트: `packages/backend/tests/`)
 - `http.ts`: Clerk Webhook 수신 및 동적 OG 메타데이터/사이트맵 제공
 - `_generated/`: Convex 자동 생성 파일 (수정 금지)
 
@@ -35,12 +37,13 @@ Convex 서버리스 백엔드: 스키마 정의, 실시간 쿼리/뮤테이션, 
 | ---------------- | ---------------------------------- |
 | DB 스키마/인덱스 | `schema.ts`                        |
 | 피드/검색 로직   | `reviews.ts` (getFeed, searchFeed) |
-| 도서 검색 API    | `aladin.ts`                        |
+| 도서 검색 API    | `bookSearch.ts`, `lib/`            |
 | 회원 동기화      | `http.ts` (webhook) & `users.ts`   |
 | 독서 기록/일기   | `readingDiaries.ts`                |
 
 ## NOTES
 
-- **환경변수**: `ALADIN_TTB_KEY`, `CLERK_WEBHOOK_SECRET`은 Convex Dashboard에서 관리
+- **환경변수**: `KAKAO_REST_API_KEY`, `NLK_CERT_KEY`(선택), `CLERK_WEBHOOK_SECRET`은 Convex Dashboard에서 관리
+- **알라딘**: OpenAPI가 2026-10-30에 종료됐다. `aladinUrl`/`ebookUrl`/`category` 필드는 이전 데이터 보존용이며 새로 채우지 않는다
 - **배칭**: `reviews.ts`의 `getAuthorInfoBatch`는 사용자 정보 중복 조회를 방지하는 핵심 패턴
 - **HTTP**: `/og/reviews/:id` 엔드포인트는 Cloudflare Worker와 연동되어 SEO/공유 기능 수행
