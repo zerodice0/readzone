@@ -168,7 +168,7 @@ function SignUpPage() {
         <CardHeader>
           <CardTitle className="text-2xl">회원가입</CardTitle>
           <CardDescription>
-            이메일 인증 후 글다락을 바로 사용할 수 있습니다.
+            이메일 인증 후 ReadZone을 바로 사용할 수 있습니다.
           </CardDescription>
         </CardHeader>
         <CardContent>

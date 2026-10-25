@@ -214,10 +214,10 @@ export function isToggleBookmarkResponse(
  */
 export function isValidExternalSource(
   value: unknown
-): value is 'GOOGLE_BOOKS' | 'ALADIN' | 'MANUAL' {
+): value is 'GOOGLE_BOOKS' | 'ALADIN' | 'KAKAO' | 'MANUAL' {
   return (
     typeof value === 'string' &&
-    ['GOOGLE_BOOKS', 'ALADIN', 'MANUAL'].includes(value)
+    ['GOOGLE_BOOKS', 'ALADIN', 'KAKAO', 'MANUAL'].includes(value)
   );
 }
 

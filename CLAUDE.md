@@ -12,10 +12,10 @@ pnpm dev
 pnpm build
 
 # Build frontend only
-pnpm --filter @geuldarak/frontend build
+pnpm --filter @readzone/frontend build
 
 # Deploy backend to Convex
-pnpm --filter @geuldarak/backend build
+pnpm --filter @readzone/backend build
 
 # Type checking
 pnpm type-check
@@ -26,8 +26,9 @@ pnpm lint
 # Format code
 pnpm format
 
-# Run frontend tests
-pnpm --filter @geuldarak/frontend test
+# Run tests
+pnpm --filter @readzone/frontend test
+pnpm --filter @readzone/backend test
 ```
 
 ### Convex Commands
@@ -44,12 +45,12 @@ npx convex dev
 # Convex 프로덕션 배포 (프로젝트 루트에서 실행)
 npx convex deploy
 # 또는 pnpm 스크립트 사용
-pnpm --filter @geuldarak/backend build
+pnpm --filter @readzone/backend build
 
 # Generate Convex types after schema changes (프로젝트 루트에서 실행)
 npx convex codegen
 # 또는 pnpm 스크립트 사용
-pnpm --filter @geuldarak/backend codegen
+pnpm --filter @readzone/backend codegen
 ```
 
 ## Architecture Overview
@@ -84,7 +85,8 @@ packages/
 │       ├── books.ts      # Book queries/mutations
 │       ├── reviews.ts    # Review queries/mutations
 │       ├── users.ts      # User sync from Clerk
-│       ├── aladin.ts     # Aladin book API integration (action)
+│       ├── bookSearch.ts # Book search (Kakao) + import with NLK enrichment (actions)
+│       ├── lib/          # Pure helpers: genre mapping, external response parsers
 │       └── http.ts       # HTTP endpoints (Clerk webhooks, OG API)
 │
 └── shared/            # Shared types (Zod schemas)
@@ -94,12 +96,12 @@ packages/
 
 1. **Authentication**: Clerk handles all auth → Clerk webhooks sync user data to Convex `users` table via `http.ts`
 2. **Data**: Frontend uses Convex React hooks (`useQuery`, `useMutation`) directly
-3. **Book Search**: `aladin.ts` action calls Aladin API (Korean book database)
+3. **Book Search**: `bookSearch.searchBooks` action calls Kakao Book Search. When a user picks a result, `books.importFromSearch` saves it and schedules `bookSearch.enrichFromNlk`, which looks up the ISBN-13 in the National Library of Korea (NLK) ISBN API to fill KDC, page count and `genre`. Aladin OpenAPI was shut down on 2026-10-30 and is no longer used.
 
 ### Convex Schema (packages/backend/convex/schema.ts)
 
 - `users`: Synced from Clerk via webhooks
-- `books`: Book metadata (title, author, ISBN, Aladin URLs)
+- `books`: Book metadata (title, author, ISBN, `genre`, `kdc`). `aladinUrl`/`ebookUrl`/`category` exist only on books saved before the Aladin shutdown.
 - `reviews`: User book reviews with like/bookmark counts
 - `likes`: Review likes (user-review relation)
 - `bookmarks`: Review bookmarks (user-review relation)
@@ -116,7 +118,8 @@ Handles OG meta tag injection for social media sharing:
 
 - **Code Splitting**: Pages use `React.lazy()` for bundle optimization (see `router.tsx`)
 - **Protected Routes**: Wrap with Clerk's `<SignedIn>` / `<SignedOut>` components
-- **Convex Actions**: Use `'use node';` directive for external API calls (see `aladin.ts`)
+- **Convex Actions**: External API calls go in actions (see `bookSearch.ts`). The default runtime has `fetch`; add `'use node';` only when Node APIs are needed.
+- **Genres**: Statistics and UI use the fixed list in `convex/lib/genre.ts`. Map any new source's categories into it instead of storing raw category strings.
 
 ## Environment Variables
 
@@ -128,7 +131,8 @@ Handles OG meta tag injection for social media sharing:
 ### Backend (Convex Dashboard)
 
 - `CLERK_WEBHOOK_SECRET`: For Clerk webhook verification
-- `ALADIN_TTB_KEY`: Aladin book API key
+- `KAKAO_REST_API_KEY`: Kakao REST API key for book search (required)
+- `NLK_CERT_KEY`: National Library of Korea ISBN API key for KDC/page enrichment (optional; search and save still work without it)
 
 ### Cloudflare Worker
 

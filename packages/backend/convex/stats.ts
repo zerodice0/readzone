@@ -1,16 +1,6 @@
 import { v } from 'convex/values';
 import { query } from './_generated/server';
-
-/**
- * 알라딘 카테고리에서 중분류 추출
- * 예: "국내도서>소설/시/희곡>한국소설" → "소설/시/희곡"
- */
-function extractMiddleCategory(categoryName: string | undefined): string {
-  if (!categoryName) return '기타';
-  const parts = categoryName.split('>');
-  // 중분류가 있으면 반환, 없으면 대분류, 그것도 없으면 '기타'
-  return parts[1]?.trim() || parts[0]?.trim() || '기타';
-}
+import { FALLBACK_GENRE, resolveGenre } from './lib/genre';
 
 /**
  * 장르별 통계 타입
@@ -70,51 +60,43 @@ export const getGenreStats = query({
       return { topGenres: [], allGenres: [], totalReviews: 0 };
     }
 
-    // 각 리뷰에 연결된 책의 카테고리 조회
+    // 각 리뷰에 연결된 책의 장르 집계
     const genreCountMap = new Map<string, number>();
 
     for (const review of reviews) {
       const book = await ctx.db.get(review.bookId);
       if (book) {
-        const genre = extractMiddleCategory(book.category);
+        const genre = resolveGenre(book);
         genreCountMap.set(genre, (genreCountMap.get(genre) || 0) + 1);
       }
     }
 
     const totalReviews = reviews.length;
 
-    // Map을 배열로 변환하고 정렬
+    // 많이 읽은 순으로 정렬하되, '그 밖의 책'은 항상 맨 뒤에 둔다
+    const toStats = (genre: string, count: number): GenreStats => ({
+      genre,
+      count,
+      percentage: Math.round((count / totalReviews) * 100),
+    });
     const allGenres: GenreStats[] = Array.from(genreCountMap.entries())
-      .map(([genre, count]) => ({
-        genre,
-        count,
-        percentage: Math.round((count / totalReviews) * 100),
-      }))
+      .filter(([genre]) => genre !== FALLBACK_GENRE)
+      .map(([genre, count]) => toStats(genre, count))
       .sort((a, b) => b.count - a.count);
+    const fallbackCount = genreCountMap.get(FALLBACK_GENRE) ?? 0;
 
-    // 상위 5개 + 나머지는 "기타"로 합산
+    // 항목이 6개 이하면 모두 보여주고, 넘으면 상위 5개 + 나머지를 '그 밖의 책'으로 합산
     const TOP_N = 5;
-    let topGenres: GenreStats[];
-
-    if (allGenres.length <= TOP_N + 1) {
-      // 장르가 6개 이하면 그대로 사용
-      topGenres = allGenres;
-    } else {
-      // 상위 5개 추출
-      topGenres = allGenres.slice(0, TOP_N);
-
-      // 나머지를 "기타"로 합산
-      const otherCount = allGenres
-        .slice(TOP_N)
-        .reduce((sum, g) => sum + g.count, 0);
-
-      if (otherCount > 0) {
-        topGenres.push({
-          genre: '기타',
-          count: otherCount,
-          percentage: Math.round((otherCount / totalReviews) * 100),
-        });
-      }
+    const showAll = allGenres.length + (fallbackCount > 0 ? 1 : 0) <= TOP_N + 1;
+    const topGenres = showAll ? [...allGenres] : allGenres.slice(0, TOP_N);
+    const restCount = showAll
+      ? 0
+      : allGenres.slice(TOP_N).reduce((sum, g) => sum + g.count, 0);
+    if (fallbackCount + restCount > 0) {
+      topGenres.push(toStats(FALLBACK_GENRE, fallbackCount + restCount));
+    }
+    if (fallbackCount > 0) {
+      allGenres.push(toStats(FALLBACK_GENRE, fallbackCount));
     }
 
     return {

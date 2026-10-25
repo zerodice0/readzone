@@ -25,7 +25,7 @@ export interface Book {
   pageCount: number | null;
   language: string | null;
   externalId: string | null;
-  externalSource: 'GOOGLE_BOOKS' | 'ALADIN' | 'MANUAL' | null;
+  externalSource: 'GOOGLE_BOOKS' | 'ALADIN' | 'KAKAO' | 'MANUAL' | null;
   createdAt: string;
   updatedAt: string;
   reviewCount?: number;
@@ -33,7 +33,7 @@ export interface Book {
 
 export interface BookSearchResult {
   externalId: string;
-  externalSource: 'GOOGLE_BOOKS' | 'ALADIN' | 'MANUAL';
+  externalSource: 'GOOGLE_BOOKS' | 'ALADIN' | 'KAKAO' | 'MANUAL';
   isbn: string | null;
   title: string;
   author: string;

@@ -9,9 +9,6 @@ import {
   AlertCircle,
   PenSquare,
   Book as BookIcon,
-  ShoppingCart,
-  Tablet,
-  ExternalLink,
   Calendar,
   Building2,
   BookOpen,
@@ -27,7 +24,8 @@ import {
   fadeInUpVariants,
   scaleInVariants,
 } from '../../utils/animations';
-import { extractMiddleCategory } from '../../utils/category';
+import { getGenreLabel } from '../../utils/category';
+import { BookstoreLinks } from '../../components/book/BookstoreLinks';
 import { decodeHtmlEntities } from '../../utils/html';
 import type { Id } from 'convex/_generated/dataModel';
 
@@ -111,6 +109,7 @@ export default function BookDetailPage() {
   const bookDescription = book.description
     ? decodeHtmlEntities(book.description)
     : null;
+  const genreLabel = getGenreLabel(book);
 
   return (
     <div className="min-h-screen">
@@ -182,7 +181,7 @@ export default function BookDetailPage() {
             {/* Right: Book Details */}
             <div className="md:col-span-7 lg:col-span-8 p-8 md:p-10 flex flex-col justify-center">
               <m.div variants={fadeInUpVariants}>
-                {(publishYear || book.category) && (
+                {(publishYear || genreLabel) && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {publishYear && (
                       <Badge
@@ -192,12 +191,12 @@ export default function BookDetailPage() {
                         {publishYear}년
                       </Badge>
                     )}
-                    {book.category && extractMiddleCategory(book.category) && (
+                    {genreLabel && (
                       <Badge
                         variant="secondary"
                         className="bg-note-blue/10 text-note-blue border-note-blue/20"
                       >
-                        {extractMiddleCategory(book.category)}
+                        {genreLabel}
                       </Badge>
                     )}
                   </div>
@@ -264,44 +263,13 @@ export default function BookDetailPage() {
                     </Button>
                   )}
 
-                  {reviewCount > 0 && (book.aladinUrl || book.ebookUrl) && (
-                    <div className="w-px h-8 bg-stone-200 mx-2 hidden sm:block" />
-                  )}
-
-                  {book.aladinUrl && (
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="border-stone-200 text-stone-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-                    >
-                      <a
-                        href={book.aladinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        종이책
-                        <ExternalLink className="w-3 h-3 ml-1.5 opacity-50" />
-                      </a>
-                    </Button>
-                  )}
-                  {book.ebookUrl && (
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="border-stone-200 text-stone-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                    >
-                      <a
-                        href={book.ebookUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Tablet className="w-4 h-4 mr-2" />
-                        전자책
-                        <ExternalLink className="w-3 h-3 ml-1.5 opacity-50" />
-                      </a>
-                    </Button>
-                  )}
+                  <BookstoreLinks
+                    isbn={book.isbn}
+                    title={book.title}
+                    author={book.author}
+                    aladinUrl={book.aladinUrl}
+                    ebookUrl={book.ebookUrl}
+                  />
                 </div>
               </m.div>
             </div>

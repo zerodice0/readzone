@@ -242,6 +242,28 @@ verify_production_clerk_configuration() {
   echo "Clerk configuration verified."
 }
 
+verify_production_book_search_configuration() {
+  echo "Verifying book search configuration..."
+
+  # 값은 출력하지 않고 설정 여부만 확인한다
+  local kakao_key
+  kakao_key="$(pnpm exec convex env get KAKAO_REST_API_KEY --prod 2>/dev/null || true)"
+
+  if [[ -z "$kakao_key" || "$kakao_key" == "undefined" ]]; then
+    echo "ERROR: KAKAO_REST_API_KEY is not set in Convex production." >&2
+    echo "Run: npx convex env set KAKAO_REST_API_KEY <key> --prod" >&2
+    exit 1
+  fi
+
+  local nlk_key
+  nlk_key="$(pnpm exec convex env get NLK_CERT_KEY --prod 2>/dev/null || true)"
+  if [[ -z "$nlk_key" || "$nlk_key" == "undefined" ]]; then
+    echo "WARNING: NLK_CERT_KEY is not set. New books will be saved without genre and page count." >&2
+  fi
+
+  echo "Book search configuration verified."
+}
+
 build_production_frontend() {
   echo "Building frontend with production Convex URL..."
   local clerk_publishable_key
@@ -249,7 +271,7 @@ build_production_frontend() {
 
   VITE_CONVEX_URL="$PROD_CONVEX_URL" \
     VITE_CLERK_PUBLISHABLE_KEY="$clerk_publishable_key" \
-    pnpm --filter @geuldarak/frontend build
+    pnpm --filter @readzone/frontend build
 }
 
 verify_production_bundle() {
@@ -372,6 +394,7 @@ deploy_worker() {
 
 deploy_production() {
   verify_production_clerk_configuration
+  verify_production_book_search_configuration
   build_production_frontend
   verify_production_bundle
 

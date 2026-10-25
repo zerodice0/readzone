@@ -1,5 +1,5 @@
 /**
- * @geuldarak/frontend
+ * @readzone/frontend
  *
  * Frontend application entry point
  */

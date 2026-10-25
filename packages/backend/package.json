@@ -1,5 +1,5 @@
 {
-  "name": "@geuldarak/backend",
+  "name": "@readzone/backend",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,8 @@
     "build": "convex deploy --cmd 'echo Convex deployed'",
     "codegen": "convex codegen",
     "type-check": "tsc --noEmit",
-    "lint": "eslint convex/"
+    "lint": "eslint convex/",
+    "test": "vitest run"
   },
   "dependencies": {
     "@clerk/backend": "^2.29.0",
@@ -18,6 +19,7 @@
     "svix": "^1.82.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.16"
   }
 }

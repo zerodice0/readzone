@@ -416,7 +416,7 @@ export function Header() {
             >
               <BrandMark className="h-8 w-8 rounded-xl" />
             </m.span>
-            <span>글다락</span>
+            <span>ReadZone</span>
           </Link>
 
           {/* 데스크톱 네비게이션 */}
@@ -512,7 +512,7 @@ export function Header() {
               >
                 <SheetHeader className="mb-8">
                   <SheetTitle className="text-left font-heading text-2xl text-primary-700">
-                    글다락
+                    ReadZone
                   </SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-1 flex-col gap-7">
